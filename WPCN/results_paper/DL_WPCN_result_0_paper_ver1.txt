@@ -1,0 +1,4 @@
+
+ <<< ESTIMATION RESULT >>>
+No.	size	test	problem	percentage
+0	12	100	0	35.9915
