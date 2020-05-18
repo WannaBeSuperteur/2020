@@ -1,0 +1,3 @@
+value must be at least 50
+number of columns of each training data is 15
+train and test outputs are 23 days later of last input data
