@@ -1,0 +1,2 @@
+200 50 0.05
+boardSize=100.0 maxDist=15.0

@@ -1,0 +1,324 @@
+ <<< epoch 5 >>>
+mean square error: 0.01623508132914603 (train: 3779 test:978)
+
+True Positive    : 366 / 37.42%
+True Negative    : 591 / 60.43%
+False Positive   : 6 / 0.61%
+False Negative   : 15 / 1.53%
+
+Real Positive    : 381 / 38.96%
+Real Negative    : 597 / 61.04%
+correct          : 957 / 97.85%
+
+ <<< epoch 5 >>>
+mean square error: 0.024884495620519007 (train: 3783 test:974)
+
+True Positive    : 408 / 41.89%
+True Negative    : 536 / 55.03%
+False Positive   : 7 / 0.72%
+False Negative   : 23 / 2.36%
+
+Real Positive    : 431 / 44.25%
+Real Negative    : 543 / 55.75%
+correct          : 944 / 96.92%
+
+ <<< epoch 5 >>>
+mean square error: 0.018277005363949404 (train: 3827 test:930)
+
+True Positive    : 377 / 40.54%
+True Negative    : 535 / 57.53%
+False Positive   : 8 / 0.86%
+False Negative   : 10 / 1.08%
+
+Real Positive    : 387 / 41.61%
+Real Negative    : 543 / 58.39%
+correct          : 912 / 98.06%
+
+ <<< epoch 15 >>>
+mean square error: 0.0153981926184935 (train: 3801 test:956)
+
+True Positive    : 361 / 37.76%
+True Negative    : 576 / 60.25%
+False Positive   : 16 / 1.67%
+False Negative   : 3 / 0.31%
+
+Real Positive    : 364 / 38.08%
+Real Negative    : 592 / 61.92%
+correct          : 937 / 98.01%
+
+ <<< epoch 15 >>>
+mean square error: 0.018282380568945034 (train: 3836 test:921)
+
+True Positive    : 372 / 40.39%
+True Negative    : 527 / 57.22%
+False Positive   : 22 / 2.39%
+False Negative   : 0 / 0.0%
+
+Real Positive    : 372 / 40.39%
+Real Negative    : 549 / 59.61%
+correct          : 899 / 97.61%
+
+ <<< epoch 15 >>>
+mean square error: 0.009574516620718945 (train: 3844 test:913)
+
+True Positive    : 368 / 40.31%
+True Negative    : 535 / 58.6%
+False Positive   : 6 / 0.66%
+False Negative   : 4 / 0.44%
+
+Real Positive    : 372 / 40.74%
+Real Negative    : 541 / 59.26%
+correct          : 903 / 98.9%
+
+ <<< epoch 30 >>>
+mean square error: 0.012052820955339537 (train: 3808 test:949)
+
+True Positive    : 375 / 39.52%
+True Negative    : 560 / 59.01%
+False Positive   : 12 / 1.26%
+False Negative   : 2 / 0.21%
+
+Real Positive    : 377 / 39.73%
+Real Negative    : 572 / 60.27%
+correct          : 935 / 98.52%
+
+ <<< epoch 30 >>>
+mean square error: 0.00574879737523609 (train: 3833 test:924)
+
+True Positive    : 355 / 38.42%
+True Negative    : 563 / 60.93%
+False Positive   : 3 / 0.32%
+False Negative   : 3 / 0.32%
+
+Real Positive    : 358 / 38.74%
+Real Negative    : 566 / 61.26%
+correct          : 918 / 99.35%
+
+ <<< epoch 30 >>>
+mean square error: 0.014534518558449288 (train: 3745 test:1012)
+
+True Positive    : 385 / 38.04%
+True Negative    : 605 / 59.78%
+False Positive   : 19 / 1.88%
+False Negative   : 3 / 0.3%
+
+Real Positive    : 388 / 38.34%
+Real Negative    : 624 / 61.66%
+correct          : 990 / 97.83%
+
+ <<< epoch 50 >>>
+mean square error: 0.013888028351234274 (train: 3768 test:989)
+
+True Positive    : 367 / 37.11%
+True Negative    : 605 / 61.17%
+False Positive   : 15 / 1.52%
+False Negative   : 2 / 0.2%
+
+Real Positive    : 369 / 37.31%
+Real Negative    : 620 / 62.69%
+correct          : 972 / 98.28%
+
+ <<< epoch 50 >>>
+mean square error: 0.011735458220301316 (train: 3767 test:990)
+
+True Positive    : 375 / 37.88%
+True Negative    : 600 / 60.61%
+False Positive   : 3 / 0.3%
+False Negative   : 12 / 1.21%
+
+Real Positive    : 387 / 39.09%
+Real Negative    : 603 / 60.91%
+correct          : 975 / 98.48%
+
+ <<< epoch 50 >>>
+mean square error: 0.006332540327783342 (train: 3788 test:969)
+
+True Positive    : 393 / 40.56%
+True Negative    : 568 / 58.62%
+False Positive   : 8 / 0.83%
+False Negative   : 0 / 0.0%
+
+Real Positive    : 393 / 40.56%
+Real Negative    : 576 / 59.44%
+correct          : 961 / 99.17%
+
+ <<< epoch 100 >>>
+mean square error: 0.006569138412356656 (train: 3762 test:995)
+
+True Positive    : 435 / 43.72%
+True Negative    : 552 / 55.48%
+False Positive   : 8 / 0.8%
+False Negative   : 0 / 0.0%
+
+Real Positive    : 435 / 43.72%
+Real Negative    : 560 / 56.28%
+correct          : 987 / 99.2%
+
+ <<< epoch 100 >>>
+mean square error: 0.010301973156791537 (train: 3834 test:923)
+
+True Positive    : 336 / 36.4%
+True Negative    : 575 / 62.3%
+False Positive   : 8 / 0.87%
+False Negative   : 4 / 0.43%
+
+Real Positive    : 340 / 36.84%
+Real Negative    : 583 / 63.16%
+correct          : 911 / 98.7%
+
+ <<< epoch 100 >>>
+mean square error: 0.01508503273107092 (train: 3767 test:990)
+
+True Positive    : 350 / 35.35%
+True Negative    : 619 / 62.53%
+False Positive   : 11 / 1.11%
+False Negative   : 10 / 1.01%
+
+Real Positive    : 360 / 36.36%
+Real Negative    : 630 / 63.64%
+correct          : 969 / 97.88%
+
+ <<< epoch 200 >>>
+mean square error: 0.0029670898330166717 (train: 3819 test:938)
+
+True Positive    : 386 / 41.15%
+True Negative    : 548 / 58.42%
+False Positive   : 4 / 0.43%
+False Negative   : 0 / 0.0%
+
+Real Positive    : 386 / 41.15%
+Real Negative    : 552 / 58.85%
+correct          : 934 / 99.57%
+
+ <<< epoch 200 >>>
+mean square error: 0.006280727388637856 (train: 3830 test:927)
+
+True Positive    : 342 / 36.89%
+True Negative    : 578 / 62.35%
+False Positive   : 7 / 0.76%
+False Negative   : 0 / 0.0%
+
+Real Positive    : 342 / 36.89%
+Real Negative    : 585 / 63.11%
+correct          : 920 / 99.24%
+
+ <<< epoch 200 >>>
+mean square error: 0.004490033950600071 (train: 3756 test:1001)
+
+True Positive    : 370 / 36.96%
+True Negative    : 626 / 62.54%
+False Positive   : 4 / 0.4%
+False Negative   : 1 / 0.1%
+
+Real Positive    : 371 / 37.06%
+Real Negative    : 630 / 62.94%
+correct          : 996 / 99.5%
+
+ <<< epoch 300 >>>
+mean square error: 0.003819089988549982 (train: 3787 test:970)
+
+True Positive    : 379 / 39.07%
+True Negative    : 586 / 60.41%
+False Positive   : 2 / 0.21%
+False Negative   : 3 / 0.31%
+
+Real Positive    : 382 / 39.38%
+Real Negative    : 588 / 60.62%
+correct          : 965 / 99.48%
+
+ <<< epoch 300 >>>
+mean square error: 0.00869894451168409 (train: 3808 test:949)
+
+True Positive    : 361 / 38.04%
+True Negative    : 578 / 60.91%
+False Positive   : 9 / 0.95%
+False Negative   : 1 / 0.11%
+
+Real Positive    : 362 / 38.15%
+Real Negative    : 587 / 61.85%
+correct          : 939 / 98.95%
+
+ <<< epoch 300 >>>
+mean square error: 0.009362851122898837 (train: 3842 test:915)
+
+True Positive    : 340 / 37.16%
+True Negative    : 564 / 61.64%
+False Positive   : 7 / 0.77%
+False Negative   : 4 / 0.44%
+
+Real Positive    : 344 / 37.6%
+Real Negative    : 571 / 62.4%
+correct          : 904 / 98.8%
+
+ <<< epoch 500 >>>
+mean square error: 0.005804280493731503 (train: 3754 test:1003)
+
+True Positive    : 409 / 40.78%
+True Negative    : 589 / 58.72%
+False Positive   : 5 / 0.5%
+False Negative   : 0 / 0.0%
+
+Real Positive    : 409 / 40.78%
+Real Negative    : 594 / 59.22%
+correct          : 998 / 99.5%
+
+ <<< epoch 500 >>>
+mean square error: 0.008380709205968338 (train: 3763 test:994)
+
+True Positive    : 397 / 39.94%
+True Negative    : 588 / 59.15%
+False Positive   : 8 / 0.8%
+False Negative   : 1 / 0.1%
+
+Real Positive    : 398 / 40.04%
+Real Negative    : 596 / 59.96%
+correct          : 985 / 99.09%
+
+ <<< epoch 500 >>>
+mean square error: 0.011120599094616965 (train: 3809 test:948)
+
+True Positive    : 363 / 38.29%
+True Negative    : 570 / 60.13%
+False Positive   : 10 / 1.05%
+False Negative   : 5 / 0.53%
+
+Real Positive    : 368 / 38.82%
+Real Negative    : 580 / 61.18%
+correct          : 933 / 98.42%
+
+ <<< epoch 1000 >>>
+mean square error: 0.011232544379931554 (train: 3805 test:952)
+
+True Positive    : 377 / 39.6%
+True Negative    : 562 / 59.03%
+False Positive   : 6 / 0.63%
+False Negative   : 7 / 0.74%
+
+Real Positive    : 384 / 40.34%
+Real Negative    : 568 / 59.66%
+correct          : 939 / 98.63%
+
+ <<< epoch 1000 >>>
+mean square error: 0.009847483411009378 (train: 3768 test:989)
+
+True Positive    : 361 / 36.5%
+True Negative    : 617 / 62.39%
+False Positive   : 8 / 0.81%
+False Negative   : 3 / 0.3%
+
+Real Positive    : 364 / 36.8%
+Real Negative    : 625 / 63.2%
+correct          : 978 / 98.89%
+
+ <<< epoch 1000 >>>
+mean square error: 0.0037151483736573396 (train: 3848 test:909)
+
+True Positive    : 348 / 38.28%
+True Negative    : 557 / 61.28%
+False Positive   : 3 / 0.33%
+False Negative   : 1 / 0.11%
+
+Real Positive    : 349 / 38.39%
+Real Negative    : 560 / 61.61%
+correct          : 905 / 99.56%
+
