@@ -1,0 +1,15 @@
+y range: Sigmoid:[0,1], tanh:[-1,1]
+tanh(x) = 2*sigmoid(2x)-1
+
+딥러닝 신경망 출력 기준
+Sigmoid for x range [0, 1]      03.18 / 85.72%
+Sigmoid for x range [-1, 1]     03.26 / 87.20%
+Sigmoid for x range [-1.5, 1.5] 04.09 / 87.77%
+Sigmoid for x range [-2, 2]     04.02 / 87.90%
+Sigmoid for x range [-3, 3]
+
+딥러닝 신경망 출력 기준
+tanh for x range [0, 1]        = 2 * (Sigmoid for x range [0, 2]) - 1
+tanh for x range [-0.75, 0.75] = 2 * (Sigmoid for x range [-1.5, 1.5]) - 1 : 04.12 / 87.02%
+tanh for x range [-1, 1]       = 2 * (Sigmoid for x range [-2, 2]) - 1     : 04.03 / 87.45%
+tanh for x range [-1.5, 1.5]   = 2 * (Sigmoid for x range [-3, 3]) - 1
