@@ -66,15 +66,15 @@ https://github.com/WannaBeSuperteur/2020/tree/91df3ce2e1f9fcce97bea12fb67323d81d
     * all files whose name is in the form of ```results/DL_WPCN_xx_result_1.txt```
 
 #### result for experiments
-* using average location of all wireless devices
+* using average location of all wireless devices (created by ```WPCN_avgLocation.py```)
   * Common throughput maximization
     * ```results_experiment/DL_WPCN_result_1_avg_ver200511.txt```
     * ```results_experiment/DL_WPCN_result_1_avg_ver200511_print.txt```
-* using fixed location (from y=0,x=0 to y=11,x=11)
+* using fixed location (from y=0,x=0 to y=11,x=11) (created by ```WPCN_fixedLocation.py```)
   * Common throughput maximization
     * ```results_experiment/DL_WPCN_result_1_fixed_ver200511.txt```
     * ```results_experiment/DL_WPCN_result_1_fixed_ver200511_print.txt```
-* throughput and HAP optimization test
+* throughput and HAP optimization test (when running ```WPCN_helper_REAL.py```)
   * ```image/helper_ver_May00_common_test.png```
   
 ### Report files
@@ -147,13 +147,13 @@ https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e
     * all files whose name is in the form of ```results/DL_WPCN_result_1_xxxxxxxxxx.txt```
 
 #### result for experiments
-* using fixed location (from y=0,x=0 to y=11,x=11)
+* using fixed location (from y=0,x=0 to y=11,x=11) (created by ```WPCN_fixedLocation.py```)
   * Sum throughput maximization
     * ```results_experiment/DL_WPCN_result_0_fixed.txt```
   * Common throughput maximization
     * ```results_experiment/DL_WPCN_result_1_fixed.txt```
     * ```results_experiment/DL_WPCN_result_1_fixed_print.txt```
-* throughput and HAP optimization test
+* throughput and HAP optimization test (when running ```WPCN_helper_REAL.py```)
   * ```image/helper_ver_Mar00_common_test.png```
 
 ### Report files
