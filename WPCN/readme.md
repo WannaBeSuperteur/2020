@@ -52,7 +52,7 @@ https://github.com/WannaBeSuperteur/2020/tree/91df3ce2e1f9fcce97bea12fb67323d81d
 #### compare throughput map (in ```/optiInfoForMap```)
 * ```optiInfoForMap/compare.py```
 
-### Text files
+### Text files and images
 #### training and testing maps
 * ```DL_WPCN_xxxx.txt``` (created when running ```deepLearning_WPCN_REAL_GPU_xxxxxx.py``` with value 1 for ```0->read files, 1->create new files``` option)
 
@@ -81,7 +81,9 @@ https://github.com/WannaBeSuperteur/2020/tree/91df3ce2e1f9fcce97bea12fb67323d81d
   * Common throughput maximization
     * ```results_experiment/DL_WPCN_result_1_fixed_ver200511.txt```
     * ```results_experiment/DL_WPCN_result_1_fixed_ver200511_print.txt```
-
+* throughput and HAP optimization test
+  * ```image/helper_ver_May00_common_test.png```
+  
 ### Report files
 * Excel Report
   * ```report/200511_testResult.xlsx```
@@ -116,7 +118,7 @@ https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e
 * implementation of paper for number of HAPs = 1 (Placement Optimization of Energy and Information Access Points in Wireless Powered Communication Networks) and test using the implementation
   * ```WPCN_paper.py```
 
-### Text files
+### Text files and images
 #### training and testing maps
 * ```DL_WPCN_xxxx.txt``` (created when running ```deepLearning_WPCN_REAL_GPU_200326.py``` with value 1 for ```0->read files, 1->create new files``` option)
 
@@ -158,6 +160,8 @@ https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e
   * Common throughput maximization
     * ```results_experiment/DL_WPCN_result_1_fixed.txt```
     * ```results_experiment/DL_WPCN_result_1_fixed_print.txt```
+* throughput and HAP optimization test
+  * ```image/helper_ver_Mar00_common_test.png```
 
 ### Report files
 * PPT files
