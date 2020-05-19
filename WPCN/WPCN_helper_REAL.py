@@ -101,7 +101,7 @@ def getThroughput(wdList, point, screenSize, problemNo):
     pointX = point[1] # HAP의 가로좌표
 
     mapSizeSquare = screenSize * screenSize
-    lr = 10000000000.0 # learning rate
+    lr = 5.0 # learning rate
 
     # Find optimal time allocation for sum/common-throughput maximization problem using Gradient Descent method
     # for both HAP and each wireless device (HAP for index 0 and each device for rest)
@@ -117,7 +117,7 @@ def getThroughput(wdList, point, screenSize, problemNo):
         # 그 값만큼 chargeTimeList의 해당 부분을 증감시킨다.
         for j in range(1+len(wdList)):
             chargeTimeListCopy = copyArray(chargeTimeList) # 배열 복사
-            chargeTimeListCopy[j] += 0.000000001
+            chargeTimeListCopy[j] += 1.0
             (thrput, None_1) = getThroughput_(wdList, point, chargeTimeListCopy, problemNo) # wdList의 각 값을 변화시킨 후에 구한 Throughput
 
             # throughput의 변화량을 추가: log2(throughput / old throught)을 leaky relu처럼 적용
@@ -127,7 +127,7 @@ def getThroughput(wdList, point, screenSize, problemNo):
         for j in range(1+len(wdList)):
             chargeTimeList[j] *= (pow(2.0, lr * thrputChange[j]))
 
-        # print(i, thrput)
+        if i < 50 or i % 100 == 0: print(i, thrput, None_1)
 
     # 충분히 많은 iteration 후의 chargeTimeList에 의한 결과값
     (finalThrput, HAPtime) = getThroughput_(wdList, point, chargeTimeList, problemNo)
