@@ -137,7 +137,7 @@ if __name__ == '__main__':
     lines = 0 # optiInfoForMap_X.txt 파일의 라인 개수 (X = 0 or 1)
     
     try: # optiInfoForMap 파일이 있으면 읽기
-        f = open('optiInfoForMap_' + str(problemNo) + '.txt', 'r')
+        f = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
         optiInformation = f.readlines()
         f.close()
 
@@ -162,7 +162,7 @@ if __name__ == '__main__':
         
     except Exception as e: # optiInfoForMap 파일이 없으면 새로 생성하기
         print(e)
-        print("can't read optiInfoForMap_" + str(problemNo) + ".txt")
+        print("can't read optiInfoForMap_" + str(problemNo) + "_200519.txt")
         
         for i in range(lines, numTrain + numTest):
             print('finding max throughput for map ' + str(i) + '...')
@@ -205,7 +205,7 @@ if __name__ == '__main__':
             if i < numTrain: outputScreen.append(temp)
 
             # 파일로 저장
-            optiInfo = open('optiInfoForMap_' + str(problemNo) + '.txt', 'w')
+            optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'w')
             optiInfo.write(toSave)
             optiInfo.close()
 
@@ -274,7 +274,7 @@ if __name__ == '__main__':
                         sumTestThroughput = 0.0 # test throughput의 합계
                         sumCorrectMaxThroughput = 0.0 # 정답의 throughput의 합계 (training data를 생성할 때와 같은 방법으로 최대 throughput 확인)
 
-                        optiInfo = open('optiInfoForMap_' + str(problemNo) + '.txt', 'r')
+                        optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
                         optiInformation = optiInfo.readlines()
                         optiInfo.close()
 
@@ -412,7 +412,7 @@ if __name__ == '__main__':
                     print('\n')
 
                     # 평가 결과 저장
-                    fSave = open('DL_WPCN_05_result_' + str(problemNo) + '.txt', 'w')
+                    fSave = open('DL_WPCN_ver200519_05_result_' + str(problemNo) + '.txt', 'w')
                     fSave.write(saveResult)
                     fSave.close()
 

@@ -238,7 +238,7 @@ if __name__ == '__main__':
     # 2~3. 논문에 나온 방법대로 실험 및 테스트
     while True:
 
-        optiInfo = open('optiInfoForMap_' + str(problemNo) + '.txt', 'r')
+        optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
         optiInformation = optiInfo.readlines()
         optiInfo.close()
 
@@ -418,11 +418,11 @@ if __name__ == '__main__':
             print('\n')
 
         # 평가 결과 저장
-        fSave = open('DL_WPCN_result_' + str(problemNo) + '_paper_ver4.txt', 'w')
+        fSave = open('DL_WPCN_result_' + str(problemNo) + '_paper_ver200519.txt', 'w')
         fSave.write(saveResult)
         fSave.close()
 
-        fSavePrint = open('DL_WPCN_result_' + str(problemNo) + '_paper_ver4_print.txt', 'w')
+        fSavePrint = open('DL_WPCN_result_' + str(problemNo) + '_paper_ver200519_print.txt', 'w')
         fSavePrint.write(savePrint)
         fSavePrint.close()
 
