@@ -104,7 +104,7 @@ def getThroughput(wdList, point, screenSize, problemNo):
 
     # learning rate
     if problemNo == 0: lr = 10000000000.0 # sum throughput maximization
-    else lr = 5.0 # common throughput maximization
+    else: lr = 5.0 # common throughput maximization
 
     # Find optimal time allocation for sum/common-throughput maximization problem using Gradient Descent method
     # for both HAP and each wireless device (HAP for index 0 and each device for rest)
