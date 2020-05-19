@@ -133,7 +133,7 @@ def getThroughput(wdList, point, screenSize, problemNo):
         for j in range(1+len(wdList)):
             chargeTimeList[j] *= (pow(2.0, lr * thrputChange[j]))
 
-        if i < 50 or i % 100 == 0: print(i, thrput, None_1)
+        # if i < 20 or i % 70 == 0: print(point, i, thrput, None_1)
 
     # 충분히 많은 iteration 후의 chargeTimeList에 의한 결과값
     (finalThrput, HAPtime) = getThroughput_(wdList, point, chargeTimeList, problemNo)
