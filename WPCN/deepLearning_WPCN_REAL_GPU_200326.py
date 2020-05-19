@@ -120,7 +120,7 @@ if __name__ == '__main__':
     lines = 0 # optiInfoForMap_X.txt 파일의 라인 개수 (X = 0 or 1)
     
     try: # optiInfoForMap 파일이 있으면 읽기
-        f = open('optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
+        f = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
         optiInformation = f.readlines()
         f.close()
 
