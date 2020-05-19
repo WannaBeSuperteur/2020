@@ -232,7 +232,7 @@ if __name__ == '__main__':
         wdList = []
 
         # wdList를 구하기 위한 맵 불러오기
-        file_ = open('DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'r')
+        file_ = open('originalMaps/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'r')
         map_ = file_.readlines() # 맵을 나타낸 배열
         file_.close()
         for j in range(len(map_)): map_[j] = map_[j].replace('\n', '') # 각 줄마다 개행문자 제거

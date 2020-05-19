@@ -72,7 +72,7 @@ if __name__ == '__main__':
             wdList.append(initScreen_[2])
 
             # 맵 파일 작성
-            f = open('DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'w')
+            f = open('originalMaps/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'w')
             for j in range(size):
                 for k in range(size):
                     if originalScreen[i][j][k] == -1: f.write('W') # wireless device
@@ -84,7 +84,7 @@ if __name__ == '__main__':
     else: # 기존 맵 파일 읽어서 기존 맵으로 트레이닝, 테스트
         print('reading maps...')
         for i in range(numTrain + numTest):
-            f = open('DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'r')
+            f = open('originalMaps/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'r')
             map_ = f.readlines() # 맵을 나타낸 배열
             f.close()
             for j in range(len(map_)): map_[j] = map_[j].replace('\n', '') # 각 줄마다 개행문자 제거
