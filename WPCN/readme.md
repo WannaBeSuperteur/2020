@@ -1,30 +1,23 @@
 ## NOW Version 1 (200511)
-https://github.com/WannaBeSuperteur/2020/tree/91df3ce2e1f9fcce97bea12fb67323d81daa6b20
+https://github.com/WannaBeSuperteur/2020/tree/91df3ce2e1f9fcce97bea12fb67323d81daa6b20 (deleted)
 
 ### Experiment Result
 * refer to ```report/200519_WPCN.pptx```
 
 ### Changes of main code
-* https://github.com/WannaBeSuperteur/2020/commit/36fdefb03ef98dcd51a3e3330ac10702f8ecad80#diff-7f6d4cfae69be1645824b710a5f64a60
-  * ```WPCN_helper_REAL.py```
-    * use learning rate 5.0 -> 1.0e+10
-    * use interval 1.0e-9 instead of 1.0 to find a differential coefficient for chargeTimeList
-  * ```WPCN_paper.py```
-    * delete the mode using integer value of uStar[0] and uStar[1], so only using exact value for uStar
-  * ```deepLearning_WPCN_REAL_GPU_xxxxxx.py```
-    * remove rounding of optiY_test and optiX_test
-
-* https://github.com/WannaBeSuperteur/2020/commit/198e75834fcfaa6e274ac085abc2142871c403aa#diff-7f6d4cfae69be1645824b710a5f64a60
-  * ```deepLearning_WPCN_REAL_GPU_xxxxxx.py```
-    * add algorithm to modify optiY_test and optiX_test
-      * optiY_test = (down - up)/(up + this + down)
-      * optiX_test = (right - left)/(left + this + right)
-
-* https://github.com/WannaBeSuperteur/2020/commit/2c9c911f1b9fdd74d6b39383bc1e6bdb8f430ee6#diff-7840fdf8f0bfd438b94458f4c92df87b
-  * ```WPCN_paper.py```
-    * use learning rate 5000.0 -> 3.0e+08
-    * use iteration times 800 -> 7000
-    * use interval 1.0e-6 instead of 1.0 to find a differential coefficient for minOfTgivenV1
+* ```WPCN_helper_REAL.py```
+  * use learning rate 5.0 -> 1.0e+10
+  * use interval 1.0e-9 instead of 1.0 to find a differential coefficient for chargeTimeList
+* ```WPCN_paper.py```
+  * delete the mode using integer value of uStar[0] and uStar[1], so only using exact value for uStar
+  * use learning rate 5000.0 -> 3.0e+08
+  * use iteration times 800 -> 7000
+  * use interval 1.0e-6 instead of 1.0 to find a differential coefficient for minOfTgivenV1
+* ```deepLearning_WPCN_REAL_GPU_xxxxxx.py```
+  * remove rounding of optiY_test and optiX_test
+  * add algorithm to modify optiY_test and optiX_test
+    * optiY_test = (down - up)/(up + this + down)
+    * optiX_test = (right - left)/(left + this + right)
 
 ### Python code
 #### main
@@ -92,7 +85,7 @@ https://github.com/WannaBeSuperteur/2020/tree/91df3ce2e1f9fcce97bea12fb67323d81d
   * ```report/200511_visualList.xlsx```
 
 ## Version 0 (200318)
-https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e6745ad/WPCN
+https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e6745ad/WPCN (deleted)
 
 ### Experiment Result
 * refer to ```report/200429_WPCN.pptx```
