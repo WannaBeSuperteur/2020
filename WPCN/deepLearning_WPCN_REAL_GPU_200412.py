@@ -141,9 +141,9 @@ if __name__ == '__main__':
         optiInformation = f.readlines()
         f.close()
 
-        lines = len(optiInformation)
+        lines = len(optiInformation) # 데이터 개수는 lines / (1 + size)
 
-        if len(optiInformation) < numTrain + numTest: # 완전한 정보가 없으면
+        if lines / (1 + size) < numTrain + numTest: # 완전한 정보가 없으면
             for i in range(lines): toSave += optiInformation[i] # toSave에 기존 저장된 정보 추가
             raiseError = 1 / 0 # 오류 발생시키기
 
@@ -164,7 +164,7 @@ if __name__ == '__main__':
         print(e)
         print("can't read optiInfoForMap_" + str(problemNo) + "_200519.txt")
         
-        for i in range(lines, numTrain + numTest):
+        for i in range(int(lines / (1 + size)), numTrain + numTest):
             print('finding max throughput for map ' + str(i) + '...')
 
             # HAP의 위치(각 좌표)에 따른 최적의 할당 시간을 찾아서 출력값에 추가
