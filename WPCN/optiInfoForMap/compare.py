@@ -8,7 +8,7 @@ nTest = int(input('number of test data'))
 for i in range(2):
 
     # open file
-    f = open('optiInfoForMap_' + str(i) + '_ver' + str(version) + '.txt', 'r')
+    f = open('optiInfoForMap_' + str(i) + '_' + str(version) + '.txt', 'r')
     fr = f.readlines()
     f.close()
 
