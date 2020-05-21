@@ -1,0 +1,74 @@
+versionver0
+size12
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1057.992089
+avg train: 1.175547
+
+sum test : 117.918317
+avg test : 1.179183
+
+sum all  : 1175.910406
+avg all  : 1.17591
+
+ <<< problem 1 >>>
+sum train: 1.971582
+avg train: 0.002191
+
+sum test : 0.219292
+avg test : 0.002193
+
+sum all  : 2.190874
+avg all  : 0.002191
+
+versionver1
+size12
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1068.573276
+avg train: 1.187304
+
+sum test : 119.103606
+avg test : 1.191036
+
+sum all  : 1187.676882
+avg all  : 1.187677
+
+ <<< problem 1 >>>
+sum train: 0.808589
+avg train: 0.000898
+
+sum test : 0.088277
+avg test : 0.000883
+
+sum all  : 0.896866
+avg all  : 0.000897
+
+version200519
+size12
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1068.573276
+avg train: 1.187304
+
+sum test : 119.103606
+avg test : 1.191036
+
+sum all  : 1187.676882
+avg all  : 1.187677
+
+ <<< problem 1 >>>
+sum train: 1.971582
+avg train: 0.002191
+
+sum test : 0.219292
+avg test : 0.002193
+
+sum all  : 2.190874
+avg all  : 0.002191
