@@ -72,3 +72,5 @@ avg test : 0.002193
 
 sum all  : 2.190874
 avg all  : 0.002191
+
+new optiInfoForMap(200519)s are as same as old optiInfoForMap(200519)s
