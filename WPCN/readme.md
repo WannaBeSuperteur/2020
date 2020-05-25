@@ -10,10 +10,10 @@ https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a3
   * "different lr and interval for Sum- and Common-" (https://github.com/WannaBeSuperteur/2020/commit/23f1f541446074652d50f3a8b5f8511652f68821)
 * ```WPCN_paper.py```
   * read each map file in WPCN/originalMaps (https://github.com/WannaBeSuperteur/2020/commit/bdeeb8814bef7408f5e46fddd6750972e136304c)
-  * use new text file name except maps and config(https://github.com/WannaBeSuperteur/2020/commit/a5aeab39238b238a4ef8a2ca9d75819ca176cb96)
+  * use new text file name except maps and config (https://github.com/WannaBeSuperteur/2020/commit/a5aeab39238b238a4ef8a2ca9d75819ca176cb96)
 * ```deepLearning_WPCN_REAL_GPU_xxxxxx.py```
   * read each map file in WPCN/originalMaps (https://github.com/WannaBeSuperteur/2020/commit/bdeeb8814bef7408f5e46fddd6750972e136304c)
-  * use new text file name except maps and config(https://github.com/WannaBeSuperteur/2020/commit/a5aeab39238b238a4ef8a2ca9d75819ca176cb96)
+  * use new text file name except maps and config (https://github.com/WannaBeSuperteur/2020/commit/a5aeab39238b238a4ef8a2ca9d75819ca176cb96)
   * revise optiInfo-making algorithm (https://github.com/WannaBeSuperteur/2020/commit/ed0c6d7aedf840dcbaa96d13a35c8d7e39d41bdb)
 
 ### Python code
