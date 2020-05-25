@@ -79,7 +79,7 @@ https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a3
     * ```results_experiment/DL_WPCN_result_1_fixed_ver200519_print.txt```
 * throughput and HAP optimization test (when running ```WPCN_helper_REAL.py```)
   * Sum throughput maximization
-    * ```image/helper_ver_May01_sum_test.png``
+    * ```image/helper_ver_May01_sum_test.png```
   * Common throughput maximization
     * ```image/helper_ver_May01_common_test.png```
   
