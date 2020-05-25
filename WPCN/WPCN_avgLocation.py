@@ -91,7 +91,7 @@ if __name__ == '__main__':
     # 2~3. 논문에 나온 방법대로 실험 및 테스트
     while True:
 
-        optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_ver200519.txt', 'r')
+        optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
         optiInformation = optiInfo.readlines()
         optiInfo.close()
 
