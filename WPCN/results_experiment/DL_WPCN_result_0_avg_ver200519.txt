@@ -1,0 +1,4 @@
+
+ <<< ESTIMATION RESULT >>>
+No.	size	test	loc_yx	problem	percentage
+0	12	100	5.875,4.875	0	34.5136
