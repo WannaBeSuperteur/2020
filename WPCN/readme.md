@@ -51,9 +51,9 @@ https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a3
 
 #### throughput maps
 * throughput map for Sum throughput maximization
-  * ```optiInfoForMap/optiInfoForMap_0_200519.txt```
+  * ```optiInfoForMap/optiInfoForMap_0_200519.txt``` (same as ```optiInfoForMap/optiInfoForMap_0_ver1.txt```)
 * throughput map for Common throughput maximization
-  * ```optiInfoForMap/optiInfoForMap_1_200519.txt```
+  * ```optiInfoForMap/optiInfoForMap_1_200519.txt``` (same as ```optiInfoForMap/optiInfoForMap_1_ver0.txt```)
 
 #### result files
 * result of experiment (```deepLearning_WPCN_REAL_GPU_xxxxxx.py```)
@@ -75,7 +75,7 @@ https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a3
     * ```results_experiment/DL_WPCN_result_0_fixed_ver200519.txt```
     * ```results_experiment/DL_WPCN_result_0_fixed_ver200519_print.txt```
   * Common throughput maximization
-    * ```results_experiment/DL_WPCN_result_1_fixed_ver200519.txt```
+    * ```results_experiment/DL_WPCN_result_1_fixed_ver200519.txt``` (same as ```results_experiment/DL_WPCN_result_1_fixed.txt```)
     * ```results_experiment/DL_WPCN_result_1_fixed_ver200519_print.txt```
 * throughput and HAP optimization test (when running ```WPCN_helper_REAL.py```)
   * Sum throughput maximization
@@ -89,6 +89,8 @@ https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a3
   
 * Visualized Throughput Map
   * ```report/200519_visualList.xlsx```
+    * Sum throughput maximization: same as ```report/200511_visualList.xlsx``` (ver1)
+    * Common throughput maximization: same as ```report/200318_visualList.xlsx``` (ver0)
 
 ## Version 1 (200511)
 https://github.com/WannaBeSuperteur/2020/tree/dffe6a35686f4cb17c49f348af0966137a953ef1
