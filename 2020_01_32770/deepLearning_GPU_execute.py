@@ -4,6 +4,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow import keras
 from keras.models import Model, model_from_json
+import gc
 
 global ALLTEXT
 ALLTEXT = ''
@@ -111,6 +112,7 @@ if __name__ == '__main__':
             lr = random.random() * (lrMax-lrMin) + lrMin
             dropout = random.random() * (dropoutMax-dropoutMin) + dropoutMin
             randoms.append([lr, dropout, trainAndTest(lr, dropout)])
+            gc.collect()
 
         # find minError for the result
         minError = 1000000000.0
@@ -162,6 +164,7 @@ if __name__ == '__main__':
                 lr = i * 0.1 * (lrMax-lrMin) + lrMin
                 dropout = j * 0.1 * (dropoutMax-dropoutMin) + dropoutMin
                 grids.append([lr, dropout, trainAndTest(lr, dropout)])
+                gc.collect()
 
         # find minError for the result
         minError = 1000000000.0
