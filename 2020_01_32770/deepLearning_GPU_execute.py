@@ -95,8 +95,35 @@ if __name__ == '__main__':
 
     np.set_printoptions(precision=4, linewidth=150)
 
-    while True:
+    # check if grid search info file exists
+    gridSearchInfoExist = False
+    try:
+        fgrid = open('grid_search_info.txt', 'r')
+        fgrid.close()
+        gridSearchInfoExist = True
+    except:
+        print(' #### grid search info file does not exist ####')
+
+    if gridSearchInfoExist == True:
+
+        # read ALLTEXT
+        ALLTEXT = ''
+        f = open('result.txt', 'r')
+        fread = f.readlines()
+        f.close()
+        for i in range(len(fread)): ALLTEXT += fread[i]
         
+        # read grid search info file
+        f_ = open('grid_search_info.txt', 'r')
+        f_read = f_.readlines()[0]
+        f_.close()
+
+        lrMin = float(f_read.split(' ')[0])
+        lrMax = float(f_read.split(' ')[1])
+        dropoutMin = float(f_read.split(' ')[2])
+        dropoutMax = float(f_read.split(' ')[3])
+
+    else:
         # random search 120 times
         toAppend0 = '\n< random search >'
         toAppend1 = 'LR: ' + str(lrMin) + '~' + str(lrMax) + ', DROPOUT: ' + str(dropoutMin) + '~' + str(dropoutMax)
@@ -148,6 +175,17 @@ if __name__ == '__main__':
         dropoutMin = max(0, minErrorDropout - dropoutGap * 0.2)
         dropoutMax = min(1, minErrorDropout + dropoutGap * 0.2)
 
+        # write to file
+        f = open('result.txt', 'w')
+        f.write(ALLTEXT)
+        f.close()
+
+        f_ = open('grid_search_info.txt', 'w')
+        f_.write(str(lrMin) + ' ' + str(lrMax) + ' ' + str(dropoutMin) + ' ' + str(dropoutMax))
+        f_.close()
+
+    # grid search
+    if True:
         # grid search
         toAppend0 = '\n< grid search >'
         toAppend1 = 'LR: ' + str(lrMin) + '~' + str(lrMax) + ', DROPOUT: ' + str(dropoutMin) + '~' + str(dropoutMax)
