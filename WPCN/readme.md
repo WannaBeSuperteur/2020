@@ -1,5 +1,5 @@
 ## NOW Version 2 (200519)
-https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a39aeb6c
+https://github.com/WannaBeSuperteur/2020/tree/ac16a8ca221159d3294949f56b0a166845ece998
 
 ### Experiment Result
 * refer to ```report/200526_WPCN.pptx```
@@ -61,6 +61,13 @@ https://github.com/WannaBeSuperteur/2020/tree/63576c8c85243310908c358953e6e5e0a3
     * all files whose name is in the form of ```results/DL_WPCN_ver200519_xx_result_0.txt```
   * Common throughput maximization
     * all files whose name is in the form of ```results/DL_WPCN_ver200519_xx_result_1.txt```
+* result of paper
+  * Sum throughput maximization
+    * ```DL_WPCN_result_0_paper_ver200519.txt```
+    * ```DL_WPCN_result_0_paper_ver200519_print.txt```
+  * Common throughput maximization
+    * ```DL_WPCN_result_1_paper_ver200519.txt```
+    * ```DL_WPCN_result_1_paper_ver200519_print.txt```
 
 #### result for experiments
 * using average location of all wireless devices (created by ```WPCN_avgLocation.py```)
