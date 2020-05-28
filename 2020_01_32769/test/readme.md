@@ -30,9 +30,9 @@ Source: https://www.kaggle.com/sudalairajkumar/novel-corona-virus-2019-dataset#t
 ```
 * ```info.txt```
 ```
-value value must be at least 50
-number of columns of each training data is 5
-train and test outputs are 7 days later of last input data
+value value must be at least 50 (=C)
+number of columns of each training data is 5 (=N)
+train and test outputs are 7 days later of last input data (=K)
 ```
 
 ## 3. run main.py
@@ -65,7 +65,7 @@ note: difAvg error (squared) and 0-difAvg error (squared) are multiplied by 100
 
 ## 4. calculate difference
 * 0. Open ```test.xlsx```.
-* 1. Copy output (in the form of 'test out: [A] val: [B] -> dif: [C]') of ```main.txt``` and copy it to column A.
+* 1. Copy output (in the form of 'test out: [A] val: [B] -> dif: [C]') of ```main.py``` and copy it to column A.
 * 2. Extract all [A]s and copy them to column H (test), and change them to numeric value.
 * 3. Extract all [B]s and copy them to column I (val), and change them to numeric value.
 * 4. Open ```print_paper_test.txt``` and copy the column indicating the last day of input to column K (last).
