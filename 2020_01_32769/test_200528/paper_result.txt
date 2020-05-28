@@ -1,0 +1,12 @@
+
+ < epoch = 50 / scalingRate = 4 >
+difference                 -> sum: 2.9958081534962613 avg: 0.01419814290756522
+dif when test out is all 0 -> sum: 14.697948007109403 avg: 0.06965852136070808
+accuracy rate              -> 4.906171308051267
+True positive : 207 / 98.1%
+True negative : 1 / 0.47%
+False positive: 1 / 0.47%
+False negative: 2 / 0.95%
+positive      : 209 / 99.05%
+negative      : 2 / 0.95%
+correct       : 208 / 98.58%
