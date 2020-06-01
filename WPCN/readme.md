@@ -61,7 +61,7 @@ https://github.com/WannaBeSuperteur/2020/tree/ac16a8ca221159d3294949f56b0a166845
     * all files whose name is in the form of ```results/DL_WPCN_ver200519_xx_result_0.txt```
   * Common throughput maximization
     * all files whose name is in the form of ```results/DL_WPCN_ver200519_xx_result_1.txt```
-* result of paper
+* result of paper (```WPCN_paper.py```)
   * Sum throughput maximization
     * ```DL_WPCN_result_0_paper_ver200519.txt```
     * ```DL_WPCN_result_0_paper_ver200519_print.txt```
