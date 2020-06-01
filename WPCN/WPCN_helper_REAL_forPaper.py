@@ -33,19 +33,12 @@ def displayScreen(screen, score, count, HAPtime):
 # 파일 형식 : (맵 세로길이) (맵 가로길이) (wireless device의 개수)
 # size      : screen의 크기 (= 가로길이 = 세로길이)
 # isHAP     : HAP가 맵에 존재하는가?
-def initScreen(size, isHAP):
+# numWD     : wireless device의 개수
+def initScreen(size, isHAP, numWD):
     originalScreen = [[0] * size for j in range(size)]
-    file = open('map.txt', 'r')
-    read = file.readlines()
-    readSplit = read[0].split(' ')
 
-    height = int(readSplit[0]) # 맵의 세로길이
-    width = int(readSplit[1]) # 맵의 가로길이
-    numWD = int(readSplit[2]) # wireless device의 개수
-          
-    file.close()
-
-    assert(size == height and size == width)
+    height = size
+    width = size
 
     # HAP 배치하기
     if isHAP:

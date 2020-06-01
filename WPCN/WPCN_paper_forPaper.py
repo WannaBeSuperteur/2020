@@ -13,7 +13,7 @@
 import math
 import random
 import sys
-import WPCN_helper_REAL
+import WPCN_helper_REAL_forPaper as WPCN_helper_REAL
 
 ## find L2 norm of array
 def L2norm(array):
@@ -163,27 +163,7 @@ def feasibleSol(wdList_, HAPloc_, L, a1, a2, dU):
             return v1op
 
 # 진행
-if __name__ == '__main__':
-
-    # 사용자 입력
-    problemNo = int(input('0->sum throughtput maximization, 1->common throughtput maximization'))
-    readOrWrite = int(input('0->read files, 1->create new files'))
-
-    # 0. 파일을 읽어서 size 값과 train 개수, test 개수 구하기
-    # 파일 형식 : (맵 세로길이) (맵 가로길이) (wireless device의 개수) (train 개수) (test 개수)
-    # train 개수: 트레이닝할 데이터(맵)의 개수
-    # test 개수 : 테스트할 데이터(맵)의 개수
-    file = open('map.txt', 'r')
-    read = file.readlines()
-    readSplit = read[0].split(' ')
-    deviceName = input('device name (for example, cpu:0 or gpu:0)')
-    
-    height = int(readSplit[0]) # 맵의 세로길이 (= 가로길이 = size)
-    size = height
-    numTrain = int(readSplit[3]) # 트레이닝할 데이터(맵)의 개수 (실제로는 트레이닝하지 않으며 파일 인덱싱에 사용됨)
-    numTest = int(readSplit[4]) # 테스트할 데이터(맵)의 개수
-    
-    file.close()
+def run(size, numTrain, numTest, numWD, deviceName):
     
     # 입력 정보
     originalScreen = [] # 각 맵의 스크린
@@ -203,7 +183,7 @@ if __name__ == '__main__':
             wdList.append(initScreen_[2])
 
             # 맵 파일 작성
-            f = open('originalMaps/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'w')
+            f = open('originalMaps_' + str(size) + '_' + str(numWD) + '/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'w')
             for j in range(size):
                 for k in range(size):
                     if originalScreen[i][j][k] == -1: f.write('W') # wireless device
@@ -215,7 +195,7 @@ if __name__ == '__main__':
     else: # 기존 맵 파일 읽어서 기존 맵으로 테스트
         print('reading maps...')
         for i in range(numTrain, numTrain+numTest):
-            f = open('originalMaps/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'r')
+            f = open('originalMaps_' + str(size) + '_' + str(numWD) + '/DL_WPCN_' + ('0' if i < 1000 else '') + ('0' if i < 100 else '') + ('0' if i < 10 else '') + str(i) + '.txt', 'r')
             map_ = f.readlines() # 맵을 나타낸 배열
             f.close()
             
@@ -238,7 +218,7 @@ if __name__ == '__main__':
     # 2~3. 논문에 나온 방법대로 실험 및 테스트
     while True:
 
-        optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_200519.txt', 'r')
+        optiInfo = open('optiInfoForMap/optiInfoForMap_' + str(problemNo) + '_forPaper_' + str(size) + '_' + str(numWD) + '.txt', 'r')
         optiInformation = optiInfo.readlines()
         optiInfo.close()
 
@@ -418,13 +398,41 @@ if __name__ == '__main__':
             print('\n')
 
         # 평가 결과 저장
-        fSave = open('DL_WPCN_result_' + str(problemNo) + '_paper_ver200519.txt', 'w')
+        fSave = open('DL_WPCN_result_' + str(problemNo) + '_paper_forPaper' + '_' + str(size) + '_' + str(numWD) + '.txt', 'w')
         fSave.write(saveResult)
         fSave.close()
 
-        fSavePrint = open('DL_WPCN_result_' + str(problemNo) + '_paper_ver200519_print.txt', 'w')
+        fSavePrint = open('DL_WPCN_result_' + str(problemNo) + '_paper_forPaper' + '_' + str(size) + '_' + str(numWD) + '_print.txt', 'w')
         fSavePrint.write(savePrint)
         fSavePrint.close()
 
         # 학습 및 테스트 종료
         break
+
+# main
+if __name__ == '__main__':
+
+    # 사용자 입력
+    problemNo = int(input('0->sum throughtput maximization, 1->common throughtput maximization'))
+    readOrWrite = int(input('0->read files, 1->create new files'))
+
+    # 0. 파일을 읽어서 size 값과 train 개수, test 개수 구하기
+    # 파일 형식 : (맵 세로길이) (맵 가로길이) (wireless device의 개수) (train 개수) (test 개수)
+    # train 개수: 트레이닝할 데이터(맵)의 개수
+    # test 개수 : 테스트할 데이터(맵)의 개수
+    file = open('map.txt', 'r')
+    read = file.readlines()
+    file.close()
+    deviceName = input('device name (for example, cpu:0 or gpu:0)')
+
+    # 각 line의 configuration에 대하여 각각 실험
+    for i in range(len(read)):
+        readSplit = read[i].split(' ')
+        
+        height = int(readSplit[0]) # 맵의 세로길이 (= 가로길이 = size)
+        size = height
+        numWD = int(readSplit[2]) # wireless device의 개수
+        numTrain = int(readSplit[3]) # 트레이닝할 데이터(맵)의 개수 (실제로는 트레이닝하지 않으며 파일 인덱싱에 사용됨)
+        numTest = int(readSplit[4]) # 테스트할 데이터(맵)의 개수
+
+        run(size, numTrain, numTest, numWD, deviceName)
