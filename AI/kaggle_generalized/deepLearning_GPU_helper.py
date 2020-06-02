@@ -27,15 +27,15 @@ def sigmoid(x):
 # ln(1/x - 1) = -y
 # ln((1-x)/x) = -y
 # ln(x/(1-x)) = y -> y = ln(x/(1-x))
-def invSigmoid(x, highBound):
+def invSigmoid(x):
     try:
         preResult = x / (1 - x)
         result = math.log(preResult)
         return result
     except RuntimeWarning: # catch runtime warnings
-        print('value of x is ' + str(x) + ' -> highBound = ' + str(highBound))
-        if x < 0.5: return 0.0 # return value must be >= 0.0
-        else: return highBound
+        print('value of x is ' + str(x))
+        if x < 0.5: return -15
+        else: return 15
 
 # 2차원 배열의 일부를 복사한 후 Flatten시켜 반환하는 함수
 # 원래 2차원 배열을 array라 할 때, array[i][j]에서 i, j를 각각 index i, index j라 하자.
