@@ -13,16 +13,17 @@ def isNumber(s):
     except:
         return False
 
-def getDataFromFile(fn, splitter, useSigmoid):
+# read training/test data from *.csv file
+def getDataFromFile(fn, splitter, useSigmoid, treatAsText):
     f = open(fn, 'r')
     flines = f.readlines()
     f.close()
 
     result = []
     for i in range(len(flines)):
-        row = flines[i].split('\n')[0].split(splitter)
+        row = flines[i].split('\n')[0].split(splitter) # each row
         for j in range(len(row)):
-            if isNumber(row[j]): # if this value is numeric
+            if isNumber(row[j]) and treatAsText[j] == False: # if this value is numeric
                 if useSigmoid == True: row[j] = helper.sigmoid(float(row[j])) # using sigmoided output value
                 else: row[j] = float(row[j]) # using original value
         result.append(row)
@@ -70,15 +71,40 @@ if __name__ == '__main__':
     inputCols = inputSplit[1:len(inputSplit)]
     outputCols = outputSplit[1:len(outputSplit)]
     testCols = testSplit[1:len(testSplit)]
+
+    # whether treat as text or not
+    inputCols_text = []
+    outputCols_text = []
+    testCols_text = []
     
-    for i in range(len(inputCols)): inputCols[i] = int(inputCols[i])
-    for i in range(len(outputCols)): outputCols[i] = int(outputCols[i])
-    for i in range(len(testCols)): testCols[i] = int(testCols[i])
+    for i in range(len(inputCols)):
+        if 't' in inputCols[i]:
+            inputCols_text.append(True)
+            inputCols[i] = int(inputCols[i][:len(inputCols[i])-1])
+        else:
+            inputCols_text.append(False)
+            inputCols[i] = int(inputCols[i])
+        
+    for i in range(len(outputCols)):
+        if 't' in outputCols[i]:
+            outputCols_text.append(True)
+            outputCols[i] = int(outputCols[i][:len(outputCols[i])-1])
+        else:
+            outputCols_text.append(False)
+            outputCols[i] = int(outputCols[i])
+        
+    for i in range(len(testCols)):
+        if 't' in testCols[i]:
+            testCols_text.append(True)
+            testCols[i] = int(testCols[i][:len(testCols[i])-1])
+        else:
+            testCols_text.append(False)
+            testCols[i] = int(testCols[i])
 
     # read files
-    inputs = getDataFromFile(inputFileName, ',', False) # input train data
-    outputs = getDataFromFile(outputFileName, ',', True) # output train data (using Sigmoid)
-    tests = getDataFromFile(testFileName, ',', False) # test input data
+    inputs = getDataFromFile(inputFileName, ',', False, inputCols_text) # input train data
+    outputs = getDataFromFile(outputFileName, ',', True, outputCols_text) # output train data (using Sigmoid)
+    tests = getDataFromFile(testFileName, ',', False, testCols_text) # test input data
 
     np.set_printoptions(precision=4, linewidth=150)
 
@@ -94,7 +120,7 @@ if __name__ == '__main__':
         trainI_temp = []
         
         for j in range(len(inputCols)):
-            if isNumber(str(inputs[i][inputCols[j]])) == True: # just append this value if numeric
+            if isNumber(str(inputs[i][inputCols[j]])) == True and inputCols_text[j] == False: # just append this value if numeric
                 trainI_temp.append(inputs[i][inputCols[j]])
                 
             else: # one-hot input (0 or 1) based on memset
@@ -109,7 +135,7 @@ if __name__ == '__main__':
         trainO_temp = []
 
         for j in range(len(outputCols)):
-            if isNumber(str(outputs[i][outputCols[j]])) == True: # just append this value if numeric
+            if isNumber(str(outputs[i][outputCols[j]])) == True and outputCols_text[j] == False: # just append this value if numeric
                 trainO_temp.append(outputs[i][outputCols[j]])
                 
             else: # one-hot input (0 or 1) based on memset
@@ -128,7 +154,7 @@ if __name__ == '__main__':
         testI_temp = []
         
         for j in range(len(testCols)):
-            if isNumber(str(tests[i][testCols[j]])) == True: # just append this value if numeric
+            if isNumber(str(tests[i][testCols[j]])) == True and testCols_text[j] == False: # just append this value if numeric
                 testI_temp.append(tests[i][testCols[j]])
                 
             else: # one-hot input (0 or 1) based on memset
@@ -271,7 +297,7 @@ if __name__ == '__main__':
     print('\n<<<< output layer >>>>')
     
     for i in range(len(outputLayer)):
-        print('output layer ' + str(i) + ' : ' + str(outputLayer[i]))
+        #print('output layer ' + str(i) + ' : ' + str(outputLayer[i]))
         
         originalIndex = 0 # column index of original test data (one-hot not applied)
         onehotListIndex = 0 # next index to see in onehotList
@@ -281,7 +307,7 @@ if __name__ == '__main__':
 
             if originalIndex == onehotList[onehotListIndex][0]: # next item to see in onehotList is column j -> apply one-hot
                 memset = onehotList[onehotListIndex][1] # set of members in column j
-                print(str(testIndex) + ' memset:' + str(memset))
+                #print(str(testIndex) + ' memset:' + str(memset))
                 
                 # find max index in onehotList
                 maxIndexInMemset = 0 # index with maximum value in memset
@@ -294,7 +320,7 @@ if __name__ == '__main__':
 
                 # append to result
                 result += memset[maxIndexInMemset]
-                print('maxIndexInMemset:' + str(maxIndexInMemset))
+                #print('maxIndexInMemset:' + str(maxIndexInMemset))
                 onehotListIndex += 1
                 testIndex += len(memset)-1
                 
