@@ -6,6 +6,13 @@ import numpy as np
 from tensorflow import keras
 from keras.models import Model, model_from_json
 
+def isNumber(s):
+    try:
+        float(s)
+        return True
+    except:
+        return False
+
 def getDataFromFile(fn, splitter, useSigmoid):
     f = open(fn, 'r')
     flines = f.readlines()
@@ -15,12 +22,24 @@ def getDataFromFile(fn, splitter, useSigmoid):
     for i in range(len(flines)):
         row = flines[i].split('\n')[0].split(splitter)
         for j in range(len(row)):
-            if useSigmoid == True: row[j] = helper.sigmoid(float(row[j])) # using sigmoided output value
-            else: row[j] = float(row[j]) # using original value
+            if isNumber(row[j]): # if this value is numeric
+                if useSigmoid == True: row[j] = helper.sigmoid(float(row[j])) # using sigmoided output value
+                else: row[j] = float(row[j]) # using original value
         result.append(row)
 
     return result
 
+# return set of members of column colNum in the array
+# example: array=[['a', 1], ['b', 1], ['c', 2], ['c', 3], ['a', 0]], colNum=0 -> ['a', 'b', 'c']
+def makeSet(array, colNum):
+    arraySet = []
+    for i in range(len(array)): arraySet.append(array[i][colNum])
+    arraySet = set(arraySet)
+    arraySet = list(arraySet)
+
+    return arraySet
+
+# sign of value
 def sign(val):
     if val > 0: return 1
     elif val == 0: return 0
@@ -67,33 +86,66 @@ if __name__ == '__main__':
     trainI = [] # train input
     trainO = [] # train output
     testI = [] # test input
+    onehotList = [] # one-hot column list of test input, in the form of [column in original data, set of values]
     
     for i in range(len(inputs)):
 
         # append to trainI (train input)
         trainI_temp = []
-        for j in range(len(inputCols)): trainI_temp.append(inputs[i][inputCols[j]])
+        
+        for j in range(len(inputCols)):
+            if isNumber(str(inputs[i][inputCols[j]])) == True: # just append this value if numeric
+                trainI_temp.append(inputs[i][inputCols[j]])
+                
+            else: # one-hot input (0 or 1) based on memset
+                memset = makeSet(inputs, inputCols[j]) # set list of members of this column
+                for k in range(len(memset)):
+                    if inputs[i][inputCols[j]] == memset[k]: trainI_temp.append(1)
+                    else: trainI_temp.append(0)
+            
         trainI.append(trainI_temp)
 
         # append to trainO (train output)
         trainO_temp = []
-        for j in range(len(outputCols)): trainO_temp.append(outputs[i][outputCols[j]])
+
+        for j in range(len(outputCols)):
+            if isNumber(str(outputs[i][outputCols[j]])) == True: # just append this value if numeric
+                trainO_temp.append(outputs[i][outputCols[j]])
+                
+            else: # one-hot input (0 or 1) based on memset
+                memset = makeSet(outputs, outputCols[j]) # set list of members of this column
+                for k in range(len(memset)):
+                    if outputs[i][outputCols[j]] == memset[k]: trainO_temp.append(1)
+                    else: trainO_temp.append(0)
+
+                if i == 0: onehotList.append([outputCols[j], memset]) # save onehotList
+                    
         trainO.append(trainO_temp)
 
     for i in range(len(tests)):
         
         # append to testI (test input)
         testI_temp = []
-        for j in range(len(testCols)): testI_temp.append(tests[i][testCols[j]])
+        
+        for j in range(len(testCols)):
+            if isNumber(str(tests[i][testCols[j]])) == True: # just append this value if numeric
+                testI_temp.append(tests[i][testCols[j]])
+                
+            else: # one-hot input (0 or 1) based on memset
+                memset = makeSet(tests, testCols[j]) # set list of members of this column
+                for k in range(len(memset)):
+                    if tests[i][testCols[j]] == memset[k]: testI_temp.append(1)
+                    else: testI_temp.append(0)
+                    
         testI.append(testI_temp)
 
     # model design using deepLearning_model.txt, in the form of
 
     ## layers
-    # FI                     (tf.keras.layers.Flatten(input_shape=(len(inputs[0]),)))
+    # FI                     (tf.keras.layers.Flatten(input_shape=(len(trainI[0]),)))
     # F                      (keras.layers.Flatten())
     # D 16 relu              (keras.layers.Dense(16, activation='relu'))
-    # DO sigmoid             (keras.layers.Dense(len(outputs[0]), activation='sigmoid'))
+    # DO sigmoid             (keras.layers.Dense(len(trainO[0]), activation='sigmoid'))
     # Drop 0.25              (keras.layers.Dropout(0.25))
     # C2DI 32 3 3 12 12 relu (keras.layers.Conv2D(32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
     # C2D 32 3 3 relu        (keras.layers.Conv2D(32, (3, 3), activation='relu'))
@@ -123,10 +175,10 @@ if __name__ == '__main__':
         infoSplit = info.split(' ')
 
         # add layers to Neural Network as below
-        if info == 'FI': NN.append(tf.keras.layers.Flatten(input_shape=(len(inputs[0]),)))
+        if info == 'FI': NN.append(tf.keras.layers.Flatten(input_shape=(len(trainI[0]),)))
         elif info == 'F': NN.append(keras.layers.Flatten())
         elif infoSplit[0] == 'D': NN.append(keras.layers.Dense(int(infoSplit[1]), activation=infoSplit[2]))
-        elif infoSplit[0] == 'DO': NN.append(keras.layers.Dense(len(outputs[0]), activation=infoSplit[1]))
+        elif infoSplit[0] == 'DO': NN.append(keras.layers.Dense(len(trainO[0]), activation=infoSplit[1]))
         elif infoSplit[0] == 'Drop': NN.append(keras.layers.Dropout(float(infoSplit[1])))
         elif infoSplit[0] == 'C2DI':
             NN.append(keras.layers.Conv2D(int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
@@ -139,6 +191,7 @@ if __name__ == '__main__':
         elif infoSplit[0] == 'R':
             NN.append(tf.keras.layers.Reshape((int(infoSplit[1]), int(infoSplit[2]), 1),
                                               input_shape=(int(infoSplit[1])*int(infoSplit[2]),)))
+
     # optimizer
     op = None
     for i in range(len(modelInfo)):
@@ -182,6 +235,16 @@ if __name__ == '__main__':
             
             break
 
+    # print input, output, and test data
+    print('\n ---- input data ----\n')
+    for i in range(len(trainI)): print(trainI[i])
+
+    print('\n ---- output data ----\n')
+    for i in range(len(trainO)): print(trainO[i])
+
+    print('\n ---- test data ----\n')
+    for i in range(len(testI)): print(testI[i])
+
     # learning
     print('\n <<<< LEARNING >>>>\n')
     deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, 'test', 500, True, True, deviceName)
@@ -192,7 +255,8 @@ if __name__ == '__main__':
     print('\n << test output (첫번째 Neural Network) >>\n')
     newModel = deepLearning_GPU.deepLearningModel('test', True)
     testOutput = deepLearning_GPU.modelOutput(newModel, testI)
-    print('\ntest output에 대한 테스트 결과:\n')
+    print('\ntest output에 대한 테스트 결과:\ntest_result.csv')
+    print('\none-hot list:\n' + str(onehotList))
 
     # estimate
     outputLayer = testOutput[len(testOutput)-1]
@@ -204,10 +268,46 @@ if __name__ == '__main__':
 
     # write to file
     result = ''
+    print('\n<<<< output layer >>>>')
+    
     for i in range(len(outputLayer)):
-        for j in range(len(outputLayer[0])):
-            if j < len(outputLayer[0])-1: result += str(outputLayer[i][j]) + ','
-            else: result += str(outputLayer[i][j])
+        print('output layer ' + str(i) + ' : ' + str(outputLayer[i]))
+        
+        originalIndex = 0 # column index of original test data (one-hot not applied)
+        onehotListIndex = 0 # next index to see in onehotList
+        testIndex = 0 # column index of test data (one-hot applied)
+        
+        while testIndex < len(outputLayer[0]):
+
+            if originalIndex == onehotList[onehotListIndex][0]: # next item to see in onehotList is column j -> apply one-hot
+                memset = onehotList[onehotListIndex][1] # set of members in column j
+                print(str(testIndex) + ' memset:' + str(memset))
+                
+                # find max index in onehotList
+                maxIndexInMemset = 0 # index with maximum value in memset
+                maxValueInMemset = -1000 # maximum value in memset
+                
+                for j in range(len(memset)):
+                    if outputLayer[i][testIndex+j] > maxValueInMemset:
+                        maxValueInMemset = outputLayer[i][testIndex+j]
+                        maxIndexInMemset = j
+
+                # append to result
+                result += memset[maxIndexInMemset]
+                print('maxIndexInMemset:' + str(maxIndexInMemset))
+                onehotListIndex += 1
+                testIndex += len(memset)-1
+                
+            else: # otherwise just write
+                result += str(outputLayer[i][testIndex])
+
+            originalIndex += 1
+            testIndex += 1
+            if testIndex < len(outputLayer[0])-1: result += ','
+
+            # break when all items in onehotList are found
+            if onehotListIndex == len(onehotList): break
+            
         result += '\n'
 
     f = open('test_result.csv', 'w')
