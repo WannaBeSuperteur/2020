@@ -3,9 +3,10 @@ import deepLearning_GPU_helper as helper
 import random
 import tensorflow as tf
 import numpy as np
-import datetime
+import time
 from tensorflow import keras
 from keras.models import Model, model_from_json
+from datetime import datetime
 
 def isNumber(s):
     try:
@@ -16,12 +17,13 @@ def isNumber(s):
 
 # return timestamp as date
 def timestamp(s):
-    ss = s.split('-')
-    t = datetime.datetime(int(ss[0]), int(ss[1]), int(ss[2]), 0, 0)
-    return int(t.timestamp / 86400)
+    ts = time.mktime(datetime.strptime(s, '%Y-%m-%d').timetuple())
+    return int(ts / 86400)
 
 # read training/test data from *.csv file
-def getDataFromFile(fn, splitter, useSigmoid, type_):
+# cols_: list of columns designated as training/test data, e.g. [0, 1, 3, 5, 6, 10]
+# type_: type of each column of training/test data, e.g. [0, 1, 2, 0, 0, 1]
+def getDataFromFile(fn, splitter, useSigmoid, cols_, type_):
     f = open(fn, 'r')
     flines = f.readlines()
     f.close()
@@ -29,14 +31,17 @@ def getDataFromFile(fn, splitter, useSigmoid, type_):
     result = []
     for i in range(len(flines)):
         row = flines[i].split('\n')[0].split(splitter) # each row
-        for j in range(len(row)):
+        
+        for j in range(len(cols_)): # for each column designated as training/test data
+
+            thisColIndex = cols_[j] # index of this column in the row
             
-            if type_ == 0: # if this value is numeric
-                if useSigmoid == True: row[j] = helper.sigmoid(float(row[j])) # using sigmoided output value
-                else: row[j] = float(row[j]) # using original value
+            if type_[j] == 0: # if this value is numeric
+                if useSigmoid == True: row[thisColIndex] = helper.sigmoid(float(row[thisColIndex])) # using sigmoided output value
+                else: row[thisColIndex] = float(row[thisColIndex]) # using original value
                 
-            elif type_ == 1: # if this value is a date
-                row[j] = timestamp(row[j]) # return the timestamp of data
+            elif type_[j] == 1: # if this value is a date
+                row[thisColIndex] = timestamp(row[thisColIndex]) # return the timestamp of data
                 
         result.append(row)
 
@@ -123,9 +128,9 @@ if __name__ == '__main__':
             testCols[i] = int(testCols[i])
 
     # read files
-    inputs = getDataFromFile(inputFileName, ',', False, inputCols_type) # input train data
-    outputs = getDataFromFile(outputFileName, ',', True, outputCols_type) # output train data (using Sigmoid)
-    tests = getDataFromFile(testFileName, ',', False, testCols_type) # test input data
+    inputs = getDataFromFile(inputFileName, ',', False, inputCols, inputCols_type) # input train data
+    outputs = getDataFromFile(outputFileName, ',', True, outputCols, outputCols_type) # output train data (using Sigmoid)
+    tests = getDataFromFile(testFileName, ',', False, testCols, testCols_type) # test input data
 
     np.set_printoptions(precision=4, linewidth=150)
 
@@ -135,18 +140,38 @@ if __name__ == '__main__':
     output_avgs = [] # average of each column of train output data
     output_stddevs = [] # standard deviation of each column of train output data
 
-    # for input and output
+    # for train input
     for i in range(len(inputCols)):
+
+        # for train input data
         if inputCols_type[i] == 0 or inputCols_type[i] == 1: # numeric or date
-            input_avgs.append(np.mean(inputs[:][inputCols[i]], axis=0)[0])
-            input_stddevs.append(np.std(inputs[:][inputCols[i]], axis=0)[0])
+
+            # train input column inputCols[i]
+            inputCol = []
+            for j in range(len(inputs)): inputCol.append(float(inputs[j][inputCols[i]]))
+
+            # append to _avgs and _stddevs
+            input_avgs.append(np.mean(inputCol))
+            input_stddevs.append(np.std(inputCol))
+            
         else: # text
             input_avgs.append(None)
             input_stddevs.append(None)
 
+    # for train output
+    for i in range(len(outputCols)):
+        
+        # for train output data
         if outputCols_type[i] == 0 or outputCols_type[i] == 1: # numeric or date
-            output_avgs.append(np.mean(outputs[:][outputCols[i]], axis=0)[0])
-            output_stddevs.append(np.std(outputs[:][outputCols[i]], axis=0)[0])
+
+            # train output column outputCols[i]
+            outputCol = []
+            for j in range(len(outputs)): outputCol.append(float(outputs[j][outputCols[i]]))
+
+            # append to _avgs and _stddevs
+            output_avgs.append(np.mean(outputCol))
+            output_stddevs.append(np.std(outputCol))
+            
         else: # text
             output_avgs.append(None)
             output_stddevs.append(None)
@@ -155,7 +180,7 @@ if __name__ == '__main__':
     trainI = [] # train input
     trainO = [] # train output
     testI = [] # test input
-    onehotList = [] # one-hot column list of test input, in the form of [column in original data, set of values]
+    onehotList = [] # one-hot column list of test input, in the form of [column in the output data, set of values]
     
     for i in range(len(inputs)):
 
@@ -185,7 +210,7 @@ if __name__ == '__main__':
                 trainO_temp.append(outputs[i][outputCols[j]])
 
             elif outputCols_type[j] == 1: # date
-                trainO_temp.append((outputs[i][outputCols[j]] - output_avgs[j])/output_stddevs[j])
+                trainO_temp.append(helper.sigmoid((outputs[i][outputCols[j]] - output_avgs[j])/output_stddevs[j]))
             
             else: # one-hot input (0 or 1) based on memset
                 memset = makeSet(outputs, outputCols[j]) # set list of members of this column
@@ -193,7 +218,7 @@ if __name__ == '__main__':
                     if outputs[i][outputCols[j]] == memset[k]: trainO_temp.append(1)
                     else: trainO_temp.append(0)
 
-                if i == 0: onehotList.append([outputCols[j], memset]) # save onehotList
+                if i == 0: onehotList.append([j, memset]) # save onehotList
                     
         trainO.append(trainO_temp)
 
@@ -206,11 +231,11 @@ if __name__ == '__main__':
             if testCols_type[j] == 0: # just append this value if numeric
                 testI_temp.append(tests[i][testCols[j]])
 
-            elif testCols_type[j] == 1: # date
-                testI_temp.append((tests[i][testCols[j]] - train_avgs[j])/train_stddevs[j])
+            elif testCols_type[j] == 1: # date (using input avgs and stddevs)
+                testI_temp.append((tests[i][testCols[j]] - input_avgs[j])/input_stddevs[j])
             
             else: # one-hot input (0 or 1) based on memset
-                memset = makeSet(tests, testsCols[j]) # set list of members of this column
+                memset = makeSet(tests, testCols[j]) # set list of members of this column
                 for k in range(len(memset)):
                     if tests[i][testCols[j]] == memset[k]: testI_temp.append(1)
                     else: testI_temp.append(0)
@@ -354,10 +379,13 @@ if __name__ == '__main__':
         originalIndex = 0 # column index of original test data (one-hot not applied)
         onehotListIndex = 0 # next index to see in onehotList
         testIndex = 0 # column index of test data (one-hot applied)
+
+        onehotList.append([None]) # append None to prevent index error
         
         while testIndex < len(outputLayer[0]):
 
-            if originalIndex == onehotList[onehotListIndex][0]: # next item to see in onehotList is column j -> apply one-hot
+            # next item to see in onehotList is column j -> apply one-hot (text or text-like number)
+            if originalIndex == onehotList[onehotListIndex][0]:
                 memset = onehotList[onehotListIndex][1] # set of members in column j
                 #print(str(testIndex) + ' memset:' + str(memset))
                 
@@ -375,16 +403,22 @@ if __name__ == '__main__':
                 #print('maxIndexInMemset:' + str(maxIndexInMemset))
                 onehotListIndex += 1
                 testIndex += len(memset)-1
-                
-            else: # otherwise just write
+
+            # date
+            elif outputCols_type[testIndex] == 1:
+                result += str(outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avg[originalIndex])
+
+            # otherwise just write
+            else:
                 result += str(outputLayer[i][testIndex])
 
             originalIndex += 1
             testIndex += 1
+            
             if testIndex < len(outputLayer[0])-1: result += ','
 
-            # break when all items in onehotList are found
-            if onehotListIndex == len(onehotList): break
+            # break when all items are found
+            if testIndex >= len(outputLayer[0]): break
             
         result += '\n'
 
