@@ -3,6 +3,7 @@ import deepLearning_GPU_helper as helper
 import random
 import tensorflow as tf
 import numpy as np
+import datetime
 from tensorflow import keras
 from keras.models import Model, model_from_json
 
@@ -13,8 +14,14 @@ def isNumber(s):
     except:
         return False
 
+# return timestamp as date
+def timestamp(s):
+    ss = s.split('-')
+    t = datetime.datetime(int(ss[0]), int(ss[1]), int(ss[2]), 0, 0)
+    return int(t.timestamp / 86400)
+
 # read training/test data from *.csv file
-def getDataFromFile(fn, splitter, useSigmoid, treatAsText):
+def getDataFromFile(fn, splitter, useSigmoid, type_):
     f = open(fn, 'r')
     flines = f.readlines()
     f.close()
@@ -23,9 +30,14 @@ def getDataFromFile(fn, splitter, useSigmoid, treatAsText):
     for i in range(len(flines)):
         row = flines[i].split('\n')[0].split(splitter) # each row
         for j in range(len(row)):
-            if isNumber(row[j]) and treatAsText[j] == False: # if this value is numeric
+            
+            if type_ == 0: # if this value is numeric
                 if useSigmoid == True: row[j] = helper.sigmoid(float(row[j])) # using sigmoided output value
                 else: row[j] = float(row[j]) # using original value
+                
+            elif type_ == 1: # if this value is a date
+                row[j] = timestamp(row[j]) # return the timestamp of data
+                
         result.append(row)
 
     return result
@@ -72,41 +84,72 @@ if __name__ == '__main__':
     outputCols = outputSplit[1:len(outputSplit)]
     testCols = testSplit[1:len(testSplit)]
 
-    # whether treat as text or not
-    inputCols_text = []
-    outputCols_text = []
-    testCols_text = []
+    # type: 0(numeric), 1(date), 2(text) for each column
+    inputCols_type = []
+    outputCols_type = []
+    testCols_type = []
     
     for i in range(len(inputCols)):
-        if 't' in inputCols[i]:
-            inputCols_text.append(True)
+        if 't' in inputCols[i]: # text
+            inputCols_type.append(2)
+            inputCols[i] = int(inputCols[i][:len(inputCols[i])-1])
+        elif 'd' in inputCols[i]: # date
+            inputCols_type.append(1)
             inputCols[i] = int(inputCols[i][:len(inputCols[i])-1])
         else:
-            inputCols_text.append(False)
+            inputCols_type.append(0)
             inputCols[i] = int(inputCols[i])
         
     for i in range(len(outputCols)):
-        if 't' in outputCols[i]:
-            outputCols_text.append(True)
+        if 't' in outputCols[i]: # text
+            outputCols_type.append(2)
+            outputCols[i] = int(outputCols[i][:len(outputCols[i])-1])
+        elif 'd' in outputCols[i]: # date
+            outputCols_type.append(1)
             outputCols[i] = int(outputCols[i][:len(outputCols[i])-1])
         else:
-            outputCols_text.append(False)
+            outputCols_type.append(0)
             outputCols[i] = int(outputCols[i])
         
     for i in range(len(testCols)):
-        if 't' in testCols[i]:
-            testCols_text.append(True)
+        if 't' in testCols[i]: # text
+            testCols_type.append(2)
+            testCols[i] = int(testCols[i][:len(testCols[i])-1])
+        elif 'd' in testCols[i]: # date
+            testCols_type.append(1)
             testCols[i] = int(testCols[i][:len(testCols[i])-1])
         else:
-            testCols_text.append(False)
+            testCols_type.append(0)
             testCols[i] = int(testCols[i])
 
     # read files
-    inputs = getDataFromFile(inputFileName, ',', False, inputCols_text) # input train data
-    outputs = getDataFromFile(outputFileName, ',', True, outputCols_text) # output train data (using Sigmoid)
-    tests = getDataFromFile(testFileName, ',', False, testCols_text) # test input data
+    inputs = getDataFromFile(inputFileName, ',', False, inputCols_type) # input train data
+    outputs = getDataFromFile(outputFileName, ',', True, outputCols_type) # output train data (using Sigmoid)
+    tests = getDataFromFile(testFileName, ',', False, testCols_type) # test input data
 
     np.set_printoptions(precision=4, linewidth=150)
+
+    # find average and stddev (standard deviation) of each column
+    input_avgs = [] # average of each column of train input data
+    input_stddevs = [] # standard deviation of each column of train input data
+    output_avgs = [] # average of each column of train output data
+    output_stddevs = [] # standard deviation of each column of train output data
+
+    # for input and output
+    for i in range(len(inputCols)):
+        if inputCols_type[i] == 0 or inputCols_type[i] == 1: # numeric or date
+            input_avgs.append(np.mean(inputs[:][inputCols[i]], axis=0)[0])
+            input_stddevs.append(np.std(inputs[:][inputCols[i]], axis=0)[0])
+        else: # text
+            input_avgs.append(None)
+            input_stddevs.append(None)
+
+        if outputCols_type[i] == 0 or outputCols_type[i] == 1: # numeric or date
+            output_avgs.append(np.mean(outputs[:][outputCols[i]], axis=0)[0])
+            output_stddevs.append(np.std(outputs[:][outputCols[i]], axis=0)[0])
+        else: # text
+            output_avgs.append(None)
+            output_stddevs.append(None)
 
     # training and test inputs and outputs
     trainI = [] # train input
@@ -120,9 +163,12 @@ if __name__ == '__main__':
         trainI_temp = []
         
         for j in range(len(inputCols)):
-            if isNumber(str(inputs[i][inputCols[j]])) == True and inputCols_text[j] == False: # just append this value if numeric
+            if inputCols_type[j] == 0: # just append this value if numeric
                 trainI_temp.append(inputs[i][inputCols[j]])
-                
+
+            elif inputCols_type[j] == 1: # date
+                trainI_temp.append((inputs[i][inputCols[j]] - input_avgs[j])/input_stddevs[j])
+            
             else: # one-hot input (0 or 1) based on memset
                 memset = makeSet(inputs, inputCols[j]) # set list of members of this column
                 for k in range(len(memset)):
@@ -135,9 +181,12 @@ if __name__ == '__main__':
         trainO_temp = []
 
         for j in range(len(outputCols)):
-            if isNumber(str(outputs[i][outputCols[j]])) == True and outputCols_text[j] == False: # just append this value if numeric
+            if outputCols_type[j] == 0: # just append this value if numeric
                 trainO_temp.append(outputs[i][outputCols[j]])
-                
+
+            elif outputCols_type[j] == 1: # date
+                trainO_temp.append((outputs[i][outputCols[j]] - output_avgs[j])/output_stddevs[j])
+            
             else: # one-hot input (0 or 1) based on memset
                 memset = makeSet(outputs, outputCols[j]) # set list of members of this column
                 for k in range(len(memset)):
@@ -154,11 +203,14 @@ if __name__ == '__main__':
         testI_temp = []
         
         for j in range(len(testCols)):
-            if isNumber(str(tests[i][testCols[j]])) == True and testCols_text[j] == False: # just append this value if numeric
+            if testCols_type[j] == 0: # just append this value if numeric
                 testI_temp.append(tests[i][testCols[j]])
-                
+
+            elif testCols_type[j] == 1: # date
+                testI_temp.append((tests[i][testCols[j]] - train_avgs[j])/train_stddevs[j])
+            
             else: # one-hot input (0 or 1) based on memset
-                memset = makeSet(tests, testCols[j]) # set list of members of this column
+                memset = makeSet(tests, testsCols[j]) # set list of members of this column
                 for k in range(len(memset)):
                     if tests[i][testCols[j]] == memset[k]: testI_temp.append(1)
                     else: testI_temp.append(0)
