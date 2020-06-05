@@ -1,8 +1,5 @@
 FI
-D 32 relu
-D 32 relu
-D 32 relu
-D 32 relu
-D 32 relu
+D 1000 sigmoid
+D 1000 sigmoid
 DO sigmoid
 OP adam0 0.001
