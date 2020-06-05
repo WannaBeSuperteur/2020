@@ -1,3 +1,3 @@
-input_example.csv 0 1 2 3t
-output_example.csv 0 1 2t
-test_example.csv 0 1 2 3t
+input_example.csv 0 1 3 4t 7d
+output_example.csv 0 3 5t 6d
+test_example.csv 0 1 3 4t 7d
