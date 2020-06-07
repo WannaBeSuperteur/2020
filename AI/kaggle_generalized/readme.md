@@ -11,6 +11,9 @@ for each column X:
 * ```Xt```: considered as TEXT
 * ```Xd```: considered as DATE/TIME
 
+output:
+```test_result.csv```
+
 ### example ###
 ```
 input_example.csv 0 1 3t 4t 7d
@@ -18,9 +21,9 @@ output_example.csv 0 3t 5t 6d
 test_example.csv 0 1 3t 4t 7d
 ```
 
-* line 1: 0th and 1st column is NUMERIC, 3rd and 4th column is considered as TEXT, and 7th column is DATE/TIME.
-* line 2: 0th column is NUMERIC, 3rd and 5th column is considered as TEXT, and 6th column is DATE/TIME.
-* line 3: 0th and 1st column is NUMERIC, 3rd and 4th column is considered as TEXT, and 7th column is DATE/TIME.
+* line 1: train input data file is ```input_example.csv``` and in this file, 0th and 1st column is NUMERIC, 3rd and 4th column is considered as TEXT, and 7th column is DATE/TIME.
+* line 2: train output data file is ```output_example.csv``` and in this file, 0th column is NUMERIC, 3rd and 5th column is considered as TEXT, and 6th column is DATE/TIME.
+* line 3: test input data file is ```test_example.csv``` and in this file, 0th and 1st column is NUMERIC, 3rd and 4th column is considered as TEXT, and 7th column is DATE/TIME.
 
 ## deepLearning_model.txt: specify deep learning model ##
 ### layer settings ###
@@ -77,7 +80,7 @@ OP adam0 0.001
 ```
 
 * line 1: Flatten input layer
-* line 2: Dense layer with 1000 nodes
-* line 3: Dense layer with 1000 nodes
-* line 4: Dense output layer
+* line 2: Dense layer with 1000 nodes, using SIGMOID as activation function
+* line 3: Dense layer with 1000 nodes, using SIGMOID as activation function
+* line 4: Dense output layer, using SIGMOID as activation function
 * line 5: Use ADAM optimizer with learning rate = 0.001 
