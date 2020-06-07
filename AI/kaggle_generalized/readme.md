@@ -55,7 +55,7 @@ IMPORTANT: LAST LAYER should use SIGMOID as activation function.
 * Adamax: ```OP adamax lr X Y eps``` (tf.keras.optimizers.Adamax(learning_rate=lr, beta_1=X, beta_2=Y, epsilon=eps))
 * Nadam: ```OP nadam lr X Y eps``` (tf.keras.optimizers.Nadam(learning_rate=lr, beta_1=X, beta_2=Y, epsilon=eps))
 * RMSprop: ```OP rmsprop lr X A eps``` (tf.keras.optimizers.RMSprop(learning_rate=lr, rho=X, momentum=A, epsilon=eps))
-* SGD: ```OP sgd 0.01 0.0``` (tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False))
+* SGD: ```OP sgd lr X``` (tf.keras.optimizers.SGD(learning_rate=lr, momentum=X, nesterov=False))
 
 example:
 * ```OP adadelta 0.001 0.95 1e-07``` (tf.keras.optimizers.Adadelta(learning_rate=0.001, rho=0.95, epsilon=1e-07))
