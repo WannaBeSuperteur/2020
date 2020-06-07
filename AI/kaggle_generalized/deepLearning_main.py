@@ -405,8 +405,10 @@ if __name__ == '__main__':
                 testIndex += len(memset)-1
 
             # date
-            elif outputCols_type[testIndex] == 1:
-                result += str(outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avg[originalIndex])
+            elif outputCols_type[originalIndex] == 1:
+                outputDate = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
+                date = datetime.fromtimestamp(outputDate * 86400)
+                result += date.strftime('%Y-%m-%d')
 
             # otherwise just write
             else:
@@ -414,11 +416,10 @@ if __name__ == '__main__':
 
             originalIndex += 1
             testIndex += 1
-            
-            if testIndex < len(outputLayer[0])-1: result += ','
 
             # break when all items are found
-            if testIndex >= len(outputLayer[0]): break
+            if testIndex < len(outputLayer[0]): result += ','
+            else: break
             
         result += '\n'
 
