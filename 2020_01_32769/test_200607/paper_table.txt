@@ -1,0 +1,3 @@
+epoch	scaling	#test	difAvg	0difAvg	accur	TP	TN	FP	FN	P	N	correct
+note: difAvg error (squared) and 0-difAvg error (squared) are multiplied by 100
+50	4	287	11.4839	36.6362	3.1902	99.6516	0.0	0.0	0.3484	100.0	0.0	99.6516
