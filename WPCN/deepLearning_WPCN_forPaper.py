@@ -385,6 +385,9 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                     # 학습 및 테스트 종료
                     break
 
+        # 완전 종료
+        break
+
 # main
 if __name__ == '__main__':
     

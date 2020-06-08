@@ -120,7 +120,11 @@ def getThroughput(wdList, point, screenSize, problemNo):
             (thrput, None_1) = getThroughput_(wdList, point, chargeTimeListCopy, problemNo) # wdList의 각 값을 변화시킨 후에 구한 Throughput
 
             # throughput의 변화량을 추가: log2(throughput / old throught)을 leaky relu처럼 적용
-            thrputChange.append(max(0.01*math.log(thrput/originalThrput, 2.0), math.log(thrput/originalThrput, 2.0)))
+            # 오류 시에는 1/1,000,000을 적용 (math.log의 값은 약 -20)
+            try:
+                thrputChange.append(max(0.01*math.log(thrput/originalThrput, 2.0), math.log(thrput/originalThrput, 2.0)))
+            except:
+                thrputChange.append(max(0.01*math.log(1/1000000, 2.0), math.log(1/1000000, 2.0)))
 
         # chargeTimeList 갱신
         for j in range(1+len(wdList)):
