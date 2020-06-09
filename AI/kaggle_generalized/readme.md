@@ -13,6 +13,8 @@ for each column X:
 * ```Xl```: log2(NUMERIC value)'s
 * ```Xz```: Z-value(NUMERIC value)'s
 * ```Xlz```: Z-value(log2(NUMERIC value))'s
+* ```Xlp```: log2(NUMERIC value + 1)'s
+* ```Xlpz```: Z-value(log2(NUMERIC value + 1))'s
 
 output:
 ```test_result.csv```
