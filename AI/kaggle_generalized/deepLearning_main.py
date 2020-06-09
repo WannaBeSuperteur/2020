@@ -41,9 +41,19 @@ def getDataFromFile(fn, splitter, cols_, type_):
 
     result = []
     for i in range(len(flines)):
-        row = flines[i].split('\n')[0].split(splitter) # each row
-        
-        for j in range(len(cols_)): # for each column designated as training/test data
+
+        # replace all ','s within "", to '#'
+        if '"' in flines[i]:
+            quoteCount = 0
+            for j in range(len(flines[i])):
+                if flines[i][j] == '"': quoteCount += 1
+                elif flines[i][j] == ',' and quoteCount % 2 == 1: flines[i] = flines[i][:j] + '#' + flines[i][j+1:]
+
+        # parse each row
+        row = flines[i].split('\n')[0].split(splitter)
+
+        # for each column designated as training/test data
+        for j in range(len(cols_)):
 
             thisColIndex = cols_[j] # index of this column in the row
             
