@@ -79,6 +79,8 @@ def sign(val):
 
 if __name__ == '__main__':
     deviceName = input('device name (for example, cpu:0 or gpu:0)')
+    epoch = int(input('epoch'))
+    printed = int(input('printed? (0 -> do not print)'))
 
     # get data from file using information in input_output_info.txt, in the form of
     # inputFileName trainCol0 trainCol1 ...
@@ -177,14 +179,15 @@ if __name__ == '__main__':
     tests = getDataFromFile(testFileName, ',', testCols, testCols_type) # test input data
 
     # print input, output, and test data
-    print('\n ---- original input data ----\n')
-    for i in range(len(inputs)): print(roundedArray(inputs[i], 6))
+    if printed != 0:
+        print('\n ---- original input data ----\n')
+        for i in range(len(inputs)): print(roundedArray(inputs[i], 6))
 
-    print('\n ---- original output data ----\n')
-    for i in range(len(outputs)): print(roundedArray(outputs[i], 6))
+        print('\n ---- original output data ----\n')
+        for i in range(len(outputs)): print(roundedArray(outputs[i], 6))
 
-    print('\n ---- original test data ----\n')
-    for i in range(len(tests)): print(roundedArray(tests[i], 6))
+        print('\n ---- original test data ----\n')
+        for i in range(len(tests)): print(roundedArray(tests[i], 6))
 
     np.set_printoptions(precision=4, linewidth=150)
 
@@ -236,11 +239,12 @@ if __name__ == '__main__':
     testI = [] # test input
     onehotList = [] # one-hot column list of test input, in the form of [column in the output data, set of values]
 
-    print('')
-    print('input_avgs: ' + str(roundedArray(input_avgs, 6)))
-    print('input_stds: ' + str(roundedArray(input_stddevs, 6)))
-    print('output_avgs: ' + str(roundedArray(output_avgs, 6)))
-    print('output_stds: ' + str(roundedArray(output_stddevs, 6)))
+    if printed != 0:
+        print('')
+        print('input_avgs: ' + str(roundedArray(input_avgs, 6)))
+        print('input_stds: ' + str(roundedArray(input_stddevs, 6)))
+        print('output_avgs: ' + str(roundedArray(output_avgs, 6)))
+        print('output_stds: ' + str(roundedArray(output_stddevs, 6)))
     
     for i in range(len(inputs)):
 
@@ -414,18 +418,19 @@ if __name__ == '__main__':
             break
 
     # print input, output, and test data
-    print('\n ---- input data ----\n')
-    for i in range(len(trainI)): print(roundedArray(trainI[i], 6))
+    if printed != 0:
+        print('\n ---- input data ----\n')
+        for i in range(len(trainI)): print(roundedArray(trainI[i], 6))
 
-    print('\n ---- output data ----\n')
-    for i in range(len(trainO)): print(roundedArray(trainO[i], 6))
+        print('\n ---- output data ----\n')
+        for i in range(len(trainO)): print(roundedArray(trainO[i], 6))
 
-    print('\n ---- test data ----\n')
-    for i in range(len(testI)): print(roundedArray(testI[i], 6))
+        print('\n ---- test data ----\n')
+        for i in range(len(testI)): print(roundedArray(testI[i], 6))
 
     # learning
     print('\n <<<< LEARNING >>>>\n')
-    deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, 'test', 500, False, True, deviceName)
+    deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, 'test', epoch, False, True, deviceName)
 
     # test
     print('\n <<<< TEST >>>>\n')
