@@ -57,10 +57,12 @@ def getDataFromFile(fn, splitter, cols_, type_):
 
             thisColIndex = cols_[j] # index of this column in the row
             
-            if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5: # if this value is numeric
+            if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7: # if this value is numeric
 
                 if type_[j] == 3 or type_[j] == 5: # using log
                     row[thisColIndex] = math.log(float(row[thisColIndex]), 2) # using log-ed value
+                elif type_[j] == 6 or type_[j] == 7: # using log(x+1)
+                    row[thisColIndex] = math.log(float(row[thisColIndex])+1.0, 2) # using log(x+1)-ed value
                 else: # not using log
                     row[thisColIndex] = float(row[thisColIndex]) # using original value
                 
@@ -128,6 +130,12 @@ if __name__ == '__main__':
         elif 'd' in inputCols[i]: # date (converted to Z value)
             inputCols_type.append(1)
             inputCols[i] = int(inputCols[i][:len(inputCols[i])-1])
+        elif 'lpz' in inputCols[i]: # numeric -> Z(log2(numeric+1))
+            inputCols_type.append(7)
+            inputCols[i] = int(inputCols[i][:len(inputCols[i])-3])
+        elif 'lp' in inputCols[i]: # numeric -> log2(numeric+1)
+            inputCols_type.append(6)
+            inputCols[i] = int(inputCols[i][:len(inputCols[i])-2])
         elif 'lz' in inputCols[i]: # numeric -> Z(log2(numeric))
             inputCols_type.append(5)
             inputCols[i] = int(inputCols[i][:len(inputCols[i])-2])
@@ -149,6 +157,12 @@ if __name__ == '__main__':
         elif 'd' in outputCols[i]: # date date (converted to Z value)
             outputCols_type.append(1)
             outputCols[i] = int(outputCols[i][:len(outputCols[i])-1])
+        elif 'lpz' in outputCols[i]: # numeric -> Z(log2(numeric+1))
+            outputCols_type.append(7)
+            outputCols[i] = int(outputCols[i][:len(outputCols[i])-3])
+        elif 'lp' in outputCols[i]: # numeric -> log2(numeric+1)
+            outputCols_type.append(6)
+            outputCols[i] = int(outputCols[i][:len(outputCols[i])-2])
         elif 'lz' in outputCols[i]: # numeric -> Z(log2(numeric))
             outputCols_type.append(5)
             outputCols[i] = int(outputCols[i][:len(outputCols[i])-2])
@@ -170,6 +184,12 @@ if __name__ == '__main__':
         elif 'd' in testCols[i]: # date date (converted to Z value)
             testCols_type.append(1)
             testCols[i] = int(testCols[i][:len(testCols[i])-1])
+        elif 'lpz' in testCols[i]: # numeric -> Z(log2(numeric+1))
+            testCols_type.append(7)
+            testCols[i] = int(testCols[i][:len(testCols[i])-3])
+        elif 'lp' in testCols[i]: # numeric -> log2(numeric+1)
+            testCols_type.append(6)
+            testCols[i] = int(testCols[i][:len(testCols[i])-2])
         elif 'lz' in testCols[i]: # numeric -> Z(log2(numeric))
             testCols_type.append(5)
             testCols[i] = int(testCols[i][:len(testCols[i])-2])
@@ -266,11 +286,12 @@ if __name__ == '__main__':
         for j in range(len(inputCols)):
 
             # just append this value if numeric
-            if inputCols_type[j] == 0 or inputCols_type[j] == 3:
+            if inputCols_type[j] == 0 or inputCols_type[j] == 3 or inputCols_type[j] == 6:
                 trainI_temp.append(inputs[i][inputCols[j]])
 
-            # date (type:1) / Z(numeric) (type:4) / Z(log2(numeric)) (type:5) (Z using log-ed average and stddev)
-            elif inputCols_type[j] == 1 or inputCols_type[j] == 4 or inputCols_type[j] == 5:
+            # date   (type:1) Z(numeric) / (type:4) Z(log2(numeric))
+            #      / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
+            elif inputCols_type[j] == 1 or inputCols_type[j] == 4 or inputCols_type[j] == 5 or inputCols_type[j] == 7:
                 trainI_temp.append((inputs[i][inputCols[j]] - input_avgs[j])/input_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
@@ -296,11 +317,12 @@ if __name__ == '__main__':
         for j in range(len(outputCols)):
             
             # just append this value if numeric
-            if outputCols_type[j] == 0 or outputCols_type[j] == 3:
+            if outputCols_type[j] == 0 or outputCols_type[j] == 3 or outputCols_type[j] == 6:
                 trainO_temp.append(outputs[i][outputCols[j]])
 
-            # date (type:1) / Z(numeric) (type:4) / Z(log2(numeric)) (type:5) (Z using log-ed average and stddev)
-            elif outputCols_type[j] == 1 or outputCols_type[j] == 4 or outputCols_type[j] == 5:
+            # date   (type:1) Z(numeric) / (type:4) Z(log2(numeric))
+            #      / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
+            elif outputCols_type[j] == 1 or outputCols_type[j] == 4 or outputCols_type[j] == 5 or outputCols_type[j] == 7:
                 trainO_temp.append((outputs[i][outputCols[j]] - output_avgs[j])/output_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
@@ -331,11 +353,12 @@ if __name__ == '__main__':
         for j in range(len(testCols)):
             
             # just append this value if numeric
-            if testCols_type[j] == 0 or testCols_type[j] == 3:
+            if testCols_type[j] == 0 or testCols_type[j] == 3 or testCols_type[j] == 6:
                 testI_temp.append(tests[i][testCols[j]])
 
-            # date (type:1) / Z(numeric) (type:4) / Z(log2(numeric)) (type:5) (Z using log-ed average and stddev)
-            elif testCols_type[j] == 1 or testCols_type[j] == 4 or testCols_type[j] == 5:
+            # date   (type:1) Z(numeric) / (type:4) Z(log2(numeric))
+            #      / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
+            elif testCols_type[j] == 1 or testCols_type[j] == 4 or testCols_type[j] == 5 or testCols_type[j] == 7:
                 testI_temp.append((tests[i][testCols[j]] - input_avgs[j])/input_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
@@ -537,6 +560,15 @@ if __name__ == '__main__':
             elif outputCols_type[originalIndex] == 5:
                 recover = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
                 result += str(pow(2.0, recover))
+
+            # log2(numeric+1) -> 2^(numeric)
+            elif outputCols_type[originalIndex] == 6:
+                result += str(pow(2.0, outputLayer[i][testIndex])-1.0)
+
+            # Z(log2(numeric+1)) -> recover(un-Z using log-ed average and stddev)+1 -> 2^(recover)
+            elif outputCols_type[originalIndex] == 7:
+                recover = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
+                result += str(pow(2.0, recover)-1.0)
 
             originalIndex += 1
             testIndex += 1
