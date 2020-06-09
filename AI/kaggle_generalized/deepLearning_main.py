@@ -238,6 +238,7 @@ if __name__ == '__main__':
     trainO = [] # train output
     testI = [] # test input
     onehotList = [] # one-hot column list of test input, in the form of [column in the output data, set of values]
+    memset = []
 
     if printed != 0:
         print('')
@@ -250,6 +251,7 @@ if __name__ == '__main__':
 
         # append to trainI (train input)
         trainI_temp = []
+        memsetIndex = 0 # index for memset
         
         for j in range(len(inputCols)):
 
@@ -263,15 +265,23 @@ if __name__ == '__main__':
 
             # one-hot input (0 or 1) based on memset
             elif inputCols_type[j] == 2:
-                memset = makeSet(inputs, inputCols[j]) # set list of members of this column
-                for k in range(len(memset)):
-                    if inputs[i][inputCols[j]] == memset[k]: trainI_temp.append(1)
+                if i == 0: memset.append(makeSet(inputs, inputCols[j])) # set list of members of this column
+                
+                for k in range(len(memset[memsetIndex])):
+                    if inputs[i][inputCols[j]] == memset[memsetIndex][k]: trainI_temp.append(1)
                     else: trainI_temp.append(0)
+
+                memsetIndex += 1
             
         trainI.append(trainI_temp)
 
+    memset = [] # initialize memset
+
+    for i in range(len(outputs)):
+
         # append to trainO (train output)
         trainO_temp = []
+        memsetIndex = 0 # index for memset
 
         for j in range(len(outputCols)):
             
@@ -285,22 +295,28 @@ if __name__ == '__main__':
 
             # one-hot input (0 or 1) based on memset
             elif outputCols_type[j] == 2:
-                memset = makeSet(outputs, outputCols[j]) # set list of members of this column
-                for k in range(len(memset)):
-                    if outputs[i][outputCols[j]] == memset[k]: trainO_temp.append(1)
+                if i == 0: memset.append(makeSet(outputs, outputCols[j])) # set list of members of this column
+                
+                for k in range(len(memset[memsetIndex])):
+                    if outputs[i][outputCols[j]] == memset[memsetIndex][k]: trainO_temp.append(1)
                     else: trainO_temp.append(0)
 
-                if i == 0: onehotList.append([j, memset]) # save onehotList
+                if i == 0: onehotList.append([j, memset[memsetIndex]]) # save onehotList
+
+                memsetIndex += 1
 
         # apply sigmoid to each value of trainO
         for k in range(len(trainO_temp)): trainO_temp[k] = helper.sigmoid(trainO_temp[k])
                     
         trainO.append(trainO_temp)
 
+    memset = [] # initialize memset
+
     for i in range(len(tests)):
         
         # append to testI (test input)
         testI_temp = []
+        memsetIndex = 0 # index for memset
         
         for j in range(len(testCols)):
             
@@ -314,12 +330,17 @@ if __name__ == '__main__':
 
             # one-hot input (0 or 1) based on memset
             elif testCols_type[j] == 2:
-                memset = makeSet(tests, testCols[j]) # set list of members of this column
-                for k in range(len(memset)):
-                    if tests[i][testCols[j]] == memset[k]: testI_temp.append(1)
+                if i == 0: memset.append(makeSet(tests, testCols[j])) # set list of members of this column
+                
+                for k in range(len(memset[memsetIndex])):
+                    if tests[i][testCols[j]] == memset[memsetIndex][k]: testI_temp.append(1)
                     else: testI_temp.append(0)
+
+                memsetIndex += 1
                     
         testI.append(testI_temp)
+
+    print(onehotList)
 
     # model design using deepLearning_model.txt, in the form of
 
