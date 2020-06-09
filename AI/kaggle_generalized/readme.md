@@ -10,20 +10,32 @@ for each column X:
 * ```X```: considered as NUMERIC values
 * ```Xt```: considered as TEXT
 * ```Xd```: considered as DATE/TIME
+* ```Xl```: log2(NUMERIC value)'s
+* ```Xz```: Z-value(NUMERIC value)'s
+* ```Xlz```: Z-value(log2(NUMERIC value))'s
 
 output:
 ```test_result.csv```
 
 ### example ###
 ```
-input_example.csv 0 1 3t 4t 7d
-output_example.csv 0 3t 5t 6d
-test_example.csv 0 1 3t 4t 7d
+input_example.csv 0 1z 2l 3lz 5t 6t 9d
+output_example.csv 0 1 2lz 5t 7t 8d
+test_example.csv 0 1z 2l 3lz 5t 6t 9d
 ```
 
-* line 1: train input data file is ```input_example.csv``` and in this file, 0th and 1st column is NUMERIC, 3rd and 4th column is considered as TEXT, and 7th column is DATE/TIME.
-* line 2: train output data file is ```output_example.csv``` and in this file, 0th column is NUMERIC, 3rd and 5th column is considered as TEXT, and 6th column is DATE/TIME.
-* line 3: test input data file is ```test_example.csv``` and in this file, 0th and 1st column is NUMERIC, 3rd and 4th column is considered as TEXT, and 7th column is DATE/TIME.
+* line 1: train input data file is ```input_example.csv``` and in this file,
+  * 0th~3th column is NUMERIC(1st column with Z-value, 2nd column with log-value, and 3rd column with Z-value(log-value))
+  * 5th and 6th column is considered as TEXT
+  * 9th column is DATE/TIME.
+* line 2: train output data file is ```output_example.csv``` and in this file,
+  * 0th~2nd column is NUMERIC(2nd column with Z-value(log-value))
+  * 3rd and 5th column is considered as TEXT
+  * and 6th column is DATE/TIME.
+* line 3: test input data file is ```test_example.csv``` and in this file,
+  * 0th~3th column is NUMERIC(1st column with Z-value, 2nd column with log-value, and 3rd column with Z-value(log-value))
+  * 5th and 6th column is considered as TEXT
+  * 9th column is DATE/TIME.
 
 ## deepLearning_model.txt: specify deep learning model ##
 ### layer settings ###
