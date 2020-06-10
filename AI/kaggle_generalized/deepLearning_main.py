@@ -27,8 +27,11 @@ def roundedArray(array, n):
     return roundedArray
 
 # return timestamp as date
-def timestamp(s):
+def timestamp_type0(s):
     ts = time.mktime(datetime.strptime(s, '%Y-%m-%d').timetuple())
+    return int(ts / 86400)
+def timestamp_type1(s):
+    ts = time.mktime(datetime.strptime(s, '%m/%d/%Y').timetuple())
     return int(ts / 86400)
 
 # read training/test data from *.csv file
@@ -40,7 +43,7 @@ def getDataFromFile(fn, splitter, cols_, type_):
     f.close()
 
     result = []
-    for i in range(len(flines)):
+    for i in range(1, len(flines)):
 
         # replace all ','s within "", to '#'
         if '"' in flines[i]:
@@ -56,8 +59,9 @@ def getDataFromFile(fn, splitter, cols_, type_):
         for j in range(len(cols_)):
 
             thisColIndex = cols_[j] # index of this column in the row
-            
-            if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7: # if this value is numeric
+
+            # if this value is numeric
+            if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7:
 
                 if type_[j] == 3 or type_[j] == 5: # using log
                     row[thisColIndex] = math.log(float(row[thisColIndex]), 2) # using log-ed value
@@ -65,9 +69,12 @@ def getDataFromFile(fn, splitter, cols_, type_):
                     row[thisColIndex] = math.log(float(row[thisColIndex])+1.0, 2) # using log(x+1)-ed value
                 else: # not using log
                     row[thisColIndex] = float(row[thisColIndex]) # using original value
-                
-            elif type_[j] == 1: # if this value is a date
-                row[thisColIndex] = timestamp(row[thisColIndex]) # return the timestamp of data
+
+            # if this value is a date
+            elif type_[j] == 1:
+                row[thisColIndex] = timestamp_type0(row[thisColIndex]) # return the timestamp of data (yyyy-mm-dd)
+            elif type_[j] == 8:
+                row[thisColIndex] = timestamp_type1(row[thisColIndex]) # return the timestamp of data (mm/dd/yyyy)
                 
         result.append(row)
 
@@ -132,7 +139,10 @@ if __name__ == '__main__':
         if 't' in inputCols[i]: # text
             inputCols_type.append(2)
             inputCols[i] = int(inputCols[i][:len(inputCols[i])-1])
-        elif 'd' in inputCols[i]: # date (converted to Z value)
+        elif 'd1' in inputCols[i]: # date type mm/dd/yyyy (converted to Z value)
+            inputCols_type.append(8)
+            inputCols[i] = int(inputCols[i][:len(inputCols[i])-2])
+        elif 'd' in inputCols[i]: # date type yyyy-mm-dd (converted to Z value)
             inputCols_type.append(1)
             inputCols[i] = int(inputCols[i][:len(inputCols[i])-1])
         elif 'lpz' in inputCols[i]: # numeric -> Z(log2(numeric+1))
@@ -159,7 +169,10 @@ if __name__ == '__main__':
         if 't' in outputCols[i]: # text
             outputCols_type.append(2)
             outputCols[i] = int(outputCols[i][:len(outputCols[i])-1])
-        elif 'd' in outputCols[i]: # date date (converted to Z value)
+        elif 'd1' in outputCols[i]: # date type mm/dd/yyyy (converted to Z value)
+            outputCols_type.append(8)
+            outputCols[i] = int(outputCols[i][:len(outputCols[i])-2])
+        elif 'd' in outputCols[i]: # date type yyyy-mm-dd (converted to Z value)
             outputCols_type.append(1)
             outputCols[i] = int(outputCols[i][:len(outputCols[i])-1])
         elif 'lpz' in outputCols[i]: # numeric -> Z(log2(numeric+1))
@@ -186,7 +199,10 @@ if __name__ == '__main__':
         if 't' in testCols[i]: # text
             testCols_type.append(2)
             testCols[i] = int(testCols[i][:len(testCols[i])-1])
-        elif 'd' in testCols[i]: # date date (converted to Z value)
+        elif 'd1' in testCols[i]: # date type mm/dd/yyyy (converted to Z value)
+            testCols_type.append(8)
+            testCols[i] = int(testCols[i][:len(testCols[i])-2])
+        elif 'd' in testCols[i]: # date type yyyy-mm-dd (converted to Z value)
             testCols_type.append(1)
             testCols[i] = int(testCols[i][:len(testCols[i])-1])
         elif 'lpz' in testCols[i]: # numeric -> Z(log2(numeric+1))
@@ -299,9 +315,9 @@ if __name__ == '__main__':
             if inputCols_type[j] == 0 or inputCols_type[j] == 3 or inputCols_type[j] == 6:
                 trainI_temp.append(inputs[i][inputCols[j]])
 
-            # date   (type:1) Z(numeric) / (type:4) Z(log2(numeric))
-            #      / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
-            elif inputCols_type[j] == 1 or inputCols_type[j] == 4 or inputCols_type[j] == 5 or inputCols_type[j] == 7:
+            # (type:1) Z(numeric) date (yyyy-mm-dd) / (type:8) Z(numeric) date (mm/dd/yyyy)
+            # (type:4) Z(log2(numeric)) / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
+            elif inputCols_type[j] == 1 or inputCols_type[j] == 4 or inputCols_type[j] == 5 or inputCols_type[j] == 7 or inputCols_type[j] == 8:
                 trainI_temp.append((inputs[i][inputCols[j]] - input_avgs[j])/input_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
@@ -330,9 +346,9 @@ if __name__ == '__main__':
             if outputCols_type[j] == 0 or outputCols_type[j] == 3 or outputCols_type[j] == 6:
                 trainO_temp.append(outputs[i][outputCols[j]])
 
-            # date   (type:1) Z(numeric) / (type:4) Z(log2(numeric))
-            #      / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
-            elif outputCols_type[j] == 1 or outputCols_type[j] == 4 or outputCols_type[j] == 5 or outputCols_type[j] == 7:
+            # (type:1) Z(numeric) date (yyyy-mm-dd) / (type:8) Z(numeric) date (mm/dd/yyyy)
+            # (type:4) Z(log2(numeric)) / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
+            elif outputCols_type[j] == 1 or outputCols_type[j] == 4 or outputCols_type[j] == 5 or outputCols_type[j] == 7 or outputCols_type[j] == 8:
                 trainO_temp.append((outputs[i][outputCols[j]] - output_avgs[j])/output_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
@@ -366,9 +382,9 @@ if __name__ == '__main__':
             if testCols_type[j] == 0 or testCols_type[j] == 3 or testCols_type[j] == 6:
                 testI_temp.append(tests[i][testCols[j]])
 
-            # date   (type:1) Z(numeric) / (type:4) Z(log2(numeric))
-            #      / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
-            elif testCols_type[j] == 1 or testCols_type[j] == 4 or testCols_type[j] == 5 or testCols_type[j] == 7:
+            # (type:1) Z(numeric) date (yyyy-mm-dd) / (type:8) Z(numeric) date (mm/dd/yyyy)
+            # (type:4) Z(log2(numeric)) / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
+            elif testCols_type[j] == 1 or testCols_type[j] == 4 or testCols_type[j] == 5 or testCols_type[j] == 7 or outputCols_type[j] == 8:
                 testI_temp.append((tests[i][testCols[j]] - input_avgs[j])/input_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
@@ -556,6 +572,10 @@ if __name__ == '__main__':
                 outputDate = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
                 date = datetime.fromtimestamp(outputDate * 86400)
                 result += date.strftime('%Y-%m-%d')
+            elif outputCols_type[originalIndex] == 8:
+                outputDate = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
+                date = datetime.fromtimestamp(outputDate * 86400)
+                result += date.strftime('%m/%d/%Y')
 
             # numeric value
             elif outputCols_type[originalIndex] == 0:
