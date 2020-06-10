@@ -97,30 +97,35 @@ if __name__ == '__main__':
     # get data from file using information in input_output_info.txt, in the form of
     # inputFileName trainCol0 trainCol1 ...
     # outputFileName trainCol0 trainCol1 ...
-    # testFileName testCol0 testCol1, ...
+    # testFileName testCol0 testCol1 ...
+    # testOutputFileName (o or r) (o or r) ...
     f = open('input_output_info.txt', 'r')
     ioInfo = f.readlines()
     f.close()
 
-    # split of line 0 ~ line 2
+    # split of line 0 ~ line 3
     inputSplit = ioInfo[0].split('\n')[0].split(' ')
     outputSplit = ioInfo[1].split('\n')[0].split(' ')
     testSplit = ioInfo[2].split('\n')[0].split(' ')
+    testOutputSplit = ioInfo[3].split('\n')[0].split(' ')
 
     # file name part
     inputFileName = inputSplit[0] # input train data file
     outputFileName = outputSplit[0] # output train data file
     testFileName = testSplit[0] # test input data file
+    testOutputFileName = testOutputSplit[0] # test output data file
 
     # column no (trainCol) part
     inputCols = inputSplit[1:len(inputSplit)]
     outputCols = outputSplit[1:len(outputSplit)]
     testCols = testSplit[1:len(testSplit)]
+    testOutputCols = testOutputSplit[1:len(testOutputSplit)]
 
     # type: 0(numeric), 1(date-Zvalue), 2(text), 3(numeric-log), 4(numeric-Zvalue), 5(numeric-logZvalue) for each column
     inputCols_type = []
     outputCols_type = []
     testCols_type = []
+    testOutputCols_type = []
 
     # for train input data
     for i in range(len(inputCols)):
@@ -202,6 +207,11 @@ if __name__ == '__main__':
         else: # just numeric
             testCols_type.append(0)
             testCols[i] = int(testCols[i])
+
+    # for test output data
+    for i in range(len(testOutputCols)):
+        if testOutputCols[i] == 'o': testOutputCols_type.append(0)
+        else: testOutputCols_type.append(1)
 
     # read files
     inputs = getDataFromFile(inputFileName, ',', inputCols, inputCols_type) # input train data
@@ -518,10 +528,14 @@ if __name__ == '__main__':
         
         while testIndex < len(outputLayer[0]):
 
+            # round or not (round if column type is 1)
+            rounded = False
+            if testOutputCols_type[originalIndex] == 1:
+                rounded = True
+
             # next item to see in onehotList is column j -> apply one-hot (text or text-like number)
             if originalIndex == onehotList[onehotListIndex][0]:
                 memset = onehotList[onehotListIndex][1] # set of members in column j
-                #print(str(testIndex) + ' memset:' + str(memset))
                 
                 # find max index in onehotList
                 maxIndexInMemset = 0 # index with maximum value in memset
@@ -534,7 +548,6 @@ if __name__ == '__main__':
 
                 # append to result
                 result += memset[maxIndexInMemset]
-                #print('maxIndexInMemset:' + str(maxIndexInMemset))
                 onehotListIndex += 1
                 testIndex += len(memset)-1
 
@@ -546,29 +559,37 @@ if __name__ == '__main__':
 
             # numeric value
             elif outputCols_type[originalIndex] == 0:
-                result += str(outputLayer[i][testIndex])
+                if rounded == True: result += str(round(outputLayer[i][testIndex], 0))
+                else: result += str(outputLayer[i][testIndex])
 
             # log2(numeric) -> 2^(numeric)
             elif outputCols_type[originalIndex] == 3:
-                result += str(pow(2.0, outputLayer[i][testIndex]))
+                if rounded == True: result += str(round(pow(2.0, outputLayer[i][testIndex]), 0))
+                else: result += str(pow(2.0, outputLayer[i][testIndex]))
 
             # Z(numeric) -> recover
             elif outputCols_type[originalIndex] == 4:
-                result += str(outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex])
+                if rounded == True: result += str(round(outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex], 0))
+                else: result += str(outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex])
 
             # Z(log2(numeric)) -> recover(un-Z using log-ed average and stddev) -> 2^(recover)
             elif outputCols_type[originalIndex] == 5:
                 recover = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
-                result += str(pow(2.0, recover))
+                
+                if rounded == True: result += str(round(pow(2.0, recover), 0))
+                else: result += str(pow(2.0, recover))
 
             # log2(numeric+1) -> 2^(numeric)
             elif outputCols_type[originalIndex] == 6:
-                result += str(pow(2.0, outputLayer[i][testIndex])-1.0)
+                if rounded == True: result += str(round(pow(2.0, outputLayer[i][testIndex])-1.0, 0))
+                else: result += str(pow(2.0, outputLayer[i][testIndex])-1.0)
 
             # Z(log2(numeric+1)) -> recover(un-Z using log-ed average and stddev)+1 -> 2^(recover)
             elif outputCols_type[originalIndex] == 7:
                 recover = outputLayer[i][testIndex] * output_stddevs[originalIndex] + output_avgs[originalIndex]
-                result += str(pow(2.0, recover)-1.0)
+
+                if rounded == True: result += str(round(pow(2.0, recover)-1.0, 0))
+                else: result += str(pow(2.0, recover)-1.0)
 
             originalIndex += 1
             testIndex += 1
@@ -579,6 +600,6 @@ if __name__ == '__main__':
             
         result += '\n'
 
-    f = open('test_result.csv', 'w')
+    f = open(testOutputFileName, 'w')
     f.write(result)
     f.close()
