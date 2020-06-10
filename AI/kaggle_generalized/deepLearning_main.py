@@ -47,7 +47,7 @@ def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList):
     if makeNullList == True: nullList = [] # list of rows with NULL numeric/date values 
 
     result = []
-    for i in range(1, 1000): # len(flines)
+    for i in range(1, len(flines)): # len(flines)
 
         # remove (do not consider -> continue) this row if it is in nullList
         if existingNullList != None:
@@ -103,6 +103,16 @@ def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList):
 def makeSet(array, colNum):
     arraySet = []
     for i in range(len(array)): arraySet.append(array[i][colNum])
+    arraySet = set(arraySet)
+    arraySet = list(arraySet)
+
+    return arraySet
+
+# return set of members of column colNum in the array, using 2 arrays
+def makeSet_(array0, array1, colNum0, colNum1):
+    arraySet = []
+    for i in range(len(array0)): arraySet.append(array0[i][colNum0])
+    for i in range(len(array1)): arraySet.append(array1[i][colNum1])
     arraySet = set(arraySet)
     arraySet = list(arraySet)
 
@@ -340,7 +350,9 @@ if __name__ == '__main__':
 
             # one-hot input (0 or 1) based on memset
             elif inputCols_type[j] == 2:
-                if i == 0: memset.append(makeSet(inputs, inputCols[j])) # set list of members of this column
+                if i == 0:
+                    memset.append(makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
+                    print(memsetIndex, memset[memsetIndex])
                 
                 for k in range(len(memset[memsetIndex])):
                     if inputs[i][inputCols[j]] == memset[memsetIndex][k]: trainI_temp.append(1)
@@ -407,7 +419,9 @@ if __name__ == '__main__':
 
             # one-hot input (0 or 1) based on memset
             elif testCols_type[j] == 2:
-                if i == 0: memset.append(makeSet(tests, testCols[j])) # set list of members of this column
+                if i == 0:
+                    memset.append(makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
+                    print(memsetIndex, memset[memsetIndex])
                 
                 for k in range(len(memset[memsetIndex])):
                     if tests[i][testCols[j]] == memset[memsetIndex][k]: testI_temp.append(1)
