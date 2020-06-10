@@ -54,11 +54,17 @@ def getDataFromFile(fn, splitter, cols_, type_):
 
         # parse each row
         row = flines[i].split('\n')[0].split(splitter)
+        isNull = False # is this row NULL?
 
         # for each column designated as training/test data
         for j in range(len(cols_)):
 
             thisColIndex = cols_[j] # index of this column in the row
+
+            # check if this row is NULL
+            if row[thisColIndex] == 'NULL' or row[thisColIndex] == 'null' or row[thisColIndex] == 'Null':
+                isNull = True
+                break
 
             # if this value is numeric
             if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7:
@@ -75,8 +81,9 @@ def getDataFromFile(fn, splitter, cols_, type_):
                 row[thisColIndex] = timestamp_type0(row[thisColIndex]) # return the timestamp of data (yyyy-mm-dd)
             elif type_[j] == 8:
                 row[thisColIndex] = timestamp_type1(row[thisColIndex]) # return the timestamp of data (mm/dd/yyyy)
-                
-        result.append(row)
+
+        # append to result if the row is not NULL
+        if isNull == False: result.append(row)
 
     return result
 
