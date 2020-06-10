@@ -352,7 +352,6 @@ if __name__ == '__main__':
             elif inputCols_type[j] == 2:
                 if i == 0:
                     memset.append(makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
-                    print(memsetIndex, memset[memsetIndex])
                 
                 for k in range(len(memset[memsetIndex])):
                     if inputs[i][inputCols[j]] == memset[memsetIndex][k]: trainI_temp.append(1)
@@ -421,7 +420,6 @@ if __name__ == '__main__':
             elif testCols_type[j] == 2:
                 if i == 0:
                     memset.append(makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
-                    print(memsetIndex, memset[memsetIndex])
                 
                 for k in range(len(memset[memsetIndex])):
                     if tests[i][testCols[j]] == memset[memsetIndex][k]: testI_temp.append(1)
