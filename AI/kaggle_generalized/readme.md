@@ -5,8 +5,9 @@
 * 1st line: (train input file name) (train input columns)
 * 2st line: (train output file name) (train output columns)
 * 3rd line: (test input file name) (test input columns)
+* 4th line: (test output file name) (test output column options)
 
-for each column X:
+for each column X (train input/output and test input columns):
 * ```X```: considered as NUMERIC values
 * ```Xt```: considered as TEXT
 * ```Xd```: considered as DATE/TIME
@@ -16,28 +17,36 @@ for each column X:
 * ```Xlp```: log2(NUMERIC value + 1)'s
 * ```Xlpz```: Z-value(log2(NUMERIC value + 1))'s
 
-output:
-```test_result.csv```
+for each column X (test output columns):
+* ```o```: output original data (ex: 2.3456)
+* ```r```: output rounded data (ex: 2)
+
+output file name:
+(test output file name)
 
 ### example ###
 ```
 input_example.csv 0 1z 2l 3lz 5t 6t 9d
 output_example.csv 0 1 2lz 5t 7t 8d
 test_example.csv 0 1z 2l 3lz 5t 6t 9d
+test_result.csv r r o o o o
 ```
 
-* line 1: train input data file is ```input_example.csv``` and in this file,
+* line 1: name of train input data file is ```input_example.csv``` and in this file,
   * 0th~3th column is NUMERIC(1st column with Z-value, 2nd column with log-value, and 3rd column with Z-value(log-value))
   * 5th and 6th column is considered as TEXT
-  * 9th column is DATE/TIME.
-* line 2: train output data file is ```output_example.csv``` and in this file,
+  * 9th column is DATE/TIME
+* line 2: name of train output data file is ```output_example.csv``` and in this file,
   * 0th~2nd column is NUMERIC(2nd column with Z-value(log-value))
   * 3rd and 5th column is considered as TEXT
-  * and 6th column is DATE/TIME.
-* line 3: test input data file is ```test_example.csv``` and in this file,
-  * 0th~3th column is NUMERIC(1st column with Z-value, 2nd column with log-value, and 3rd column with Z-value(log-value))
+  * and 6th column is DATE/TIME
+* line 3: name of test input data file is ```test_example.csv``` and in this file,
+  * 0th~3rd column is NUMERIC(1st column with Z-value, 2nd column with log-value, and 3rd column with Z-value(log-value))
   * 5th and 6th column is considered as TEXT
-  * 9th column is DATE/TIME.
+  * 9th column is DATE/TIME
+* line 4: name of test input data file is ```test_result.csv``` and in this file,
+  * 0th~1st column output is rounded to integer
+  * 2nd~5th column output is not rounded (original)
 
 ## deepLearning_model.txt: specify deep learning model ##
 ### layer settings ###
