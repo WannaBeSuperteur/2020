@@ -35,15 +35,23 @@ def timestamp_type1(s):
     return int(ts / 86400)
 
 # read training/test data from *.csv file
-# cols_: list of columns designated as training/test data, e.g. [0, 1, 3, 5, 6, 10]
-# type_: type of each column of training/test data, e.g. [0, 1, 2, 0, 0, 1]
-def getDataFromFile(fn, splitter, cols_, type_):
+# cols_           : list of columns designated as training/test data, e.g. [0, 1, 3, 5, 6, 10]
+# type_           : type of each column of training/test data, e.g. [0, 1, 2, 0, 0, 1]
+# makeNullList    : make null list for removing rows with NULL numeric/date values in train/test data
+# existingNullList: existing null list (list of rows with NULL numeric/date values)
+def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList):
     f = open(fn, 'r')
     flines = f.readlines()
     f.close()
 
+    if makeNullList == True: nullList = [] # list of rows with NULL numeric/date values 
+
     result = []
-    for i in range(1, len(flines)):
+    for i in range(1, 1000): # len(flines)
+
+        # remove (do not consider -> continue) this row if it is in nullList
+        if existingNullList != None:
+            if i in existingNullList: continue
 
         # replace all ','s within "", to '#'
         if '"' in flines[i]:
@@ -61,10 +69,12 @@ def getDataFromFile(fn, splitter, cols_, type_):
 
             thisColIndex = cols_[j] # index of this column in the row
 
-            # check if this row is NULL
-            if row[thisColIndex] == 'NULL' or row[thisColIndex] == 'null' or row[thisColIndex] == 'Null':
-                isNull = True
-                break
+            # check if this value is NULL when it is not a text value
+            if type_[j] != 2:
+                if row[thisColIndex] == 'NULL' or row[thisColIndex] == 'null' or row[thisColIndex] == 'Null':
+                    isNull = True
+                    if makeNullList == True: nullList.append(i) # append this row to nullList
+                    break
 
             # if this value is numeric
             if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7:
@@ -85,7 +95,8 @@ def getDataFromFile(fn, splitter, cols_, type_):
         # append to result if the row is not NULL
         if isNull == False: result.append(row)
 
-    return result
+    if makeNullList == True: return (result, nullList)
+    else: return result
 
 # return set of members of column colNum in the array
 # example: array=[['a', 1], ['b', 1], ['c', 2], ['c', 3], ['a', 0]], colNum=0 -> ['a', 'b', 'c']
@@ -237,9 +248,9 @@ if __name__ == '__main__':
         else: testOutputCols_type.append(1)
 
     # read files
-    inputs = getDataFromFile(inputFileName, ',', inputCols, inputCols_type) # input train data
-    outputs = getDataFromFile(outputFileName, ',', outputCols, outputCols_type) # output train data (using Sigmoid)
-    tests = getDataFromFile(testFileName, ',', testCols, testCols_type) # test input data
+    (inputs, nullList) = getDataFromFile(inputFileName, ',', inputCols, inputCols_type, True, None) # input train data
+    outputs = getDataFromFile(outputFileName, ',', outputCols, outputCols_type, False, nullList) # output train data (using Sigmoid)
+    tests = getDataFromFile(testFileName, ',', testCols, testCols_type, False, None) # test input data
 
     # print input, output, and test data
     if printed != 0:
@@ -391,7 +402,7 @@ if __name__ == '__main__':
 
             # (type:1) Z(numeric) date (yyyy-mm-dd) / (type:8) Z(numeric) date (mm/dd/yyyy)
             # (type:4) Z(log2(numeric)) / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
-            elif testCols_type[j] == 1 or testCols_type[j] == 4 or testCols_type[j] == 5 or testCols_type[j] == 7 or outputCols_type[j] == 8:
+            elif testCols_type[j] == 1 or testCols_type[j] == 4 or testCols_type[j] == 5 or testCols_type[j] == 7 or testCols_type[j] == 8:
                 testI_temp.append((tests[i][testCols[j]] - input_avgs[j])/input_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
