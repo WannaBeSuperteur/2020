@@ -39,7 +39,8 @@ def timestamp_type1(s):
 # type_           : type of each column of training/test data, e.g. [0, 1, 2, 0, 0, 1]
 # makeNullList    : make null list for removing rows with NULL numeric/date values in train/test data
 # existingNullList: existing null list (list of rows with NULL numeric/date values)
-def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList):
+# nullValueArray  : array of alternative value when the test input value is null, e.g. [0, 0, 0, 0, 0, 0]
+def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList, nullValueArray):
     f = open(fn, 'r')
     flines = f.readlines()
     f.close()
@@ -72,9 +73,14 @@ def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList):
             # check if this value is NULL when it is not a text value
             if type_[j] != 2:
                 if row[thisColIndex] == 'NULL' or row[thisColIndex] == 'null' or row[thisColIndex] == 'Null':
+
                     isNull = True
                     if makeNullList == True: nullList.append(i) # append this row to nullList
-                    break
+                    elif existingNullList == None:
+                        row[thisColIndex] = nullValueArray[j] # use nullValue for test data
+                        isNull = False # do not consider it as null value
+                    
+                    continue
 
             # if this value is numeric
             if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7:
@@ -258,9 +264,16 @@ if __name__ == '__main__':
         else: testOutputCols_type.append(1)
 
     # read files
-    (inputs, nullList) = getDataFromFile(inputFileName, ',', inputCols, inputCols_type, True, None) # input train data
-    outputs = getDataFromFile(outputFileName, ',', outputCols, outputCols_type, False, nullList) # output train data (using Sigmoid)
-    tests = getDataFromFile(testFileName, ',', testCols, testCols_type, False, None) # test input data
+    (inputs, nullList) = getDataFromFile(inputFileName, ',', inputCols, inputCols_type, True, None, None) # input train data
+    outputs = getDataFromFile(outputFileName, ',', outputCols, outputCols_type, False, nullList, None) # output train data (using Sigmoid)
+    tests = getDataFromFile(testFileName, ',', testCols, testCols_type, False, None, [0]*len(testCols)) # test input data (set nullValue to 0)
+
+    print('')
+    print(' ---- number of rows ----')
+    print('input  size: ' + str(len(inputs)))
+    print('output size: ' + str(len(outputs)))
+    print('test   size: ' + str(len(tests)))
+    print('')
 
     # print input, output, and test data
     if printed != 0:
