@@ -10,7 +10,8 @@
 for each column X (train input/output and test input columns):
 * ```X```: considered as NUMERIC values
 * ```Xt```: considered as TEXT
-* ```Xd```: considered as DATE/TIME
+* ```Xd```: considered as DATE/TIME (yyyy-mm-dd form)
+* ```Xd1```: considered as DATE/TIME (mm/dd/yyyy form)
 * ```Xl```: log2(NUMERIC value)'s
 * ```Xz```: Z-value(NUMERIC value)'s
 * ```Xlz```: Z-value(log2(NUMERIC value))'s
