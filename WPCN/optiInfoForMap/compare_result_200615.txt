@@ -1,0 +1,155 @@
+======== RESTART: C:\Users\hskim\2020\WPCN\optiInfoForMap\compare.py ========
+versionforPaper_8_6
+size8
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1101.747054
+avg train: 1.224163
+
+sum test : 124.928332
+avg test : 1.249283
+
+sum all  : 1226.675386
+avg all  : 1.226675
+
+ <<< problem 1 >>>
+sum train: 9.378949
+avg train: 0.010421
+
+sum test : 1.084162
+avg test : 0.010842
+
+sum all  : 10.463111
+avg all  : 0.010463
+>>> 
+======== RESTART: C:\Users\hskim\2020\WPCN\optiInfoForMap\compare.py ========
+versionforPaper_8_10
+size8
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1258.277764
+avg train: 1.398086
+
+sum test : 140.414607
+avg test : 1.404146
+
+sum all  : 1398.692371
+avg all  : 1.398692
+
+ <<< problem 1 >>>
+sum train: 6.095566
+avg train: 0.006773
+
+sum test : 0.68512
+avg test : 0.006851
+
+sum all  : 6.780686
+avg all  : 0.006781
+>>> 
+======== RESTART: C:\Users\hskim\2020\WPCN\optiInfoForMap\compare.py ========
+versionforPaper_12_6
+size12
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1001.035364
+avg train: 1.112262
+
+sum test : 109.954869
+avg test : 1.099549
+
+sum all  : 1110.990233
+avg all  : 1.11099
+
+ <<< problem 1 >>>
+sum train: 2.630316
+avg train: 0.002923
+
+sum test : 0.295057
+avg test : 0.002951
+
+sum all  : 2.925373
+avg all  : 0.002925
+>>> 
+======== RESTART: C:\Users\hskim\2020\WPCN\optiInfoForMap\compare.py ========
+versionforPaper_12_10
+size12
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1127.88317
+avg train: 1.253204
+
+sum test : 124.342352
+avg test : 1.243424
+
+sum all  : 1252.225522
+avg all  : 1.252226
+
+ <<< problem 1 >>>
+sum train: 1.601521
+avg train: 0.001779
+
+sum test : 0.178948
+avg test : 0.001789
+
+sum all  : 1.780468
+avg all  : 0.00178
+>>> 
+======== RESTART: C:\Users\hskim\2020\WPCN\optiInfoForMap\compare.py ========
+versionforPaper_16_6
+size16
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 915.198614
+avg train: 1.016887
+
+sum test : 99.082948
+avg test : 0.990829
+
+sum all  : 1014.281561
+avg all  : 1.014282
+
+ <<< problem 1 >>>
+sum train: 0.924587
+avg train: 0.001027
+
+sum test : 0.099367
+avg test : 0.000994
+
+sum all  : 1.023953
+avg all  : 0.001024
+>>> 
+======== RESTART: C:\Users\hskim\2020\WPCN\optiInfoForMap\compare.py ========
+versionforPaper_16_10
+size16
+number of train data900
+number of test data100
+
+ <<< problem 0 >>>
+sum train: 1057.234091
+avg train: 1.174705
+
+sum test : 117.415684
+avg test : 1.174157
+
+sum all  : 1174.649775
+avg all  : 1.17465
+
+ <<< problem 1 >>>
+sum train: 0.556116
+avg train: 0.000618
+
+sum test : 0.058558
+avg test : 0.000586
+
+sum all  : 0.614674
+avg all  : 0.000615
