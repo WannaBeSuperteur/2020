@@ -1,3 +1,78 @@
+## NOW for final paper (200615)
+
+### Paper
+* ```paper00_temporary.docx```
+
+### Experiment Result
+* refer to ```report/200616_WPCN.pptx```
+
+### Python code
+#### main
+* for training and testing (Sum- or Common- throughput maximization) using throughput map
+  * create the throughput map if throughput map file (optiInfoForMap txt file) does not exist
+  * ```deepLearning_WPCN_forPaper.py``` : Sigmoid [-1, 1]
+* helper file (get throughput for given wireless device position list)
+  * ```WPCN_helper_REAL_paper.py```
+
+#### experiments
+* implementation of paper for number of HAPs = 1 (Placement Optimization of Energy and Information Access Points in Wireless Powered Communication Networks) and test using the implementation
+  * ```WPCN_paper_forPaper.py```
+  
+#### compare throughput map (in ```/optiInfoForMap```)
+* ```optiInfoForMap/compare.py```
+
+### Text files and images
+#### training and testing maps
+* ```originalMaps_size_WDs/DL_WPCN_xxxx.txt``` (created when running ```deepLearning_WPCN_forPaper.py``` with value 1 for ```0->read files, 1->create new files``` option)
+  * size: ```8```, ```12``` or ```16```
+  * WDs: ```6``` or ```10```
+
+#### metadata for training and testing
+* ```map.txt``` (each line denotes each configuration)
+
+#### throughput maps
+* throughput map for Sum throughput maximization
+  * ```optiInfoForMap/optiInfoForMap_0_forPaper_8_6.txt``` (size=8, WDs=6)
+  * ```optiInfoForMap/optiInfoForMap_0_forPaper_8_10.txt``` (size=8, WDs=10)
+  * ```optiInfoForMap/optiInfoForMap_0_forPaper_12_6.txt``` (size=12, WDs=6)
+  * ```optiInfoForMap/optiInfoForMap_0_forPaper_12_10.txt``` (size=12, WDs=10)
+  * ```optiInfoForMap/optiInfoForMap_0_forPaper_16_6.txt``` (size=16, WDs=6)
+  * ```optiInfoForMap/optiInfoForMap_0_forPaper_16_10.txt``` (size=16, WDs=10)
+* throughput map for Common throughput maximization
+  * ```optiInfoForMap/optiInfoForMap_1_forPaper_8_6.txt``` (size=8, WDs=6)
+  * ```optiInfoForMap/optiInfoForMap_1_forPaper_8_10.txt``` (size=8, WDs=10)
+  * ```optiInfoForMap/optiInfoForMap_1_forPaper_12_6.txt``` (size=12, WDs=6)
+  * ```optiInfoForMap/optiInfoForMap_1_forPaper_12_10.txt``` (size=12, WDs=10)
+  * ```optiInfoForMap/optiInfoForMap_1_forPaper_16_6.txt``` (size=16, WDs=6)
+  * ```optiInfoForMap/optiInfoForMap_1_forPaper_16_10.txt``` (size=16, WDs=10)
+
+#### result files
+* result of experiment (```deepLearning_WPCN_forPaper.py```)
+  * Sum throughput maximization
+    * all files whose name is in the form of ```results/DL_WPCN_forPaper_0_(size)_(WDs).txt```
+  * Common throughput maximization
+    * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
+  * size: ```8```, ```12``` or ```16```
+  * WDs: ```6``` or ```10```
+* result of paper (```WPCN_paper.py```)
+  * Sum throughput maximization
+    * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
+    * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
+  * Common throughput maximization
+    * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt```
+    * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt```
+  * size: ```8```, ```12``` or ```16```
+  * WDs: ```6``` or ```10```
+  
+### Report files
+* Visualized Throughput Map
+  * ```../report/200615_visualList_8_6.xlsx``` (size=8, WDs=6)
+  * ```../report/200615_visualList_8_10.xlsx``` (size=8, WDs=10)
+  * ```../report/200615_visualList_12_6.xlsx``` (size=12, WDs=6)
+  * ```../report/200615_visualList_12_10.xlsx``` (size=12, WDs=10)
+  * ```../report/200615_visualList_16_6.xlsx``` (size=16, WDs=6)
+  * ```../report/200615_visualList_16_10.xlsx``` (size=16, WDs=10)
+
 ## NOW Version 2 (200519)
 https://github.com/WannaBeSuperteur/2020/tree/ac16a8ca221159d3294949f56b0a166845ece998
 
@@ -92,12 +167,12 @@ https://github.com/WannaBeSuperteur/2020/tree/ac16a8ca221159d3294949f56b0a166845
   
 ### Report files
 * Excel Report
-  * ```report/200519_testResult.xlsx```
+  * ```../report/200519_testResult.xlsx```
   
 * Visualized Throughput Map
-  * ```report/200519_visualList.xlsx```
-    * Sum throughput maximization: same as ```report/200511_visualList.xlsx``` (ver1)
-    * Common throughput maximization: same as ```report/200318_visualList.xlsx``` (ver0)
+  * ```../report/200519_visualList.xlsx```
+    * Sum throughput maximization: same as ```../report/200511_visualList.xlsx``` (ver1)
+    * Common throughput maximization: same as ```../report/200318_visualList.xlsx``` (ver0)
 
 ## Version 1 (200511)
 https://github.com/WannaBeSuperteur/2020/tree/dffe6a35686f4cb17c49f348af0966137a953ef1
@@ -180,10 +255,10 @@ https://github.com/WannaBeSuperteur/2020/tree/dffe6a35686f4cb17c49f348af0966137a
   
 ### Report files
 * Excel Report
-  * ```report/200511_testResult.xlsx```
+  * ```../report/200511_testResult.xlsx```
   
 * Visualized Throughput Map
-  * ```report/200511_visualList.xlsx```
+  * ```../report/200511_visualList.xlsx```
 
 ## Version 0 (200318)
 https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e6745ad/WPCN (deleted)
@@ -273,10 +348,10 @@ https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e
     * ```report/200429_WPCN.pptx```
 
 * Excel Report
-  * ```report/200318_testResult.xlsx```
+  * ```../report/200318_testResult.xlsx```
   
 * Visualized Throughput Map
-  * ```report/200318_visualList.xlsx```
+  * ```../report/200318_visualList.xlsx```
 
 ## Unused files
 * ```Qlearning_deep_WPCN.py```
