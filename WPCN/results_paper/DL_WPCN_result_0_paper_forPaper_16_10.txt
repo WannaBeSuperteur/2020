@@ -1,0 +1,5 @@
+< mode 0: original >
+
+ <<< ESTIMATION RESULT >>>
+No.	size	test	problem	percentage
+0	16	100	0	23.6149
