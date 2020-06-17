@@ -1,0 +1,3 @@
+40 32 1 1 1 train_imgs test_imgs
+naver 0
+google 1
