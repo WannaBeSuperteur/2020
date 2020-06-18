@@ -1,4 +1,6 @@
 # 1. deepLearning_main.py #
+input: DATA + INPUT AND OUTPUT INFO (COMPATIBLE) + MODEL -> output: TRAIN AND TEST RESULT
+
 Execute Deep Learning and write the result of learning using given information.
 
 ## How to execute ##
@@ -113,6 +115,8 @@ OP adam0 0.001
 * line 5: Use ADAM optimizer with learning rate = 0.001 
 
 # 2. image_data_generator.py #
+input: IMAGE + INFO AND RULES -> output: DATA
+
 Write data about train/test input/output images.
 * including label using rules (```keywordX, valueX``` pairs in ```input_output_image_info.txt```)
 * resize image for input of the neural network
@@ -150,6 +154,8 @@ google 1
 * ```google 1``` means, if the image file name contains ```google```, it is labeled as ```1```.
 
 # 3. input_output_info_converter.py #
+input: INPUT AND OUTPUT INFO (NOT COMPATIBLE) -> INPUT AND OUTPUT INFO (COMPATIBLE)
+
 Convert ranged input/output information into input/output information compatible with ```input_output_info.txt``` and ```deepLearning_main.py```. Write converted information into ```input_output_info_converted.txt```.
 
 ## How to execute ##
