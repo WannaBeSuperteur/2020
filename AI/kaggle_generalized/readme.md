@@ -136,6 +136,19 @@ keywordN valueN
 * testImagesFolder: the name of folder containing test images
 * ```keywordX, valueX``` pairs: label it as ```valueX``` if the file name contains ```keywordX```
 
+for example,
+```
+12 12 1 1 1 train_imgs test_imgs
+naver 0
+google 1
+```
+* width and height of image after resizing is ```12``` and ```12```. (images are converted info 12x12 images)
+* RW, GW and BW are ```1```, ```1``` and ```1```. (weight of Red, Green and Blue are all the same)
+* trainImagesFolder is ```train_imgs```. (image for training is in ```train_imgs``` folder)
+* testImagesFolder is ```test_imgs```. (image for testing is in ```test_imgs``` folder)
+* ```naver 0``` means, if the image file name contains ```naver```, it is labeled as ```0```.
+* ```google 1``` means, if the image file name contains ```google```, it is labeled as ```1```.
+
 # 3. input_output_info_converter.py #
 Convert ranged input/output information into input/output information compatible with ```input_output_info.txt``` and ```deepLearning_main.py```. Write converted information into ```input_output_info_converted.txt```.
 
