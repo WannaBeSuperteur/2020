@@ -148,16 +148,16 @@ for training input/output and test input
 * ```start(label)~end(label)``` -> ```start(label) start+1(label) ... end(label)```
 
 for example,
-```0~9``` -> ```0 1 2 3 4 5 6 7 8 9```
-```10~14t``` -> ```10t 11t 12t 13t 14t```
-```15~19z``` -> ```15z 16z 17z 18z 19z```
-```20~29d1``` -> ```20d1 21d1 22d1 23d1 24d1 25d1 26d1 27d1 28d1 29d1```
+* ```0~9``` -> ```0 1 2 3 4 5 6 7 8 9```
+* ```10~14t``` -> ```10t 11t 12t 13t 14t```
+* ```15~19z``` -> ```15z 16z 17z 18z 19z```
+* ```20~29d1``` -> ```20d1 21d1 22d1 23d1 24d1 25d1 26d1 27d1 28d1 29d1```
 
 for test output
 * ```o(number)``` -> ```o o o ... o```(```(number)``` o's)
 * ```r(number)``` -> ```r r r ... r```(```(number)``` r's)
 
 for example,
-```o2``` -> ```o o```
-```r3``` -> ```r r r```
-```o5``` -> ```o o o o o```
+* ```o2``` -> ```o o```
+* ```r3``` -> ```r r r```
+* ```o5``` -> ```o o o o o```
