@@ -1,3 +1,6 @@
+# 1. deepLearning_main.py #
+Execute Deep Learning and write the result of learning using given information.
+
 ## How to execute ##
 ```python deepLearning_main.py```
 
@@ -108,3 +111,53 @@ OP adam0 0.001
 * line 3: Dense layer with 1000 nodes, using SIGMOID as activation function
 * line 4: Dense output layer, using SIGMOID as activation function
 * line 5: Use ADAM optimizer with learning rate = 0.001 
+
+# 2. image_data_generator.py #
+Write data about train/test input/output images.
+* including label using rules (```keywordX, valueX``` pairs in ```input_output_image_info.txt```)
+* resize image for input of the neural network
+
+## How to execute ##
+```python image_data_generator.py```
+
+## input_output_image_info.txt: information about images and how to write the data ##
+in the form of
+```
+width height RW GW BW trainImagesFolder testImagesFolder
+keyword0 value0
+keyword1 value1
+...
+keywordN valueN
+```
+* width: width of image after resizing (for input of neural network)
+* height: height of image after resizing (for input of neural network)
+* RW, GW and BW: weight for Red, Green and Blue components of image
+* trainImagesFolder: the name of folder containing train images
+* testImagesFolder: the name of folder containing test images
+* ```keywordX, valueX``` pairs: label it as ```valueX``` if the file name contains ```keywordX```
+
+# 3. input_output_info_converter.py #
+Convert ranged input/output information into input/output information compatible with ```input_output_info.txt``` and ```deepLearning_main.py```. Write converted information into ```input_output_info_converted.txt```.
+
+## How to execute ##
+```python input_output_info_converter.py```
+
+## input_output_info_original.txt: ranged information ##
+for training input/output and test input
+* ```start~end``` -> ```start start+1 ... end```
+* ```start(label)~end(label)``` -> ```start(label) start+1(label) ... end(label)```
+
+for example,
+```0~9``` -> ```0 1 2 3 4 5 6 7 8 9```
+```10~14t``` -> ```10t 11t 12t 13t 14t```
+```15~19z``` -> ```15z 16z 17z 18z 19z```
+```20~29d1``` -> ```20d1 21d1 22d1 23d1 24d1 25d1 26d1 27d1 28d1 29d1```
+
+for test output
+* ```o(number)``` -> ```o o o ... o```(```(number)``` o's)
+* ```r(number)``` -> ```r r r ... r```(```(number)``` r's)
+
+for example,
+```o2``` -> ```o o```
+```r3``` -> ```r r r```
+```o5``` -> ```o o o o o```
