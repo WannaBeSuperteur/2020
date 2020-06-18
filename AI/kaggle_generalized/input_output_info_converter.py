@@ -92,7 +92,7 @@ if __name__ == '__main__':
             for j in range(count): TestO_converted += ' ' + TestO[i][0]
 
         else: # not in the range form (just append)
-            TestO_converted += ' ' + Test0[i]
+            TestO_converted += ' ' + TestO[i]
 
     # text to write
     toWrite = TrainI_converted + '\n' + TrainO_converted + '\n' + TestI_converted + '\n' + TestO_converted
