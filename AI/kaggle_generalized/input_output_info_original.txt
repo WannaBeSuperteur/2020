@@ -1,4 +1,4 @@
-training.csv 0~9 10~14t 15~19z 20~29d1 30t 31z 32 33 34 35 36~39t
-training.csv 40 41t 42~44z 45t 46t 47 48 49
-test.csv 0~9 10~14t 15~19z 20~29d1 30t 31z 32 33 34 35 36~39t
-result.csv o2 r3 o5
+training_image.csv 1~144
+training_image.csv 0t
+test_image.csv 0~143
+result_image.csv o
