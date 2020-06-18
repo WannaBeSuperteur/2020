@@ -1,0 +1,4 @@
+training.csv 0 1 2 3 4 5 6 7 8 9 10t 11t 12t 13t 14t 15z 16z 17z 18z 19z 20d1 21d1 22d1 23d1 24d1 25d1 26d1 27d1 28d1 29d1 30t 31z 32 33 34 35 36t 37t 38t 39t
+training.csv 40 41t 42z 43z 44z 45t 46t 47 48 49
+test.csv 0 1 2 3 4 5 6 7 8 9 10t 11t 12t 13t 14t 15z 16z 17z 18z 19z 20d1 21d1 22d1 23d1 24d1 25d1 26d1 27d1 28d1 29d1 30t 31z 32 33 34 35 36t 37t 38t 39t
+result.csv o o r r r o o o o o
