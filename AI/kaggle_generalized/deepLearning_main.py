@@ -1,5 +1,5 @@
 import deepLearning_GPU
-import deepLearning_GPU_helper as helper
+import deepLearning_GPU_helper as GPUhelper
 import random
 import tensorflow as tf
 import numpy as np
@@ -8,127 +8,7 @@ import math
 from tensorflow import keras
 from keras.models import Model, model_from_json
 from datetime import datetime
-
-def isNumber(s):
-    try:
-        float(s)
-        return True
-    except:
-        return False
-
-# print rounded array
-def roundedArray(array, n):
-    roundedArray = []
-    for i in range(len(array)):
-        try:
-            roundedArray.append(round(array[i], n))
-        except:
-            roundedArray.append(array[i])
-    return roundedArray
-
-# return timestamp as date
-def timestamp_type0(s):
-    ts = time.mktime(datetime.strptime(s, '%Y-%m-%d').timetuple())
-    return int(ts / 86400)
-def timestamp_type1(s):
-    ts = time.mktime(datetime.strptime(s, '%m/%d/%Y').timetuple())
-    return int(ts / 86400)
-
-# read training/test data from *.csv file
-# cols_           : list of columns designated as training/test data, e.g. [0, 1, 3, 5, 6, 10]
-# type_           : type of each column of training/test data, e.g. [0, 1, 2, 0, 0, 1]
-# makeNullList    : make null list for removing rows with NULL numeric/date values in train/test data
-# existingNullList: existing null list (list of rows with NULL numeric/date values)
-# nullValueArray  : array of alternative value when the test input value is null, e.g. [0, 0, 0, 0, 0, 0]
-def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList, nullValueArray):
-    f = open(fn, 'r')
-    flines = f.readlines()
-    f.close()
-
-    if makeNullList == True: nullList = [] # list of rows with NULL numeric/date values 
-
-    result = []
-    for i in range(1, len(flines)): # len(flines)
-
-        # remove (do not consider -> continue) this row if it is in nullList
-        if existingNullList != None:
-            if i in existingNullList: continue
-
-        # replace all ','s within "", to '#'
-        if '"' in flines[i]:
-            quoteCount = 0
-            for j in range(len(flines[i])):
-                if flines[i][j] == '"': quoteCount += 1
-                elif flines[i][j] == ',' and quoteCount % 2 == 1: flines[i] = flines[i][:j] + '#' + flines[i][j+1:]
-
-        # parse each row
-        row = flines[i].split('\n')[0].split(splitter)
-        isNull = False # is this row NULL?
-
-        # for each column designated as training/test data
-        for j in range(len(cols_)):
-
-            thisColIndex = cols_[j] # index of this column in the row
-
-            # check if this value is NULL when it is not a text value
-            if type_[j] != 2:
-                if row[thisColIndex] == 'NULL' or row[thisColIndex] == 'null' or row[thisColIndex] == 'Null':
-
-                    isNull = True
-                    if makeNullList == True: nullList.append(i) # append this row to nullList
-                    elif existingNullList == None:
-                        row[thisColIndex] = nullValueArray[j] # use nullValue for test data
-                        isNull = False # do not consider it as null value
-                    
-                    continue
-
-            # if this value is numeric
-            if type_[j] == 0 or type_[j] == 3 or type_[j] == 4 or type_[j] == 5 or type_[j] == 6 or type_[j] == 7:
-
-                if type_[j] == 3 or type_[j] == 5: # using log
-                    row[thisColIndex] = math.log(float(row[thisColIndex]), 2) # using log-ed value
-                elif type_[j] == 6 or type_[j] == 7: # using log(x+1)
-                    row[thisColIndex] = math.log(float(row[thisColIndex])+1.0, 2) # using log(x+1)-ed value
-                else: # not using log
-                    row[thisColIndex] = float(row[thisColIndex]) # using original value
-
-            # if this value is a date
-            elif type_[j] == 1:
-                row[thisColIndex] = timestamp_type0(row[thisColIndex]) # return the timestamp of data (yyyy-mm-dd)
-            elif type_[j] == 8:
-                row[thisColIndex] = timestamp_type1(row[thisColIndex]) # return the timestamp of data (mm/dd/yyyy)
-
-        # append to result if the row is not NULL
-        if isNull == False: result.append(row)
-
-    if makeNullList == True: return (result, nullList)
-    else: return result
-
-# return set of members of column colNum in the array
-# example: array=[['a', 1], ['b', 1], ['c', 2], ['c', 3], ['a', 0]], colNum=0 -> ['a', 'b', 'c']
-def makeSet(array, colNum):
-    arraySet = []
-    for i in range(len(array)): arraySet.append(array[i][colNum])
-    arraySet = set(arraySet)
-    arraySet = list(arraySet)
-
-    return arraySet
-
-# return set of members of column colNum in the array, using 2 arrays
-def makeSet_(array0, array1, colNum0, colNum1):
-    arraySet = []
-    for i in range(len(array0)): arraySet.append(array0[i][colNum0])
-    for i in range(len(array1)): arraySet.append(array1[i][colNum1])
-    arraySet = set(arraySet)
-    arraySet = list(arraySet)
-
-    return arraySet
-
-# sign of value
-def sign(val):
-    if val > 0: return 1
-    elif val == 0: return 0
-    else: return -1
+import helper
 
 if __name__ == '__main__':
     deviceName = input('device name (for example, cpu:0 or gpu:0)')
@@ -264,9 +144,9 @@ if __name__ == '__main__':
         else: testOutputCols_type.append(1)
 
     # read files
-    (inputs, nullList) = getDataFromFile(inputFileName, ',', inputCols, inputCols_type, True, None, None) # input train data
-    outputs = getDataFromFile(outputFileName, ',', outputCols, outputCols_type, False, nullList, None) # output train data (using Sigmoid)
-    tests = getDataFromFile(testFileName, ',', testCols, testCols_type, False, None, [0]*len(testCols)) # test input data (set nullValue to 0)
+    (inputs, nullList) = helper.getDataFromFile(inputFileName, ',', inputCols, inputCols_type, True, None, None) # input train data
+    outputs = helper.getDataFromFile(outputFileName, ',', outputCols, outputCols_type, False, nullList, None) # output train data (using Sigmoid)
+    tests = helper.getDataFromFile(testFileName, ',', testCols, testCols_type, False, None, [0]*len(testCols)) # test input data (set nullValue to 0)
 
     print('')
     print(' ---- number of rows ----')
@@ -278,13 +158,13 @@ if __name__ == '__main__':
     # print input, output, and test data
     if printed != 0:
         print('\n ---- original input data ----\n')
-        for i in range(len(inputs)): print(roundedArray(inputs[i], 6))
+        for i in range(len(inputs)): print(helper.roundedArray(inputs[i], 6))
 
         print('\n ---- original output data ----\n')
-        for i in range(len(outputs)): print(roundedArray(outputs[i], 6))
+        for i in range(len(outputs)): print(helper.roundedArray(outputs[i], 6))
 
         print('\n ---- original test data ----\n')
-        for i in range(len(tests)): print(roundedArray(tests[i], 6))
+        for i in range(len(tests)): print(helper.roundedArray(tests[i], 6))
 
     np.set_printoptions(precision=4, linewidth=150)
 
@@ -339,10 +219,10 @@ if __name__ == '__main__':
 
     if printed != 0:
         print('')
-        print('input_avgs: ' + str(roundedArray(input_avgs, 6)))
-        print('input_stds: ' + str(roundedArray(input_stddevs, 6)))
-        print('output_avgs: ' + str(roundedArray(output_avgs, 6)))
-        print('output_stds: ' + str(roundedArray(output_stddevs, 6)))
+        print('input_avgs: ' + str(helper.roundedArray(input_avgs, 6)))
+        print('input_stds: ' + str(helper.roundedArray(input_stddevs, 6)))
+        print('output_avgs: ' + str(helper.roundedArray(output_avgs, 6)))
+        print('output_stds: ' + str(helper.roundedArray(output_stddevs, 6)))
     
     for i in range(len(inputs)):
 
@@ -364,7 +244,7 @@ if __name__ == '__main__':
             # one-hot input (0 or 1) based on memset
             elif inputCols_type[j] == 2:
                 if i == 0:
-                    memset.append(makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
+                    memset.append(helper.makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
                 
                 for k in range(len(memset[memsetIndex])):
                     if inputs[i][inputCols[j]] == memset[memsetIndex][k]: trainI_temp.append(1)
@@ -395,7 +275,7 @@ if __name__ == '__main__':
 
             # one-hot input (0 or 1) based on memset
             elif outputCols_type[j] == 2:
-                if i == 0: memset.append(makeSet(outputs, outputCols[j])) # set list of members of this column
+                if i == 0: memset.append(helper.makeSet(outputs, outputCols[j])) # set list of members of this column
                 
                 for k in range(len(memset[memsetIndex])):
                     if outputs[i][outputCols[j]] == memset[memsetIndex][k]: trainO_temp.append(1)
@@ -406,7 +286,7 @@ if __name__ == '__main__':
                 memsetIndex += 1
 
         # apply sigmoid to each value of trainO
-        for k in range(len(trainO_temp)): trainO_temp[k] = helper.sigmoid(trainO_temp[k])
+        for k in range(len(trainO_temp)): trainO_temp[k] = GPUhelper.sigmoid(trainO_temp[k])
                     
         trainO.append(trainO_temp)
 
@@ -432,7 +312,7 @@ if __name__ == '__main__':
             # one-hot input (0 or 1) based on memset
             elif testCols_type[j] == 2:
                 if i == 0:
-                    memset.append(makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
+                    memset.append(helper.makeSet_(inputs, tests, inputCols[j], testCols[j])) # set list of members of this column
                 
                 for k in range(len(memset[memsetIndex])):
                     if tests[i][testCols[j]] == memset[memsetIndex][k]: testI_temp.append(1)
@@ -543,13 +423,13 @@ if __name__ == '__main__':
     # print input, output, and test data
     if printed != 0:
         print('\n ---- input data ----\n')
-        for i in range(len(trainI)): print(roundedArray(trainI[i], 6))
+        for i in range(len(trainI)): print(helper.roundedArray(trainI[i], 6))
 
         print('\n ---- output data ----\n')
-        for i in range(len(trainO)): print(roundedArray(trainO[i], 6))
+        for i in range(len(trainO)): print(helper.roundedArray(trainO[i], 6))
 
         print('\n ---- test data ----\n')
-        for i in range(len(testI)): print(roundedArray(testI[i], 6))
+        for i in range(len(testI)): print(helper.roundedArray(testI[i], 6))
 
     # learning
     print('\n <<<< LEARNING >>>>\n')
@@ -570,7 +450,7 @@ if __name__ == '__main__':
     # inverse sigmoid
     for i in range(len(outputLayer)): # for each output data
         for j in range(len(outputLayer[0])): # for each value of output data
-            outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
+            outputLayer[i][j] = GPUhelper.invSigmoid(outputLayer[i][j])
 
     # write to file
     result = ''
