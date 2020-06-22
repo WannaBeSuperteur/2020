@@ -98,6 +98,167 @@ def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList, 
     if makeNullList == True: return (result, nullList)
     else: return result
 
+# sub-function for categorizeData function
+# return true when data satisfies condition, otherwise return false
+def dataCondition(data, condition):
+
+    # '>X', '>=X', '<X', '<=X' and '<>X'
+    if condition[:2] == '>=' and len(condition) >= 3:
+        if data >= float(condition[2:]): return True
+    elif condition[:2] == '<=' and len(condition) >= 3:
+        if data <= float(condition[2:]): return True
+    elif condition[:2] == '<>' and len(condition) >= 3:
+        if data != float(condition[2:]): return True
+    elif condition[0] == '>' and len(condition) >= 2:
+        if data > float(condition[1:]): return True
+    elif condition[0] == '<' and len(condition) >= 2:
+        if data < float(condition[1:]): return True
+
+    # '*X*', '*X' and 'X*'
+    elif condition[0] == '*' and condition[len(condition)-1] == '*' and len(condition) >= 3: # '*X*' : include X
+        if condition[1:len(condition)-1] in data: return True
+    elif condition[0] == '*' and len(condition) >= 2: # '*X' : ends with X
+        if data[len(data)-len(condition)+1:] == condition[1:]: return True
+    elif condition[len(condition)-1] == '*' and len(condition) >= 2: # 'X*' : starts with X
+        if data[:len(condition)-1] == condition[:len(condition)-1]: return True
+
+    # '!*X*', '!*X' and '!X*'
+    elif condition[:2] == '!*' and condition[len(condition)-1] == '*' and len(condition) >= 4: # '!*X*' : does not include X
+        if not condition[2:len(condition)-1] in data: return True
+    elif condition[:2] == '!*' and len(condition) >= 3: # '!*X' : does not end with X
+        if not data[len(data)-len(condition)+2:] == condition[2:]: return True
+    elif condition[0] == '!' and condition[len(condition)-1] == '*' and len(condition) >= 3: # '!X*' : does not start with X
+        if not data[:len(condition)-2] == condition[1:len(condition)-1]: return True
+
+    # X (equal to)
+    else:
+        if data == condition: return True
+
+    return False
+
+# read training/test data from *.csv file
+# cols_           : list of columns designated as training/test data, e.g. [0, 1, 3, 5, 6, 10]
+# categorizeRules : rules for categorization for each column, e.g. [['>25', 'x', '>15', 'y', 'z'], ['A', 'x', 'B', 'y', 'z'], ...]
+#                   '>X', '>=X', '<X', '<=X', 'X', '<>X': greater than/at least/less than/at most/equal to/not equal to X
+#                   '*X*', '*X', 'X*': contains/end with/start with X
+#                   '!*X*', '!*X', '!X*': do not contains/end with/start with X
+def categorizeData(fn, splitter, cols_, categorizeRules):
+    f = open(fn, 'r')
+    flines = f.readlines()
+    f.close()
+
+    result = []
+    for i in range(1, len(flines)): # len(flines)
+
+        # replace all ','s within "", to '#'
+        if '"' in flines[i]:
+            quoteCount = 0
+            for j in range(len(flines[i])):
+                if flines[i][j] == '"': quoteCount += 1
+                elif flines[i][j] == ',' and quoteCount % 2 == 1: flines[i] = flines[i][:j] + '#' + flines[i][j+1:]
+
+        # parse each row
+        row = []
+        originalRow = flines[i].split('\n')[0].split(splitter) # each column of original data
+        for j in range(len(cols_)): row.append(originalRow[cols_[j]])
+
+        # for each column designated as training/test data
+        for j in range(len(cols_)):
+
+            # do not modify this row (remain original) if categorize rule does not exist
+            if categorizeRules[j] == None: continue
+
+            # use the categorize rules to categorize the value of columns
+            for k in range((len(categorizeRules[j])+1)/2):
+
+                # if row[thisColIndex] satisfies a condition
+                if dataCondition(row[j], categorizeRules[2*k]):
+                    row[j] = categorizeRules[2*k+1]
+                    break
+
+                # otherwise (not satisfy any condition)
+                if k == (len(categorizeRules[j])-1)/2: row[j] = categorizeRules[2*k]
+
+        # append to result
+        result.append(row)
+
+    return result
+
+# read data (NOT including cols not designated as input/output)
+# from file using information in input_output_info.txt, in the form of
+# *inputFileName
+# trainCol0 categorizationRule0
+# trainCol1 categorizationRule1
+# ...
+# trainColN categorizationRuleN
+# *outputFileName
+# testCol0 categorizationRule0
+# testCol1 categorizationRule1
+# ...
+# testColN categorizationRuleN
+# *testFileName
+# testCol0 categorizationRule0
+# testCol1 categorizationRule1
+# ...
+# testColN categorizationRuleN
+# *testOutputFileName
+def readFromFileCatg(fn):
+    f = open(fn, 'r')
+    ioInfo = f.readlines()
+    f.close()
+
+    mode = '' # mode (trainInput, trainOutput or testInput)
+    inputFileName = '' # input train data file
+    outputFileName = '' # output train data file
+    testFileName = '' # test input data file
+    testOutputFileName = '' # test output data file
+
+    inputs = None # train input data
+    outputs = None # train output data
+    tests = None # test input data
+
+    for i in range(len(ioInfo)):
+
+        cols_ = [] # columns designated as input/output column
+        categorizationRules = [] # categorization rules for these columns
+
+        # change mode when the line starts with '*'
+        if ioInfo[i][0] == '*':
+            if mode == '': # train input file
+                mode = 'trainInput'
+                inputFileName = ioInfo[i].split('\n')[0][1:]
+                
+            elif mode == 'trainInput': # train output file
+                mode = 'trainOutput'
+                outputFileName = ioInfo[i].split('\n')[0][1:]
+                inputs = categorizeData(inputFileName, ',', cols_, categorizationRules)
+                cols_ = []
+                categorizationRules = []
+                
+            elif mode == 'trainOutput': # test input file
+                mode = 'testInput'
+                testFileName = ioInfo[i].split('\n')[0][1:]
+                outputs = categorizeData(outputFileName, ',', cols_, categorizationRules)
+                cols_ = []
+                categorizationRules = []
+                
+            elif mode == 'testInput': # test output file
+                testOutputFileName = ioInfo[i].split('\n')[0][1:]
+                tests = categorizeData(testFileName, ',', cols_, categorizationRules)
+
+        # append the information to cols_ and categorizationRules
+        else:
+            ioInfoSplit = ioInfo[i].split('\n')[0].split(' ')
+            
+            cols_.append(int(ioInfoSplit[0]))
+
+            temp = []
+            for j in range(1, len(ioInfoSplit)): temp.append(ioInfoSplit[j])
+            categorizationRules.append(temp)
+
+    # return input, output and test data
+    return (inputs, outputs, tests, testOutputFileName)
+
 # return set of members of column colNum in the array
 # example: array=[['a', 1], ['b', 1], ['c', 2], ['c', 3], ['a', 0]], colNum=0 -> ['a', 'b', 'c']
 def makeSet(array, colNum):
