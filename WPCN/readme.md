@@ -4,7 +4,7 @@
 * ```paper00_temporary.docx```
 
 ### Experiment Result
-* refer to ```report/200616_WPCN.pptx```
+* refer to ```../report/200616_WPCN.pptx```
 
 ### Python code
 #### main
@@ -77,7 +77,7 @@
 https://github.com/WannaBeSuperteur/2020/tree/ac16a8ca221159d3294949f56b0a166845ece998
 
 ### Experiment Result
-* refer to ```report/200526_WPCN.pptx```
+* refer to ```../report/200526_WPCN.pptx```
 
 ### Changes of main code
 * ```WPCN_helper_REAL.py```
@@ -178,7 +178,7 @@ https://github.com/WannaBeSuperteur/2020/tree/ac16a8ca221159d3294949f56b0a166845
 https://github.com/WannaBeSuperteur/2020/tree/dffe6a35686f4cb17c49f348af0966137a953ef1
 
 ### Experiment Result
-* refer to ```report/200519_WPCN.pptx```
+* refer to ```../report/200519_WPCN.pptx```
 
 ### Changes of main code
 * ```WPCN_helper_REAL.py```
@@ -264,7 +264,7 @@ https://github.com/WannaBeSuperteur/2020/tree/dffe6a35686f4cb17c49f348af0966137a
 https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e6745ad/WPCN (deleted)
 
 ### Experiment Result
-* refer to ```report/200429_WPCN.pptx```
+* refer to ```../report/200429_WPCN.pptx```
 
 ### Python code
 #### main
@@ -335,17 +335,17 @@ https://github.com/WannaBeSuperteur/2020/tree/e515244d41bc7d12caa8f0020e2821211e
 ### Report files
 * PPT files
   * result of ```deepLearning_WPCN_REAL_GPU_200318.py``` and ```deepLearning_WPCN_REAL_GPU_200318_.py```
-    * ```report/200324_WPCN.pptx```
-    * ```report/200421_WPCN.pptx```
+    * ```../report/200324_WPCN.pptx```
+    * ```../report/200421_WPCN.pptx```
   * result of ```deepLearning_WPCN_REAL_GPU_200326.py``` and ```deepLearning_WPCN_REAL_GPU_200330.py```
-    * ```report/200331_WPCN.pptx```
-    * ```report/200421_WPCN.pptx```
+    * ```../report/200331_WPCN.pptx```
+    * ```../report/200421_WPCN.pptx```
   * result of ```deepLearning_WPCN_REAL_GPU_200401.py``` and ```deepLearning_WPCN_REAL_GPU_200403.py```
-    * ```report/200407_WPCN.pptx```
-    * ```report/200421_WPCN.pptx```
+    * ```../report/200407_WPCN.pptx```
+    * ```../report/200421_WPCN.pptx```
   * result of ```deepLearning_WPCN_REAL_GPU_200409.py``` and ```deepLearning_WPCN_REAL_GPU_200412.py```
-    * ```report/200414_WPCN.pptx```
-    * ```report/200429_WPCN.pptx```
+    * ```../report/200414_WPCN.pptx```
+    * ```../report/200429_WPCN.pptx```
 
 * Excel Report
   * ```../report/200318_testResult.xlsx```
