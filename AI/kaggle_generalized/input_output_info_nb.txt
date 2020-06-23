@@ -1,11 +1,11 @@
 *input_example_nb.csv
-0 None
+0 None_
 1 <10 a <20 b <30 c d
 2 <10 x <20 y <30 z w
 *input_example_nb.csv
-4 None
+4 None_
 *test_example_nb.csv
-1 None
+1 None_
 4 <10 a <20 b <30 c d
 5 <10 x <20 y <30 z w
 *test_example_output_nb.csv
