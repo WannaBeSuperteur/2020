@@ -75,14 +75,14 @@ if __name__ == '__main__':
     # [2] total number and probability of Y = TRUE (or 1)
     total_Y = [] # total_Y[j] = total number of rows with Y = TRUE (or 1) for output column j = |Yj=TRUE|
     prob_Y = [] # prob_Y[j] = probability for Y = TRUE (or 1) for output column j = |Yj=TRUE|/(output rows)
-    for i in range(output_cols):
+    for k in range(output_cols):
         total_Y.append(0.0)
         prob_Y.append(0.0)
 
     # calculate total_Y and prob_Y
     for k in range(output_cols):
         for j in range(len(outputs)):
-            if outputs[j][k] == 1 or outputs[j][k] == True or outputs[j][k] == 'True' or outputs[j][k] == 'TRUE':
+            if str(outputs[j][k]) == '1' or outputs[j][k] == True or outputs[j][k] == 'True' or outputs[j][k] == 'TRUE':
                 total_Y[k] += 1.0 # add 1.0 if TRUE
         prob_Y[k] = total_Y[k] / len(outputs) # calculate prob_Y[k] = total_Y[k]/(output rows) = P(Yk)
 
@@ -113,7 +113,7 @@ if __name__ == '__main__':
             prob_X_notY[i][k] = []
 
             # initialize as 0
-            for j in range(inputSet):
+            for j in range(len(inputSet[i])):
                 total_X_Y[i][k].append(0.0)
                 total_X_notY[i][k].append(0.0)
                 prob_X_Y[i][k].append(0.0)
@@ -129,20 +129,20 @@ if __name__ == '__main__':
                     for k in range(output_cols): # for each output column
 
                         # if Yk=TRUE
-                        if outputs[row][k] == 1 or outputs[row][k] == True or outputs[row][k] == 'True' or outputs[row][k] == 'TRUE':
+                        if str(outputs[row][k]) == '1' or outputs[row][k] == True or outputs[row][k] == 'True' or outputs[row][k] == 'TRUE':
                             total_X_Y[i][k][j] += 1
                         # if Yk=False
                         else:
                             total_X_notY[i][k][j] += 1
 
     # [3-3] calculate P(Xi=item_i(j)|Yk)s and P(Xi=item_i(j)|~Yk)s
-    # P(Xi=item_i(j)|Yk) = prob_X_Y[i][k][j] = |Xi=item_i(j),Yk=TRUE|/|Yk=TRUE| = total_X_Y[i][k][j] / total_Y[j]
-    # P(Xi=item_i(j)|~Yk) = prob_X_notY[i][k][j] = |Xi=item_i(j),Yk=FALSE|/|Yk=FALSE| = total_X_notY[i][k][j]/((output rows) - total_Y[j])
+    # P(Xi=item_i(j)|Yk) = prob_X_Y[i][k][j] = |Xi=item_i(j),Yk=TRUE|/|Yk=TRUE| = total_X_Y[i][k][j] / total_Y[k]
+    # P(Xi=item_i(j)|~Yk) = prob_X_notY[i][k][j] = |Xi=item_i(j),Yk=FALSE|/|Yk=FALSE| = total_X_notY[i][k][j]/((output rows) - total_Y[k])
     for i in range(input_cols):
         for k in range(output_cols):
-            for j in range(len(prob_X_Y[i][k])): 
-                prob_X_Y[i][k][j] = total_X_Y[i][k][j] / total_Y[j] # calculate P(Xi|Yj)s
-                prob_X_notY[i][k][j] = total_X_notY[i][k][j] / (len(outputs)-total_Y[j]) # calculate P(Xi|~Yj)s
+            for j in range(len(prob_X_Y[i][k])):
+                prob_X_Y[i][k][j] = total_X_Y[i][k][j] / total_Y[k] # calculate P(Xi=item_i(j)|Yk)s
+                prob_X_notY[i][k][j] = total_X_notY[i][k][j] / (len(outputs)-total_Y[k]) # calculate P(Xi=item_i(j)|~Yk)s
     
     # [4] test: calculate the probability
     # [Yk]  = P(Yk)     * P(X0=x0|Yk)       * P(X1=x1|Yk)       * ... * P(XN=xN|Yk)
@@ -175,10 +175,11 @@ if __name__ == '__main__':
 
                 # multiply prob_X_Y[0][k][j], prob_X_Y[1][k][j], ...
                 prob *= prob_X_Y[i][k][j_index]
+                nprob *= prob_X_notY[i][k][j_index]
 
             # append to YKs and nYKs
             YKs.append(prob)
-            nYKs.append(prob)
+            nYKs.append(nprob)
 
         # compare YKs, nYKs and decide TRUE or FALSE
         temp = []

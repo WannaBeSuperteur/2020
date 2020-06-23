@@ -104,15 +104,15 @@ def dataCondition(data, condition):
 
     # '>X', '>=X', '<X', '<=X' and '<>X'
     if condition[:2] == '>=' and len(condition) >= 3:
-        if data >= float(condition[2:]): return True
+        if float(data) >= float(condition[2:]): return True
     elif condition[:2] == '<=' and len(condition) >= 3:
-        if data <= float(condition[2:]): return True
+        if float(data) <= float(condition[2:]): return True
     elif condition[:2] == '<>' and len(condition) >= 3:
-        if data != float(condition[2:]): return True
+        if data != condition[2:]: return True
     elif condition[0] == '>' and len(condition) >= 2:
-        if data > float(condition[1:]): return True
+        if float(data) > float(condition[1:]): return True
     elif condition[0] == '<' and len(condition) >= 2:
-        if data < float(condition[1:]): return True
+        if float(data) < float(condition[1:]): return True
 
     # '*X*', '*X' and 'X*'
     elif condition[0] == '*' and condition[len(condition)-1] == '*' and len(condition) >= 3: # '*X*' : include X
@@ -166,18 +166,18 @@ def categorizeData(fn, splitter, cols_, categorizeRules):
         for j in range(len(cols_)):
 
             # do not modify this row (remain original) if categorize rule does not exist
-            if categorizeRules[j] == None: continue
+            if categorizeRules[j][0] == 'None_': continue
 
             # use the categorize rules to categorize the value of columns
-            for k in range((len(categorizeRules[j])+1)/2):
+            for k in range(int((len(categorizeRules[j])+1)/2)):
 
                 # if row[thisColIndex] satisfies a condition
-                if dataCondition(row[j], categorizeRules[2*k]):
-                    row[j] = categorizeRules[2*k+1]
+                if dataCondition(row[j], categorizeRules[j][2*k]):
+                    row[j] = categorizeRules[j][2*k+1]
                     break
 
                 # otherwise (not satisfy any condition)
-                if k == (len(categorizeRules[j])-1)/2: row[j] = categorizeRules[2*k]
+                if k == int((len(categorizeRules[j])-1)/2): row[j] = categorizeRules[j][2*k]
 
         # append to result
         result.append(row)
@@ -217,10 +217,10 @@ def readFromFileCatg(fn):
     outputs = None # train output data
     tests = None # test input data
 
-    for i in range(len(ioInfo)):
+    cols_ = [] # columns designated as input/output column
+    categorizationRules = [] # categorization rules for these columns
 
-        cols_ = [] # columns designated as input/output column
-        categorizationRules = [] # categorization rules for these columns
+    for i in range(len(ioInfo)):
 
         # change mode when the line starts with '*'
         if ioInfo[i][0] == '*':
