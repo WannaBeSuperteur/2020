@@ -216,11 +216,11 @@ colZ ruleZ
 * ```colK ruleK```: pair of column no and categorization rule -> apply categorization rule ```ruleK``` to column ```colK``` of this file / the rules are as following:
   * ```None_```: do not apply categorization rule
   * ```cond0 label0 cond1 label1 ... condN labelN labelM```:
-    * if ```cond0``` is true then label it as ```label0```
-    * else if ```cond1``` is true then label it as ```label1```
+    * if ```cond0``` is TRUE then label it as ```label0```
+    * else if ```cond1``` is TRUE then label it as ```label1```
     * ...
-    * else if ```condN``` is true then label it as ```labelN```
-    * if all conditions are true then label it as ```labelM```
+    * else if ```condN``` is TRUE then label it as ```labelN```
+    * if all conditions are FALSE then label it as ```labelM```
   * about condition ```cond0```, ```cond1```, ..., and ```condN```
     * ```X```: equal to X
     * ```>X```, ```>=X```, ```<X```, ```<=X```, ```X```, ```<>X```: greater than/at least/less than/at most/equal to/not equal to X
