@@ -180,3 +180,91 @@ for example,
 * ```o2``` -> ```o o```
 * ```r3``` -> ```r r r```
 * ```o5``` -> ```o o o o o```
+
+# 4. naivebayes.py #
+input: DATA + INPUT AND OUTPUT INFO (in ```input_output_info_nb.txt```) -> output: TRAIN AND TEST RESULT
+
+Execute Naive Bayes algorithm and write the result of learning using given information.
+
+## How to execute ##
+```python naivebayes.py```
+
+## input_output_info_nb.txt: input/output information for naivebayes.py ##
+in the form of
+```
+*trainInputFileName
+col0 rule0
+col1 rule1
+...
+colX ruleX
+*trainOutputFileName
+col0 rule0
+col1 rule1
+...
+colY ruleY
+*testInputFileName
+col0 rule0
+col1 rule1
+...
+colZ ruleZ
+*testOutputFileName
+```
+* ```trainInputFileName```: name of train input data file
+* ```trainOutputFileName```: name of train output data file
+* ```testInputFileName```: name of test input data file
+* ```testOutputFileName```: name of test output data file
+* ```colK ruleK```: pair of column no and categorization rule -> apply categorization rule ```ruleK``` to column ```colK``` of this file / the rules are as following:
+  * ```None_```: do not apply categorization rule
+  * ```cond0 label0 cond1 label1 ... condN labelN labelM```:
+    * if ```cond0``` is true then label it as ```label0```
+    * else if ```cond1``` is true then label it as ```label1```
+    * ...
+    * else if ```condN``` is true then label it as ```labelN```
+    * if all conditions are true then label it as ```labelM```
+  * about condition ```cond0```, ```cond1```, ..., and ```condN```
+    * ```X```: equal to X
+    * ```>X```, ```>=X```, ```<X```, ```<=X```, ```X```, ```<>X```: greater than/at least/less than/at most/equal to/not equal to X
+    * ```*X*```, ```*X```, ```X*```: contains/end with/start with X
+    * ```!*X*```, ```!*X```, ```!X*```: do not contains/end with/start with X
+
+for example,
+```
+*input_example_nb.csv
+0 None_
+1 <10 a <20 b <30 c d
+2 <10 x <20 y <30 z w
+*input_example_nb.csv
+4 None_
+*test_example_nb.csv
+1 None_
+4 <10 a <20 b <30 c d
+5 <10 x <20 y <30 z w
+*test_example_output_nb.csv
+```
+* ```*input_example_nb.csv``` -> using ```input_example_nb.csv``` as input data file
+* ```0 None_``` -> apply no categorization rule for 0-th column of input data file
+* ```1 <10 a <20 b <30 c d``` -> apply categorization rule for 1st column of input data file, as same as the following:
+  * if the value is less than 10(```<10```), label it as ```a```
+  * else if the value is less than 20(```<20```), label it as ```b```
+  * else if the value is less than 30(```<30```), label it as ```c```
+  * else label it as ```d```
+* ```2 <10 x <20 y <30 z w``` -> apply categorization rule for 2nd column of input data file, as same as the following:
+  * if the value is less than 10(```<10```), label it as ```a```
+  * else if the value is less than 20(```<20```), label it as ```b```
+  * else if the value is less than 30(```<30```), label it as ```c```
+  * else label it as ```d```
+* ```*input_example_nb.csv``` -> using ```input_example_nb.csv``` as output data file
+* ```4 None_``` -> apply no categorization rule for 4th column of output data file
+* ```*test_example_nb.csv``` -> using ```test_example_nb.csv``` as test data file
+* ```1 None_``` -> apply no categorization rule for 1st column of test data file
+* ```4 <10 a <20 b <30 c d``` -> apply categorization rule for 4th column of test data file, as same as the following:
+  * if the value is less than 10(```<10```), label it as ```a```
+  * else if the value is less than 20(```<20```), label it as ```b```
+  * else if the value is less than 30(```<30```), label it as ```c```
+  * else label it as ```d```
+* ```5 <10 x <20 y <30 z w``` -> apply categorization rule for 5th column of test data file, as same as the following:
+  * if the value is less than 10(```<10```), label it as ```a```
+  * else if the value is less than 20(```<20```), label it as ```b```
+  * else if the value is less than 30(```<30```), label it as ```c```
+  * else label it as ```d```
+* ```*test_example_output_nb.csv``` -> write the test output data to ```test_example_output_nb.csv``` file
