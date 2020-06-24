@@ -3,31 +3,6 @@ import random
 import numpy as np
 from operator import itemgetter
 
-# 스크린 표시 함수
-# screen   : 스크린 (odd*odd size)
-# score    : 현재 점수
-# point    : HAP의 좌표
-# wdList   : wireless device의 위치를 저장한 배열, [[wd0Y, wd0X], [wd1Y, wd1X], ..., [wd(n-1)Y, wd(n-1)X]]
-def displayScreen(screen, score, count, HAPtime):
-    print('< 카운트: ' + str(count) + ' 점수: ' + str(round(score, 6)) + ' >')
-
-    x = 1 - HAPtime # HAPtime = 1-x
-    device = [x*HAPtime, x*x*HAPtime, x*x*x*HAPtime]
-    print('< HAP의 충전 시간: ' + str(round(HAPtime, 3)) + ', WD의 충전 시간: '
-          + str(round(device[0], 3)) + ', ' + str(round(device[1], 3)) + ', ' + str(round(device[2], 3)) + ', ... >')
-    
-    print(' +=' + '==='*len(screen[0]) + '=+')
-    
-    for i in range(len(screen)):
-        temp = ' | '
-        for j in range(len(screen[0])):
-            if screen[i][j] == 1: temp += 'HAP' # HAP
-            elif screen[i][j] == 0: temp += ' . ' # 공간
-            elif screen[i][j] == -1: temp += 'W.D' # wireless device
-        print(temp + ' | ')
-    print(' +=' + '==='*len(screen[0]) + '=+')
-    print('')
-
 # 스크린 초기화
 # 파일 이름 : map.txt
 # 파일 형식 : (맵 세로길이) (맵 가로길이) (wireless device의 개수)
