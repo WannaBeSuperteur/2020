@@ -80,11 +80,11 @@ def getThroughput(wdList, point, screenSize, problemNo):
     # print('\n\n' + str(wdList) + '\n')
     for i in range(1000):
 
-        thrputChange = [] # wdList의 각 값을 1만큼 증가시켰을 때 throughput의 변화량
+        thrputChange = [] # 각 wireless device에 대한 할당 시간의 값을 일정 양만큼 증가시켰을 때 throughput의 변화량
         (originalThrput, None_0) = getThroughput_(wdList, point, chargeTimeList, problemNo) # 원래 Throughput
         # print(printRounded(chargeTimeList, 6) + ' ' + printRounded([originalThrput], 6))
 
-        # wdList의 각 값을 1.0e-9만큼 증가시켜서 throughput이 얼마나 증가/감소하는지 확인하고,
+        # 각 wireless device에 대한 할당 시간의 값을 1.0e-9 또는 1만큼 증가시켜서 throughput이 얼마나 증가/감소하는지 확인하고,
         # 그 값만큼 chargeTimeList의 해당 부분을 증감시킨다.
         for j in range(1+len(wdList)):
             chargeTimeListCopy = copyArray(chargeTimeList) # 배열 복사
@@ -123,7 +123,7 @@ def getThroughput_(wdList, point, chargeTimeList, problemNo):
 
     HAPtime = chargeTimeList[0] / sumOfChargeTime # time allocated to HAP
     
-    # 각 wireless device에 대한 directReward와 그 합 구하기
+    # 각 wireless device에 대한 throughput 구하기
     for i in range(len(wdList)):
         wdY = wdList[i][0] # wireless device의 가로 좌표
         wdX = wdList[i][1] # wireless device의 세로 좌표
