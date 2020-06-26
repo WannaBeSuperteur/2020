@@ -81,6 +81,8 @@ def makeCSV(configFileName):
 
     # convert train images (training_image.csv)
     for i in range(len(trainImgs)):
+        if i % 50 == 0: print('training image ' + str(i))
+        
         for j in range(1, len(flines)):
             flinesSplit = flines[j].split('\n')[0].split(' ')
             
@@ -95,6 +97,8 @@ def makeCSV(configFileName):
 
     # convert test images (test_image.csv)
     for i in range(len(testImgs)):
+        if i % 50 == 0: print('testing image ' + str(i))
+        
         testCSVFile += makeImageAsLine(testDir+'/'+testImgs[i], width, height, RW, GW, BW, None) + '\n'
 
     f = open('test_image.csv', 'w')
