@@ -63,6 +63,8 @@
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
+* compare result of throughput
+  * ```optiInfoForMap/compare_result_200615.txt```
   
 ### Report files
 * Visualized Throughput Map
