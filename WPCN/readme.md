@@ -65,6 +65,14 @@
   * WDs: ```6``` or ```10```
 * compare result of throughput
   * ```optiInfoForMap/compare_result_200615.txt```
+  * ```sum train```: sum of throughput for 900 training maps
+  * ```sum test```: sum of throughput for 100 test maps
+  * ```sum all```: sum of throughput for 1000 training/test maps
+  * ```avg train```: average of throughput for 900 training maps
+  * ```avg test```: average of throughput for 100 test maps
+  * ```avg all```: average of throughput for 1000 training/test maps
+  * ```<<< problem 0 >>>```: SUM-THROUGHPUT maximization
+  * ```<<< problem 1 >>>```: COMMON-THROUGHPUT maximization
   
 ### Report files
 * Visualized Throughput Map
