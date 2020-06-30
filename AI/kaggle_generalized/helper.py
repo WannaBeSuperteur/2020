@@ -43,6 +43,7 @@ def getDataFromFile(fn, splitter, cols_, type_, makeNullList, existingNullList, 
 
     result = []
     for i in range(1, len(flines)): # len(flines)
+        if i % 50 == 0: print('reading data from *.csv file: ' + str(i))
 
         # remove (do not consider -> continue) this row if it is in nullList
         if existingNullList != None:

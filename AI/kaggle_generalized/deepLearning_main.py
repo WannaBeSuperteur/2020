@@ -176,6 +176,7 @@ if __name__ == '__main__':
 
     # for train input
     for i in range(len(inputCols)):
+        if i % 50 == 0: print('input column ' + str(i))
 
         # for train input data
         if inputCols_type[i] == 2: # text (type == 2)
@@ -194,6 +195,7 @@ if __name__ == '__main__':
 
     # for train output
     for i in range(len(outputCols)):
+        if i % 50 == 0: print('output column ' + str(i))
         
         # for train input data
         if outputCols_type[i] == 2: # text (type == 2)
@@ -225,6 +227,7 @@ if __name__ == '__main__':
         print('output_stds: ' + str(helper.roundedArray(output_stddevs, 6)))
     
     for i in range(len(inputs)):
+        if i % 50 == 0: print('input row ' + str(i))
 
         # append to trainI (train input)
         trainI_temp = []
@@ -257,6 +260,7 @@ if __name__ == '__main__':
     memset = [] # initialize memset
 
     for i in range(len(outputs)):
+        if i % 50 == 0: print('output row ' + str(i))
 
         # append to trainO (train output)
         trainO_temp = []
@@ -267,14 +271,14 @@ if __name__ == '__main__':
             # just append this value if numeric
             if outputCols_type[j] == 0 or outputCols_type[j] == 3 or outputCols_type[j] == 6:
                 trainO_temp.append(outputs[i][outputCols[j]])
-
+            
             # (type:1) Z(numeric) date (yyyy-mm-dd) / (type:8) Z(numeric) date (mm/dd/yyyy)
             # (type:4) Z(log2(numeric)) / (type:5) (Z using log-ed average and stddev) / (type:7) (Z using (log+1)-ed average and stddev)
             elif outputCols_type[j] == 1 or outputCols_type[j] == 4 or outputCols_type[j] == 5 or outputCols_type[j] == 7 or outputCols_type[j] == 8:
                 trainO_temp.append((outputs[i][outputCols[j]] - output_avgs[j])/output_stddevs[j])
 
             # one-hot input (0 or 1) based on memset
-            elif outputCols_type[j] == 2:
+            elif outputCols_type[j] == 2:   
                 if i == 0: memset.append(helper.makeSet(outputs, outputCols[j])) # set list of members of this column
                 
                 for k in range(len(memset[memsetIndex])):
@@ -287,12 +291,12 @@ if __name__ == '__main__':
 
         # apply sigmoid to each value of trainO
         for k in range(len(trainO_temp)): trainO_temp[k] = GPUhelper.sigmoid(trainO_temp[k])
-                    
         trainO.append(trainO_temp)
 
     memset = [] # initialize memset
 
     for i in range(len(tests)):
+        if i % 50 == 0: print('test row ' + str(i))
         
         # append to testI (test input)
         testI_temp = []
