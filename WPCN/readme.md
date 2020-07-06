@@ -54,7 +54,7 @@
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper (```WPCN_paper.py```)
+* result of paper (```WPCN_paper_forPaper.py```)
   * Sum throughput maximization
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
@@ -63,6 +63,14 @@
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
+* result of paper with 2 options, ```K``` and ```et``` (```WPCN_paper_forPaper_option.py```)
+  * Common throughput maximization
+    * all files whose name is in the form of ```results_paper_option/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_K=(K)_et=(et).txt```
+    * all files whose name is in the form of ```results_paper_option/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_K=(K)_et=(et)_print.txt```
+  * size: ```8```, ```12``` or ```16```
+  * WDs: ```6``` or ```10```
+  * K: ```10```, ```20``` or ```40```
+  * et: ```1.0e-05```, ```1.0e-06``` or ```1.0e-07```
 * compare result of throughput
   * ```optiInfoForMap/compare_result_200615.txt```
   * ```sum train```: sum of throughput for 900 training maps
