@@ -435,16 +435,17 @@ if __name__ == '__main__':
         print('\n ---- test data ----\n')
         for i in range(len(testI)): print(helper.roundedArray(testI[i], 6))
 
-    # learning
-    print('\n <<<< LEARNING >>>>\n')
-    deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, 'test', epoch, False, True, deviceName)
+    try: # try reading test.h5 and test.json
+        newModel = deepLearning_GPU.deepLearningModel('test', True)
+        testOutput = deepLearning_GPU.modelOutput(newModel, testI)
+    except: # do learning if test.h5 and test.json does not exist
+        print('\n <<<< LEARNING >>>>\n')
+        deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, 'test', epoch, False, True, deviceName)
 
     # test
     print('\n <<<< TEST >>>>\n')
         
     print('\n << test output (첫번째 Neural Network) >>\n')
-    newModel = deepLearning_GPU.deepLearningModel('test', True)
-    testOutput = deepLearning_GPU.modelOutput(newModel, testI)
     print('\ntest output에 대한 테스트 결과:\ntest_result.csv')
     print('\none-hot list:\n' + str(onehotList))
 
