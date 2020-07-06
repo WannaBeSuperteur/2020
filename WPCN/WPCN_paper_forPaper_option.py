@@ -163,7 +163,9 @@ def feasibleSol(wdList_, HAPloc_, L, a1, a2, dU):
             return v1op
 
 # 진행
-def run(size, numTrain, numTest, numWD, deviceName):
+# K  : LB <- -K, UB -> K where K is sufficiently large
+# et : error tolerance
+def run(size, numTrain, numTest, numWD, deviceName, K, et):
     
     # 입력 정보
     originalScreen = [] # 각 맵의 스크린
@@ -285,8 +287,8 @@ def run(size, numTrain, numTest, numWD, deviceName):
                 while True:
                     
                     # LB <- -K, UB -> K where K is sufficiently large
-                    LB = -20
-                    UB = 20
+                    LB = -K
+                    UB = K
 
                     while True:
                         t = (UB + LB)/2 # ti <- (UB+LB)/2
@@ -302,7 +304,7 @@ def run(size, numTrain, numTest, numWD, deviceName):
                             print(LB, UB)
                             UB = t
 
-                        if abs(UB-LB) < 0.000001: break
+                        if abs(UB-LB) < et: break
 
                     # check if all K assumptions are valid
                     # Assume WD k satisfies condition (a) or (b)
@@ -398,11 +400,11 @@ def run(size, numTrain, numTest, numWD, deviceName):
             print('\n')
 
         # 평가 결과 저장
-        fSave = open('DL_WPCN_result_' + str(problemNo) + '_paper_forPaper' + '_' + str(size) + '_' + str(numWD) + '.txt', 'w')
+        fSave = open('DL_WPCN_result_' + str(problemNo) + '_paper_forPaper' + '_' + str(size) + '_' + str(numWD) + '_K=' + str(K) + '_et=' + str(et) + '.txt', 'w')
         fSave.write(saveResult)
         fSave.close()
 
-        fSavePrint = open('DL_WPCN_result_' + str(problemNo) + '_paper_forPaper' + '_' + str(size) + '_' + str(numWD) + '_print.txt', 'w')
+        fSavePrint = open('DL_WPCN_result_' + str(problemNo) + '_paper_forPaper' + '_' + str(size) + '_' + str(numWD) + '_K=' + str(K) + '_et=' + str(et) + '_print.txt', 'w')
         fSavePrint.write(savePrint)
         fSavePrint.close()
 
@@ -435,4 +437,7 @@ if __name__ == '__main__':
         numTrain = int(readSplit[3]) # 트레이닝할 데이터(맵)의 개수 (실제로는 트레이닝하지 않으며 파일 인덱싱에 사용됨)
         numTest = int(readSplit[4]) # 테스트할 데이터(맵)의 개수
 
-        run(size, numTrain, numTest, numWD, deviceName)
+        # RUN!
+        for K in [10, 20, 40]: # for each K value
+            for et in [0.00001, 0.000001, 0.0000001]: # for each error tolerance
+                run(size, numTrain, numTest, numWD, deviceName, K, et)
