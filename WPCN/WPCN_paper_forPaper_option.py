@@ -120,7 +120,7 @@ def feasibleSol(wdList_, HAPloc_, L, a1, a2, dU):
     P0 = 1.0 # transmit power (20.0 in report/200219_WPCN.pptx)
     dD = 2.2 # dD >= 2 denotes the path loss exponent in DL
     b = [] # b = [Ad*(3*10^8)/(4*PI*fd)]^dD for each WD k
-    for k in range(K): b.append(pow(Ad[k]*(300000000/(4*3.141592654*fd)), dD))
+    for k in range(K): b.append(Ad[k]*pow(300000000/(4*3.141592654*fd), dD))
 
     # With vj(0)'s, calculate j_k(b)'s using (6)
     jb = [] # j_k(b)'s for each k
