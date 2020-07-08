@@ -1,10 +1,12 @@
-## NOW for final paper (200615)
+## NOW for final paper (200714)
+
+* THERE WAS A CRITICAL ISSUE FOR THE PAPER. PLEASE REFER TO https://github.com/WannaBeSuperteur/2020/commit/83665628f374752bc467a9d4e7f6edce74462c6a.
 
 ### Paper
-* ```paper00_temporary.docx```
+* ```paper01_temporary.docx``` (not applied the issue)
 
 ### Experiment Result
-* refer to ```../report/200616_WPCN.pptx```
+* refer to ```../report/200714_WPCN.pptx``` (not applied the issue)
 
 ### Python code
 #### main
@@ -54,7 +56,7 @@
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper (```WPCN_paper_forPaper.py```)
+* result of paper (```WPCN_paper_forPaper.py```) (not applied the issue)
   * Sum throughput maximization
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
@@ -63,7 +65,7 @@
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper with 2 options, ```K``` and ```et``` (```WPCN_paper_forPaper_option.py```)
+* result of paper with 2 options, ```K``` and ```et``` (```WPCN_paper_forPaper_option.py```) (not applied the issue)
   * Common throughput maximization
     * all files whose name is in the form of ```results_paper_option/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_K=(K)_et=(et).txt```
     * all files whose name is in the form of ```results_paper_option/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_K=(K)_et=(et)_print.txt```
@@ -71,7 +73,7 @@
   * WDs: ```6``` or ```10```
   * K: ```10```, ```20``` or ```40```
   * et: ```1.0e-05```, ```1.0e-06``` or ```1.0e-07```
-* compare result of throughput
+* compare result of throughput (not applied the issue)
   * ```optiInfoForMap/compare_result_200615.txt```
   * ```sum train```: sum of throughput for 900 training maps
   * ```sum test```: sum of throughput for 100 test maps
