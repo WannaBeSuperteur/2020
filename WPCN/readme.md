@@ -18,7 +18,7 @@
 
 #### experiments
 * implementation of paper for number of HAPs = 1 (Placement Optimization of Energy and Information Access Points in Wireless Powered Communication Networks) and test using the implementation
-  * ```WPCN_paper_forPaper.py```
+  * ```WPCN_paper_forPaper.py``` (updated for the issue)
   
 #### compare throughput map (in ```/optiInfoForMap```)
 * ```optiInfoForMap/compare.py```
