@@ -2,4 +2,4 @@
 
  <<< ESTIMATION RESULT >>>
 No.	size	test	problem	percentage
-0	8	100	1	54.5807
+0	8	100	1	71.9627
