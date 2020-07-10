@@ -58,8 +58,8 @@
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper (```WPCN_paper_forPaper.py```) <strong>(partially applied the issue)</strong>
-  * Sum throughput maximization <strong>(not applied the issue)</strong>
+* result of paper (```WPCN_paper_forPaper.py```) <strong>(updated for the issue)</strong>
+  * Sum throughput maximization <strong>(updated for the issue)</strong>
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
   * Common throughput maximization <strong>(updated for the issue)</strong>
