@@ -3,7 +3,7 @@
 * THERE WAS A CRITICAL ISSUE FOR THE PAPER. PLEASE REFER TO https://github.com/WannaBeSuperteur/2020/commit/83665628f374752bc467a9d4e7f6edce74462c6a.
 
 ### Paper
-* ```paper01_temporary.docx``` <strong>(not applied the issue)</strong>
+* ```paper01_temporary.docx``` <strong>(updated for the issue)</strong>
 
 ### Experiment Result
 * refer to ```../report/200714_WPCN.pptx``` <strong>(not applied the issue)</strong>
