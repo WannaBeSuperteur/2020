@@ -49,10 +49,12 @@
   * ```optiInfoForMap/optiInfoForMap_1_forPaper_16_10.txt``` (size=16, WDs=10)
 
 #### result files
+* <strong>We only calculated CT.RATE (%) of each method and CT.AVGMAX. CT.AVERAGE is derived by CT.RATE * CT.AVGMAX for each method, and PR is derived by (CT.AVERAGE of our method) / (CT.AVERAGE of the methodology in the original paper).</strong>
 * result of experiment (```deepLearning_WPCN_forPaper.py```)
   * Sum throughput maximization
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_0_(size)_(WDs).txt```
   * Common throughput maximization
+    * <strong>for CT.RATE (%) for our methodology in the paper</strong>
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
@@ -61,6 +63,7 @@
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
   * Common throughput maximization <strong>(updated for the issue)</strong>
+    * <strong>for CT.RATE (%) for the methodology in the original paper</strong>
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt```
   * size: ```8```, ```12``` or ```16```
@@ -73,7 +76,8 @@
   * WDs: ```6``` or ```10```
   * K: ```10```, ```20``` or ```40```
   * et: ```1.0e-05```, ```1.0e-06``` or ```1.0e-07```
-* compare result of throughput <strong>(not applied the issue)</strong>
+* compare result of throughput
+  * <strong>for CT.AVGMAX in the paper (common for each method)</strong>
   * ```optiInfoForMap/compare_result_200615.txt```
   * ```sum train```: sum of throughput for 900 training maps
   * ```sum test```: sum of throughput for 100 test maps
