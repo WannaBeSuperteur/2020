@@ -3,10 +3,10 @@
 * THERE WAS A CRITICAL ISSUE FOR THE PAPER. PLEASE REFER TO https://github.com/WannaBeSuperteur/2020/commit/83665628f374752bc467a9d4e7f6edce74462c6a.
 
 ### Paper
-* ```paper01_temporary.docx``` (not applied the issue)
+* ```paper01_temporary.docx``` <strong>(not applied the issue)</strong>
 
 ### Experiment Result
-* refer to ```../report/200714_WPCN.pptx``` (not applied the issue)
+* refer to ```../report/200714_WPCN.pptx``` <strong>(not applied the issue)</strong>
 
 ### Python code
 #### main
@@ -18,7 +18,7 @@
 
 #### experiments
 * implementation of paper for number of HAPs = 1 (Placement Optimization of Energy and Information Access Points in Wireless Powered Communication Networks) and test using the implementation
-  * ```WPCN_paper_forPaper.py``` (updated for the issue)
+  * ```WPCN_paper_forPaper.py``` <strong>(updated for the issue)</strong>
   
 #### compare throughput map (in ```/optiInfoForMap```)
 * ```optiInfoForMap/compare.py```
@@ -56,16 +56,16 @@
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper (```WPCN_paper_forPaper.py```) (not applied the issue)
-  * Sum throughput maximization
+* result of paper (```WPCN_paper_forPaper.py```) <strong>(partially applied the issue)</strong>
+  * Sum throughput maximization <strong>(not applied the issue)</strong>
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
-  * Common throughput maximization
+  * Common throughput maximization <strong>(updated for the issue)</strong>
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper with 2 options, ```K``` and ```et``` (```WPCN_paper_forPaper_option.py```) (not applied the issue)
+* result of paper with 2 options, ```K``` and ```et``` (```WPCN_paper_forPaper_option.py```) <strong>(updated for the issue)</strong>
   * Common throughput maximization
     * all files whose name is in the form of ```results_paper_option/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_K=(K)_et=(et).txt```
     * all files whose name is in the form of ```results_paper_option/DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_K=(K)_et=(et)_print.txt```
@@ -73,7 +73,7 @@
   * WDs: ```6``` or ```10```
   * K: ```10```, ```20``` or ```40```
   * et: ```1.0e-05```, ```1.0e-06``` or ```1.0e-07```
-* compare result of throughput (not applied the issue)
+* compare result of throughput <strong>(not applied the issue)</strong>
   * ```optiInfoForMap/compare_result_200615.txt```
   * ```sum train```: sum of throughput for 900 training maps
   * ```sum test```: sum of throughput for 100 test maps
