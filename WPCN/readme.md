@@ -10,14 +10,14 @@
 
 ### Python code
 #### main
-* for training and testing (Sum- or Common- throughput maximization) using throughput map
+* <strong>MAIN EXPERIMENT:</strong> for training and testing (Sum- or Common- throughput maximization) using throughput map
   * create the throughput map if throughput map file (optiInfoForMap txt file) does not exist
   * ```deepLearning_WPCN_forPaper.py``` : Sigmoid [-1, 1]
 * helper file (get throughput for given wireless device position list)
   * ```WPCN_helper_REAL_paper.py```
 
 #### experiments
-* implementation of paper for number of HAPs = 1 (Placement Optimization of Energy and Information Access Points in Wireless Powered Communication Networks) and test using the implementation
+* <strong>ORIGINAL PAPER EXPERIMENT:</strong> implementation of the original paper for number of HAPs = 1 (Placement Optimization of Energy and Information Access Points in Wireless Powered Communication Networks) and test using the implementation
   * ```WPCN_paper_forPaper.py``` <strong>(updated for the issue)</strong>
   
 #### compare throughput map (in ```/optiInfoForMap```)
@@ -50,7 +50,7 @@
 
 #### result files
 * <strong>We only calculated CT.RATE (%) of each method and CT.AVGMAX. CT.AVERAGE is derived by CT.RATE * CT.AVGMAX for each method, and PR is derived by (CT.AVERAGE of our method) / (CT.AVERAGE of the methodology in the original paper).</strong>
-* result of experiment (```deepLearning_WPCN_forPaper.py```)
+* <strong>result of experiment</strong> (```deepLearning_WPCN_forPaper.py```)
   * Sum throughput maximization
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_0_(size)_(WDs).txt```
   * Common throughput maximization
@@ -58,7 +58,7 @@
     * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
-* result of paper (```WPCN_paper_forPaper.py```) <strong>(updated for the issue)</strong>
+* <strong>result of the original paper</strong> (```WPCN_paper_forPaper.py```) <strong>(updated for the issue)</strong>
   * Sum throughput maximization <strong>(updated for the issue)</strong>
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs).txt```
     * all files whose name is in the form of ```results_paper/DL_WPCN_result_0_paper_forPaper_(size)_(WDs)_print.txt```
