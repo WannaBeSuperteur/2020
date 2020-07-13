@@ -6,6 +6,7 @@
 * For our methodology (CT.RATE (%) for our methodology): refer to ```guideline_ourMethod.txt```
 * For the methodology in the original paper (CT.RATE (%) for the methodology in the original paper): refer to ```guideline_original.txt```
 * For CT.AVGMAX: refer to ```optiInfoForMap/compare_result_200615.txt``` (run ```optiInfoForMap/compare.py``` and input as the file)
+* Example experiment result file: ```exampleTestResult.zip```
 
 ### Paper
 * ```paper01_temporary.docx``` <strong>(updated for the issue)</strong>
