@@ -1,0 +1,51 @@
+1. Download the repository as *.ZIP file.
+
+2. You can delete folders except for DQN, WPCN.
+
+3. Extract zip files in these folders respectively:
+ * form: originalMaps_(size)_(WDs)
+ - originalMaps_8_6
+ - originalMaps_8_10
+ - originalMaps_12_6
+ - originalMaps_12_10
+ - originalMaps_16_6
+ - originalMaps_16_10
+
+4. Edit map.txt file as below.
+ * form: (size) (size) (WDs) (# of train data) (# of test data)
+8 8 6 900 100
+8 8 10 900 100
+12 12 6 900 100
+12 12 10 900 100
+16 16 6 900 100
+16 16 10 900 100
+
+5. Run WPCN_paper_forPaper.py.
+
+6. input 1 for the message below:
+0->sum throughtput maximization, 1->common throughtput maximization
+
+7. input 0 for the message below:
+0->read files, 1->create new files
+
+8. input your device name for the message below:
+device name (for example, cpu:0 or gpu:0)
+
+9. The code is ececuted.
+
+10. Check the result in the files below, after the code execution is finished.
+ * form: DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt
+ * form: DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt
+ - DL_WPCN_result_1_paper_forPaper_8_6.txt
+ - DL_WPCN_result_1_paper_forPaper_8_6_print.txt
+ - DL_WPCN_result_1_paper_forPaper_8_10.txt
+ - DL_WPCN_result_1_paper_forPaper_8_10_print.txt
+ - DL_WPCN_result_1_paper_forPaper_12_6.txt
+ - DL_WPCN_result_1_paper_forPaper_12_6_print.txt
+ - DL_WPCN_result_1_paper_forPaper_12_10.txt
+ - DL_WPCN_result_1_paper_forPaper_12_10_print.txt
+ - DL_WPCN_result_1_paper_forPaper_16_6.txt
+ - DL_WPCN_result_1_paper_forPaper_16_6_print.txt
+ - DL_WPCN_result_1_paper_forPaper_16_10.txt
+ - DL_WPCN_result_1_paper_forPaper_16_10_print.txt
+ - You can copy them to 'results' folder.
