@@ -2,6 +2,11 @@
 
 * THERE WAS A CRITICAL ISSUE FOR THE PAPER. PLEASE REFER TO https://github.com/WannaBeSuperteur/2020/commit/83665628f374752bc467a9d4e7f6edce74462c6a.
 
+### Experiment Guidelines
+* For our methodology (CT.RATE (%) for our methodology): refer to ```guideline_ourMethod.txt```
+* For the methodology in the original paper (CT.RATE (%) for the methodology in the original paper): refer to ```guideline_original.txt```
+* For CT.AVGMAX: refer to ```optiInfoForMap/compare_result_200615.txt``` (run ```optiInfoForMap/compare.py``` and input as the file)
+
 ### Paper
 * ```paper01_temporary.docx``` <strong>(updated for the issue)</strong>
 
