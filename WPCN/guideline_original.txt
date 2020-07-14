@@ -49,3 +49,11 @@ device name (for example, cpu:0 or gpu:0)
  - DL_WPCN_result_1_paper_forPaper_16_10.txt
  - DL_WPCN_result_1_paper_forPaper_16_10_print.txt
  - You can copy them to 'results' folder.
+
+------ RESULT ------
+(percentage) part of DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt
+
+Size / WDs	6 WDs	10 WDs
+8x8		65.5779	71.9627
+12x12		89.1676	90.3931
+16x16		100.6565	96.8606
