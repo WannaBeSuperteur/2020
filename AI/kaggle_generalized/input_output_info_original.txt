@@ -1,4 +1,4 @@
-training_image.csv 1~144
-training_image.csv 0t
-test_image.csv 0~143
+training_image.csv 2~145
+training_image.csv 1t
+test_image.csv 1~144
 result_image.csv o

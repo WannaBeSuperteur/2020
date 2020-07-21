@@ -1,11 +1,11 @@
 FI
 R 12 12
-C2DI 32 3 3 12 12 relu
+C2D 32 3 3 relu
 MP 2
 C2D 32 3 3 relu
 F
-D 100 relu
-D 100 relu
-D 100 relu
+D 80 relu
+D 80 relu
+D 80 relu
 DO sigmoid
 OP adam0 0.001

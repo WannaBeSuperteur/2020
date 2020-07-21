@@ -19,8 +19,8 @@ def makeImageAsLine(imageFileName, width, height, RW, GW, BW, label):
     imArray = np.array(im) # [height][width][3] numpy array of this image
 
     # initialize result
-    result = ''
-    if label != None: result = label + ','
+    result = imageFileName + ','
+    if label != None: result = imageFileName + ',' + label + ','
 
     # [height][width] array of this image
     array = [[0]*width for _ in range(height)]

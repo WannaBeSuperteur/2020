@@ -463,6 +463,8 @@ if __name__ == '__main__':
     
     for i in range(len(outputLayer)):
         #print('output layer ' + str(i) + ' : ' + str(outputLayer[i]))
+
+        result += tests[i][0] + ',' # file name
         
         originalIndex = 0 # column index of original test data (one-hot not applied)
         onehotListIndex = 0 # next index to see in onehotList
