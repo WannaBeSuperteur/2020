@@ -53,6 +53,12 @@
 # 18             occupancy array를 업데이트한다. (ocA[before] -= people; ocA[after] += people;)
 # 19     더 이상 최적화가 되지 않으면 종료
 
+
+##### 버그 수정사항 #####
+# after가 100일 때 account penalty 계산
+# before와 after가 같을 때 (73) account penalty 계산 (실제로 0이지만 계산시 -로 나올때가 있음, 완료)
+# 거의 수렴했을 때 ocA 출력 테스트
+
 import helper as h
 import random
 import math
@@ -224,7 +230,7 @@ if __name__ == '__main__':
         for i in range(FAMILIES):
 
             # condition TO ANALYZE SCORE-INCREASING CASES
-            caseCondition = (count == 2 and i > 2150 and i < 2250)
+            caseCondition = False
 
             if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
                 pcost = h.prefCost(famData, subData, ocA)
@@ -283,7 +289,7 @@ if __name__ == '__main__':
                 ocA_copy = []
                 for k in range(len(ocA)):
                     if k == before: ocA_copy.append(ocA[k] - members)
-                    elif k == after: ocA_copy.append(ocA[k] + members)
+                    if k == after: ocA_copy.append(ocA[k] + members)
                     else: ocA_copy.append(ocA[k])
                 # print(ocA)
                 # print(ocA_copy)
@@ -353,12 +359,13 @@ if __name__ == '__main__':
                 ocA[befores[minChoiceIndex]] -= members
                 ocA[afters[minChoiceIndex]] += members
 
-                #print('')
-                #print('score (before -> after)')
-                #print('before   : ' + str(score))
-                #print('before pc: ' + str(pcost))
-                #print('before ap: ' + str(accpe))
-                #print('')
+                if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
+                    print('')
+                    print('score (before -> after)')
+                    print('before   : ' + str(score))
+                    print('before pc: ' + str(pcost))
+                    print('before ap: ' + str(accpe))
+                    print('')
 
                 beforeScore = score
 
