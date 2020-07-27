@@ -262,7 +262,7 @@ if __name__ == '__main__':
             befores = [] # value of 'before' for each option
             afters = [] # value of 'after' for each option
 
-            toPrint = ' **************** [ FOR ANALYSIS ] ****************\n' # print TO ANALYZE SCORE-INCREASING CASES
+            toPrint = '\n **************** [ FOR ANALYSIS ] ****************\n' # print TO ANALYZE SCORE-INCREASING CASES
             
             # 06 For 모든 options (choice_0, choice_1, ..., choice_9)
             for j in range(OPTIONS):
@@ -327,8 +327,28 @@ if __name__ == '__main__':
 
                 # 분석용
                 if caseCondition == True and scoreChange[j] < 0: # TO ANALYZE SCORE-INCREASING CASES
-                    
+
+                    toPrint += '\n <<< array >>>\n'
+                    toPrint += 'fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' *** OPTION ' + str(j) + ' ***\n'
+                    toPrint += 'BEFORE\n'
+                    toPrint += '       OCA     : ' + str(ocA[1:21]) + '\n'
+                    toPrint += '                 ' + str(ocA[21:41]) + '\n'
+                    toPrint += '                 ' + str(ocA[41:61]) + '\n'
+                    toPrint += '                 ' + str(ocA[61:81]) + '\n'
+                    toPrint += '                 ' + str(ocA[81:]) + '\n'
+                    toPrint += 'before OCA     : ' + str(beforeOCA) + ' (before: ' + str(before) + ')\n'
+                    toPrint += 'after  OCA     : ' + str(afterOCA) + ' (after : ' + str(after) + ')\n'
                     toPrint += '\n'
+                    toPrint += 'AFTER\n'
+                    toPrint += '       ocA_copy: ' + str(ocA_copy[1:21]) + '\n'
+                    toPrint += '                 ' + str(ocA_copy[21:41]) + '\n'
+                    toPrint += '                 ' + str(ocA_copy[41:61]) + '\n'
+                    toPrint += '                 ' + str(ocA_copy[61:81]) + '\n'
+                    toPrint += '                 ' + str(ocA_copy[81:]) + '\n'
+                    toPrint += 'before OCA_copy: ' + str(beforeOCA_copy) + ' (before: ' + str(before) + ')\n'
+                    toPrint += 'after  OCA_copy: ' + str(afterOCA_copy) + ' (after : ' + str(after) + ')\n'
+                    
+                    toPrint += '\n <<< compare >>>\n'
                     toPrint += 'fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' *** OPTION ' + str(j) + ' ***\n'
                     toPrint += 'BEFORE changing the number of people for each day\n'
                     toPrint += 'after  acP = ' + str(round(A0, 3)) + '\n' # 변경 후 date의 ocA 변경 전 account penalty
@@ -350,7 +370,7 @@ if __name__ == '__main__':
                 if caseCondition == True and j == OPTIONS - 1: # TO ANALYZE SCORE-INCREASING CASES
                     
                     minNoneResult = minNone(scoreChange) # [minVal, minIndex]
-                    toPrint += ('\n **************** [FINAL DECISION] ****************\n' +
+                    toPrint += ('\n **************** [FINAL DECISION] ****************\n\n' +
                                 str(minNoneResult[0]) + ' / [' + str(i) + '] ' +
                                 str(befores[minNoneResult[1]]) + ' -> ' + str(afters[minNoneResult[1]]))
 
@@ -381,7 +401,7 @@ if __name__ == '__main__':
 
                 if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
                     print('')
-                    print(' **************** [ FINAL RESULT ] ****************')
+                    print(' **************** [ FINAL RESULT ] ****************\n')
                     print('score (before -> after)')
                     print('before ap: ' + str(accpe))
                     print('before pc: ' + str(pcost))
