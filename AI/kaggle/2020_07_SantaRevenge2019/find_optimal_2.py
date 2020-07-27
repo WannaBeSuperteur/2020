@@ -294,7 +294,7 @@ if __name__ == '__main__':
                 #    A0 : 변경 후 date의 ocA 변경 전 account penalty
                 afterOCA = [None]*max(6-after, 0) + ocA[max(after-5, 1):min(after+6, 101)] + [ocA[100]]*max(0, after-95)
                 #print('after:  ' + str(afterOCA))
-                if after == 100: B0 = accountPenaltyFor100(afterOCA)
+                if after == 100: A0 = accountPenaltyFor100(afterOCA)
                 else: A0 = accountPenalty(afterOCA)
 
                 # 11 ocA를 복사한 배열을 ocA_copy라 하면 ocA_copy[before] -= people; ocA_copy[after] += people;
@@ -330,19 +330,21 @@ if __name__ == '__main__':
                     
                     toPrint += '\n'
                     toPrint += 'fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' *** OPTION ' + str(j) + ' ***\n'
-                    toPrint += 'after changing the number of people for each day\n'
-                    toPrint += 'after  acP = ' + str(round(A1, 3)) + '\n' # 변경 후 date의 ocA 변경 후 account penalty
-                    toPrint += 'before acP = ' + str(round(B1, 3)) + '\n' # 변경 전 date의 ocA 변경 후 account penalty
-                    toPrint += '       prC = ' + str(round(p1, 3)) + '\n' # 해당 family에 대한 date 변경 후 prefCost
-                    toPrint += 'total      = ' + str(round(A1+B1+p1, 3)) + '\n'
-                    toPrint += '\n'
-                    toPrint += 'before changing the number of people for each day\n'
+                    toPrint += 'BEFORE changing the number of people for each day\n'
                     toPrint += 'after  acP = ' + str(round(A0, 3)) + '\n' # 변경 후 date의 ocA 변경 전 account penalty
                     toPrint += 'before acP = ' + str(round(B0, 3)) + '\n' # 변경 전 date의 ocA 변경 전 account penalty
                     toPrint += '       prC = ' + str(round(p0, 3)) + '\n' # 해당 family에 대한 date 변경 전 prefCost
                     toPrint += 'total      = ' + str(round(A0+B0+p0, 3)) + '\n'
                     toPrint += '\n'
+                    toPrint += 'AFTER changing the number of people for each day\n'
+                    toPrint += 'after  acP = ' + str(round(A1, 3)) + '\n' # 변경 후 date의 ocA 변경 후 account penalty
+                    toPrint += 'before acP = ' + str(round(B1, 3)) + '\n' # 변경 전 date의 ocA 변경 후 account penalty
+                    toPrint += '       prC = ' + str(round(p1, 3)) + '\n' # 해당 family에 대한 date 변경 후 prefCost
+                    toPrint += 'total      = ' + str(round(A1+B1+p1, 3)) + '\n'
+                    toPrint += '\n'
+                    toPrint += 'CHANGE\n'
                     toPrint += 'acP    dif = ' + str(round((A1+B1)-(A0+B0), 3)) + '\n'
+                    toPrint += 'prC    dif = ' + str(round(p1-p0, 3)) + '\n'
                     toPrint += 'total  dif = ' + str(round(scoreChange[j], 3)) + '\n'
 
                 if caseCondition == True and j == OPTIONS - 1: # TO ANALYZE SCORE-INCREASING CASES
@@ -381,9 +383,9 @@ if __name__ == '__main__':
                     print('')
                     print(' **************** [ FINAL RESULT ] ****************')
                     print('score (before -> after)')
-                    print('before   : ' + str(score))
-                    print('before pc: ' + str(pcost))
                     print('before ap: ' + str(accpe))
+                    print('before pc: ' + str(pcost))
+                    print('BEFORE   : ' + str(score))
                     print('')
 
                 beforeScore = score
@@ -401,13 +403,13 @@ if __name__ == '__main__':
                 if i % 10 == 0 and caseCondition == False: print(score)
 
                 if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
-                    print('after    : ' + str(score))
-                    print('after  pc: ' + str(pcost))
                     print('after  ap: ' + str(accpe))
+                    print('after  pc: ' + str(pcost))
+                    print('AFTER    : ' + str(score))
                     print('')
-                    print('change   : ' + str(score-beforeScore))
-                    print('change pc: ' + str(pcost-beforePcost))
                     print('change ap: ' + str(accpe-beforeAccpe))
+                    print('change pc: ' + str(pcost-beforePcost))
+                    print('CHANGE   : ' + str(score-beforeScore))
                     print('')
                     print('min      : ' + str(minNone(scoreChange)) + ' <- [minVal, minIndex]')
 
