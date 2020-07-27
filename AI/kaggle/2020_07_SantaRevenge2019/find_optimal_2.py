@@ -184,9 +184,16 @@ def prefCostForThisFamily(famData_i, subData_i):
 
 def minNone(array):
     newArray = []
+    index = 0
+    minVal = INFINITE
+    
     for i in range(len(array)):
-        if array[i] != None: newArray.append(array[i])
-    return min(newArray)
+        if array[i] != None:
+            if array[i] < minVal:
+                minVal = array[i]
+                index = i
+
+    return [minVal, index]
 
 def roundPrint(array, n):
     newArray = []
@@ -230,7 +237,7 @@ if __name__ == '__main__':
         for i in range(FAMILIES):
 
             # condition TO ANALYZE SCORE-INCREASING CASES
-            caseCondition = False
+            caseCondition = count == 1 and i > 830 and i < 870
 
             if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
                 pcost = h.prefCost(famData, subData, ocA)
@@ -254,6 +261,8 @@ if __name__ == '__main__':
 
             befores = [] # value of 'before' for each option
             afters = [] # value of 'after' for each option
+
+            toPrint = ' **************** [ FOR ANALYSIS ] ****************\n' # print TO ANALYZE SCORE-INCREASING CASES
             
             # 06 For 모든 options (choice_0, choice_1, ..., choice_9)
             for j in range(OPTIONS):
@@ -314,33 +323,39 @@ if __name__ == '__main__':
                 scoreChange[j] = (A1+B1+p1) - (A0+B0+p0)
 
                 # 분석용
-                if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
-                    print('')
-                    print('<<< for analysis >>>')
-                    print('fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' (OPTION ' + str(j) + ')')
-                    print('after changing the number of people for each day')
-                    print('after  acP = ' + str(round(A1, 3))) # 변경 후 date의 ocA 변경 후 account penalty
-                    print('before acP = ' + str(round(B1, 3))) # 변경 전 date의 ocA 변경 후 account penalty
-                    print('       prC = ' + str(round(p1, 3))) # 해당 family에 대한 date 변경 후 prefCost
-                    print('total      = ' + str(round(A1+B1+p1, 3)))
-                    print('')
-                    print('before changing the number of people for each day')
-                    print('after  acP = ' + str(round(A0, 3))) # 변경 후 date의 ocA 변경 전 account penalty
-                    print('before acP = ' + str(round(B0, 3))) # 변경 전 date의 ocA 변경 전 account penalty
-                    print('       prC = ' + str(round(p0, 3))) # 해당 family에 대한 date 변경 전 prefCost
-                    print('total      = ' + str(round(A0+B0+p0, 3)))
-                    print('')
-                    print('acP    dif = ' + str(round((A1+B1)-(A0+B0), 3)))
-                    print('total  dif = ' + str(round(scoreChange[j], 3)))
+                if caseCondition == True and scoreChange[j] < 0: # TO ANALYZE SCORE-INCREASING CASES
+                    
+                    toPrint += '\n'
+                    toPrint += 'fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' *** OPTION ' + str(j) + ' ***\n'
+                    toPrint += 'after changing the number of people for each day\n'
+                    toPrint += 'after  acP = ' + str(round(A1, 3)) + '\n' # 변경 후 date의 ocA 변경 후 account penalty
+                    toPrint += 'before acP = ' + str(round(B1, 3)) + '\n' # 변경 전 date의 ocA 변경 후 account penalty
+                    toPrint += '       prC = ' + str(round(p1, 3)) + '\n' # 해당 family에 대한 date 변경 후 prefCost
+                    toPrint += 'total      = ' + str(round(A1+B1+p1, 3)) + '\n'
+                    toPrint += '\n'
+                    toPrint += 'before changing the number of people for each day\n'
+                    toPrint += 'after  acP = ' + str(round(A0, 3)) + '\n' # 변경 후 date의 ocA 변경 전 account penalty
+                    toPrint += 'before acP = ' + str(round(B0, 3)) + '\n' # 변경 전 date의 ocA 변경 전 account penalty
+                    toPrint += '       prC = ' + str(round(p0, 3)) + '\n' # 해당 family에 대한 date 변경 전 prefCost
+                    toPrint += 'total      = ' + str(round(A0+B0+p0, 3)) + '\n'
+                    toPrint += '\n'
+                    toPrint += 'acP    dif = ' + str(round((A1+B1)-(A0+B0), 3)) + '\n'
+                    toPrint += 'total  dif = ' + str(round(scoreChange[j], 3)) + '\n'
 
-                    print('')
-                    print(str(roundPrint(scoreChange, 0)) + ' ' + str(minNone(scoreChange)) + ' / [' + str(i) + '] ' + str(before) + ' -> ' + str(after))
-                    print('')
+                if caseCondition == True and j == OPTIONS - 1: # TO ANALYZE SCORE-INCREASING CASES
+                    
+                    minNoneResult = minNone(scoreChange) # [minVal, minIndex]
+                    toPrint += ('\n **************** [FINAL DECISION] ****************\n' +
+                                str(minNoneResult[0]) + ' / [' + str(i) + '] ' +
+                                str(befores[minNoneResult[1]]) + ' -> ' + str(afters[minNoneResult[1]]))
 
             if scoreChange == [None, None, None, None, None, None, None, None, None, None]: continue
 
             # 16 if 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
-            if minNone(scoreChange) < 0:
+            if minNone(scoreChange)[0] < 0:
+
+                # 분석 결과 출력
+                if caseCondition == True: print(toPrint)
 
                 # 17 score(의 변화량)가 가장 작은 option을 찾아서 실행한다.
                 minBefore = 0 # 가장 작은 option의 before 값
@@ -361,6 +376,7 @@ if __name__ == '__main__':
 
                 if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
                     print('')
+                    print(' **************** [ FINAL RESULT ] ****************')
                     print('score (before -> after)')
                     print('before   : ' + str(score))
                     print('before pc: ' + str(pcost))
@@ -379,8 +395,7 @@ if __name__ == '__main__':
                     pcost = h.prefCost(famData, subData, ocA)
                     accpe = h.accountPenalty(famData, subData, ocA)
 
-                if i % 10 == 0: print(score)
-                elif caseCondition == True: print(score) # TO ANALYZE SCORE-INCREASING CASES
+                if i % 10 == 0 and caseCondition == False: print(score)
 
                 if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
                     print('after    : ' + str(score))
@@ -391,7 +406,7 @@ if __name__ == '__main__':
                     print('change pc: ' + str(pcost-beforePcost))
                     print('change ap: ' + str(accpe-beforeAccpe))
                     print('')
-                    print('min      : ' + str(minNone(scoreChange)))
+                    print('min      : ' + str(minNone(scoreChange)) + ' <- [minVal, minIndex]')
 
         # 19 더 이상 최적화가 되지 않으면 종료
         if score < 114000: break
