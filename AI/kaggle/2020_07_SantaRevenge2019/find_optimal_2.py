@@ -274,6 +274,9 @@ if __name__ == '__main__':
                 befores.append(before)
                 afters.append(after)
 
+                # before와 after가 서로 같으면 변화가 없는 것이므로 건너뛰기
+                if before == after: continue
+
                 #print(before, after)
                 
                 # 07 변경전 day의 인원수(ocA[before]) - 해당 family 인원수가 125 미만이면 제외
