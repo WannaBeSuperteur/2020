@@ -222,7 +222,7 @@ def roundPrint(array, n):
 #     ]
 #
 # i는 count용 변수, prevScore는 직전 점수
-def findBestOption(subData, famData, options, caseCondition, ocA, i, prevScore, prevAccpe, prevPCost):
+def findBestOption(subData, famData, options, ocA, i, prevScore):
 
     if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
         pcost = h.prefCost(famData, subData, ocA)
@@ -266,14 +266,12 @@ def findBestOption(subData, famData, options, caseCondition, ocA, i, prevScore, 
         # 09 B0 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
         #    B0 : 변경 전 date의 ocA 변경 전 account penalty
         beforeOCA = [None]*max(6-before, 0) + ocA[max(before-5, 1):min(before+6, 101)] + [ocA[100]]*max(0, before-95)
-        #print('before: ' + str(beforeOCA))
         if before == 100: B0 = accountPenaltyFor100(beforeOCA)
         else: B0 = accountPenalty(beforeOCA)
 
         # 10 A0 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
         #    A0 : 변경 후 date의 ocA 변경 전 account penalty
         afterOCA = [None]*max(6-after, 0) + ocA[max(after-5, 1):min(after+6, 101)] + [ocA[100]]*max(0, after-95)
-        #print('after:  ' + str(afterOCA))
         if after == 100: A0 = accountPenaltyFor100(afterOCA)
         else: A0 = accountPenalty(afterOCA)
 
@@ -305,58 +303,9 @@ def findBestOption(subData, famData, options, caseCondition, ocA, i, prevScore, 
         # 15 해당 family에 대한 account penalty의 변화량 (A1-B0), prefCost의 변화량 (p1-p0)을 이용하여 score의 변화량 (B1+A1+p1)-(B0+A0+p0)을 계산한다.
         scoreChange[j] = (A1+B1+p1) - (A0+B0+p0)
 
-        # 분석용
-        if caseCondition == True and scoreChange[j] < 0: # TO ANALYZE SCORE-INCREASING CASES
+    if scoreChange == [None, None, None, None, None, None, None, None, None, None]: return prevScore
 
-            toPrint += '\n <<< array >>>\n'
-            toPrint += 'fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' *** OPTION ' + str(j) + ' ***\n'
-            toPrint += 'BEFORE\n'
-            toPrint += '       OCA     : ' + str(ocA[1:21]) + '\n'
-            toPrint += '                 ' + str(ocA[21:41]) + '\n'
-            toPrint += '                 ' + str(ocA[41:61]) + '\n'
-            toPrint += '                 ' + str(ocA[61:81]) + '\n'
-            toPrint += '                 ' + str(ocA[81:]) + '\n'
-            toPrint += 'before OCA     : ' + str(beforeOCA) + ' (before: ' + str(before) + ')\n'
-            toPrint += 'after  OCA     : ' + str(afterOCA) + ' (after : ' + str(after) + ')\n'
-            toPrint += '\n'
-            toPrint += 'AFTER\n'
-            toPrint += '       ocA_copy: ' + str(ocA_copy[1:21]) + '\n'
-            toPrint += '                 ' + str(ocA_copy[21:41]) + '\n'
-            toPrint += '                 ' + str(ocA_copy[41:61]) + '\n'
-            toPrint += '                 ' + str(ocA_copy[61:81]) + '\n'
-            toPrint += '                 ' + str(ocA_copy[81:]) + '\n'
-            toPrint += 'before OCA_copy: ' + str(beforeOCA_copy) + ' (before: ' + str(before) + ')\n'
-            toPrint += 'after  OCA_copy: ' + str(afterOCA_copy) + ' (after : ' + str(after) + ')\n'
-                    
-            toPrint += '\n <<< compare >>>\n'
-            toPrint += 'fam:' + str(i) + ' before:' + str(before) + ' after:' + str(after) + ' *** OPTION ' + str(j) + ' ***\n'
-            toPrint += 'BEFORE changing the number of people for each day\n'
-            toPrint += 'after  acP = ' + str(round(A0, 3)) + '\n' # 변경 후 date의 ocA 변경 전 account penalty
-            toPrint += 'before acP = ' + str(round(B0, 3)) + '\n' # 변경 전 date의 ocA 변경 전 account penalty
-            toPrint += '       prC = ' + str(round(p0, 3)) + '\n' # 해당 family에 대한 date 변경 전 prefCost
-            toPrint += 'total      = ' + str(round(A0+B0+p0, 3)) + '\n'
-            toPrint += '\n'
-            toPrint += 'AFTER changing the number of people for each day\n'
-            toPrint += 'after  acP = ' + str(round(A1, 3)) + '\n' # 변경 후 date의 ocA 변경 후 account penalty
-            toPrint += 'before acP = ' + str(round(B1, 3)) + '\n' # 변경 전 date의 ocA 변경 후 account penalty
-            toPrint += '       prC = ' + str(round(p1, 3)) + '\n' # 해당 family에 대한 date 변경 후 prefCost
-            toPrint += 'total      = ' + str(round(A1+B1+p1, 3)) + '\n'
-            toPrint += '\n'
-            toPrint += 'CHANGE\n'
-            toPrint += 'acP    dif = ' + str(round((A1+B1)-(A0+B0), 3)) + '\n'
-            toPrint += 'prC    dif = ' + str(round(p1-p0, 3)) + '\n'
-            toPrint += 'total  dif = ' + str(round(scoreChange[j], 3)) + '\n'
-
-        if caseCondition == True and j == len(options) - 1: # TO ANALYZE SCORE-INCREASING CASES
-                    
-            minNoneResult = minNone(scoreChange) # [minVal, minIndex]
-            toPrint += ('\n **************** [FINAL DECISION] ****************\n\n' +
-                        str(minNoneResult[0]) + ' / [' + str(i) + '] ' +
-                        str(befores[minNoneResult[1]]) + ' -> ' + str(afters[minNoneResult[1]]))
-
-    if scoreChange == [None, None, None, None, None, None, None, None, None, None]: return [prevAccpe, prevPCost, prevScore]
-
-    # 16 if 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
+    # 16 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
         # 분석 결과 출력
@@ -383,38 +332,12 @@ def findBestOption(subData, famData, options, caseCondition, ocA, i, prevScore, 
 
         score = h.getScoreFeasible(famData, subData, ocA)
 
-        # pcost, accpe는 caseCondition이 True일 때만 사용
-        if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
-            pcost = h.prefCost(famData, subData, ocA)
-            accpe = h.accountPenalty(famData, subData, ocA)
-        else:
-            pcost = prevPCost
-            accpe = prevAccpe
-
         if i % 10 == 0 and caseCondition == False: print(score)
 
-        if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
-            print('')
-            print(' **************** [ FINAL RESULT ] ****************\n')
-            print('score (before -> after)')
-            print('before ap: ' + str(prevAccpe))
-            print('before pc: ' + str(prevPCost))
-            print('BEFORE   : ' + str(prevScore))
-            print('')
-            print('after  ap: ' + str(accpe))
-            print('after  pc: ' + str(pcost))
-            print('AFTER    : ' + str(score))
-            print('')
-            print('change ap: ' + str(accpe-prevAccpe))
-            print('change pc: ' + str(pcost-prevPCost))
-            print('CHANGE   : ' + str(score-prevScore))
-            print('')
-            print('min      : ' + str(minNone(scoreChange)) + ' <- [minVal, minIndex]')
-
-        return [accpe, pcost, score]
+        return score
 
     # 가장 작은 변화량이 0 초과이면 변화가 없으므로 이전 값을 반환
-    return [prevAccpe, prevPCost, prevScore]
+    return prevScore
 
 if __name__ == '__main__':
 
@@ -444,8 +367,6 @@ if __name__ == '__main__':
         # 02 현재 상태에 대한 score를 계산하여 출력한다. (feasible하지 않으면 무한대)
         ocA = h.getOccupancy(famData, subData) # occupancy array
         score = h.getScoreFeasible(famData, subData, ocA)
-        pcost = h.prefCost(famData, subData, ocA)
-        accpe = h.accountPenalty(famData, subData, ocA)
 
         # 지난 단계의 score와 같으면 더 이상 업데이트가 되지 않으므로 랜덤하게 5개 변경 (미구현)
         random5 = False
@@ -464,7 +385,7 @@ if __name__ == '__main__':
             caseCondition = False
 
             options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
-            score = findBestOption(subData, famData, options, caseCondition, ocA, i, score, accpe, pcost)[2]
+            score = findBestOption(subData, famData, options, ocA, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
         if score < 114000: break
