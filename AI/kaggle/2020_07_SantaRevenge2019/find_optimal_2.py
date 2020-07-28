@@ -224,10 +224,6 @@ def roundPrint(array, n):
 # i는 count용 변수, prevScore는 직전 점수
 def findBestOption(subData, famData, options, ocA, i, prevScore):
 
-    if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
-        pcost = h.prefCost(famData, subData, ocA)
-        accpe = h.accountPenalty(famData, subData, ocA)
-
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = [None, None, None, None, None, None, None, None, None, None]
 
@@ -308,9 +304,6 @@ def findBestOption(subData, famData, options, ocA, i, prevScore):
     # 16 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
-        # 분석 결과 출력
-        if caseCondition == True: print(toPrint)
-
         # 17 score(의 변화량)가 가장 작은 option을 찾아서 실행한다.
         minBefore = 0 # 가장 작은 option의 before 값
         minAfter = 0 # 가장 작은 option의 after 값
@@ -331,8 +324,6 @@ def findBestOption(subData, famData, options, ocA, i, prevScore):
         ocA[afters[minChoiceIndex]] += members
 
         score = h.getScoreFeasible(famData, subData, ocA)
-
-        if i % 10 == 0 and caseCondition == False: print(score)
 
         return score
 
@@ -378,11 +369,7 @@ if __name__ == '__main__':
         # 03 For 모든 families
         for i in range(FAMILIES):
 
-            if (count == 0 and i % 100 == 0) or i == 0: print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
-
-            # condition TO ANALYZE SCORE-INCREASING CASES
-            # caseCondition = count == 1 and i > 830 and i < 870
-            caseCondition = False
+            if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
             options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             score = findBestOption(subData, famData, options, ocA, i, score)
