@@ -237,7 +237,8 @@ if __name__ == '__main__':
         for i in range(FAMILIES):
 
             # condition TO ANALYZE SCORE-INCREASING CASES
-            caseCondition = count == 1 and i > 830 and i < 870
+            # caseCondition = count == 1 and i > 830 and i < 870
+            caseCondition = False
 
             if caseCondition == True: # TO ANALYZE SCORE-INCREASING CASES
                 pcost = h.prefCost(famData, subData, ocA)
@@ -250,7 +251,7 @@ if __name__ == '__main__':
             #print(ocA[61:81])
             #print(ocA[81:101])
             
-            if i % 100 == 0: print(str(count) + ' ' + str(i))
+            if (count == 0 and i % 100 == 0) or i == 0: print(str(count) + ' ' + str(i))
 
             # 04 p0 = 해당 family에 대한 prefCost를 계산한다.
             #    p0 : 해당 family에 대한 date 변경 전 prefCost
@@ -300,8 +301,8 @@ if __name__ == '__main__':
                 # 11 ocA를 복사한 배열을 ocA_copy라 하면 ocA_copy[before] -= people; ocA_copy[after] += people;
                 ocA_copy = []
                 for k in range(len(ocA)):
-                    if k == before: ocA_copy.append(ocA[k] - members)
-                    if k == after: ocA_copy.append(ocA[k] + members)
+                    if k == before and k != after: ocA_copy.append(ocA[k] - members)
+                    elif k != before and k == after: ocA_copy.append(ocA[k] + members)
                     else: ocA_copy.append(ocA[k])
                 # print(ocA)
                 # print(ocA_copy)
