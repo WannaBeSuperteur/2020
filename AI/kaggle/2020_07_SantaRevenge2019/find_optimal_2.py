@@ -230,9 +230,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
     befores = [] # value of 'before' for each option
     afters = [] # value of 'after' for each option
-
-    if ci == 0 and i > 2300 and i < 2350: print('k\tA1s\tB1s\tp1s\tall(1)\tA0s\tB0s\tp0s\tall(0)\tdif') # temp
-            
+         
     # 05 For 모든 options (0, 1, 2, ..., and 9)
     for j in range(len(options)):
 
@@ -247,6 +245,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         for k in range(len(ocA)): ocA_copy.append(ocA[k])
 
         # 각 option에 대하여 (famK0, famK1, ..., famKA에 대하여 변경)
+        # 처음의 p0, A0, B0 값과 마지막 p1, A1, B1 값만을 이용 (단일 변경의 경우 처음과 마지막이 같으므로 모두 이용)
         for k in range(len(thisOption)):
             famID = thisOption[k][0] # option의 변경사항 k에 대한 family ID
             toChange = thisOption[k][1] # option의 변경사항 k에 대한 change to this option (0, 1, ..., or 9)
@@ -282,9 +281,25 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                 else: A0 = accountPenalty(afterOCA)
 
             # 12 [IMPORTANT] ocA 배열 갱신: ocA_copy[before] -= people; ocA_copy[after] += people;
+            if ci == 0 and i > 2300 and i < 2350:
+                print(str(before) + '->' + str(after))
+                print(ocA_copy[1:21])
+                print(ocA_copy[21:41])
+                print(ocA_copy[41:61])
+                print(ocA_copy[61:81])
+                print(ocA_copy[81:])
+            
             for l in range(len(ocA_copy)):
                 if l == before and l != after: ocA_copy[l] -= members
                 elif l != before and l == after: ocA_copy[l] += members
+
+            if k == len(thisOption)-1 and ci == 0 and i > 2300 and i < 2350:
+                print(str(before) + '->' + str(after))
+                print(ocA_copy[1:21])
+                print(ocA_copy[21:41])
+                print(ocA_copy[41:61])
+                print(ocA_copy[61:81])
+                print(ocA_copy[81:])
                 
             # 13 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B1 : 변경 전 date의 ocA 변경 후 account penalty
@@ -311,6 +326,10 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         # prefCost의 변화량 (p1s-p0s)을 이용하여 score의 변화량 (B1s+A1s+p1s)-(B0s+A0s+p0s)을 계산한다.
         try:
             scoreChange[j] = (A1 + B1 + p1) - (A0 + B0 + p0)
+            if ci == 0 and i > 2300 and i < 2350:
+                print('1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
+                      ',\t0[all/aA/aB/p]: ' + str(round(A0 + B0 + p0, 1)) + '\t' + str(round(A0, 1)) + '\t' + str(round(B0, 1)) + '\t' + str(round(p0, 1)) +
+                      ',\tdif: ' + str(round(scoreChange[j], 1)) + '\t')
         except:
             scoreChange[j] = None
 
@@ -322,7 +341,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     # 17 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
-        if ci == 0 and i > 2300 and i < 2350: roundPrint(scoreChange, 0) # temp
+        if ci == 0 and i > 2300 and i < 2350:
+            roundPrint(scoreChange, 3)
 
         # 18 score(의 변화량)가 가장 작은 (음수 중에서는 절댓값이 가장 큰) option을 찾아서 실행한다.
         minBefore = 0 # 가장 작은 option의 before 값
@@ -354,7 +374,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         score = h.getScoreFeasible(famData, subData, ocA)
 
-        if ci == 0 and i > 2300 and i < 2350: print(score) # temp
+        if ci == 0 and i > 2300 and i < 2350: print(str(score) + '\n') # temp
 
         return score
 
@@ -402,7 +422,7 @@ if __name__ == '__main__':
 
             if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
-            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            options = [[[i, 0], [i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
