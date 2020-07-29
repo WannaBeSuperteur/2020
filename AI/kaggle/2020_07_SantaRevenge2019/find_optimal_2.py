@@ -231,22 +231,23 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     befores = [] # value of 'before' for each option
     afters = [] # value of 'after' for each option
 
-    toPrint = '\n **************** [ FOR ANALYSIS ] ****************\n' # print TO ANALYZE SCORE-INCREASING CASES
+    if ci == 0 and i > 2300 and i < 2350: print('k\tA1s\tB1s\tp1s\tall(1)\tA0s\tB0s\tp0s\tall(0)\tdif') # temp
             
     # 05 For 모든 options (0, 1, 2, ..., and 9)
     for j in range(len(options)):
 
         thisOption = options[j] # 변경사항: [[famK0, optK0], [famK1, optK1], ..., [famKA, optKA]]
 
-        # 값 저장. 이 값들의 합계를 이용하여 scoreChange 계산.
-        p0s = [] # p0 : 해당 family에 대한 date 변경 전 prefCost
-        B0s = [] # B0 : 변경 전 date의 ocA 변경 전 account penalty
-        A0s = [] # A0 : 변경 후 date의 ocA 변경 전 account penalty
-        p1s = [] # p1 : 해당 family에 대한 date 변경 후 prefCost
-        B1s = [] # B1 : 변경 전 date의 ocA 변경 후 account penalty
-        A1s = [] # A1 : 변경 후 date의 ocA 변경 후 account penalty
+        # 06 p0 = 해당 family에 대한 prefCost를 계산한다.
+        #    p0 : 해당 family에 대한 date 변경 전 prefCost
+        p0 = prefCostForThisFamily(famData[i], subData[i])
 
-        for k in range(len(thisOption)): # 각 option에 대하여 (famK0, famK1, ..., famKA에 대하여 변경)
+        # 07 ocA를 복사한 배열을 만든다.
+        ocA_copy = []
+        for k in range(len(ocA)): ocA_copy.append(ocA[k])
+
+        # 각 option에 대하여 (famK0, famK1, ..., famKA에 대하여 변경)
+        for k in range(len(thisOption)):
             famID = thisOption[k][0] # option의 변경사항 k에 대한 family ID
             toChange = thisOption[k][1] # option의 변경사항 k에 대한 change to this option (0, 1, ..., or 9)
 
@@ -258,89 +259,72 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             afters.append(after)
 
             # before와 after가 서로 같으면 변화가 없는 것이므로 건너뛰기
-            if before == after:
-                p0s.append(None)
-                B0s.append(None)
-                A0s.append(None)
-                p1s.append(None)
-                B1s.append(None)
-                A1s.append(None)
-                continue
+            if before == after: continue
                     
-            # 06 변경전 day의 인원수(ocA[before]) - 해당 family 인원수가 125 미만이면 제외
-            # 07 변경후 day의 인원수(ocA[after]) + 해당 family 인원수가 300 초과이면 제외
-            if ocA[before] - members < 125 or ocA[after] + members > 300:
-                p0s.append(None)
-                B0s.append(None)
-                A0s.append(None)
-                p1s.append(None)
-                B1s.append(None)
-                A1s.append(None)
-                continue
+            # 08 변경전 day의 인원수(ocA[before]) - 해당 family 인원수가 125 미만이면 제외
+            # 09 변경후 day의 인원수(ocA[after]) + 해당 family 인원수가 300 초과이면 제외
+            if ocA[before] - members < 125 or ocA[after] + members > 300: continue
 
-            # 08 p0 = 해당 family에 대한 prefCost를 계산한다.
-            #    p0 : 해당 family에 대한 date 변경 전 prefCost
-            p0s.append(prefCostForThisFamily(famData[i], subData[i]))
-
-            # 09 B0 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
+            # 10 B0 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B0 : 변경 전 date의 ocA 변경 전 account penalty
             beforeOCA = [None]*max(6-before, 0) + ocA[max(before-5, 1):min(before+6, 101)] + [ocA[100]]*max(0, before-95)
-            if before == 100: B0 = accountPenaltyFor100(beforeOCA)
-            else: B0 = accountPenalty(beforeOCA)
-            B0s.append(B0)
 
-            # 10 A0 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
+            if k == 0: # k=0일 때만 B0에 반영
+                if before == 100: B0 = accountPenaltyFor100(beforeOCA)
+                else: B0 = accountPenalty(beforeOCA)
+
+            # 11 A0 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
             #    A0 : 변경 후 date의 ocA 변경 전 account penalty
             afterOCA = [None]*max(6-after, 0) + ocA[max(after-5, 1):min(after+6, 101)] + [ocA[100]]*max(0, after-95)
-            if after == 100: A0 = accountPenaltyFor100(afterOCA)
-            else: A0 = accountPenalty(afterOCA)
-            A0s.append(A0)
 
-            # 11 ocA를 복사한 배열을 ocA_copy라 하면 ocA_copy[before] -= people; ocA_copy[after] += people;
-            ocA_copy = []
-            for k in range(len(ocA)):
-                if k == before and k != after: ocA_copy.append(ocA[k] - members)
-                elif k != before and k == after: ocA_copy.append(ocA[k] + members)
-                else: ocA_copy.append(ocA[k])
+            if k == 0: # k=0일 때만 A0에 반영
+                if after == 100: A0 = accountPenaltyFor100(afterOCA)
+                else: A0 = accountPenalty(afterOCA)
+
+            # 12 [IMPORTANT] ocA 배열 갱신: ocA_copy[before] -= people; ocA_copy[after] += people;
+            for l in range(len(ocA_copy)):
+                if l == before and l != after: ocA_copy[l] -= members
+                elif l != before and l == after: ocA_copy[l] += members
                 
-            # 12 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
+            # 13 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B1 : 변경 전 date의 ocA 변경 후 account penalty
             beforeOCA_copy = [None]*max(6-before, 0) + ocA_copy[max(before-5, 1):min(before+6, 101)] + [ocA_copy[100]]*max(0, before-95)
-            if before == 100: B1 = accountPenaltyFor100(beforeOCA_copy)
-            else: B1 = accountPenalty(beforeOCA_copy)
-            B1s.append(B1)
 
-            # 13 A1 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
+            if k == len(thisOption)-1: # k가 마지막일 때만 B1에 반영
+                if before == 100: B1 = accountPenaltyFor100(beforeOCA_copy)
+                else: B1 = accountPenalty(beforeOCA_copy)
+
+            # 14 A1 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
             #    A1 : 변경 후 date의 ocA 변경 후 account penalty
             afterOCA_copy = [None]*max(6-after, 0) + ocA_copy[max(after-5, 1):min(after+6, 101)] + [ocA_copy[100]]*max(0, after-95)
-            if after == 100: A1 = accountPenaltyFor100(afterOCA_copy)
-            else: A1 = accountPenalty(afterOCA_copy)
-            A1s.append(A1)
 
-            # 14 p1 = 해당 family에 대한 변경된 prefCost를 계산한다.
+            if k == len(thisOption)-1: # k가 마지막일 때만 A1에 반영
+                if after == 100: A1 = accountPenaltyFor100(afterOCA_copy)
+                else: A1 = accountPenalty(afterOCA_copy)
+
+            # 15 p1 = 해당 family에 대한 변경된 prefCost를 계산한다.
             #    p1 : 해당 family에 대한 date 변경 후 prefCost
-            p1s.append(prefCostForThisFamily(famData[famID], [famID, after]))
+            if k == len(thisOption)-1: # k가 마지막일 때만 p1에 반영
+                p1 = prefCostForThisFamily(famData[famID], [famID, after])
 
-        # 15 해당 option에 대한 account penalty의 변화량 [(A1s+B1s)-(A0s+B0s)],
+        # 16 해당 option에 대한 account penalty의 변화량 [(A1s+B1s)-(A0s+B0s)],
         # prefCost의 변화량 (p1s-p0s)을 이용하여 score의 변화량 (B1s+A1s+p1s)-(B0s+A0s+p0s)을 계산한다.
-        scoreChangeOfThisOption = 0
-
-        for k in range(len(thisOption)):
-            if A1s[k] != None:
-                scoreChangeOfThisOption += (A1s[k] + B1s[k] + p1s[k]) - (A0s[k] + B0s[k] + p0s[k])
-        scoreChange[j] = scoreChangeOfThisOption
+        try:
+            scoreChange[j] = (A1 + B1 + p1) - (A0 + B0 + p0)
+        except:
+            scoreChange[j] = None
 
     # scoreChange가 모두 None이면 건너뛰기
     allNone = []
     for j in range(len(options)): allNone.append(None)
     if scoreChange == allNone: return prevScore
 
-    # 16 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
+    # 17 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
-        # usage of ci here: if ci == 0 and i > 2300 and i < 2350: roundPrint(scoreChange, 0)
+        if ci == 0 and i > 2300 and i < 2350: roundPrint(scoreChange, 0) # temp
 
-        # 17 score(의 변화량)가 가장 작은 (음수 중에서는 절댓값이 가장 큰) option을 찾아서 실행한다.
+        # 18 score(의 변화량)가 가장 작은 (음수 중에서는 절댓값이 가장 큰) option을 찾아서 실행한다.
         minBefore = 0 # 가장 작은 option의 before 값
         minAfter = 0 # 가장 작은 option의 after 값
         minFamIDs = [] # 가장 작은 option의 family ID의 집합
@@ -364,11 +348,13 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         for k in range(len(minFamIDs)):
             subData[minFamIDs[k]][1] = famData[minFamIDs[k]][minChoices[k]+1]
 
-            # 18 occupancy array를 업데이트한다. (ocA[before of minChoice] -= people; ocA[after of minChoice] += people;)
+            # 19 occupancy array를 업데이트한다. (ocA[before of minChoice] -= people; ocA[after of minChoice] += people;)
             ocA[befores[minChoices[k]]] -= members
             ocA[afters[minChoices[k]]] += members
 
         score = h.getScoreFeasible(famData, subData, ocA)
+
+        if ci == 0 and i > 2300 and i < 2350: print(score) # temp
 
         return score
 
@@ -416,7 +402,7 @@ if __name__ == '__main__':
 
             if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
-            options = [[[i, 0], [i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
