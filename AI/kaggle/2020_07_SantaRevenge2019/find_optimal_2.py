@@ -221,8 +221,8 @@ def roundPrint(array, n):
 #      [[famN0, optN0], [famN1, optN1], ..., [famNC, optNC]]  # option N은 (C+1)개를 변경
 #     ]
 #
-# i는 count용 변수, prevScore는 직전 점수
-def findBestOption(subData, famData, options, ocA, i, prevScore):
+# ci(기존 count), i는 count용 변수, prevScore는 직전 점수
+def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = []
@@ -338,6 +338,8 @@ def findBestOption(subData, famData, options, ocA, i, prevScore):
     # 16 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
+        # usage of ci here: if ci == 0 and i > 2300 and i < 2350: roundPrint(scoreChange, 0)
+
         # 17 score(의 변화량)가 가장 작은 (음수 중에서는 절댓값이 가장 큰) option을 찾아서 실행한다.
         minBefore = 0 # 가장 작은 option의 before 값
         minAfter = 0 # 가장 작은 option의 after 값
@@ -414,8 +416,8 @@ if __name__ == '__main__':
 
             if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
-            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
-            score = findBestOption(subData, famData, options, ocA, i, score)
+            options = [[[i, 0], [i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
         if score < 114000: break
