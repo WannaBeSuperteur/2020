@@ -262,11 +262,11 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                     
             # 08 변경전 day의 인원수(ocA[before]) - 해당 family 인원수가 125 미만이면 제외
             # 09 변경후 day의 인원수(ocA[after]) + 해당 family 인원수가 300 초과이면 제외
-            if ocA[before] - members < 125 or ocA[after] + members > 300: continue
+            if ocA_copy[before] - members < 125 or ocA_copy[after] + members > 300: continue
 
             # 10 B0 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B0 : 변경 전 date의 ocA 변경 전 account penalty
-            beforeOCA = [None]*max(6-before, 0) + ocA[max(before-5, 1):min(before+6, 101)] + [ocA[100]]*max(0, before-95)
+            beforeOCA = [None]*max(6-before, 0) + ocA_copy[max(before-5, 1):min(before+6, 101)] + [ocA_copy[100]]*max(0, before-95)
 
             if k == 0: # k=0일 때만 B0에 반영
                 if before == 100: B0 = accountPenaltyFor100(beforeOCA)
@@ -274,7 +274,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
             # 11 A0 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
             #    A0 : 변경 후 date의 ocA 변경 전 account penalty
-            afterOCA = [None]*max(6-after, 0) + ocA[max(after-5, 1):min(after+6, 101)] + [ocA[100]]*max(0, after-95)
+            afterOCA = [None]*max(6-after, 0) + ocA_copy[max(after-5, 1):min(after+6, 101)] + [ocA_copy[100]]*max(0, after-95)
 
             if k == 0: # k=0일 때만 A0에 반영
                 if after == 100: A0 = accountPenaltyFor100(afterOCA)
