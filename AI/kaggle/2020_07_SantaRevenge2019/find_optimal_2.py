@@ -282,24 +282,18 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
             # 12 [IMPORTANT] ocA 배열 갱신: ocA_copy[before] -= people; ocA_copy[after] += people;
             if ci == 0 and i > 2300 and i < 2350:
-                print(str(before) + '->' + str(after))
-                print(ocA_copy[1:21])
-                print(ocA_copy[21:41])
-                print(ocA_copy[41:61])
-                print(ocA_copy[61:81])
-                print(ocA_copy[81:])
+                print(str(before) + '->' + str(after) + ' ( members: ' + str(members) + ' ) :' +
+                      ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) +
+                      ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
             
-            for l in range(len(ocA_copy)):
-                if l == before and l != after: ocA_copy[l] -= members
-                elif l != before and l == after: ocA_copy[l] += members
+            for x in range(len(ocA_copy)):
+                if x == before and x != after: ocA_copy[x] -= members
+                elif x != before and x == after: ocA_copy[x] += members
 
-            if k == len(thisOption)-1 and ci == 0 and i > 2300 and i < 2350:
-                print(str(before) + '->' + str(after))
-                print(ocA_copy[1:21])
-                print(ocA_copy[21:41])
-                print(ocA_copy[41:61])
-                print(ocA_copy[61:81])
-                print(ocA_copy[81:])
+            if ci == 0 and i > 2300 and i < 2350:
+                print(str(before) + '->' + str(after) + ' ( members: ' + str(members) + ' ) :' +
+                      ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) +
+                      ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
                 
             # 13 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B1 : 변경 전 date의 ocA 변경 후 account penalty
@@ -329,7 +323,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if ci == 0 and i > 2300 and i < 2350:
                 print('1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
                       ',\t0[all/aA/aB/p]: ' + str(round(A0 + B0 + p0, 1)) + '\t' + str(round(A0, 1)) + '\t' + str(round(B0, 1)) + '\t' + str(round(p0, 1)) +
-                      ',\tdif: ' + str(round(scoreChange[j], 1)) + '\t')
+                      ',\tdif: ' + str(round(scoreChange[j], 1)) + '\n')
         except:
             scoreChange[j] = None
 
