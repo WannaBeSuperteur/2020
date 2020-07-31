@@ -224,7 +224,7 @@ def roundPrint(array, n):
 # ci(기존 count), i는 count용 변수, prevScore는 직전 점수
 def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
-    condition = (ci == 0 and i > 500 and i < 502)
+    condition = (ci == 0 and i >= 500 and i < 502)
 
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = []
@@ -236,6 +236,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     # 05 For 모든 options (0, 1, 2, ..., and 9)
     for j in range(len(options)):
 
+        if condition == True: print(j)
+        
         thisOption = options[j] # 변경사항: [[famK0, optK0], [famK1, optK1], ..., [famKA, optKA]]
 
         # 06 p0 = 해당 family에 대한 prefCost를 계산한다.
@@ -245,6 +247,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         # 07 ocA를 복사한 배열을 만든다.
         ocA_copy = []
         for k in range(len(ocA)): ocA_copy.append(ocA[k])
+
+        isFeasible = True # ocA >= 125 and ocA <= 300
 
         # 각 option에 대하여 (famK0, famK1, ..., famKA에 대하여 변경)
         # 처음의 p0, A0, B0 값과 마지막 p1, A1, B1 값만을 이용 (단일 변경의 경우 처음과 마지막이 같으므로 모두 이용)
@@ -267,7 +271,9 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             # 08 변경전 day의 인원수(ocA[before]) - 해당 family 인원수가 125 미만이면 제외
             # 09 변경후 day의 인원수(ocA[after]) + 해당 family 인원수가 300 초과이면 제외
             if k == len(thisOption)-1:
-                if ocA_copy[before] - members < 125 or ocA_copy[after] + members > 300: continue
+                if ocA_copy[before] - members < 125 or ocA_copy[after] + members > 300:
+                    isFeasible = False
+                    continue
 
             # 10 B0 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B0 : 변경 전 date의 ocA 변경 전 account penalty
@@ -319,12 +325,15 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if k == len(thisOption)-1: # k가 마지막일 때만 p1에 반영
                 p1 = prefCostForThisFamily(famData[famID], [famID, after])
 
+        # Feasible하지 않으면 해당 option 건너뛰기
+        if isFeasible == False: continue
+
         # 16 해당 option에 대한 account penalty의 변화량 [(A1s+B1s)-(A0s+B0s)],
         # prefCost의 변화량 (p1s-p0s)을 이용하여 score의 변화량 (B1s+A1s+p1s)-(B0s+A0s+p0s)을 계산한다.
         try:          
             scoreChange[j] = (A1 + B1 + p1) - (A0 + B0 + p0)
             if condition == True:
-                print('1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
+                print('[' + str(j) + '] 1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
                       ',\t0[all/aA/aB/p]: ' + str(round(A0 + B0 + p0, 1)) + '\t' + str(round(A0, 1)) + '\t' + str(round(B0, 1)) + '\t' + str(round(p0, 1)) +
                       ',\tdif: ' + str(round(scoreChange[j], 1)) + '\n')
         except:
@@ -356,9 +365,9 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                 thisOption = options[k]
                 minFamIDs = []
                 minChoices = []
-                for l in range(len(thisOption)):
-                    minFamIDs.append(thisOption[l][0])
-                    minChoices.append(thisOption[l][1])
+                for x in range(len(thisOption)):
+                    minFamIDs.append(thisOption[x][0])
+                    minChoices.append(thisOption[x][1])
 
         # subData 변경
         for k in range(len(minFamIDs)):
@@ -370,7 +379,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         score = h.getScoreFeasible(famData, subData, ocA)
 
-        if condition == True: print(str(score) + '\n') # temp
+        if condition == True: print('minChoSC : ' + str(minChoiceSC) + ' -> ' + str(score) + '\n') # temp
 
         return score
 
@@ -418,7 +427,7 @@ if __name__ == '__main__':
 
             if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
-            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            options = [[[i, 0], [i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
