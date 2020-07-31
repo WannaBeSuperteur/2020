@@ -224,6 +224,8 @@ def roundPrint(array, n):
 # ci(기존 count), i는 count용 변수, prevScore는 직전 점수
 def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
+    condition = (ci == 0 and i > 500 and i < 502)
+
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = []
     for j in range(len(options)): scoreChange.append(None)
@@ -247,6 +249,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         # 각 option에 대하여 (famK0, famK1, ..., famKA에 대하여 변경)
         # 처음의 p0, A0, B0 값과 마지막 p1, A1, B1 값만을 이용 (단일 변경의 경우 처음과 마지막이 같으므로 모두 이용)
         for k in range(len(thisOption)):
+            
             famID = thisOption[k][0] # option의 변경사항 k에 대한 family ID
             toChange = thisOption[k][1] # option의 변경사항 k에 대한 change to this option (0, 1, ..., or 9)
 
@@ -259,10 +262,12 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
             # before와 after가 서로 같으면 변화가 없는 것이므로 건너뛰기
             if before == after: continue
-                    
+
+            # 마지막 변경사항인 경우
             # 08 변경전 day의 인원수(ocA[before]) - 해당 family 인원수가 125 미만이면 제외
             # 09 변경후 day의 인원수(ocA[after]) + 해당 family 인원수가 300 초과이면 제외
-            if ocA_copy[before] - members < 125 or ocA_copy[after] + members > 300: continue
+            if k == len(thisOption)-1:
+                if ocA_copy[before] - members < 125 or ocA_copy[after] + members > 300: continue
 
             # 10 B0 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B0 : 변경 전 date의 ocA 변경 전 account penalty
@@ -281,19 +286,17 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                 else: A0 = accountPenalty(afterOCA)
 
             # 12 [IMPORTANT] ocA 배열 갱신: ocA_copy[before] -= people; ocA_copy[after] += people;
-            if ci == 0 and i > 2300 and i < 2350:
+            if condition == True:
                 print(str(before) + '->' + str(after) + ' ( members: ' + str(members) + ' ) :' +
-                      ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) +
-                      ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
+                      ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) + ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
             
             for x in range(len(ocA_copy)):
                 if x == before and x != after: ocA_copy[x] -= members
                 elif x != before and x == after: ocA_copy[x] += members
 
-            if ci == 0 and i > 2300 and i < 2350:
+            if condition == True:
                 print(str(before) + '->' + str(after) + ' ( members: ' + str(members) + ' ) :' +
-                      ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) +
-                      ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
+                      ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) + ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
                 
             # 13 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B1 : 변경 전 date의 ocA 변경 후 account penalty
@@ -318,9 +321,9 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         # 16 해당 option에 대한 account penalty의 변화량 [(A1s+B1s)-(A0s+B0s)],
         # prefCost의 변화량 (p1s-p0s)을 이용하여 score의 변화량 (B1s+A1s+p1s)-(B0s+A0s+p0s)을 계산한다.
-        try:
+        try:          
             scoreChange[j] = (A1 + B1 + p1) - (A0 + B0 + p0)
-            if ci == 0 and i > 2300 and i < 2350:
+            if condition == True:
                 print('1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
                       ',\t0[all/aA/aB/p]: ' + str(round(A0 + B0 + p0, 1)) + '\t' + str(round(A0, 1)) + '\t' + str(round(B0, 1)) + '\t' + str(round(p0, 1)) +
                       ',\tdif: ' + str(round(scoreChange[j], 1)) + '\n')
@@ -335,8 +338,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     # 17 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
-        if ci == 0 and i > 2300 and i < 2350:
-            roundPrint(scoreChange, 3)
+        if condition == True: roundPrint(scoreChange, 3)
 
         # 18 score(의 변화량)가 가장 작은 (음수 중에서는 절댓값이 가장 큰) option을 찾아서 실행한다.
         minBefore = 0 # 가장 작은 option의 before 값
@@ -368,7 +370,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         score = h.getScoreFeasible(famData, subData, ocA)
 
-        if ci == 0 and i > 2300 and i < 2350: print(str(score) + '\n') # temp
+        if condition == True: print(str(score) + '\n') # temp
 
         return score
 
@@ -416,7 +418,7 @@ if __name__ == '__main__':
 
             if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
-            options = [[[i, 0], [i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
