@@ -243,9 +243,11 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         # 06 ocA 및 subData를 복사한 배열을 만든다.
         ocA_copy = []
-        subData_copy = []
         for k in range(len(ocA)): ocA_copy.append(ocA[k])
-        for k in range(len(subData)): subData_copy.append(subData[k])
+
+        if len(thisOption) >= 2:
+            subData_copy = []
+            for k in range(len(subData)): subData_copy.append(subData[k])
 
         before_ = [] # 'before' values of option j : for example [o0b0, o0b1, o0b2]
         after_ = [] # 'after' values of option j : for example [o0a0, o0a1, o0a2]
@@ -263,7 +265,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             toChange = thisOption[k][1] # option의 변경사항 k에 대한 change to this option (0, 1, ..., or 9)
             if condition == True: print('[01] famID: ' + str(famID) + ', toChange: ' + str(toChange))
 
-            before = subData_copy[famID][1] # 변경 전 date (option)
+            if len(thisOption) >= 2: before = subData_copy[famID][1] # 변경 전 date (option)
+            else: before = subData[famID][1] # 변경 전 date (option)
             after = famData[famID][toChange+1] # 변경 후 date (option)
             if condition == True: print('[02] before: ' + str(before) + ', after: ' + str(after))
             
@@ -358,7 +361,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                       ',\tdif: ' + str(round(thisScoreChange, 1)))
 
             # change copy of subData
-            subData_copy[famID] = [subData_copy[famID][0], famData[famID][toChange+1]]
+            if len(thisOption) >= 2: subData_copy[famID] = [subData_copy[famID][0], famData[famID][toChange+1]]
 
         # before_, after_를 각각 befores, afters에 추가
         befores.append(before_)
