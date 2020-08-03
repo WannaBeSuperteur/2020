@@ -233,6 +233,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
     befores = [] # value of 'before' for each option: [opt0:[o0b0, o0b1], opt1:[o1b0, o1b1, o1b2, o1b3], ...]
     afters = [] # value of 'after' for each option:  [opt0:[o0a0, o0a1], opt1:[o1a0, o1a1, o1a2, o1a3], ...]
+    isFeasible = []
          
     # 05 For 모든 options (0, 1, 2, ..., and 9)
     for j in range(len(options)):
@@ -315,22 +316,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if condition == True:
                 print(str(before) + '->' + str(after) + ' ( members: ' + str(members) + ' ) :' +
                       ' ocA_copy[' + str(before) + '] = ' + str(ocA_copy[before]) + ', ocA_copy[' + str(after) + '] = ' + str(ocA_copy[after]))
-
-            # 마지막 변경사항인 경우
-            # 11 변경전 day의 인원수(ocA[before])가 125 미만이면 제외
-            # 12 변경후 day의 인원수(ocA[after])가 300 초과이면 제외
-            if k == len(thisOption)-1:
-
-                # 조건에 위배되는 날짜가 있는지 확인
-                if max(ocA_copy) > 300 or min(ocA_copy[1:]) < 125:
-                    if ci == 18: print(i, 'opt', j, max(ocA_copy), 'Not Feasible')
-                    isFeasible = False
-                    break
-
-            if condition == True: print('[09] isFeasible: ' + str(isFeasible))
-            if isFeasible == False: continue
                 
-            # 13 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
+            # 11 B1 = 변경전 day가 before일 때 day (before-5) ~ day (before+5) 부분을 추출하여 account penalty를 계산한다.
             #    B1 : 변경 전 date의 ocA 변경 후 account penalty
             beforeOCA_copy = [None]*max(6-before, 0) + ocA_copy[max(before-5, 1):min(before+6, 101)] + [ocA_copy[100]]*max(0, before-95)
 
@@ -338,7 +325,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             else: B1 = accountPenalty(beforeOCA_copy)
             if condition == True: print('[10] B1: ' + str(B1) + ' / beforeOCA_copy=' + str(beforeOCA_copy))
 
-            # 14 A1 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
+            # 12 A1 = 변경후 day가 after일 때 day (after-5) ~ day (after+5) 부분을 추출하여 account penalty를 계산한다.
             #    A1 : 변경 후 date의 ocA 변경 후 account penalty
             afterOCA_copy = [None]*max(6-after, 0) + ocA_copy[max(after-5, 1):min(after+6, 101)] + [ocA_copy[100]]*max(0, after-95)
 
@@ -365,19 +352,15 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if len(thisOption) >= 2: subData_copy[famID] = [subData_copy[famID][0], famData[famID][toChange+1]]
 
         # before_, after_를 각각 befores, afters에 추가
-        if isFeasible == True:
-            befores.append(before_)
-            afters.append(after_)
-        else:
-            befores.append(None)
-            afters.append(None)
-        
+        befores.append(before_)
+        afters.append(after_)
+
         if condition == True:
             print('[13] befores: ' + str(befores))
             print('[14] afters : ' + str(afters))
 
-        # Feasible하지 않으면 해당 option 건너뛰기
-        if isFeasible == False:
+        # Feasible하지 않으면 (max>300 or min<125) 해당 option 건너뛰기
+        if max(ocA_copy) > 300 or min(ocA_copy[1:]) < 125:
             scoreChange[j] = None
             continue
         else:
@@ -387,8 +370,6 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     allNone = []
     for j in range(len(options)): allNone.append(None)
     if scoreChange == allNone: return prevScore
-
-    if ci == 18: print(scoreChange)
 
     # 17 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
