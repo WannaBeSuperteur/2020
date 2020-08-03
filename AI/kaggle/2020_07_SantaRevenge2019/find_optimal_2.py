@@ -239,12 +239,9 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         if condition == True: print(j)
         
         thisOption = options[j] # 변경사항: [[famK0, optK0], [famK1, optK1], ..., [famKA, optKA]]
+        if condition == True: print('[**] thisOption = ' + str(thisOption))
 
-        # 06 p0 = 해당 family에 대한 prefCost를 계산한다.
-        #    p0 : 해당 family에 대한 date 변경 전 prefCost
-        p0 = prefCostForThisFamily(famData[i], subData[i])
-
-        # 07 ocA를 복사한 배열을 만든다.
+        # 06 ocA를 복사한 배열을 만든다.
         ocA_copy = []
         for k in range(len(ocA)): ocA_copy.append(ocA[k])
 
@@ -252,6 +249,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         after_ = [] # 'after' values of option j : for example [o0a0, o0a1, o0a2]
 
         isFeasible = True # ocA >= 125 and ocA <= 300
+
+        scoreChangeSum = 0 # sum of score change
 
         # 각 option에 대하여 (famK0, famK1, ..., famKA에 대하여 변경)
         # 처음의 p0, A0, B0 값과 마지막 p1, A1, B1 값만을 이용 (단일 변경의 경우 처음과 마지막이 같으므로 모두 이용)
@@ -271,6 +270,11 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if condition == True: print('[03] before_: ' + str(before_) + ', after_: ' + str(after_))
             
             members = famData[famID][11]
+
+            # 07 p0 = 해당 family에 대한 prefCost를 계산한다.
+            #    p0 : 해당 family에 대한 date 변경 전 prefCost
+            p0 = prefCostForThisFamily(famData[famID], [famID, before])
+            if condition == True: print('[04] p0: ' + str(p0))
 
             # before와 after가 서로 같으면 변화가 없는 것이므로 건너뛰기
             if before == after: continue
@@ -345,6 +349,15 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                 p1 = prefCostForThisFamily(famData[famID], [famID, after])
                 if condition == True: print('[12] p1: ' + str(p1))
 
+            # 16 해당 option에 대한 account penalty의 변화량 [(A1s+B1s)-(A0s+B0s)],
+            # prefCost의 변화량 (p1s-p0s)을 이용하여 score의 변화량 (B1s+A1s+p1s)-(B0s+A0s+p0s)을 계산한다.
+            thisScoreChange = (A1 + B1 + p1) - (A0 + B0 + p0)
+            scoreChangeSum += thisScoreChange
+            if condition == True:
+                print('< score change of ' + str(j) + ' > 1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
+                      ',\t0[all/aA/aB/p]: ' + str(round(A0 + B0 + p0, 1)) + '\t' + str(round(A0, 1)) + '\t' + str(round(B0, 1)) + '\t' + str(round(p0, 1)) +
+                      ',\tdif: ' + str(round(thisScoreChange, 1)) + '\n')
+
         # before_, after_를 각각 befores, afters에 추가
         befores.append(before_)
         afters.append(after_)
@@ -356,17 +369,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         if isFeasible == False:
             scoreChange[j] = None
             continue
-
-        # 16 해당 option에 대한 account penalty의 변화량 [(A1s+B1s)-(A0s+B0s)],
-        # prefCost의 변화량 (p1s-p0s)을 이용하여 score의 변화량 (B1s+A1s+p1s)-(B0s+A0s+p0s)을 계산한다.
-        try:          
-            scoreChange[j] = (A1 + B1 + p1) - (A0 + B0 + p0)
-            if condition == True:
-                print('[' + str(j) + '] 1[all/aA/aB/p]: ' + str(round(A1 + B1 + p1, 1)) + '\t' + str(round(A1, 1)) + '\t' + str(round(B1, 1)) + '\t' + str(round(p1, 1)) +
-                      ',\t0[all/aA/aB/p]: ' + str(round(A0 + B0 + p0, 1)) + '\t' + str(round(A0, 1)) + '\t' + str(round(B0, 1)) + '\t' + str(round(p0, 1)) +
-                      ',\tdif: ' + str(round(scoreChange[j], 1)) + '\n')
-        except:
-            scoreChange[j] = None
+        else:
+            scoreChange[j] = scoreChangeSum
 
     # scoreChange가 모두 None이면 건너뛰기
     allNone = []
