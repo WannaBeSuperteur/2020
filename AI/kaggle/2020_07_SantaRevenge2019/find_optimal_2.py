@@ -247,7 +247,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         if len(thisOption) >= 2:
             subData_copy = []
-            for k in range(len(subData)): subData_copy.append(subData[k])
+            for k in range(len(subData)): subData_copy.append([subData[k][0], subData[k][1]])
 
         before_ = [] # 'before' values of option j : for example [o0b0, o0b1, o0b2]
         after_ = [] # 'after' values of option j : for example [o0a0, o0a1, o0a2]
@@ -428,6 +428,9 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         for k in range(len(thisOption)):
             subData[minFamIDs[k]][1] = famData[minFamIDs[k]][minChoices[k]+1]
 
+            # minFamIDs[k]에 해당하는 members
+            members = famData[minFamIDs[k]][11]
+
             if condition == True:
                 print('< minK = ' + str(minK) + ' > minChoices: ' + str(minChoices))
                 print('[19] minFamIDs[k]             : ' + str(minFamIDs[k]))
@@ -497,7 +500,7 @@ if __name__ == '__main__':
 
             if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
 
-            options = [[[i, 0], [i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
