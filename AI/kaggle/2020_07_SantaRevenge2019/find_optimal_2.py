@@ -224,8 +224,8 @@ def roundPrint(array, n):
 # ci(기존 count), i는 count용 변수, prevScore는 직전 점수
 def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
-    # condition = (ci == 0 and i >= 0 and i < 5)
-    condition = False
+    condition = (ci == 17 and i >= 0 and i < 5)
+    # condition = False
 
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = []
@@ -234,6 +234,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     befores = [] # value of 'before' for each option: [opt0:[o0b0, o0b1], opt1:[o1b0, o1b1, o1b2, o1b3], ...]
     afters = [] # value of 'after' for each option:  [opt0:[o0a0, o0a1], opt1:[o1a0, o1a1, o1a2, o1a3], ...]
     isFeasible = []
+
+    randomAfter = [] # random after value
          
     # 05 For 모든 options (0, 1, 2, ..., and 9)
     for j in range(len(options)):
@@ -269,7 +271,11 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
             if len(thisOption) >= 2: before = subData_copy[famID][1] # 변경 전 date (option)
             else: before = subData[famID][1] # 변경 전 date (option)
-            after = famData[famID][toChange+1] # 변경 후 date (option)
+
+            if toChange < 10: after = famData[famID][toChange+1] # 변경 후 date (option)
+            else: after = random.randint(1, 100) # 변경 후 date (option) - toChange가 10 이상이면 1~100에서 랜덤하게 지정
+            randomAfter.append(after)
+            
             if condition == True: print('[02] before: ' + str(before) + ', after: ' + str(after))
             
             before_.append(before)
@@ -349,7 +355,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
                       ',\tdif: ' + str(round(thisScoreChange, 1)))
 
             # change copy of subData
-            if len(thisOption) >= 2: subData_copy[famID] = [subData_copy[famID][0], famData[famID][toChange+1]]
+            if len(thisOption) >= 2: subData_copy[famID] = [subData_copy[famID][0], after]
 
         # before_, after_를 각각 befores, afters에 추가
         befores.append(before_)
@@ -365,6 +371,9 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             continue
         else:
             scoreChange[j] = scoreChangeSum
+
+    if condition == True:
+        print('[15] scoreChange: ' + str(scoreChange))
 
     # scoreChange가 모두 None이면 건너뛰기
     allNone = []
@@ -415,7 +424,10 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
         # subData 변경
         for k in range(len(thisOption)):
-            subData[minFamIDs[k]][1] = famData[minFamIDs[k]][minChoices[k]+1]
+            if minChoices[k] < 10: # 가장 작은 choice의 옵션의 번호가 10 미만이면
+                subData[minFamIDs[k]][1] = famData[minFamIDs[k]][minChoices[k]+1]
+            else: # 10 이상이면 랜덤 (10, 11, 12, ... 순으로 작성)
+                subData[minFamIDs[k]][1] = randomAfter[minChoices[k]-10]
 
             # minFamIDs[k]에 해당하는 members
             members = famData[minFamIDs[k]][11]
@@ -498,8 +510,11 @@ if __name__ == '__main__':
                            [[i, 5], [i+1, 6]], [[i, 6], [i+1, 7]], [[i, 7], [i+1, 8]], [[i, 8], [i+1, 9]],
                            [[i, 1], [i+1, 0]], [[i, 2], [i+1, 1]], [[i, 3], [i+1, 2]], [[i, 4], [i+1, 3]], [[i, 5], [i+1, 4]],
                            [[i, 6], [i+1, 5]], [[i, 7], [i+1, 6]], [[i, 8], [i+1, 7]], [[i, 9], [i+1, 8]]]
-            else:
+            elif count < 17:
                 options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            else:
+                options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]],
+                           [[i, 10]], [[i, 11]], [[i, 12]], [[i, 13]]]
             
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
