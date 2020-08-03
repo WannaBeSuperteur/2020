@@ -224,7 +224,8 @@ def roundPrint(array, n):
 # ci(기존 count), i는 count용 변수, prevScore는 직전 점수
 def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
-    condition = (ci == 0 and i >= 0 and i < 5)
+    # condition = (ci == 0 and i >= 0 and i < 5)
+    condition = False
 
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = []
@@ -321,10 +322,10 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if k == len(thisOption)-1:
 
                 # 조건에 위배되는 날짜가 있는지 확인
-                for x in range(1, DAYS+1):
-                    if ocA_copy[x] < 125 or ocA_copy[x] > 300:
-                        isFeasible = False
-                        break
+                if max(ocA_copy) > 300 or min(ocA_copy[1:]) < 125:
+                    if ci == 18: print(i, 'opt', j, max(ocA_copy), 'Not Feasible')
+                    isFeasible = False
+                    break
 
             if condition == True: print('[09] isFeasible: ' + str(isFeasible))
             if isFeasible == False: continue
@@ -364,8 +365,13 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             if len(thisOption) >= 2: subData_copy[famID] = [subData_copy[famID][0], famData[famID][toChange+1]]
 
         # before_, after_를 각각 befores, afters에 추가
-        befores.append(before_)
-        afters.append(after_)
+        if isFeasible == True:
+            befores.append(before_)
+            afters.append(after_)
+        else:
+            befores.append(None)
+            afters.append(None)
+        
         if condition == True:
             print('[13] befores: ' + str(befores))
             print('[14] afters : ' + str(afters))
@@ -381,6 +387,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     allNone = []
     for j in range(len(options)): allNone.append(None)
     if scoreChange == allNone: return prevScore
+
+    if ci == 18: print(scoreChange)
 
     # 17 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
@@ -489,8 +497,8 @@ if __name__ == '__main__':
         score = h.getScoreFeasible(famData, subData, ocA)
 
         # 지난 단계의 score와 같으면 더 이상 업데이트가 되지 않으므로 랜덤하게 5개 변경 (미구현)
-        random5 = False
-        if lastStageScore == score: random5 = True
+        converged = False
+        if lastStageScore == score: converged = True
 
         # 지난 단계(while문 loop)의 score를 업데이트
         lastStageScore = score
@@ -498,9 +506,20 @@ if __name__ == '__main__':
         # 03 For 모든 families
         for i in range(FAMILIES):
 
-            if (count == 0 and i % 50 == 0) or (count > 0 and i % 1000 == 0): print(str(count) + ' ' + str(i) + ' / score: ' + str(score))
+            if (count == 0 and i % 50 == 0) or (count > 0 and i % 200 == 0):
+                print(str(count) + ' ' + str(i) + ' / score: ' + str(score) +
+                      ' / checksum: ' + str(sum(ocA)) + ' ' + str(max(ocA)) + ' ' + str(min(ocA[1:])))
 
-            options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            if converged == True and i < FAMILIES-1:
+                options = [[[i, 0], [i+1, 0]], [[i, 1], [i+1, 1]], [[i, 2], [i+1, 2]], [[i, 3], [i+1, 3]], [[i, 4], [i+1, 4]],
+                           [[i, 5], [i+1, 5]], [[i, 6], [i+1, 6]], [[i, 7], [i+1, 7]], [[i, 8], [i+1, 8]], [[i, 9], [i+1, 9]],
+                           [[i, 0], [i+1, 1]], [[i, 1], [i+1, 2]], [[i, 2], [i+1, 3]], [[i, 3], [i+1, 4]], [[i, 4], [i+1, 5]],
+                           [[i, 5], [i+1, 6]], [[i, 6], [i+1, 7]], [[i, 7], [i+1, 8]], [[i, 8], [i+1, 9]],
+                           [[i, 1], [i+1, 0]], [[i, 2], [i+1, 1]], [[i, 3], [i+1, 2]], [[i, 4], [i+1, 3]], [[i, 5], [i+1, 4]],
+                           [[i, 6], [i+1, 5]], [[i, 7], [i+1, 6]], [[i, 8], [i+1, 7]], [[i, 9], [i+1, 8]]]
+            else:
+                options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
+            
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
         # 19 더 이상 최적화가 되지 않으면 종료
