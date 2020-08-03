@@ -224,8 +224,8 @@ def roundPrint(array, n):
 # ci(기존 count), i는 count용 변수, prevScore는 직전 점수
 def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
 
-    condition = (ci == 17 and i >= 0 and i < 5)
-    # condition = False
+    # condition = (ci == 17 and i >= 0 and i < 5)
+    condition = False
 
     # 04 각 option에 따른 score의 변화량을 저장한 배열을 초기화한다.
     scoreChange = []
@@ -235,8 +235,6 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     afters = [] # value of 'after' for each option:  [opt0:[o0a0, o0a1], opt1:[o1a0, o1a1, o1a2, o1a3], ...]
     isFeasible = []
 
-    randomAfter = [] # random after value
-         
     # 05 For 모든 options (0, 1, 2, ..., and 9)
     for j in range(len(options)):
 
@@ -273,8 +271,7 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
             else: before = subData[famID][1] # 변경 전 date (option)
 
             if toChange < 10: after = famData[famID][toChange+1] # 변경 후 date (option)
-            else: after = random.randint(1, 100) # 변경 후 date (option) - toChange가 10 이상이면 1~100에서 랜덤하게 지정
-            randomAfter.append(after)
+            else: after = toChange-100 # 변경 후 date (option) - toChange가 10 이상(101~200)이면 100을 뺀 값으로 지정
             
             if condition == True: print('[02] before: ' + str(before) + ', after: ' + str(after))
             
@@ -380,6 +377,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
     for j in range(len(options)): allNone.append(None)
     if scoreChange == allNone: return prevScore
 
+    # if ci == 17: print('min score = ' + str(minNone(scoreChange)[0]))
+
     # 17 기존 option에 대한 score보다 낮은 score인 option이 있으면 (즉 score의 변화량 < 0)
     if minNone(scoreChange)[0] < 0:
 
@@ -426,8 +425,8 @@ def findBestOption(subData, famData, options, ocA, ci, i, prevScore):
         for k in range(len(thisOption)):
             if minChoices[k] < 10: # 가장 작은 choice의 옵션의 번호가 10 미만이면
                 subData[minFamIDs[k]][1] = famData[minFamIDs[k]][minChoices[k]+1]
-            else: # 10 이상이면 랜덤 (10, 11, 12, ... 순으로 작성)
-                subData[minFamIDs[k]][1] = randomAfter[minChoices[k]-10]
+            else: # 10 이상이면 100을 뺀 값으로 지정 (즉 101 <= minChoices[k] <= 200)
+                subData[minFamIDs[k]][1] = minChoices[k] - 100
 
             # minFamIDs[k]에 해당하는 members
             members = famData[minFamIDs[k]][11]
@@ -513,8 +512,8 @@ if __name__ == '__main__':
             elif count < 17:
                 options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]]]
             else:
-                options = [[[i, 0]], [[i, 1]], [[i, 2]], [[i, 3]], [[i, 4]], [[i, 5]], [[i, 6]], [[i, 7]], [[i, 8]], [[i, 9]],
-                           [[i, 10]], [[i, 11]], [[i, 12]], [[i, 13]]]
+                options = []
+                for j in range(100): options.append([[i, j+101]]) # [[[i, 101]], [[i, 102]], ..., [[i, 200]]] -> 1~100 전체검사
             
             score = findBestOption(subData, famData, options, ocA, count, i, score)
 
