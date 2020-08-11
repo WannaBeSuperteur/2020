@@ -516,6 +516,9 @@ if __name__ == '__main__':
                 for j in range(100): options.append([[i, j+101]]) # [[[i, 101]], [[i, 102]], ..., [[i, 200]]] -> 1~100 전체검사
             
             score = findBestOption(subData, famData, options, ocA, count, i, score)
-
+            if count >= 17:
+                # write FINAL sample submission file
+                h.writeSampleSub(subData, 'sampleExample_0')
+    
         # 19 더 이상 최적화가 되지 않으면 종료
         if score < 114000: break
