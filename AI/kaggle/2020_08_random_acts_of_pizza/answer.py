@@ -29,6 +29,9 @@ for i in range(len(json_data.columns)):
     for j in range(len(tfCols)):
         if json_data.columns[i] == tfCols[j]: tfColsIndex[j] = i
 
+# extract column name before change into np.array
+dataCols = np.array(json_data.columns)
+
 # change json_data into np.array
 json_data = json_data.to_numpy()
 
@@ -42,7 +45,7 @@ for x in range(2):
         else:
             json_data[i][tfColsIndex[x]] = 0
 
-json_data = pd.DataFrame(json_data)
+json_data = pd.DataFrame(json_data, columns=dataCols)
 print('json_data.shape = ' + str(json_data.shape))
 
 # create data
@@ -51,23 +54,18 @@ targetCol = 'requester_received_pizza' # target column name
 textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
             'request_title', 'request_subreddits_at_request', 'requester_user_flair',
             'requester_username']
-dataCols = json_data.columns
+print(dataCols)
 
 dataPart = [] # data columns
 targetPart = [] # target column
 
-print('<< max and min vals: >>')
-
 for col in dataCols:
-    print(' == ' + str(col))
     
     # not in targetCol and all of values are numeric -> dataPart
     if col != targetCol and not col in textCols: dataPart.append(col)
 
     # in targetCol and not all values are the same (then not meaningful)
     elif col == targetCol and max(json_data[col]) > min(json_data[col]): targetPart.append(col)
-
-    print(' == ' + str(max(json_data[col])) + ', ' + str(min(json_data[col])))
 
 print(dataPart)
 print(targetPart)
@@ -78,8 +76,8 @@ dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
 # display correlation
 # https://seaborn.pydata.org/generated/seaborn.clustermap.html
 print('<<< [0] json_data >>>')
-json_data = dataSet['data'][:50]
-print(json_data)
+json_data = dataSet['data']
+print(json_data[:50])
 
 df = json_data.corr()
 seab.clustermap(df,
@@ -102,7 +100,7 @@ scaledPCA = pca.transform(scaled)
 print('scaledPCA.shape = ' + str(scaledPCA.shape))
 print('scaledPCA.data.shape = ' + str(scaledPCA.data.shape))
 
-print('<<< [2] scaledPCA >>>')
+print('<<< [1] scaledPCA >>>')
 print(scaledPCA)
 
 # convert to numpy array
