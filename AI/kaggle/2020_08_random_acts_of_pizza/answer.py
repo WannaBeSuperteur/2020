@@ -14,10 +14,11 @@ import graphviz
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
-# fn     : file name
-# n_cols : number of columns(components) of PCA
-# isTrain: training(True) or not(False)
-def makePCA(fn, n_cols, isTrain):
+# fn        : file name
+# n_cols    : number of columns(components) of PCA
+# isTrain   : training(True) or not(False)
+# exceptCols: using the columns except for them
+def makePCA(fn, n_cols, isTrain, exceptCols):
 
     # open and show plt data
     jf = open(fn, 'r')
@@ -65,6 +66,15 @@ def makePCA(fn, n_cols, isTrain):
     extractCols = [] # extracted columns = dataPart + targetPart
 
     for col in dataCols:
+
+        # except for these columns
+        continueThis = False
+        for i in range(len(exceptCols)):
+            if col == exceptCols[i]:
+                continueThis = True
+                break
+        if continueThis == True: continue
+        
         dataPartAdded = False
 
         # accept columns only if not all values are the same (then not meaningful)
@@ -77,6 +87,7 @@ def makePCA(fn, n_cols, isTrain):
                     dataPart.append(col)
                     extractCols.append(col)
                     dataPartAdded = True
+
         else: # test mode -> targetCol does not exist
             if not col in textCols:
                 if max(json_data[col]) > min(json_data[col]):
@@ -84,11 +95,14 @@ def makePCA(fn, n_cols, isTrain):
                     extractCols.append(col)
                     dataPartAdded = True
 
-        # equal to targetCol
+        # if equal to targetCol
         if isTrain == True and dataPartAdded == False:
             if col == targetCol:
                 targetPart.append(col)
                 extractCols.append(col)
+
+    print('\n<<< [1] dataPart >>>')
+    for i in range(len(dataPart)): print(dataPart[i])
 
     # bind the data and target
     if isTrain == True: dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
@@ -99,7 +113,7 @@ def makePCA(fn, n_cols, isTrain):
 
     # display correlation
     # https://seaborn.pydata.org/generated/seaborn.clustermap.html
-    print('\n<<< [1] dataSetDF >>>')
+    print('\n<<< [2] dataSetDF >>>')
     print(dataSetDF)
 
     df = dataSetDF.corr() # get correlation
@@ -118,14 +132,11 @@ def makePCA(fn, n_cols, isTrain):
     pca.fit(scaled)
     scaledPCA = pca.transform(scaled)
 
-    print('\n<<< [2] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
-    print('\n<<< [3] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
+    print('\n<<< [3] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
+    print('\n<<< [4] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
 
-    print('\n<<< [4] scaledPCA >>>')
+    print('\n<<< [5] scaledPCA >>>')
     print(scaledPCA)
-
-    # convert to numpy array
-    json_data = np.array(json_data)
 
     # name each column for PCA transformed data
     pca_cols = []
@@ -133,7 +144,7 @@ def makePCA(fn, n_cols, isTrain):
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
     if isTrain == True: df_pca['target'] = dataSetDF['requester_received_pizza']
 
-    print('\n<<< [5] df_pca >>>')
+    print('\n<<< [6] df_pca >>>')
     print(df_pca)
 
     df_pcaCorr = df_pca.corr()
@@ -183,7 +194,22 @@ def makePCA(fn, n_cols, isTrain):
     return df_pca
 
 # make PCA from training data
-df_pca = makePCA('train.json', 3, True)
+exceptCols = ["number_of_downvotes_of_request_at_retrieval",
+              "number_of_upvotes_of_request_at_retrieval",
+              "post_was_edited",
+              "request_number_of_comments_at_retrieval",
+              "request_text",
+              "requester_account_age_in_days_at_retrieval",
+              "requester_days_since_first_post_on_raop_at_retrieval",
+              "requester_number_of_comments_at_retrieval",
+              "requester_number_of_comments_in_raop_at_retrieval",
+              "requester_number_of_posts_at_retrieval",
+              "requester_number_of_posts_on_raop_at_retrieval",
+              "requester_subreddits_at_request",
+              "requester_upvotes_minus_downvotes_at_retrieval",
+              "requester_upvotes_plus_downvotes_at_retrieval",
+              "requester_user_flair"] # list of columns not used
+df_pca = makePCA('test.json', 3, False, exceptCols)
 
 # test
 for i in range(len(json_data)):
