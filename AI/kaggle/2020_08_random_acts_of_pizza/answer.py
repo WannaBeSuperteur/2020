@@ -14,8 +14,10 @@ import graphviz
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 
-# n_cols: number of columns(components) of PCA
-def makePCA(fn, n_cols):
+# fn     : file name
+# n_cols : number of columns(components) of PCA
+# isTrain: training(True) or not(False)
+def makePCA(fn, n_cols, isTrain):
 
     # open and show plt data
     jf = open(fn, 'r')
@@ -53,29 +55,45 @@ def makePCA(fn, n_cols):
 
     # create data
     # .data and .target
-    targetCol = 'requester_received_pizza' # target column name
+    if isTrain == True: targetCol = 'requester_received_pizza' # target column name
     textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
                 'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
                 'requester_username']
     
     dataPart = [] # data columns
-    targetPart = [] # target column
+    if isTrain == True: targetPart = [] # target column
     extractCols = [] # extracted columns = dataPart + targetPart
 
     for col in dataCols:
+        dataPartAdded = False
+
+        # accept columns only if not all values are the same (then not meaningful)
+        # so check if max(col) > min(col)
         
         # not in targetCol and all of values are numeric -> dataPart
-        if col != targetCol and not col in textCols:
-            dataPart.append(col)
-            extractCols.append(col)
+        if isTrain == True: # train mode -> targetCol exists
+            if col != targetCol and not col in textCols:
+                if max(json_data[col]) > min(json_data[col]):
+                    dataPart.append(col)
+                    extractCols.append(col)
+                    dataPartAdded = True
+        else: # test mode -> targetCol does not exist
+            if not col in textCols:
+                if max(json_data[col]) > min(json_data[col]):
+                    dataPart.append(col)
+                    extractCols.append(col)
+                    dataPartAdded = True
 
-        # in targetCol and not all values are the same (then not meaningful)
-        elif col == targetCol and max(json_data[col]) > min(json_data[col]):
-            targetPart.append(col)
-            extractCols.append(col)
+        # equal to targetCol
+        if isTrain == True and dataPartAdded == False:
+            if col == targetCol:
+                targetPart.append(col)
+                extractCols.append(col)
 
     # bind the data and target
-    dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
+    if isTrain == True: dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
+    else: dataSet = {'data':json_data[dataPart]}
+    
     dataSetDF = json_data[extractCols]
     dataSetDF = dataSetDF.astype(float) # change dataSetDF into float type
 
@@ -113,7 +131,7 @@ def makePCA(fn, n_cols):
     pca_cols = []
     for i in range(n_cols): pca_cols.append('pca' + str(i))
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
-    df_pca['target'] = dataSetDF['requester_received_pizza']
+    if isTrain == True: df_pca['target'] = dataSetDF['requester_received_pizza']
 
     print('\n<<< [5] df_pca >>>')
     print(df_pca)
@@ -124,6 +142,9 @@ def makePCA(fn, n_cols):
                     cmap='RdYlBu_r',
                     vmin=-1, vmax=1)
     plt.show()
+
+    # immediately return the pca if testing
+    if isTrain == False: return df_pca
 
     # set markers
     markers = ['s', 'o']
@@ -162,7 +183,7 @@ def makePCA(fn, n_cols):
     return df_pca
 
 # make PCA from training data
-df_pca = makePCA('train.json', 3)
+df_pca = makePCA('train.json', 3, True)
 
 # test
 for i in range(len(json_data)):
