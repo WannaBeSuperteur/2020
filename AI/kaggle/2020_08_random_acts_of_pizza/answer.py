@@ -52,34 +52,41 @@ print('json_data.shape = ' + str(json_data.shape))
 # .data and .target
 targetCol = 'requester_received_pizza' # target column name
 textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
-            'request_title', 'request_subreddits_at_request', 'requester_user_flair',
+            'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
             'requester_username']
 print(dataCols)
 
 dataPart = [] # data columns
 targetPart = [] # target column
+extractCols = [] # extracted columns = dataPart + targetPart
 
 for col in dataCols:
     
     # not in targetCol and all of values are numeric -> dataPart
-    if col != targetCol and not col in textCols: dataPart.append(col)
+    if col != targetCol and not col in textCols:
+        dataPart.append(col)
+        extractCols.append(col)
 
     # in targetCol and not all values are the same (then not meaningful)
-    elif col == targetCol and max(json_data[col]) > min(json_data[col]): targetPart.append(col)
+    elif col == targetCol and max(json_data[col]) > min(json_data[col]):
+        targetPart.append(col)
+        extractCols.append(col)
 
 print(dataPart)
 print(targetPart)
+print(extractCols)
 
 # bind the data and target
 dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
+dataSetDF = json_data[extractCols]
+dataSetDF = dataSetDF.astype(float) # change dataSetDF into float type
 
 # display correlation
 # https://seaborn.pydata.org/generated/seaborn.clustermap.html
-print('<<< [0] json_data >>>')
-json_data = dataSet['data']
-print(json_data[:50])
+print('<<< [0] dataSetDF >>>')
+print(dataSetDF)
 
-df = json_data.corr()
+df = dataSetDF.corr() # get correlation
 seab.clustermap(df,
                 annot=True,
                 cmap='RdYlBu_r',
@@ -90,8 +97,6 @@ plt.show()
 # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
 scaled = StandardScaler().fit_transform(json_data) # to standard normal distribution
 pca = PCA(n_components=8)
-
-# show plt data
 
 # get PCA transformed data
 pca.fit(scaled)
