@@ -28,11 +28,12 @@ for x in tfCols:
 
     # True to 1, False to 0, and decimal to 0
     for i in range(len(json_data[x])):
-        if i < 50: print('[' + str(json_data[x][i]) + ']')
+        if i % 20 == 0: print(i)
+        
         if str(json_data[x][i]) == 'True':
-            json_data[x][i] = 1
+            json_data.at[x, i] = 1
         else:
-            json_data[x][i] = 0
+            json_data.at[x, i] = 0
             
     print(json_data[x][:50])
 
