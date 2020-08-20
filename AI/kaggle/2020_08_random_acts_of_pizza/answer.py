@@ -95,7 +95,7 @@ plt.show()
 
 # PCA
 # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
-scaled = StandardScaler().fit_transform(json_data) # to standard normal distribution
+scaled = StandardScaler().fit_transform(dataSetDF) # to standard normal distribution
 pca = PCA(n_components=8)
 
 # get PCA transformed data
@@ -113,31 +113,20 @@ json_data = np.array(json_data)
 
 # name each column for PCA transformed data
 pca_cols = ['pca0', 'pca1', 'pca2', 'pca3', 'pca4', 'pca5', 'pca6', 'pca7']
-df_pca = pd.DataFrame(scaledPCA.data, columns=pca_cols)
-df_pca['target'] = scaledPCA['requester_received_pizza']
-df_pca.head(3)
+df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
+df_pca['target'] = dataSetDF['requester_received_pizza']
 
-# set markers
-markers = ['^', 's', 'o']
+print('<<< [2] df_pca >>>')
+print(df_pca)
 
-# scatter plot
-for i, marker in enumerate(markers):
-    x_axis_data = df_pca[df_pca['target'] == i]['pca_component_1']
-    y_axis_data = df_pca[df_pca['target'] == i]['pca_component_2']
-    plt.scatter(x_axis_data, y_axis_data, marker=marker, label=scaledPCA.target_names[i])
-
-plt.legend()
-plt.xlabel('pca_component_1')
-plt.ylabel('pca_component_2')
+df_pcaCorr = df_pca.corr()
+seab.clustermap(df_pcaCorr,
+                annot=True,
+                cmap='RdYlBu_r',
+                vmin=-1, vmax=1)
 plt.show()
 
-result = ''
-
-x = json_data["request_id"]
-y = json_data["requester_number_of_posts_on_raop_at_request"]
-
-print(x, y)
-
+# test
 for i in range(len(json_data)):
     if y[i] <= 1:
         result += str(x[i]) + ',' + str(0) + '\n'
