@@ -22,21 +22,27 @@ json_data = pd.DataFrame(json_loaded)
 # True to 1, False to 0, and decimal to 0
 # https://stackoverflow.com/questions/29960733/how-to-convert-true-false-values-in-dataframe-as-1-for-true-and-0-for-false
 tfCols = ['post_was_edited', 'requester_received_pizza']
+tfColsIndex = [-1, -1] # column indices of tfCols
 
-for x in tfCols:
-    print(json_data[x][:50])
+# initialize tfColsIndex
+for i in range(len(json_data.columns)):
+    for j in range(len(tfCols)):
+        if json_data.columns[i] == tfCols[j]: tfColsIndex[j] = i
+
+# change json_data into np.array
+json_data = json_data.to_numpy()
+
+# modify values: True to 1, False to 0, and decimal to 0
+for x in range(2):
 
     # True to 1, False to 0, and decimal to 0
-    for i in range(len(json_data[x])):
-        if i % 20 == 0: print(i)
-        
-        if str(json_data[x][i]) == 'True':
-            json_data.at[x, i] = 1
+    for i in range(len(json_data)):
+        if str(json_data[i][tfColsIndex[x]]) == 'True':
+            json_data[i][tfColsIndex[x]] = 1
         else:
-            json_data.at[x, i] = 0
-            
-    print(json_data[x][:50])
+            json_data[i][tfColsIndex[x]] = 0
 
+json_data = pd.DataFrame(json_data)
 print('json_data.shape = ' + str(json_data.shape))
 
 # create data
@@ -50,14 +56,18 @@ dataCols = json_data.columns
 dataPart = [] # data columns
 targetPart = [] # target column
 
+print('<< max and min vals: >>')
+
 for col in dataCols:
+    print(' == ' + str(col))
+    
     # not in targetCol and all of values are numeric -> dataPart
     if col != targetCol and not col in textCols: dataPart.append(col)
 
     # in targetCol and not all values are the same (then not meaningful)
     elif col == targetCol and max(json_data[col]) > min(json_data[col]): targetPart.append(col)
 
-    print(max(json_data[col]), min(json_data[col]))
+    print(' == ' + str(max(json_data[col])) + ', ' + str(min(json_data[col])))
 
 print(dataPart)
 print(targetPart)
