@@ -125,11 +125,44 @@ def makePCA(fn, n_cols):
                     vmin=-1, vmax=1)
     plt.show()
 
+    # set markers
+    markers = ['s', 'o']
+
+    # plot if the value of n_cols is 2
+    # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
+    if n_cols == 2:
+
+        # add each point
+        for i, marker in enumerate(markers):
+            x_axis_data = df_pca[df_pca['target']==i]['pca0']
+            y_axis_data = df_pca[df_pca['target']==i]['pca1']
+            plt.scatter(x_axis_data, y_axis_data, marker=marker, label=df_pca['target'][i])
+
+        # set labels and show
+        plt.legend()
+        plt.xlabel('pca0')
+        plt.ylabel('pca1')
+        plt.show()
+
+    # plot in the space, if the value of n_cols is 3
+    # https://python-graph-gallery.com/372-3d-pca-result/
+    elif n_cols == 3:
+
+        fig = plt.figure()
+        ax = fig.add_subplot(111, projection='3d')
+        ax.scatter(df_pca['pca0'], df_pca['pca1'], df_pca['pca2'], c=df_pca['target'])
+
+        # set labels and show
+        ax.set_xlabel('pca0')
+        ax.set_ylabel('pca1')
+        ax.set_zlabel('pca2')
+        plt.show()
+
     # return
     return df_pca
 
 # make PCA from training data
-df_pca = makePCA('train.json', 10)
+df_pca = makePCA('train.json', 3)
 
 # test
 for i in range(len(json_data)):
