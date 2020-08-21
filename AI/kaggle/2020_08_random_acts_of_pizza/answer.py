@@ -229,6 +229,7 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
 
     # kNN classification result
     result = []
+    resultT = [] # transport of result
 
     # mark the result using k-nearest neighbor
     for i in range(len(dfTest)): # for each test data
@@ -276,12 +277,19 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
 
         # append the vote result (=prediction) to result array
         result.append(largestVoteTargetVal)
+        resultT.append([largestVoteTargetVal])
+
+    # add vote result value
+    # https://rfriend.tistory.com/352
+    dfTest = np.column_stack([dfTest, resultT])
 
     # print data as 2d or 3d space
-    # prinDataAsSpace(len(dfTest[0]), pd.dataFrame(dfTest)) [temp]
+    if len(dfTest[0]) == 3: # 2 except for target col
+        printDataAsSpace(2, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'target']))
+    elif len(dfTest[0]) == 4: # 3 except for target col
+        printDataAsSpace(3, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'pca2', 'target']))
             
     # return the result array
-    print(result)
     return result
 
 # make PCA from training data
@@ -306,9 +314,9 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "requester_upvotes_plus_downvotes_at_retrieval",
               "requester_user_flair"] # list of columns not used
 
-df_pca_train = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols)
-df_pca_test = makePCA('test.json', 3, False, targetCol, tfCols, textCols, exceptCols)
-kNN(df_pca_train, df_pca_test, 'target', 3, 95)
+df_pca_train = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols)
+df_pca_test = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols)
+kNN(df_pca_train, df_pca_test, 'target', 2, 95)
 
 # test
 for i in range(len(json_data)):
@@ -320,3 +328,8 @@ for i in range(len(json_data)):
 f = open('result.csv', 'w')
 f.write(result)
 f.close()
+
+# 향후계획
+# train 시의 PCA와 test 시의 PCA를 일치시키기
+# decision tree 모델 도입
+# categorial data(textCols 중 값의 종류가 일정개수 이하)를 one-hot으로 처리하여 숫자로 변환
