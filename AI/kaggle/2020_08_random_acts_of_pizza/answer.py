@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as seab
 import json
+import math
 
 # to make decision tree
 # https://scikit-learn.org/stable/modules/tree.html
@@ -22,6 +23,7 @@ from sklearn.decomposition import PCA
 # textCols  : columns that contains text values
 # exceptCols: using the columns except for them
 def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
+    print('\n ######## makePCA function ########')
 
     # open and show plt data
     jf = open(fn, 'r')
@@ -193,6 +195,81 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
     # return
     return df_pca
 
+# k Nearest Neighbor algorithm
+# dfTrain    : dataframe for training data
+# dfTest     : dataframe for test data
+# targetCol  : target column for dfTrain
+# targetIndex: index for the target column
+# k          : number of neighbors
+def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
+    print('\n ######## kNN function ########')
+
+    # count of each value for training data
+    targetVals = list(set(dfTrain[targetCol].values)) # set of target values
+    classCount = dfTrain[targetCol].value_counts() # class count for each target value
+    print(classCount)
+    print(classCount[0.0])
+
+    # convert to numpy array
+    dfTrain = np.array(dfTrain)
+    dfTest = np.array(dfTest)
+    print(dfTrain)
+    print(dfTest)
+
+    # kNN classification result
+    result = []
+
+    # mark the result using k-nearest neighbor
+    for i in range(len(dfTest)): # for each test data
+        if i % 10 == 0: print('test data ' + str(i))
+        
+        thisTestData = dfTest[i]
+
+        # [distance between the test data and each training data, mark]
+        distAndMark = []
+
+        # for each training data
+        for j in range(len(dfTrain)):
+            thisTrainData = dfTrain[j]
+
+            # calculate distance from the test data
+            thisDistSquare = 0
+            for l in range(len(dfTrain[0])):
+                if l == targetIndex: continue
+                thisDistSquare = thisDistSquare + pow(thisTestData[l] - thisTrainData[l], 2)
+
+            # add to distAndMark
+            distAndMark.append([math.sqrt(thisDistSquare), thisTrainData[targetIndex]])
+
+        # sort distAndMark array
+        distAndMark = sorted(distAndMark, key=lambda x:x[0], reverse=False)
+
+        # count the vote for each class (using weight = len(dfTrain)/trainCount)
+        vote = {} # vote result for each class: [class targetVals[j], vote score of targetVals[j]]
+        for j in range(len(classCount)): vote[targetVals[j]] = 0 # initialize dictionary vote
+        for j in range(k): # count the vote using k nearest neighbors
+            thisMark = distAndMark[j][1] # mark of this 'neighbor'
+            vote[thisMark] = vote[thisMark] + len(dfTrain) / classCount[thisMark]
+
+        # find max vote item
+        largestVoteVal = -1 # number of votes of largest voted target value
+        largestVoteTargetVal = -1 # largest voted target value
+
+        # key: class targetVals[j], value: vote score of targetVals[j]
+        for key in vote.keys():
+            value = vote[key]
+            
+            if value > largestVoteVal:
+                largestVoteVal = value
+                largestVoteTargetVal = key
+
+        # append the vote result (=prediction) to result array
+        result.append(largestVoteTargetVal)
+            
+    # return the result array
+    print(result)
+    return result
+
 # make PCA from training data
 targetCol = 'requester_received_pizza'
 tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -215,7 +292,9 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "requester_upvotes_plus_downvotes_at_retrieval",
               "requester_user_flair"] # list of columns not used
 
-df_pca = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols)
+df_pca_train = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols)
+df_pca_test = makePCA('test.json', 3, False, targetCol, tfCols, textCols, exceptCols)
+kNN(df_pca_train, df_pca_test, 'target', 3, 95)
 
 # test
 for i in range(len(json_data)):
