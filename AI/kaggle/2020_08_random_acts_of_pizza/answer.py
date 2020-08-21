@@ -17,8 +17,11 @@ from sklearn.decomposition import PCA
 # fn        : file name
 # n_cols    : number of columns(components) of PCA
 # isTrain   : training(True) or not(False)
+# target    : target column if isTrain is True
+# tfCols    : columns that contains True or False values
+# textCols  : columns that contains text values
 # exceptCols: using the columns except for them
-def makePCA(fn, n_cols, isTrain, exceptCols):
+def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
 
     # open and show plt data
     jf = open(fn, 'r')
@@ -27,8 +30,8 @@ def makePCA(fn, n_cols, isTrain, exceptCols):
 
     # True to 1, False to 0, and decimal to 0
     # https://stackoverflow.com/questions/29960733/how-to-convert-true-false-values-in-dataframe-as-1-for-true-and-0-for-false
-    tfCols = ['post_was_edited', 'requester_received_pizza']
-    tfColsIndex = [-1, -1] # column indices of tfCols
+    tfColsIndex = []
+    for i in range(len(tfCols)): tfColsIndex.append(-1) # column indices of tfCols
 
     # initialize tfColsIndex
     for i in range(len(json_data.columns)):
@@ -56,10 +59,7 @@ def makePCA(fn, n_cols, isTrain, exceptCols):
 
     # create data
     # .data and .target
-    if isTrain == True: targetCol = 'requester_received_pizza' # target column name
-    textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
-                'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
-                'requester_username']
+    if isTrain == True: targetCol = target # target column name
     
     dataPart = [] # data columns
     if isTrain == True: targetPart = [] # target column
@@ -142,7 +142,7 @@ def makePCA(fn, n_cols, isTrain, exceptCols):
     pca_cols = []
     for i in range(n_cols): pca_cols.append('pca' + str(i))
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
-    if isTrain == True: df_pca['target'] = dataSetDF['requester_received_pizza']
+    if isTrain == True: df_pca['target'] = dataSetDF[target]
 
     print('\n<<< [6] df_pca >>>')
     print(df_pca)
@@ -194,6 +194,11 @@ def makePCA(fn, n_cols, isTrain, exceptCols):
     return df_pca
 
 # make PCA from training data
+targetCol = 'requester_received_pizza'
+tfCols = ['post_was_edited', 'requester_received_pizza']
+textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
+                'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
+                'requester_username']
 exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "number_of_upvotes_of_request_at_retrieval",
               "post_was_edited",
@@ -209,7 +214,8 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "requester_upvotes_minus_downvotes_at_retrieval",
               "requester_upvotes_plus_downvotes_at_retrieval",
               "requester_user_flair"] # list of columns not used
-df_pca = makePCA('test.json', 3, False, exceptCols)
+
+df_pca = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols)
 
 # test
 for i in range(len(json_data)):
