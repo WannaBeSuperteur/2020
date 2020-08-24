@@ -1,0 +1,31 @@
+# common constant
+7 # K : number of GTs
+10 # N : number of equal-length time slots
+50 # T : pre-determined time period (sec)
+8 # H : flight altitude of UAVs
+8 # HI : flight altitude of ID UAV
+8 # HE : flight altitude of ET UAV
+5 # vmax : max speed for UAVs
+5 # vImax : max speed for ID UAVs
+5 # vEmax : max speed for ET UAVs
+40 # P^DL : downlink power
+-20 # P^ULmax : maximum value for uplink power
+2 # r : reference channel gain at distance of 1m and path-loss exponent, r>=2
+-90 # o^2 : noise variance
+0.9 # n : portion of stored energy used for uplink info transmission, nk=n for k in K, 0<n<=1
+0.2 # ζ : energy conversion efficiency (of GT k)
+-2147483647 # Rmin : to reflect minimum throughput among GTs (Rk>=Rmin)
+47083 # a : determined by circuit specifications (NON-LINEAR EH MODEL)
+0.0000029 # b : determined by circuit specifications (NON-LINEAR EH MODEL)
+9.079 # M
+-30 # g0 : reference channel gain
+
+# option
+l # linear(l) non-linear(n)
+i # integrated(i) separated(s)
+
+# A. LINEAR EH MODEL
+120 # length for x (m)
+120 # length for y (m)
+8 # H for static AP (m)
+15 # number of iteration
