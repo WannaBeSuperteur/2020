@@ -188,15 +188,128 @@ def yFunc():
     # FILL IN THE BLANK
     return -1
 
-######################################
-###                                ###
-###  3. formula about the problem  ###
-###                                ###
-######################################
+#######################################
+###                                 ###
+###  3. formula about the problems  ###
+###                                 ###
+#######################################
+
+### [ P1 ] - INTEGRATED ###
+# 3-0. Rk >= Rmin for k in K ... (11)
+def checkCond11(Rmin, K, n, p, g0, x, y, H, r, ng, o2, T, t):
+    for k in range(1, K+1):
+        Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t) # get Rk
+        if Rk < Rmin: return False
+    return True
+
+# 3-1. Sum(i=2,n)t[i][k]*P^UL[i][k] <= (1/δN)*Sum(i=1,n-1)E^L[i][k] for n in ^N and k in K ... (12)
+def checkCond12(t, PUL, T, N, K, EL):
+    sN = T/N # δN: length of each slot
+
+    for n in range(2, N+1): # for n in ^N
+        for k in range(1, K+1): # for k in K
+        
+            # Sum(i=2,n)t[i][k]*P^UL[i][k]
+            leftSide = 0
+            for i in range(2, n+1): leftSide += t[i][k] * PUL[i][k]
+
+            # (1/δN)*Sum(i=1,n-1)E^L[i][k]
+            rightSide = 0
+            for i in range(1, n): rightSide += EL[i][k]/sN
+
+            if leftSide > rightSide: return False
+
+    return True
+
+# 3-2. ||p[n]-p[n-1]|| <= δN*vmax for n in ^N ... (13)
+def checkCond13(p, n, T, N, vmax):
+    sN = T/N # δN: length of each slot
+
+    for n in range(2, N+1): # for n in ^N
+        leftSide = [p[n][0]-p[n-1][0], p[n][1]-p[n-1][1]] # p[n]-p[n-1]
+        rightSide = sN*vmax # δN*vmax
+
+        if leftSide > rightSide: return False
+
+    return True
+
+# 3-3. p[0] == p[N] ... (14)
+def checkCond14(p, N):
+    if p[0][0] == p[N][0] and p[0][1] == p[N][1]: return True
+    return False
+
+# 3-4. 0 <= P^UL[n][k] <= P^UL_max for n in N and k in K ... (15)
+def checkCond15(PUL, n, k, PULmax, N, K):
+    midSide = PUL[n][k] # P^UL[n][k]
+    rightSide = PULmax # P^UL_max
+
+    if 0 <= midSide and midSide <= rightSide: return True
+    return False
+
+### [ P2 ] - SEPARATED ###
+# ... (18)
+
+# ... (19)
+
+# ... (20)
+
+# ... (21)
+
+### [ P1-NL ] - NONLINEAR ###
+# ... (23)
+
+# ... (24)
+
+########################################
+###                                  ###
+###  4. formula about the solutions  ###
+###                                  ###
+########################################
+
+### commonly used ####
+# ... (28)
+
+# ... (34)
+
+### [ P1.1A ] - INTEGRATED ###
+# ... (29)
+
+# ... (30)
+
+# ... (31)
+
+# ... (37)
+
+# ... (38)
+
+# ... (39)
+
+# ... (40)
+
+# ... (41)
+
+### [ P2.1A ] - SEPARATED ###
+# ... (42)
+
+# ... (45)
+
+# ... (46)
+
+# ... (47)
+
+# ... (48)
+
+### [ P1.2A ] - NONLINEAR ###
+# ... (56)
+
+# ... (57)
+
+### [ P1.3 ] - TIME RESOURCE ALLOCATION ###
+# (4)(5)(23)(24)
 
 ##########################
 ###                    ###
-###  4. configuration  ###
+###  5. configuration  ###
 ###                    ###
 ##########################
 
@@ -245,7 +358,7 @@ if __name__ == '__main__':
 
     ######################
     ###                ###
-    ###  5. execution  ###
+    ###  6. execution  ###
     ###                ###
     ######################
     print('\n <<< 1. execution result >>>')
