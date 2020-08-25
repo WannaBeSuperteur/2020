@@ -350,10 +350,20 @@ def getELkLB(w, z, wHat, zHat, n, k, g0, s, PDL):
     
     return part0*part1
 
-# 4-pre3. A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
+# 4-pre3. A[n][k](e[n][k],z[n][k] | ^e[n][k],^z[n][k]) ... (36)
+#       = (^e[n][k])^2/^z[n][k] + (2*^e[n][k]/^z[n][k])(e[n][k]-^e[n][k]) - ((^e[n][k])^2/(^z[n][k])^2)(z[n][k] - ^z[n][k])
 def getAnk(e, z, eHat, zHat, n, k):
-    # FILL IN THE BLANK
-    return None
+
+    # (^e[n][k])^2/^z[n][k]
+    part0 = pow(eHat[n][k], 2)/zHat[n][k]
+
+    # (2*^e[n][k]/^z[n][k])(e[n][k]-^e[n][k])
+    part1 = (2*eHat[n][k]/zHat[n][k])*(e[n][k] - eHat[n][k])
+
+    # ((^e[n][k])^2/(^z[n][k])^2)(z[n][k] - ^z[n][k])
+    part2 = (pow(eHat[n][k], 2)/pow(zHat[n][k], 2))*(z[n][k] - zHat[n][k])
+
+    return part0 + part1 - part2
 
 # 4-pre4. ||p[n]-uk||^2 <= array[n][k]^(2/r)
 def pnUkArray(p, x, y, array, r):
