@@ -361,6 +361,16 @@ def pnUkArray(p, x, y, array, r):
     if leftSide <= rightSide: return True
     return False
 
+# 4-pre5. R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
+def getRkLB(n, k, z, PUL, zHat):
+    # FILL IN THE BLANK
+    return None
+
+# 4-pre6. E^NL_k,LB[i](z[i][k] | ^z[i][k])
+def getENLkLB(i, k, z, zHat):
+    # FILL IN THE BLANK
+    return None
+
 # 4-0. (e[n][k])^2 <= P^ULmax*t[n][k] for n in N and k in K ... (28)
 def checkCond28(PULmax, N, K, t, PUL):
     for n in range(1, N+1): # for n in N
@@ -529,9 +539,42 @@ def checkCond48(Y, e, zI, eHat, zIHat, N, K):
     return True
 
 ### [ P1.2A ] - NONLINEAR ###
-# 4-15. ... (56)
+# 4-15. (1/N)*Sum(n=2,N)(t[n][k]*R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])) >= Rmin for k in K ... (56)
+def checkCond56(N, t, z, PUL, zHat, Rmin, K):
+    for k in range(1, K+1): # for k in K
 
-# 4-16. ... (57)
+        # Sum(n=2,N)(t[n][k]*R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k]))
+        sumVal = 0
+        for n in range(2, N+1):
+            RkLB = getRkLB(n, k, z, PUL, zHat) # R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
+            sumVal += t[n][k] * RkLB
+        sumVal /= N # (1/N)*sumVal
+
+        if sumVal < Rmin: return False
+
+    return True
+
+# 4-16. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= (1/δN)*Sum(i=1,n-1)E^NL_k,LB[i](z[i][k] | ^z[i][k]) for n in ^N and k in K ... (57)
+def checkCond57(t, PUL, T, N, z, zHat, K):
+    nHat = Khat(N) # ^N
+
+    for n in range(NHat): # for n in ^N
+        for k in range(1, K+1): # for k in K
+
+            # Sum(i=2,n)(t[i][k]*P^UL[i][k])
+            leftSide = 0
+            for i in range(2, n+1): leftSide += t[i][k]*PUL[i][k]
+
+            # (1/δN)*Sum(i=1,n-1)E^NL_k,LB[i](z[i][k] | ^z[i][k])
+            rightSide = 0
+            for i in range(1, n): rightSide += getENLkLB(i, k, z, zHat) # E^NL_k,LB[i](z[i][k] | ^z[i][k])
+            
+            sN = T/N # δN: length of each slot
+            rightSide /= sN # (1/δN)*...
+
+            if leftSide > rightSide: return False
+
+    return True
 
 ### [ P1.3 ] - TIME RESOURCE ALLOCATION ###
 # (4)(5)(23)(24)
