@@ -247,18 +247,80 @@ def checkCond15(PUL, n, k, PULmax, N, K):
     return False
 
 ### [ P2 ] - SEPARATED ###
-# ... (18)
+# 3-5. Rk,S >= Rmin for k in K ... (18)
+#      Rk,S is average throughput of GT k
+def checkCond18(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
+    for k in range(1, K+1):
+        RkS = avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r) # Rk,S
+        if RkS < Rmin: return False
+    return True
 
-# ... (19)
+# 3-6. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= Sum(i=1,n-1){t[i][0]*g0*s*P^DL/(||pE[i]-uk||^2 + HE^2)^(r/2)} for n in ^N and k in K ... (19)
+#   => Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
+#      where GE[n][k] = g0/(||pE[i]-uk||^2 + HE^2)^(r/2)
+def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K):
+    NHat = Khat(N) # ^N
 
-# ... (20)
+    for n in range(NHat): # for n in ^N
+        for k in range(1, K+1): # for k in K
 
-# ... (21)
+            # Sum(i=2,n)(t[i][k]*P^UL[i][k])
+            leftSide = 0
+            for i in range(2, n+1): leftSide += t[i][k] * PUL[i][k]
+
+            # Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
+            rightSide = 0
+            for i in range(1, n):
+                GE = getG(pE, g0, x, y, n, k, HE, r) # GE[n][k]
+                rightSide += t[i][0] * GE * s * PDL
+
+            if leftSide > rightSide: return False
+
+    return True
+
+# 3-7. ||px[n]-px[n-1]|| <= δN*vmax^x for x in {I,E} and n in ^N ... (20)
+def checkCond20(pI, pE, n, T, N, vImax, vEmax):
+    condForI = checkCond13(pI, n, T, N, vImax) # ||pI[n]-pI[n-1]|| <= δN*vmax^I for n in ^N
+    condForE = checkCond13(pE, n, T, N, vEmax) # ||pE[n]-pE[n-1]|| <= δN*vmax^E for n in ^N
+
+    if condForI == True and condForE == True: return True
+    else: return False
+
+# 3-8. px[0] == px[N] for x in {I,E} ... (21)
+def checkCond21(pI, pE, N):
+    condForI = checkCond14(pI, N) # pI[0] == pI[N]
+    condForE = checkCond14(pE, N) # pE[0] == pE[N]
+
+    if condForI == True and condForE == True: return True
+    else: return False
 
 ### [ P1-NL ] - NONLINEAR ###
-# ... (23)
+# 3-9. Rk >= Rmin for k in K ... (23)
+def checkCond23(n, p, g0, x, y, H, r, ng, o2, T, t, Rmin):
+    for k in range(1, K+1): # for k in K
+        Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t) # Rk
+        if Rk < Rmin: return False
+    return True
 
-# ... (24)
+# 3-10. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= (1/δN)*Sum(i=1,n-1)E^NL[i][k] for n in ^N and k in K ... (24)
+def checkCond24(t, PUL, T, N, ENL, K):
+    sN = T/N # δN: length of each slot
+
+    for n in range(NHat): # for n in ^N
+        for k in range(1, K+1): # for k in K
+
+            # Sum(i=2,n)(t[i][k]*P^UL[i][k])
+            leftSide = 0
+            for i in range(2, n+1): leftSide += t[i][k] * PUL[i][k]
+
+            # Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
+            rightSide = 0
+            for i in range(1, n): rightSide += ENL[i][k] # Sum(i=1,n-1)E^NL[i][k]
+            rightSide /= sN # (1/δN)*Sum(i=1,n-1)E^NL[i][k]
+
+            if leftSide > rightSide: return False
+
+    return True
 
 ########################################
 ###                                  ###
@@ -267,49 +329,55 @@ def checkCond15(PUL, n, k, PULmax, N, K):
 ########################################
 
 ### commonly used ####
-# ... (28)
+# 4-0. ... (28)
 
-# ... (34)
+# 4-1. ... (34)
 
 ### [ P1.1A ] - INTEGRATED ###
-# ... (29)
+# 4-2. ... (29)
 
-# ... (30)
+# 4-3. ... (30)
 
-# ... (31)
+# 4-4. ... (31)
 
-# ... (37)
+# 4-5. ... (37)
 
-# ... (38)
+# 4-6. ... (38)
 
-# ... (39)
+# 4-7. ... (39)
 
-# ... (40)
+# 4-8. ... (40)
 
-# ... (41)
+# 4-9. ... (41)
 
 ### [ P2.1A ] - SEPARATED ###
-# ... (42)
+# 4-10. ... (42)
 
-# ... (45)
+# 4-11. ... (45)
 
-# ... (46)
+# 4-12. ... (46)
 
-# ... (47)
+# 4-13. ... (47)
 
-# ... (48)
+# 4-14. ... (48)
 
 ### [ P1.2A ] - NONLINEAR ###
-# ... (56)
+# 4-15. ... (56)
 
-# ... (57)
+# 4-16. ... (57)
 
 ### [ P1.3 ] - TIME RESOURCE ALLOCATION ###
 # (4)(5)(23)(24)
 
+####################################
+###                              ###
+###  5. function for algorithms  ###
+###                              ###
+####################################
+
 ##########################
 ###                    ###
-###  5. configuration  ###
+###  6. configuration  ###
 ###                    ###
 ##########################
 
@@ -358,7 +426,7 @@ if __name__ == '__main__':
 
     ######################
     ###                ###
-    ###  6. execution  ###
+    ###  7. execution  ###
     ###                ###
     ######################
     print('\n <<< 1. execution result >>>')
