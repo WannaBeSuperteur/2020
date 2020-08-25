@@ -329,26 +329,134 @@ def checkCond24(t, PUL, T, N, ENL, K):
 ########################################
 
 ### commonly used ####
-# 4-0. ... (28)
+# 4-pre0. e[n][k] = t[n][k]*P^UL[n][k]
+def gete(t, PUL, n, k):
+    return t[n][k]*PUL[n][k]
 
-# 4-1. ... (34)
+# 4-pre1. X[n][k] = (e[n][k])^2/z[n][k]
+def getX(t, PUL, n, k, z):
+    enk = gete(t, PUL, n, k)
+    return pow(enk, 2)/z[n][k]
+
+# 4-pre2. EL_k,LB[n](w[n],z[n][k] | ^w[n],^z[n][k])
+def ELkLB(w, z, wHat, zHat, n, k):
+    # FILL IN THE BLANK
+    return None
+
+# 4-pre3. A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
+def Ank(e, z, eHat, zHat, n, k):
+    # FILL IN THE BLANK
+    return None
+
+# 4-0. (e[n][k])^2 <= P^ULmax*t[n][k] for n in N and k in K ... (28)
+def checkCond28(PULmax, N, K, t, PUL):
+    for n in range(1, N+1): # for n in N
+        for k in range(1, K+1): # for k in K
+            enk = gete(t, PUL, n, k) # e[n][k]
+            if enk*enk > PULmax*t[n][k]: return False
+
+    return True
+
+# 4-1. ||p[n]-uk||^2+H^2 <= (z[n][k])^(2/r) for n in N and k in K ... (34)
+def checkCond34(p, x, y, H, z, r):
+    for n in range(1, N+1): # for n in N
+        for k in range(1, K+1): # for k in K
+            eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||^2
+            if eucN*eucN + H*H <= pow(z[n][k], 2/r): return True
+    return False
 
 ### [ P1.1A ] - INTEGRATED ###
-# 4-2. ... (29)
+# 4-2.       Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2/t[n][k])/(||p[n]-uk||^2 + H^2)^(r/2))
+#         >= Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k])) ... (29)
+# 4-2. =>    Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
+#         >= Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k]))
+# G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2)
+def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z):
 
-# 4-3. ... (30)
+    # Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
+    leftSide = 0
+    for n in range(2, N+1):
+        G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
+        enk = gete(t, PUL, n, k) # e[n][k]
+        leftSide += (t[n][k]/N)*math.log(1 + (G*ng/o2)*pow(enk, 2)/t[n][k], 2)
 
-# 4-4. ... (31)
+    # Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k]))
+    rightSide = 0
+    for n in range(2, N+1):
+        enk = gete(t, PUL, n, k) # e[n][k]
+        rightSide += (t[n][k]/N)*math.log(1 + ((g0*ng/o2)*pow(enk, 2))/(t[n][k]*z[n][k]), 2)
 
-# 4-5. ... (37)
+    if leftSide >= rightSide: return True
+    else: return False
 
-# 4-6. ... (38)
+# 4-3. Sum(i=1,n-1)t[i][0]*(g0*s*PDL)/(||p[n]-uk||^2 + H^2)^(r/2) >= Sum(i=1,n-1)g0*s*PDL*(w[i]^2/z[i][k]) ... (30)
+#   => Sum(i=1,n-1)(t[i][0]*G[n][k]*s*PDL) >= Sum(i=1,n-1)g0*s*PDL*(t[i][0]/z[i][k])
+def checkCond30(t, k, s, PDL, g0, z, p, x, y, H, r):
 
-# 4-7. ... (39)
+    # Sum(i=1,n-1)(t[i][0]*G[n][k]*s*PDL)
+    leftSide = 0
+    for i in range(1, n):
+        G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
+        leftSide += t[i][0]*G*s*PDL
 
-# 4-8. ... (40)
+    # Sum(i=1,n-1)g0*s*PDL*(t[i][0]/z[i][k])
+    rightSide = 0
+    for i in range(1, n): rightSide += g0*s*PDL*t[i][0]/z[i][k]
 
-# 4-9. ... (41)
+    if leftSide >= rightSide: return True
+    else: return False
+
+# 4-4. (1/N)*Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*X[n][k]/t[n][k]) >= Rmin for k in K ... (31)
+def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z):
+
+    for k in range(1, K+1): # for k in K
+        
+        # Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*X[n][k]/t[n][k])
+        sumVal = 0
+        for n in range(2, N+1):
+            Xnk = getX(t, PUL, n, k, z) # X[n][k]
+            sumVal += t[n][k]*math.log(1 + (g0*ng/o2)*Xnk/t[n][k], 2)
+        sumVal /= N # (1/N)*sumVal
+
+        if sumVal >= Rmin: return True
+
+    return False
+
+# 4-5. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k])) for n in ^N and k, in K... (37)
+def checkCond37(N, K, t, PUL, w, z, wHat, zHat):
+    NHat = Khat(N) # ^N
+    
+    for n in range(NHat): # for n in ^N
+        for k in range(1, K+1): # for k in K
+
+            # Sum(i=2,n)(e[i][k])^2
+            leftSide = 0
+            for i in range(2, n+1): leftSide += pow(gete(t, PUL, n, k), 2)
+
+            # Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k]))
+            rightSide = 0
+            for i in range(1, n): rightSide += ELkLB(w, z, wHat, zHat, i, k)
+
+            if leftSide > rightSide: return False
+
+    return True
+
+# 4-6. X[n][k] <= A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k]) for n in N and k in K ... (38)
+def checkCond38(N, K, t, PUL, e, z, eHat, zHat):
+    for n in range(1, N+1): # for n in N
+        for k in range(1, K+1): # for k in K
+
+            # A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
+            Xnk = getX(t, PUL, n, k, z) # X[n][k]
+            A_nk = Ank(e, z, eHat, zHat, n, k) # A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
+
+            if Xnk > A_nk: return False
+
+    return True
+
+# 4-7. p*[n] = p^(q)[n] for n in N ... (39)
+# 4-8. t*[n][0] = w^(q)[n]^2 and t*[n][k] = t^(q)[n][k] for n in N and k in K ... (40)
+# 4-9. P^UL*[n][k] = (e^(q)[n][k])^2/t[n][k] for t[n][k] != 0, and 0 for t[n][k] == 0, for n in N and k in K ... (41)
 
 ### [ P2.1A ] - SEPARATED ###
 # 4-10. ... (42)
