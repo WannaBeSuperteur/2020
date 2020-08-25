@@ -329,9 +329,9 @@ def checkCond24(t, PUL, T, N, ENL, K):
 ########################################
 
 ### commonly used ####
-# 4-pre0. e[n][k] = t[n][k]*P^UL[n][k]
+# 4-pre0. e[n][k] = sqrt(t[n][k]*P^UL[n][k]) ( >= 0 )
 def gete(t, PUL, n, k):
-    return t[n][k]*PUL[n][k]
+    return math.sqrt(t[n][k]*PUL[n][k])
 
 # 4-pre1. X[n][k] = (e[n][k])^2/z[n][k]
 def getX(t, PUL, n, k, z):
