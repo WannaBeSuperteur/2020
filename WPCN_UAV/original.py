@@ -366,10 +366,33 @@ def getRkLB(n, k, z, PUL, zHat):
     # FILL IN THE BLANK
     return None
 
-# 4-pre6. E^NL_k,LB[i](z[i][k] | ^z[i][k])
-def getENLkLB(i, k, z, zHat):
-    # FILL IN THE BLANK
-    return None
+# 4-pre6. E^NL_k,LB[n](z[n][k] | ^z[n][k])
+#       = t[n][0]*M * {(1-exp(-^Z[n][k]))/(1+alpha*exp(-^Z[k][n]))
+#         + ((1+alpha)*(^Z[n][k])^2*exp(-^Z[n][k])*(z[n][k]-^z[n][k]))/(beta*g0*P^DL*(1+alpha*exp(-^Z[n][k]))^2)}
+#         + (Um/2)*(z[n][k]-^z[n][k])^2
+#         where ^Z[n][k] = b*g0*P^DL/^z[n][k] and Um = min(z[n][k] in R)(U(z[n][k]))
+def getENLkLB(n, k, N, K, z, zHat, M, alpha, beta, g0, PDL):
+
+    ZHat = beta*g0*PDL/z[n][k] #^Z[n][k] = b*g0*P^DL/^z[n][k]
+    Um = U(z[0][0]) # Um = min(z[n][k] in R)(U(z[n][k]))
+    for n in range(N+1):
+        for k in range(K+1):
+            if Um > U(z[n][k]): Um = U(z[n][k])
+
+    # 1-exp(-^Z[n][k]))/(1+alpha*exp(-^Z[k][n])
+    part0 = (1 - math.exp((-1)*ZHat))/(1 + alpha + math.exp((-1)*ZHat))
+
+    # (1+alpha)*(^Z[n][k])^2*exp(-^Z[n][k])*(z[n][k]-^z[n][k])
+    part1 = (1 + alpha)*pow(ZHat, 2)*math.exp((-1)*ZHat)*(z[n][k]-zHat[n][k])
+
+    # beta*g0*P^DL*(1+alpha*exp(-^Z[n][k]))^2
+    part2 = beta*g0*PDL*pow(1 + alpha + math.exp((-1)*ZHat), 2)
+
+    # (Um/2)*(z[n][k]-^z[n][k])^2
+    part3 = (Um/2)*pow(z[n][k]-zHat[n][k], 2)
+
+    # E^NL_k,LB[n](z[n][k] | ^z[n][k])
+    return t[n][0]*M*(part0 + part1/part2 + part3)
 
 # 4-0. (e[n][k])^2 <= P^ULmax*t[n][k] for n in N and k in K ... (28)
 def checkCond28(PULmax, N, K, t, PUL):
