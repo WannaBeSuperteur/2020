@@ -338,13 +338,20 @@ def getX(t, PUL, n, k, z):
     enk = gete(t, PUL, n, k)
     return pow(enk, 2)/z[n][k]
 
-# 4-pre2. EL_k,LB[n](w[n],z[n][k] | ^w[n],^z[n][k])
-def ELkLB(w, z, wHat, zHat, n, k):
-    # FILL IN THE BLANK
-    return None
+# 4-pre2. EL_k,LB[n](w[n],z[n][k] | ^w[n],^z[n][k]) ... (35)
+#       = (g0*s*PDL*^w[n]/^z[n][k])(2w[n] - ^w[n] - ^w[n](z[n][k]-^z[n][k])/^z[n][k]) 
+def getELkLB(w, z, wHat, zHat, n, k, g0, s, PDL):
+
+    # g0*s*PDL*^w[n]/^z[n][k]
+    part0 = g0*s*PDL*w[n]/z[n][k]
+
+    # 2w[n] - ^w[n] - ^w[n](z[n][k]-^z[n][k])/^z[n][k]
+    part1 = 2*w[n] - wHat[n] - wHat[n]*(z[n][k]-zHat[n][k])/zHat[n][k]
+    
+    return part0*part1
 
 # 4-pre3. A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
-def Ank(e, z, eHat, zHat, n, k):
+def getAnk(e, z, eHat, zHat, n, k):
     # FILL IN THE BLANK
     return None
 
@@ -366,7 +373,7 @@ def getRkLB(n, k, z, PUL, zHat):
     # FILL IN THE BLANK
     return None
 
-# 4-pre6. E^NL_k,LB[n](z[n][k] | ^z[n][k])
+# 4-pre6. E^NL_k,LB[n](z[n][k] | ^z[n][k]) ... (55)
 #       = t[n][0]*M * {(1-exp(-^Z[n][k]))/(1+alpha*exp(-^Z[k][n]))
 #         + ((1+alpha)*(^Z[n][k])^2*exp(-^Z[n][k])*(z[n][k]-^z[n][k]))/(beta*g0*P^DL*(1+alpha*exp(-^Z[n][k]))^2)}
 #         + (Um/2)*(z[n][k]-^z[n][k])^2
@@ -468,7 +475,7 @@ def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z):
     return False
 
 # 4-5. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k])) for n in ^N and k, in K... (37)
-def checkCond37(N, K, t, PUL, w, z, wHat, zHat):
+def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL):
     NHat = Khat(N) # ^N
     
     for n in range(NHat): # for n in ^N
@@ -480,7 +487,7 @@ def checkCond37(N, K, t, PUL, w, z, wHat, zHat):
 
             # Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k]))
             rightSide = 0
-            for i in range(1, n): rightSide += ELkLB(w, z, wHat, zHat, i, k)
+            for i in range(1, n): rightSide += getELkLB(w, z, wHat, zHat, i, k, g0, s, PDL)
 
             if leftSide > rightSide: return False
 
@@ -493,7 +500,7 @@ def checkCond38(N, K, t, PUL, e, z, eHat, zHat):
 
             # A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
             Xnk = getX(t, PUL, n, k, z) # X[n][k]
-            A_nk = Ank(e, z, eHat, zHat, n, k) # A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
+            A_nk = getAnk(e, z, eHat, zHat, n, k) # A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
 
             if Xnk > A_nk: return False
 
@@ -531,7 +538,7 @@ def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
     return True
 
 # 4-13. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k]) for n in ^N and k in K ... (47)
-def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K):
+def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K, g0, s, PDL):
     NHat = Khat(N) # ^N
     
     for n in range(NHat): # for n in ^N
@@ -543,7 +550,7 @@ def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K):
 
             # Sum(i=1,n-1)EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k])
             rightSide = 0
-            for i in range(1, n): rightSide += ELkLB(w, zE, wHat, zEHat, i, k) # EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k])
+            for i in range(1, n): rightSide += getELkLB(w, zE, wHat, zEHat, i, k, g0, s, PDL) # EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k])
 
             if leftSide > rightSide: return False
             
@@ -555,7 +562,7 @@ def checkCond48(Y, e, zI, eHat, zIHat, N, K):
         for k in range(1, K+1): # for k in K
 
             leftSide = Y[n][k] # Y[n][k]
-            rightSide = Ank(e, zI, eHat, zIHat, n, k) # A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k])
+            rightSide = getAnk(e, zI, eHat, zIHat, n, k) # A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k])
 
             if leftSide > rightSide: return False
 
@@ -578,7 +585,7 @@ def checkCond56(N, t, z, PUL, zHat, Rmin, K):
     return True
 
 # 4-16. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= (1/δN)*Sum(i=1,n-1)E^NL_k,LB[i](z[i][k] | ^z[i][k]) for n in ^N and k in K ... (57)
-def checkCond57(t, PUL, T, N, z, zHat, K):
+def checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL):
     nHat = Khat(N) # ^N
 
     for n in range(NHat): # for n in ^N
@@ -590,7 +597,7 @@ def checkCond57(t, PUL, T, N, z, zHat, K):
 
             # (1/δN)*Sum(i=1,n-1)E^NL_k,LB[i](z[i][k] | ^z[i][k])
             rightSide = 0
-            for i in range(1, n): rightSide += getENLkLB(i, k, z, zHat) # E^NL_k,LB[i](z[i][k] | ^z[i][k])
+            for i in range(1, n): rightSide += getENLkLB(i, k, z, zHat, M, alpha, beta, g0, PDL) # E^NL_k,LB[i](z[i][k] | ^z[i][k])
             
             sN = T/N # δN: length of each slot
             rightSide /= sN # (1/δN)*...
