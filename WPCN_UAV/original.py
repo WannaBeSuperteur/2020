@@ -31,7 +31,7 @@ def maxSpeedConstraint(p, T, N, vmax):
 
 # 0-2. G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2) ... (3)
 def getG(p, g0, x, y, n, k, H, r):
-    eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||^2
+    eucN = pow(eucNorm([p[n][0]-x[k], p[n][1]-y[k]]), 2) # ||p[n]-uk||^2
     return g0/pow(pow(eucN, 2) + H*H, r/2)
 
 # 0-3. check condition for tk[n] ... (4)(5)
@@ -226,7 +226,7 @@ def checkCond13(p, n, T, N, vmax):
     sN = T/N # δN: length of each slot
 
     for n in range(2, N+1): # for n in ^N
-        leftSide = [p[n][0]-p[n-1][0], p[n][1]-p[n-1][1]] # p[n]-p[n-1]
+        leftSide = eucNorm([p[n][0]-p[n-1][0], p[n][1]-p[n-1][1]]) # p[n]-p[n-1]
         rightSide = sN*vmax # δN*vmax
 
         if leftSide > rightSide: return False
@@ -348,6 +348,19 @@ def Ank(e, z, eHat, zHat, n, k):
     # FILL IN THE BLANK
     return None
 
+# 4-pre4. ||p[n]-uk||^2 <= array[n][k]^(2/r)
+def pnUkArray(p, x, y, array, r):
+    
+    # ||p[n]-uk||^2
+    eNorm = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||pI[n]-uk||
+    leftSide = pow(eNorm, 2)
+
+    # (array[n][k])^(2/r)
+    rightSide = pow(array[n][k], 2/r)
+
+    if leftSide <= rightSide: return True
+    return False
+
 # 4-0. (e[n][k])^2 <= P^ULmax*t[n][k] for n in N and k in K ... (28)
 def checkCond28(PULmax, N, K, t, PUL):
     for n in range(1, N+1): # for n in N
@@ -361,7 +374,7 @@ def checkCond28(PULmax, N, K, t, PUL):
 def checkCond34(p, x, y, H, z, r):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
-            eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||^2
+            eucN = pow(eucNorm([p[n][0]-x[k], p[n][1]-y[k]]), 2) # ||p[n]-uk||^2
             if eucN*eucN + H*H <= pow(z[n][k], 2/r): return True
     return False
 
@@ -408,7 +421,6 @@ def checkCond30(t, k, s, PDL, g0, z, p, x, y, H, r):
 
 # 4-4. (1/N)*Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*X[n][k]/t[n][k]) >= Rmin for k in K ... (31)
 def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z):
-
     for k in range(1, K+1): # for k in K
         
         # Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*X[n][k]/t[n][k])
@@ -459,15 +471,62 @@ def checkCond38(N, K, t, PUL, e, z, eHat, zHat):
 # 4-9. P^UL*[n][k] = (e^(q)[n][k])^2/t[n][k] for t[n][k] != 0, and 0 for t[n][k] == 0, for n in N and k in K ... (41)
 
 ### [ P2.1A ] - SEPARATED ###
-# 4-10. ... (42)
+# 4-10. (1/N)*Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*Y[n][k]/t[n][k])) >= Rmin for k in K ... (42)
+def checkCond42(N, t, g0, ng, o2, Y, Rmin, K):
+    for k in range(1, K+1): # for k in K
 
-# 4-11. ... (45)
+        # Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*Y[n][k]/t[n][k]))
+        sumVal = 0
+        for n in range(2, N+1):
+            sumVal += t[n][k]*math.log(1 + (g0*ng/o2)*Y[n][k]/t[n][k], 2)
+        sumVal /= N # (1/N)*sumVal
 
-# 4-12. ... (46)
+        if sumVal < Rmin: return False
 
-# 4-13. ... (47)
+    return True
 
-# 4-14. ... (48)
+# 4-11. ||pI[n]-uk||^2 <= (zI[n][k])^(2/r) for n in N and k in K ... (45)
+# 4-12. ||pE[n]-uk||^2 <= (zE[n][k])^(2/r) for n in N and k in K ... (46)
+def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
+    for n in range(1, N+1): # for n in N
+        for k in range(1, K+1): # for k in K
+            pnUkCompareI = pnUkArray(pI, x, y, zI, r) # ||pI[n]-uk||^2 <= (zI[n][k])^(2/r)
+            pnUkCompareE = pnUkArray(pE, x, y, zE, r) # ||pE[n]-uk||^2 <= (zE[n][k])^(2/r)
+
+            if pnUkComparI == False or pnUkCompareE == False: return False
+
+    return True
+
+# 4-13. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k]) for n in ^N and k in K ... (47)
+def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K):
+    NHat = Khat(N) # ^N
+    
+    for n in range(NHat): # for n in ^N
+        for k in range(1, K+1): # for k in K
+
+            # Sum(i=2,n)(e[i][k])^2
+            leftSide = 0
+            for i in range(2, n+1): leftSide += pow(gete(t, PUL, i, k), 2) # (e[i][k])^2
+
+            # Sum(i=1,n-1)EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k])
+            rightSide = 0
+            for i in range(1, n): rightSide += ELkLB(w, zE, wHat, zEHat, i, k) # EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k])
+
+            if leftSide > rightSide: return False
+            
+    return True
+
+# 4-14. Y[n][k] <= A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k]) for n in N and k in K ... (47)
+def checkCond48(Y, e, zI, eHat, zIHat, N, K):
+    for n in range(1, N+1): # for n in N
+        for k in range(1, K+1): # for k in K
+
+            leftSide = Y[n][k] # Y[n][k]
+            rightSide = Ank(e, zI, eHat, zIHat, n, k) # A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k])
+
+            if leftSide > rightSide: return False
+
+    return True
 
 ### [ P1.2A ] - NONLINEAR ###
 # 4-15. ... (56)
