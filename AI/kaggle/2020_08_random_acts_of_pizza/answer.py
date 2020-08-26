@@ -61,7 +61,8 @@ def printDataAsSpace(n_cols, df_pca):
 # tfCols    : columns that contains True or False values
 # textCols  : columns that contains text values
 # exceptCols: using the columns except for them
-def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
+# pca       : create new pca if null, use the pca if exists
+def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
     print('\n ######## makePCA function ########')
 
     # open and show plt data
@@ -164,19 +165,27 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
                     vmin=-1, vmax=1)
     plt.show()
 
+    # to standard normal distribution
+    scaled = StandardScaler().fit_transform(dataSetDF)
+
     # PCA
     # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
-    scaled = StandardScaler().fit_transform(dataSetDF) # to standard normal distribution
-    pca = PCA(n_components=n_cols)
+    if pca == None: # create PCA if does not exist
+        pca = PCA(n_components=n_cols)
+        pca.fit(scaled)
 
-    # get PCA transformed data
-    pca.fit(scaled)
+    # https://machinelearningmastery.com/calculate-principal-component-analysis-scratch-python/
+    # print pca.components_ and pca.explained_variance_
+    print('\n<<< [3] pca.components_ >>>\n' + str(pca.components_))
+    print('\n<<< [4] pca.explained_variance_ >>>\n' + str(pca.explained_variance_))
+    
+    # apply PCA to the data
     scaledPCA = pca.transform(scaled)
 
-    print('\n<<< [3] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
-    print('\n<<< [4] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
+    print('\n<<< [5] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
+    print('\n<<< [6] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
 
-    print('\n<<< [5] scaledPCA >>>')
+    print('\n<<< [7] scaledPCA >>>')
     print(scaledPCA)
 
     # name each column for PCA transformed data
@@ -185,7 +194,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
     if isTrain == True: df_pca['target'] = dataSetDF[target]
 
-    print('\n<<< [6] df_pca >>>')
+    print('\n<<< [8] df_pca >>>')
     print(df_pca)
 
     df_pcaCorr = df_pca.corr()
@@ -202,7 +211,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols):
     printDataAsSpace(n_cols, df_pca)
 
     # return
-    return df_pca
+    return (df_pca, pca)
 
 # k Nearest Neighbor algorithm
 # dfTrain    : dataframe for training data
@@ -312,11 +321,12 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "requester_subreddits_at_request",
               "requester_upvotes_minus_downvotes_at_retrieval",
               "requester_upvotes_plus_downvotes_at_retrieval",
-              "requester_user_flair"] # list of columns not used
+              "requester_user_flair",
+              "unix_timestamp_of_request_utc"] # list of columns not used
 
-df_pca_train = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols)
-df_pca_test = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols)
-kNN(df_pca_train, df_pca_test, 'target', 2, 95)
+(df_pca_train, pca) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols, None)
+df_pca_test = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols, None)
+kNN(df_pca_train, df_pca_test, 'target', 2, 10)
 
 # test
 for i in range(len(json_data)):
@@ -330,6 +340,7 @@ f.write(result)
 f.close()
 
 # 향후계획
-# train 시의 PCA와 test 시의 PCA를 일치시키기
+# train 시의 PCA와 test 시의 PCA를 일치시키기 (PCA에서 특정 column을 제거하는 방법
+#     / 하나의 PCA로 train+test를 한번에 학습시키는 방법 필요)
 # decision tree 모델 도입
 # categorial data(textCols 중 값의 종류가 일정개수 이하)를 one-hot으로 처리하여 숫자로 변환
