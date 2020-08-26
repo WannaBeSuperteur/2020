@@ -71,6 +71,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     jf = open(fn, 'r')
     json_loaded = json.load(jf)
     json_data = pd.DataFrame(json_loaded)
+    targetCol = -1 # index of target column
 
     # True to 1, False to 0, and decimal to 0
     # https://stackoverflow.com/questions/29960733/how-to-convert-true-false-values-in-dataframe-as-1-for-true-and-0-for-false
@@ -148,6 +149,9 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
                 targetPart.append(col)
                 extractCols.append(col)
                 extractColInfo.append('target')
+
+                # set index to the index of target column
+                targetCol = len(extractCols)-1
 
     print('\n<<< [1] dataPart and extractCols >>>')
     for i in range(len(dataPart)): print(dataPart[i])
@@ -230,13 +234,12 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     plt.show()
 
     # immediately return the pca if testing
-    if isTrain == False: return df_pca
+    if isTrain == False: return (df_pca, comp, exva, mean, targetCol)
 
     # print data as 2d or 3d space
     printDataAsSpace(n_cols, df_pca)
 
-    # return
-    return (df_pca, comp, exva, mean)
+    return (df_pca, comp, exva, mean, targetCol)
 
 # k Nearest Neighbor algorithm
 # dfTrain    : dataframe for training data
@@ -350,12 +353,25 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "unix_timestamp_of_request_utc"] # list of columns not used
 
 # get PCA (components and explained variances) for training data
-(df_pca_train, comp, exva, mean) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols,
-                                     None, None, None)
+(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols,
+                                                      None, None, None)
+
+print('<<< before >>>')
+print(comp)
+print(mean)
+print(targetCol)
+
+# remove target column from comp and mean
+comp = np.delete(comp, [targetCol], 1)
+mean = np.delete(mean, [targetCol], 0)
+
+print('<<< after >>>')
+print(comp)
+print(mean)
 
 # get PCA (components and explained variances) for test data
-(df_pca_test, noUse0, noUse1, noUse2) = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols,
-                                        comp, exva, mean)
+(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols,
+                                                        comp, exva, mean)
 
 kNN(df_pca_train, df_pca_test, 'target', 2, 10)
 
@@ -372,6 +388,6 @@ f.close()
 
 # 향후계획
 # train 시의 PCA와 test 시의 PCA를 일치시키기 (PCA에서 특정 column을 제거하는 방법
-#     / 하나의 PCA로 train+test를 한번에 학습시키는 방법 필요)
+#     / 하나의 PCA로 train+test를 한번에 학습시키는 방법 필요) [FINISHED]
 # decision tree 모델 도입
 # categorial data(textCols 중 값의 종류가 일정개수 이하)를 one-hot으로 처리하여 숫자로 변환
