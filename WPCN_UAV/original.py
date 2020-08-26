@@ -2,6 +2,8 @@
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=8836548
 
 import math
+import numpy as np
+from cvxpy import *
 
 ##############################################################
 ###                                                        ###
@@ -624,6 +626,83 @@ def checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL):
 ###  5. function for algorithms  ###
 ###                              ###
 ####################################
+# Algorithm 1. Proposed Algorithm for (P1) With the Linear EH Model
+def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
+    q = 0
+    zq = [] # refer form: zq[q][n][k] for q=0,1,2,..., n in N and k in K
+    eq = [] # refer form: eq[q][n][k] for q=0,1,2,..., n in N and k in K
+    tq = [] # refer form: tq[q][n][k] for q=0,1,2,..., n in N and k in K
+    wq = [] # refer form: wq[q][n] for q=0,1,2,..., n in N
+    pq = [] # refer form: pq[q][n] for q=0,1,2,..., n in N
+
+    # set and solve (P1.1A) until convergence, for all n and all k
+    while True:
+        zq.append([[0 for k in range(K+1)] for n in range(N+1)])
+        eq.append([[0 for k in range(K+1)] for n in range(N+1)])
+        tq.append([[0 for k in range(K+1)] for n in range(N+1)])
+        wq.append([0 for n in range(N+1)])
+        pq.append([0 for n in range(N+1)])
+        
+        # setting values
+        q += 1
+        for n in range(0, N+1):
+            for k in range(0, K+1):
+                zHat[n][k] = zq[q-1][n][k]
+                eHat[n][k] = eq[q-1][n][k]
+                wHat[n] = wq[q-1][n]
+
+        # solve P(1.1A) by using the CVX
+        # reference: https://stackoverrun.com/ko/q/8432547
+        objective = Minimize(Rmin)
+
+        Rmin_ = Variable(Rmin)
+        e_ = Variable(e) # e[n][k]
+        p_ = Variable(p) # p[n]
+        t_ = Variable(t) # t[n][k]
+        z_ = Variable(z) # z[n][k]
+        w_ = Variable(w) # w[n]
+
+        # X[n][k] = t[n][k]*PUL[n][k]/z[n][k]
+        X = [[0 for k in range(K+1)] for n in range(N+1)]
+        for n in range(N+1):
+            for k in range(K+1):
+                X[n][k] = t[n][k]*PUL[n][k]/z[n][k]
+        X_ = Variable(X) # X[n][k]
+
+        # solve the problem
+        constraints = [checkCond37(N, K, t_, PUL, w_, z_, wHat, zHat, g0, s, PDL)]
+
+        prob = Problem(objective, constraints)
+        result = prob.solve(verbose=True)
+
+        # convergence check
+        # FILL IN THE BLANK
+        if convergence == True:
+
+            # need (q+1) elements for arrays below
+            zq.append([[0 for k in range(K+1)] for n in range(N+1)])
+            eq.append([[0 for k in range(K+1)] for n in range(N+1)])
+            tq.append([[0 for k in range(K+1)] for n in range(N+1)])
+            wq.append([0 for n in range(N+1)])
+            pq.append([0 for n in range(N+1)])
+            
+            break
+
+    # set values
+    pStar = [0 for n in range(N+1)] # p*[n]
+    pULStar = [[0 for k in range(K+1)] for n in range(N+1)] # P^UL_k*[n]
+    t0Star = [0 for n in range(N+1)] # t0*[n]
+    tStar = [[0 for k in range(K+1)] for n in range(N+1)] # t*[n]
+    
+    for n in range(0, N+1):
+        pStar[n] = pq[q][n] # p*[n] = p(q)[n]
+        t0Star[n] = pow(w[q][n], 2) # t0*[n] = (w(q)[n])^2
+        
+        for k in range(0, K+1):
+            PULStar[n][k] = pow(eq[q][n][k], 2)/t[n][k] # P^UL_k*[n] = (ek(q)[n])^2/t[n][k]
+            tStar[n][k] = tq[n][k] # t*[n] = t(q)[n][k]
+
+    return (pStar, t0Star, PULStar, tStar)
 
 ##########################
 ###                    ###
