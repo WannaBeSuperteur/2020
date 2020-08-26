@@ -106,6 +106,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
     dataPart = [] # data columns
     if isTrain == True: targetPart = [] # target column
     extractCols = [] # extracted columns = dataPart + targetPart
+    extractColInfo = [] # info about extracted columns (type, etc.)
 
     for col in dataCols:
 
@@ -128,6 +129,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
                 if max(json_data[col]) > min(json_data[col]):
                     dataPart.append(col)
                     extractCols.append(col)
+                    extractColInfo.append('data')
                     dataPartAdded = True
 
         else: # test mode -> targetCol does not exist
@@ -135,6 +137,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
                 if max(json_data[col]) > min(json_data[col]):
                     dataPart.append(col)
                     extractCols.append(col)
+                    extractColInfo.append('data')
                     dataPartAdded = True
 
         # if equal to targetCol
@@ -142,9 +145,12 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
             if col == targetCol:
                 targetPart.append(col)
                 extractCols.append(col)
+                extractColInfo.append('target')
 
-    print('\n<<< [1] dataPart >>>')
+    print('\n<<< [1] dataPart and extractCols >>>')
     for i in range(len(dataPart)): print(dataPart[i])
+    print('')
+    for i in range(len(extractCols)): print(extractCols[i] + ' : ' + extractColInfo[i])
 
     # bind the data and target
     if isTrain == True: dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
