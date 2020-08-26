@@ -61,8 +61,10 @@ def printDataAsSpace(n_cols, df_pca):
 # tfCols    : columns that contains True or False values
 # textCols  : columns that contains text values
 # exceptCols: using the columns except for them
-# pca       : create new pca if null, use the pca if exists
-def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
+# comp      : components of PCA used
+# exva      : explained variances of PCA used
+# mean      : mean of PCA used
+def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exva, mean):
     print('\n ######## makePCA function ########')
 
     # open and show plt data
@@ -173,25 +175,42 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
 
     # to standard normal distribution
     scaled = StandardScaler().fit_transform(dataSetDF)
-
+    
     # PCA
     # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
-    if pca == None: # create PCA if does not exist
+    initializePCA = False # initializing PCA?
+    
+    if str(comp) == 'None' or str(exva) == 'None' or str(mean) == 'None': # create PCA if does not exist
         pca = PCA(n_components=n_cols)
         pca.fit(scaled)
 
+        # get components and explained variances of PCA
+        comp = pca.components_
+        exva = pca.explained_variance_
+        mean = pca.mean_
+        
+        initializePCA = True
+
     # https://machinelearningmastery.com/calculate-principal-component-analysis-scratch-python/
     # print pca.components_ and pca.explained_variance_
-    print('\n<<< [3] pca.components_ >>>\n' + str(pca.components_))
-    print('\n<<< [4] pca.explained_variance_ >>>\n' + str(pca.explained_variance_))
+    print('\n<<< [3] pca.components_ >>>\n' + str(comp))
+    print('\n<<< [4] pca.explained_variance_ >>>\n' + str(exva))
+    print('\n<<< [5] pca.mean_ >>>\n' + str(mean))
+
+    # create PCA using comp and exva
+    if initializePCA == False:
+        pca = PCA(n_components=n_cols)
+        pca.components_ = comp
+        pca.explained_variance_ = exva
+        pca.mean_ = mean
     
     # apply PCA to the data
     scaledPCA = pca.transform(scaled)
 
-    print('\n<<< [5] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
-    print('\n<<< [6] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
+    print('\n<<< [6] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
+    print('\n<<< [7] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
 
-    print('\n<<< [7] scaledPCA >>>')
+    print('\n<<< [8] scaledPCA >>>')
     print(scaledPCA)
 
     # name each column for PCA transformed data
@@ -200,7 +219,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
     if isTrain == True: df_pca['target'] = dataSetDF[target]
 
-    print('\n<<< [8] df_pca >>>')
+    print('\n<<< [9] df_pca >>>')
     print(df_pca)
 
     df_pcaCorr = df_pca.corr()
@@ -217,7 +236,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, pca):
     printDataAsSpace(n_cols, df_pca)
 
     # return
-    return (df_pca, pca)
+    return (df_pca, comp, exva, mean)
 
 # k Nearest Neighbor algorithm
 # dfTrain    : dataframe for training data
@@ -330,8 +349,14 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "requester_user_flair",
               "unix_timestamp_of_request_utc"] # list of columns not used
 
-(df_pca_train, pca) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols, None)
-df_pca_test = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols, None)
+# get PCA (components and explained variances) for training data
+(df_pca_train, comp, exva, mean) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols,
+                                     None, None, None)
+
+# get PCA (components and explained variances) for test data
+(df_pca_test, noUse0, noUse1, noUse2) = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols,
+                                        comp, exva, mean)
+
 kNN(df_pca_train, df_pca_test, 'target', 2, 10)
 
 # test
