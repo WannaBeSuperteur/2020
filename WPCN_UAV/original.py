@@ -704,6 +704,101 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
 
     return (pStar, t0Star, PULStar, tStar)
 
+# Algorithm 2 Proposed Algorithm for (P1-NL) with the Non-Linear EH Model
+def algorithm2():
+    q = 0
+    tq = [] # refer form: tq[q][n][k] for q=0,1,2,..., n in N and k in K
+    pq = [] # refer form: pq[q][n] for q=0,1,2,..., n in N
+    zqi = [] # refer form: zqi[q][i][n][k] for i, q, n in N and k in K
+    pqi = [] # refer form: pqi[q][i][n] for i, q and n in N
+    PULqi = [] # refer form: PULqi[q][i][n][k] for i, q, n in N and k in K
+    zHat = [[0 for k in range(K+1)] for n in range(N+1)] # ^z[n][k]
+    Rminq = Rmin # R^(q)_min
+
+    # to prevent index error
+    tq.append([[0 for k in range(K+1)] for n in range(N+1)])
+    pq.append([0 for n in range(N+1)])
+    zqi.append([]) # append zqi[q]
+    pqi.append([]) # append pqi[q]
+    PULqi.append([]) # append PULqi[q]
+
+    # until Rminq converges
+    while True:
+        tq.append([[0 for k in range(K+1)] for n in range(N+1)])
+        pq.append([0 for n in range(N+1)])
+        zqi.append([]) # append zqi[q]
+        pqi.append([]) # append pqi[q]
+        PULqi.append([]) # append PULqi[q]
+
+        # update
+        q = q + 1
+        i = 0
+
+        # set z^(q,i)_k[n] = ||p^(q-1)[n] - uk||^2 for all n in N and all k in K
+        zqi[q].append([]) # append zqi[q][i]
+        pqi[q].append([]) # append pqi[q][i]
+        PULqi[q].append([]) # append PULqi[q][i]
+        
+        zqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append zqi[q][i][n][k]
+        pqi[q][i].append(0) # append pqi[q][i][n]
+        PULqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append PULqi[q][i][n][k]
+        
+        for n in range(N+1):
+            for k in range(K+1):
+                zqi[q][i][n][k] = pow(eucNorm([pq[q-1][n][0]-x[k], pq[q-1][n][1]-y[k]]), 2)
+
+        # repeat until convergence
+        while True:
+            
+            # set ^z[n][k] = z^(q,i)[n][k]
+            for n in range(N+1):
+                for k in range(K+1):
+                    zHat[n][k] = zqi[q][i][n][k]
+            
+            # solve (P1.2A) for given {t(q-1)[n][k]}
+            # reference: https://stackoverrun.com/ko/q/8432547
+            objective = Minimize(Rmin)
+
+            Rmin_ = Variable(Rmin) # Rmin
+            PUL_ = Variable(PUL) # P^UL[n][k]
+            p_ = Variable(p) # p[n]
+            z_ = Variable(z) # z[n][k]
+
+            # solve the problem
+            constraints = [checkCond56(N, t, z_, PUL_, zHat, Rmin_, K),
+                           checkCond57(t, PUL_, T, N, z_, zHat, K, M, alpha, beta, g0, PDL)]
+
+            prob = Problem(objective, constraints)
+            result = prob.solve(verbose=True)
+
+            # update: i <- i+1
+            i += 1
+            
+            zqi[q].append([]) # append zqi[q][i]
+            pqi[q].append([]) # append pqi[q][i]
+            PULqi[q].append([]) # append PULqi[q][i]
+        
+            zqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append zqi[q][i][n][k]
+            pqi[q][i].append(0) # append pqi[q][i][n]
+            PULqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append PULqi[q][i][n][k]
+
+            # convergence check
+            # FILL IN THE BLANK
+            if convergence == True: break
+
+        # p^(q)[n] = p^(q,i)[n] and P^UL(q)[n][k] = P^UL(q,i)[n][k]
+        for n in range(N+1):
+            for k in range(K+1):
+                pq[q][n] = pqi[q][i][n]
+                PUL[q][n][k] = PULqi[q][i][n][k]
+
+        # compute R(q)_min and {t(q)[n][k]} from (P1.3)
+        # FILL IN THE BLANK
+
+        # convergence heck for R^(q)_min
+        # FILL IN THE BLANK
+        if convergence == True: return
+
 ##########################
 ###                    ###
 ###  6. configuration  ###
