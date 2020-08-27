@@ -14,6 +14,7 @@ import graphviz
 # for PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+from sklearn.tree import export_text
 
 # print data point as 2d or 3d space
 # data should be PCA-ed data
@@ -61,6 +62,7 @@ def printDataAsSpace(n_cols, df_pca):
 # textCols  : columns that contains text values
 # exceptCols: using the columns except for them
 def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
+    print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
     jf = open(fn, 'r')
@@ -95,7 +97,7 @@ def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
                 json_data[i][tfColsIndex[x]] = 0
 
     json_data = pd.DataFrame(json_data, columns=dataCols)
-    print('<<< [0] json_data.shape >>>\n' + str(json_data.shape))
+    print('\n<<< [0] json_data.shape >>>\n' + str(json_data.shape))
 
     # create data
     # .data and .target
@@ -166,6 +168,46 @@ def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
 
     return (dataSetDF, targetCol)
 
+# dataSetDF : dataframe to create Decision Tree
+def createDTfromDF(dataSetDF, targetCol):
+    print('\n ######## createDTfromDF function ########')
+
+    cols = len(dataSetDF.columns) # number of columns
+
+    # designate index for input data and output(target) data
+    inputIndex = []
+    for i in range(cols):
+        if i != targetCol: inputIndex.append(i)
+
+    outputIndex = [targetCol]
+
+    # extract input and output data of dataSetDF
+    inputData = np.array(dataSetDF.iloc[:, inputIndex])
+    outputData = np.array(dataSetDF.iloc[:, outputIndex]).flatten()
+
+    # create Decision Tree using input and output data
+    DT = tree.DecisionTreeClassifier()
+    DT = DT.fit(inputData, outputData)
+
+    print('\n<<< [3] DT (Decision Tree) >>>')
+    r = export_text(DT, feature_names=None)
+    print(r)
+    
+    return DT
+
+# predict using Decision Tree
+def predictDF(df_pca_test, DT):
+    print('\n ######## predictDF function ########')
+
+    # get prediction
+    DTresult = DT.predict(df_pca_test)
+
+    # print prediction
+    print('\n<<< [4] DTresult (first 100 elements) >>>')
+    print(DTresult[:min(len(DTresult), 100)])
+
+    return DTresult
+
 # fn        : file name
 # n_cols    : number of columns(components) of PCA
 # isTrain   : training(True) or not(False)
@@ -211,9 +253,9 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
 
     # https://machinelearningmastery.com/calculate-principal-component-analysis-scratch-python/
     # print pca.components_ and pca.explained_variance_
-    print('\n<<< [3] pca.components_ >>>\n' + str(comp))
-    print('\n<<< [4] pca.explained_variance_ >>>\n' + str(exva))
-    print('\n<<< [5] pca.mean_ >>>\n' + str(mean))
+    print('\n<<< [5] pca.components_ >>>\n' + str(comp))
+    print('\n<<< [6] pca.explained_variance_ >>>\n' + str(exva))
+    print('\n<<< [7] pca.mean_ >>>\n' + str(mean))
 
     # create PCA using comp and exva
     if initializePCA == False:
@@ -225,10 +267,10 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     # apply PCA to the data
     scaledPCA = pca.transform(scaled)
 
-    print('\n<<< [6] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
-    print('\n<<< [7] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
+    print('\n<<< [8] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
+    print('\n<<< [9] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
 
-    print('\n<<< [8] scaledPCA >>>')
+    print('\n<<< [10] scaledPCA >>>')
     print(scaledPCA)
 
     # name each column for PCA transformed data
@@ -237,7 +279,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
     if isTrain == True: df_pca['target'] = dataSetDF[target]
 
-    print('\n<<< [9] df_pca >>>')
+    print('\n<<< [11] df_pca >>>')
     print(df_pca)
 
     df_pcaCorr = df_pca.corr()
@@ -267,15 +309,13 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
     # count of each value for training data
     targetVals = list(set(dfTrain[targetCol].values)) # set of target values
     classCount = dfTrain[targetCol].value_counts() # class count for each target value
-    print(classCount)
-    print(classCount[0.0])
 
     # convert to numpy array
     dfTrain = np.array(dfTrain)
     dfTest = np.array(dfTest)
-    print('<<< [0] dfTrain >>>')
+    print('\n<<< [12] dfTrain >>>')
     print(dfTrain)
-    print('\n<<< [1] dfTest >>>')
+    print('\n<<< [13] dfTest >>>')
     print(dfTest)
 
     # kNN classification result
@@ -367,18 +407,25 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "unix_timestamp_of_request_utc"] # list of columns not used
 
 # get PCA (components and explained variances) for training data
-(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols,
+(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols,
                                                       None, None, None)
+
+# make decision tree
+DT = createDTfromDF(df_pca_train, 3)
 
 # remove target column from comp and mean
 comp = np.delete(comp, [targetCol], 1)
 mean = np.delete(mean, [targetCol], 0)
 
 # get PCA (components and explained variances) for test data
-(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols,
+(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 3, False, targetCol, tfCols, textCols, exceptCols,
                                                         comp, exva, mean)
 
-kNN(df_pca_train, df_pca_test, 'target', 2, 10)
+# predict test data using decision tree
+predictResult = predictDF(df_pca_test, DT)
+
+# k-NN of test data
+kNN(df_pca_train, df_pca_test, 'target', 3, 10)
 
 # test
 for i in range(len(json_data)):
@@ -392,5 +439,7 @@ f.write(result)
 f.close()
 
 # 향후계획
-# decision tree 모델 도입
+# decision tree 모델 도입 [ING]
+# 메인 과정을 함수화
+# createDTfromDF, predictDF 함수의 결과값을 점 차트로 표시
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
