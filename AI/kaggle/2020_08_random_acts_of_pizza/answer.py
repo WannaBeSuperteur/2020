@@ -353,27 +353,18 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "unix_timestamp_of_request_utc"] # list of columns not used
 
 # get PCA (components and explained variances) for training data
-(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols,
+(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols,
                                                       None, None, None)
-
-print('<<< before >>>')
-print(comp)
-print(mean)
-print(targetCol)
 
 # remove target column from comp and mean
 comp = np.delete(comp, [targetCol], 1)
 mean = np.delete(mean, [targetCol], 0)
 
-print('<<< after >>>')
-print(comp)
-print(mean)
-
 # get PCA (components and explained variances) for test data
-(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols,
+(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 3, False, targetCol, tfCols, textCols, exceptCols,
                                                         comp, exva, mean)
 
-kNN(df_pca_train, df_pca_test, 'target', 2, 10)
+kNN(df_pca_train, df_pca_test, 'target', 3, 10)
 
 # test
 for i in range(len(json_data)):
@@ -390,4 +381,4 @@ f.close()
 # train 시의 PCA와 test 시의 PCA를 일치시키기 (PCA에서 특정 column을 제거하는 방법
 #     / 하나의 PCA로 train+test를 한번에 학습시키는 방법 필요) [FINISHED]
 # decision tree 모델 도입
-# categorial data(textCols 중 값의 종류가 일정개수 이하)를 one-hot으로 처리하여 숫자로 변환
+# categorical data(textCols 중 값의 종류가 일정개수 이하)를 one-hot으로 처리하여 숫자로 변환
