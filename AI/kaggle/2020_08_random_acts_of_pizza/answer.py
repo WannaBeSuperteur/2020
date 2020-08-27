@@ -55,18 +55,13 @@ def printDataAsSpace(n_cols, df_pca):
     else: print('n_cols should be 2 or 3 to print data as 2d/3d space')
 
 # fn        : file name
-# n_cols    : number of columns(components) of PCA
 # isTrain   : training(True) or not(False)
 # target    : target column if isTrain is True
 # tfCols    : columns that contains True or False values
 # textCols  : columns that contains text values
 # exceptCols: using the columns except for them
-# comp      : components of PCA used
-# exva      : explained variances of PCA used
-# mean      : mean of PCA used
-def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exva, mean):
-    print('\n ######## makePCA function ########')
-
+def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
+    
     # open and show plt data
     jf = open(fn, 'r')
     json_loaded = json.load(jf)
@@ -165,11 +160,30 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     dataSetDF = json_data[extractCols]
     dataSetDF = dataSetDF.astype(float) # change dataSetDF into float type
 
-    # display correlation
-    # https://seaborn.pydata.org/generated/seaborn.clustermap.html
+    # return dataFrame
     print('\n<<< [2] dataSetDF >>>')
     print(dataSetDF)
 
+    return (dataSetDF, targetCol)
+
+# fn        : file name
+# n_cols    : number of columns(components) of PCA
+# isTrain   : training(True) or not(False)
+# target    : target column if isTrain is True
+# tfCols    : columns that contains True or False values
+# textCols  : columns that contains text values
+# exceptCols: using the columns except for them
+# comp      : components of PCA used
+# exva      : explained variances of PCA used
+# mean      : mean of PCA used
+def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exva, mean):
+    print('\n ######## makePCA function ########')
+
+    # get dataFrame
+    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols)
+    
+    # display correlation
+    # https://seaborn.pydata.org/generated/seaborn.clustermap.html
     df = dataSetDF.corr() # get correlation
     seab.clustermap(df,
                     annot=True,
@@ -353,7 +367,7 @@ exceptCols = ["number_of_downvotes_of_request_at_retrieval",
               "unix_timestamp_of_request_utc"] # list of columns not used
 
 # get PCA (components and explained variances) for training data
-(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols,
+(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 2, True, targetCol, tfCols, textCols, exceptCols,
                                                       None, None, None)
 
 # remove target column from comp and mean
@@ -361,10 +375,10 @@ comp = np.delete(comp, [targetCol], 1)
 mean = np.delete(mean, [targetCol], 0)
 
 # get PCA (components and explained variances) for test data
-(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 3, False, targetCol, tfCols, textCols, exceptCols,
+(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 2, False, targetCol, tfCols, textCols, exceptCols,
                                                         comp, exva, mean)
 
-kNN(df_pca_train, df_pca_test, 'target', 3, 10)
+kNN(df_pca_train, df_pca_test, 'target', 2, 10)
 
 # test
 for i in range(len(json_data)):
@@ -378,7 +392,5 @@ f.write(result)
 f.close()
 
 # 향후계획
-# train 시의 PCA와 test 시의 PCA를 일치시키기 (PCA에서 특정 column을 제거하는 방법
-#     / 하나의 PCA로 train+test를 한번에 학습시키는 방법 필요) [FINISHED]
 # decision tree 모델 도입
-# categorical data(textCols 중 값의 종류가 일정개수 이하)를 one-hot으로 처리하여 숫자로 변환
+# textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
