@@ -383,63 +383,72 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
     # return the result array
     return result
 
-# make PCA from training data
-targetCol = 'requester_received_pizza'
-tfCols = ['post_was_edited', 'requester_received_pizza']
-textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
-                'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
-                'requester_username']
-exceptCols = ["number_of_downvotes_of_request_at_retrieval",
-              "number_of_upvotes_of_request_at_retrieval",
-              "post_was_edited",
-              "request_number_of_comments_at_retrieval",
-              "request_text",
-              "requester_account_age_in_days_at_retrieval",
-              "requester_days_since_first_post_on_raop_at_retrieval",
-              "requester_number_of_comments_at_retrieval",
-              "requester_number_of_comments_in_raop_at_retrieval",
-              "requester_number_of_posts_at_retrieval",
-              "requester_number_of_posts_on_raop_at_retrieval",
-              "requester_subreddits_at_request",
-              "requester_upvotes_minus_downvotes_at_retrieval",
-              "requester_upvotes_plus_downvotes_at_retrieval",
-              "requester_user_flair",
-              "unix_timestamp_of_request_utc"] # list of columns not used
+if __name__ == '__main__':
+    # make PCA from training data
+    PCAdimen = 3 # dimension of PCA
+    targetCol = 'requester_received_pizza'
+    tfCols = ['post_was_edited', 'requester_received_pizza']
+    textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
+                    'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
+                    'requester_username']
+    exceptCols = ["number_of_downvotes_of_request_at_retrieval",
+                  "number_of_upvotes_of_request_at_retrieval",
+                  "post_was_edited",
+                  "request_number_of_comments_at_retrieval",
+                  "request_text",
+                  "requester_account_age_in_days_at_retrieval",
+                  "requester_days_since_first_post_on_raop_at_retrieval",
+                  "requester_number_of_comments_at_retrieval",
+                  "requester_number_of_comments_in_raop_at_retrieval",
+                  "requester_number_of_posts_at_retrieval",
+                  "requester_number_of_posts_on_raop_at_retrieval",
+                  "requester_subreddits_at_request",
+                  "requester_upvotes_minus_downvotes_at_retrieval",
+                  "requester_upvotes_plus_downvotes_at_retrieval",
+                  "requester_user_flair",
+                  "unix_timestamp_of_request_utc"] # list of columns not used
+    useDecisionTree = False
 
-# get PCA (components and explained variances) for training data
-(df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', 3, True, targetCol, tfCols, textCols, exceptCols,
-                                                      None, None, None)
+    # get PCA (components and explained variances) for training data
+    (df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', PCAdimen, True, targetCol, tfCols, textCols, exceptCols,
+                                                          None, None, None)
 
-# make decision tree
-DT = createDTfromDF(df_pca_train, 3)
+    # remove target column from comp and mean
+    comp = np.delete(comp, [targetCol], 1)
+    mean = np.delete(mean, [targetCol], 0)
 
-# remove target column from comp and mean
-comp = np.delete(comp, [targetCol], 1)
-mean = np.delete(mean, [targetCol], 0)
+    # get PCA (components and explained variances) for test data
+    (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', PCAdimen, False, targetCol, tfCols, textCols, exceptCols,
+                                                            comp, exva, mean)
 
-# get PCA (components and explained variances) for test data
-(df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', 3, False, targetCol, tfCols, textCols, exceptCols,
-                                                        comp, exva, mean)
+    # use decision tree
+    if useDecisionTree == True:
+        
+        # make decision tree
+        DT = createDTfromDF(df_pca_train, PCAdimen)
 
-# predict test data using decision tree
-predictResult = predictDF(df_pca_test, DT)
+        # predict test data using decision tree
+        predictResult = predictDF(df_pca_test, DT)
 
-# k-NN of test data
-kNN(df_pca_train, df_pca_test, 'target', 3, 10)
-
-# test
-for i in range(len(json_data)):
-    if y[i] <= 1:
-        result += str(x[i]) + ',' + str(0) + '\n'
+    # do not use decision tree
     else:
-        result += str(x[i]) + ',' + str(1) + '\n'
 
-f = open('result.csv', 'w')
-f.write(result)
-f.close()
+        # k-NN of test data
+        kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
+
+    # test
+    for i in range(len(json_data)):
+        if y[i] <= 1:
+            result += str(x[i]) + ',' + str(0) + '\n'
+        else:
+            result += str(x[i]) + ',' + str(1) + '\n'
+
+    f = open('result.csv', 'w')
+    f.write(result)
+    f.close()
 
 # 향후계획
 # decision tree 모델 도입 [ING]
-# 메인 과정을 함수화
+# 메인 과정을 함수화 [FIN]
 # createDTfromDF, predictDF 함수의 결과값을 점 차트로 표시
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
