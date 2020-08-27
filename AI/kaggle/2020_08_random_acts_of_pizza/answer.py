@@ -18,7 +18,10 @@ from sklearn.tree import export_text
 
 # print data point as 2d or 3d space
 # data should be PCA-ed data
-def printDataAsSpace(n_cols, df_pca):
+# n_cols : number of columns (not include target)
+# df_pca : dataFrame
+# title  : title of displayed chart
+def printDataAsSpace(n_cols, df_pca, title):
 
     # set markers
     markers = ['s', 'o']
@@ -34,6 +37,7 @@ def printDataAsSpace(n_cols, df_pca):
             plt.scatter(x_axis_data, y_axis_data, marker=marker, label=df_pca['target'][i])
 
         # set labels and show
+        plt.title(title)
         plt.legend()
         plt.xlabel('pca0')
         plt.ylabel('pca1')
@@ -44,6 +48,8 @@ def printDataAsSpace(n_cols, df_pca):
     elif n_cols == 3:
 
         fig = plt.figure()
+        fig.suptitle(title)
+        
         ax = fig.add_subplot(111, projection='3d')
         ax.scatter(df_pca['pca0'], df_pca['pca1'], df_pca['pca2'], c=df_pca['target'])
 
@@ -168,8 +174,10 @@ def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
 
     return (dataSetDF, targetCol)
 
-# dataSetDF : dataframe to create Decision Tree
-def createDTfromDF(dataSetDF, targetCol):
+# dataSetDF    : dataframe to create Decision Tree
+# targetCol    : index of target column
+# displayChart : display as chart?
+def createDTfromDF(dataSetDF, targetCol, displayChart):
     print('\n ######## createDTfromDF function ########')
 
     cols = len(dataSetDF.columns) # number of columns
@@ -192,11 +200,24 @@ def createDTfromDF(dataSetDF, targetCol):
     print('\n<<< [3] DT (Decision Tree) >>>')
     r = export_text(DT, feature_names=None)
     print(r)
+
+    # display as chart
+    if displayChart == True:
+        title = '(Decision Tree) training data'
+        
+        # print data as 2d or 3d space
+        if cols == 3: # 2 except for target col
+            printDataAsSpace(2, pd.DataFrame(dataSetDF, columns=['pca0', 'pca1', 'target']), title)
+        elif cols == 4: # 3 except for target col
+            printDataAsSpace(3, pd.DataFrame(dataSetDF, columns=['pca0', 'pca1', 'pca2', 'target']), title)
     
     return DT
 
 # predict using Decision Tree
-def predictDF(df_pca_test, DT):
+# df_pca_test  : dataFrame for test data
+# DT           : decision tree
+# displayChart : display as chart?
+def predictDF(df_pca_test, DT, displayChart):
     print('\n ######## predictDF function ########')
 
     # get prediction
@@ -205,6 +226,32 @@ def predictDF(df_pca_test, DT):
     # print prediction
     print('\n<<< [4] DTresult (first 100 elements) >>>')
     print(DTresult[:min(len(DTresult), 100)])
+
+    # display as chart
+    if displayChart == True:
+        title = '(Decision Tree) test data prediction'
+
+        # add result to df_pca_test
+        colsSaved = df_pca_test.columns
+        colsSaved = colsSaved.append(pd.Index(['target']))
+        df_pca_array = np.array(df_pca_test)
+        df_pca_array = np.column_stack([df_pca_array, DTresult])
+        df_pca_test_new = pd.DataFrame(df_pca_array, columns=colsSaved)
+
+        print('\n<<< [5] df_pca_array >>>')
+        print(df_pca_array)
+
+        print('\n<<< [6] df_pca_test_new >>>')
+        print(df_pca_test_new)
+
+        print('\n<<< [7] colsSaved >>>')
+        print(colsSaved)
+        
+        # print data as 2d or 3d space
+        if len(df_pca_array[0]) == 3: # 2 except for target col
+            printDataAsSpace(2, pd.DataFrame(df_pca_test_new, columns=['pca0', 'pca1', 'target']), title)
+        elif len(df_pca_array[0]) == 4: # 3 except for target col
+            printDataAsSpace(3, pd.DataFrame(df_pca_test_new, columns=['pca0', 'pca1', 'pca2', 'target']), title)
 
     return DTresult
 
@@ -253,9 +300,9 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
 
     # https://machinelearningmastery.com/calculate-principal-component-analysis-scratch-python/
     # print pca.components_ and pca.explained_variance_
-    print('\n<<< [5] pca.components_ >>>\n' + str(comp))
-    print('\n<<< [6] pca.explained_variance_ >>>\n' + str(exva))
-    print('\n<<< [7] pca.mean_ >>>\n' + str(mean))
+    print('\n<<< [8] pca.components_ >>>\n' + str(comp))
+    print('\n<<< [9] pca.explained_variance_ >>>\n' + str(exva))
+    print('\n<<< [10] pca.mean_ >>>\n' + str(mean))
 
     # create PCA using comp and exva
     if initializePCA == False:
@@ -267,10 +314,10 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     # apply PCA to the data
     scaledPCA = pca.transform(scaled)
 
-    print('\n<<< [8] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
-    print('\n<<< [9] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
+    print('\n<<< [11] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
+    print('\n<<< [12] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
 
-    print('\n<<< [10] scaledPCA >>>')
+    print('\n<<< [13] scaledPCA >>>')
     print(scaledPCA)
 
     # name each column for PCA transformed data
@@ -279,7 +326,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
     if isTrain == True: df_pca['target'] = dataSetDF[target]
 
-    print('\n<<< [11] df_pca >>>')
+    print('\n<<< [14] df_pca >>>')
     print(df_pca)
 
     df_pcaCorr = df_pca.corr()
@@ -292,8 +339,8 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     # immediately return the pca if testing
     if isTrain == False: return (df_pca, comp, exva, mean, targetCol)
 
-    # print data as 2d or 3d space
-    printDataAsSpace(n_cols, df_pca)
+    # print data as 2d or 3d space (run only on training data)
+    printDataAsSpace(n_cols, df_pca, '(PCA) training data')
 
     return (df_pca, comp, exva, mean, targetCol)
 
@@ -313,9 +360,9 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
     # convert to numpy array
     dfTrain = np.array(dfTrain)
     dfTest = np.array(dfTest)
-    print('\n<<< [12] dfTrain >>>')
+    print('\n<<< [15] dfTrain >>>')
     print(dfTrain)
-    print('\n<<< [13] dfTest >>>')
+    print('\n<<< [16] dfTest >>>')
     print(dfTest)
 
     # kNN classification result
@@ -374,16 +421,20 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
     # https://rfriend.tistory.com/352
     dfTest = np.column_stack([dfTest, resultT])
 
+    # display as chart
+    title = '(kNN) test data prediction'
+
     # print data as 2d or 3d space
     if len(dfTest[0]) == 3: # 2 except for target col
-        printDataAsSpace(2, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'target']))
+        printDataAsSpace(2, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'target']), title)
     elif len(dfTest[0]) == 4: # 3 except for target col
-        printDataAsSpace(3, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'pca2', 'target']))
+        printDataAsSpace(3, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'pca2', 'target']), title)
             
     # return the result array
     return result
 
 if __name__ == '__main__':
+
     # make PCA from training data
     PCAdimen = 3 # dimension of PCA
     targetCol = 'requester_received_pizza'
@@ -407,7 +458,7 @@ if __name__ == '__main__':
                   "requester_upvotes_plus_downvotes_at_retrieval",
                   "requester_user_flair",
                   "unix_timestamp_of_request_utc"] # list of columns not used
-    useDecisionTree = False
+    useDecisionTree = True
 
     # get PCA (components and explained variances) for training data
     (df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', PCAdimen, True, targetCol, tfCols, textCols, exceptCols,
@@ -425,10 +476,10 @@ if __name__ == '__main__':
     if useDecisionTree == True:
         
         # make decision tree
-        DT = createDTfromDF(df_pca_train, PCAdimen)
+        DT = createDTfromDF(df_pca_train, PCAdimen, True)
 
         # predict test data using decision tree
-        predictResult = predictDF(df_pca_test, DT)
+        predictResult = predictDF(df_pca_test, DT, True)
 
     # do not use decision tree
     else:
@@ -448,7 +499,7 @@ if __name__ == '__main__':
     f.close()
 
 # 향후계획
-# decision tree 모델 도입 [ING]
+# decision tree 모델 도입 [FIN]
 # 메인 과정을 함수화 [FIN]
-# createDTfromDF, predictDF 함수의 결과값을 점 차트로 표시
+# createDTfromDF, predictDF 함수의 결과값을 점 차트로 표시 [FIN]
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
