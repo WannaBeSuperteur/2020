@@ -174,10 +174,15 @@ def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
 
     return (dataSetDF, targetCol)
 
+# create Decision Tree using DataFrame
+# ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 # dataSetDF    : dataframe to create Decision Tree
 # targetCol    : index of target column
 # displayChart : display as chart?
-def createDTfromDF(dataSetDF, targetCol, displayChart):
+# DT_maxDepth  : max depth of decision tree
+# DT_criterion : 'gini' or 'entropy'
+# DT_splitter  : 'best' or 'random'
+def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion, DT_splitter):
     print('\n ######## createDTfromDF function ########')
 
     cols = len(dataSetDF.columns) # number of columns
@@ -194,7 +199,7 @@ def createDTfromDF(dataSetDF, targetCol, displayChart):
     outputData = np.array(dataSetDF.iloc[:, outputIndex]).flatten()
 
     # create Decision Tree using input and output data
-    DT = tree.DecisionTreeClassifier()
+    DT = tree.DecisionTreeClassifier(max_depth=DT_maxDepth, criterion=DT_criterion, splitter=DT_splitter)
     DT = DT.fit(inputData, outputData)
 
     print('\n<<< [3] DT (Decision Tree) >>>')
@@ -203,7 +208,8 @@ def createDTfromDF(dataSetDF, targetCol, displayChart):
 
     # display as chart
     if displayChart == True:
-        title = '(Decision Tree) training data'
+        title = ('(Decision Tree) training data / maxDepth='
+                 + str(DT_maxDepth) + ', criterion=' + DT_criterion + ', splitter=' + DT_splitter)
         
         # print data as 2d or 3d space
         if cols == 3: # 2 except for target col
@@ -217,7 +223,10 @@ def createDTfromDF(dataSetDF, targetCol, displayChart):
 # df_pca_test  : dataFrame for test data
 # DT           : decision tree
 # displayChart : display as chart?
-def predictDF(df_pca_test, DT, displayChart):
+# DT_maxDepth  : max depth of decision tree
+# DT_criterion : 'gini' or 'entropy'
+# DT_splitter  : 'best' or 'random'
+def predictDF(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_splitter):
     print('\n ######## predictDF function ########')
 
     # get prediction
@@ -229,7 +238,8 @@ def predictDF(df_pca_test, DT, displayChart):
 
     # display as chart
     if displayChart == True:
-        title = '(Decision Tree) test data prediction'
+        title = ('(Decision Tree) test data prediction / maxDepth='
+                 + str(DT_maxDepth) + ', criterion=' + DT_criterion + ', splitter=' + DT_splitter)
 
         # add result to df_pca_test
         colsSaved = df_pca_test.columns
@@ -435,6 +445,10 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
 
 if __name__ == '__main__':
 
+    # meta info
+    trainName = 'train.json'
+    testName = 'test.json'
+
     # make PCA from training data
     PCAdimen = 3 # dimension of PCA
     targetCol = 'requester_received_pizza'
@@ -458,10 +472,15 @@ if __name__ == '__main__':
                   "requester_upvotes_plus_downvotes_at_retrieval",
                   "requester_user_flair",
                   "unix_timestamp_of_request_utc"] # list of columns not used
+
+    # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     useDecisionTree = True
+    DT_maxDepth = 10 # max depth of decision tree
+    DT_criterion = 'gini' # 'gini' or 'entropy'
+    DT_splitter = 'best' # 'best' or 'random'
 
     # get PCA (components and explained variances) for training data
-    (df_pca_train, comp, exva, mean, targetCol) = makePCA('train.json', PCAdimen, True, targetCol, tfCols, textCols, exceptCols,
+    (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetCol, tfCols, textCols, exceptCols,
                                                           None, None, None)
 
     # remove target column from comp and mean
@@ -469,17 +488,17 @@ if __name__ == '__main__':
     mean = np.delete(mean, [targetCol], 0)
 
     # get PCA (components and explained variances) for test data
-    (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA('test.json', PCAdimen, False, targetCol, tfCols, textCols, exceptCols,
+    (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, targetCol, tfCols, textCols, exceptCols,
                                                             comp, exva, mean)
 
     # use decision tree
     if useDecisionTree == True:
         
         # make decision tree
-        DT = createDTfromDF(df_pca_train, PCAdimen, True)
+        DT = createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
 
         # predict test data using decision tree
-        predictResult = predictDF(df_pca_test, DT, True)
+        predictResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
     # do not use decision tree
     else:
@@ -499,7 +518,7 @@ if __name__ == '__main__':
     f.close()
 
 # 향후계획
-# decision tree 모델 도입 [FIN]
-# 메인 과정을 함수화 [FIN]
-# createDTfromDF, predictDF 함수의 결과값을 점 차트로 표시 [FIN]
+# Decision Tree의 하위노드 개수, truncate되는 단계를 조정, best/random 설정 [ING]
+# -> https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
+# 전체 열에 대한 단일 Decision Tree를 이용하여 결정
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
