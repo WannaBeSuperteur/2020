@@ -24,7 +24,7 @@ from sklearn.tree import export_text
 def printDataAsSpace(n_cols, df_pca, title):
 
     # set markers
-    markers = ['s', 'o']
+    markers = ['^', 'o']
 
     # plot if the value of n_cols is 2
     # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
@@ -34,7 +34,7 @@ def printDataAsSpace(n_cols, df_pca, title):
         for i, marker in enumerate(markers):
             x_axis_data = df_pca[df_pca['target']==i]['pca0']
             y_axis_data = df_pca[df_pca['target']==i]['pca1']
-            plt.scatter(x_axis_data, y_axis_data, marker=marker, label=df_pca['target'][i])
+            plt.scatter(x_axis_data, y_axis_data, s=1, marker=marker, label=df_pca['target'][i])
 
         # set labels and show
         plt.title(title)
@@ -51,7 +51,7 @@ def printDataAsSpace(n_cols, df_pca, title):
         fig.suptitle(title)
         
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(df_pca['pca0'], df_pca['pca1'], df_pca['pca2'], c=df_pca['target'])
+        ax.scatter(df_pca['pca0'], df_pca['pca1'], df_pca['pca2'], c=df_pca['target'], s=1)
 
         # set labels and show
         ax.set_xlabel('pca0')
