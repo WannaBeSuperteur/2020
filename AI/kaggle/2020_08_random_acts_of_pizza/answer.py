@@ -451,7 +451,8 @@ if __name__ == '__main__':
 
     # make PCA from training data
     PCAdimen = 3 # dimension of PCA
-    targetCol = 'requester_received_pizza'
+    idCol = 'request_id'
+    targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
     textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
                     'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
@@ -474,13 +475,13 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    useDecisionTree = True
+    useDecisionTree = False
     DT_maxDepth = 10 # max depth of decision tree
     DT_criterion = 'gini' # 'gini' or 'entropy'
     DT_splitter = 'best' # 'best' or 'random'
 
     # get PCA (components and explained variances) for training data
-    (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetCol, tfCols, textCols, exceptCols,
+    (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols, exceptCols,
                                                           None, None, None)
 
     # remove target column from comp and mean
@@ -488,7 +489,7 @@ if __name__ == '__main__':
     mean = np.delete(mean, [targetCol], 0)
 
     # get PCA (components and explained variances) for test data
-    (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, targetCol, tfCols, textCols, exceptCols,
+    (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols, exceptCols,
                                                             comp, exva, mean)
 
     # use decision tree
@@ -498,20 +499,25 @@ if __name__ == '__main__':
         DT = createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
 
         # predict test data using decision tree
-        predictResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
+        finalResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
     # do not use decision tree
     else:
 
         # k-NN of test data
-        kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
+        finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
 
-    # test
+    # write result
+    jf = open(testName, 'r')
+    json_file = jf.read()
+    jf.close()
+
+    json_data = json.loads(json_file)
+    
+    result = str(idCol) + ',' + str(targetColName) + '\n'
     for i in range(len(json_data)):
-        if y[i] <= 1:
-            result += str(x[i]) + ',' + str(0) + '\n'
-        else:
-            result += str(x[i]) + ',' + str(1) + '\n'
+        x = json_data[i][idCol]
+        result += str(x) + ',' + str(finalResult[i]) + '\n'
 
     f = open('result.csv', 'w')
     f.write(result)
@@ -520,5 +526,6 @@ if __name__ == '__main__':
 # 향후계획
 # Decision Tree의 하위노드 개수, truncate되는 단계를 조정, best/random 설정 [ING]
 # -> https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
+# 학습단계에서 target column을 제외하고 PCA변환하는 것을 고려
 # 전체 열에 대한 단일 Decision Tree를 이용하여 결정
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
