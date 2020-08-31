@@ -894,14 +894,19 @@ if __name__ == '__main__':
     ###                ###
     ######################
 
+    algo = int(input('algorithm'))
+
     # Proposed Algorithm for (P1) With the Linear EH Model
-    print('\n <<< 1. execution result of algorithm 1 >>>')
-    algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL)
+    if algo == 1:
+        print('\n <<< 1. execution result of algorithm 1 >>>')
+        algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL)
 
     # Proposed Algorithm for (P1-NL) with the Non-Linear EH Model
-    print('\n <<< 2. execution result of algorithm 2 >>>')
-    algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL)
+    elif algo == 2:
+        print('\n <<< 2. execution result of algorithm 2 >>>')
+        algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL)
 
     # time allocation algorithm
-    print('\n <<< 3. execution result of time allocation algorithm >>>')
-    algorithmTimeAllocate(Rmin, t, n, p, g0, x, y, H, r, ng, o2, T, PUL, N, ENL, K)
+    elif algo == 3:
+        print('\n <<< 3. execution result of time allocation algorithm >>>')
+        algorithmTimeAllocate(Rmin, t, n, p, g0, x, y, H, r, ng, o2, T, PUL, N, ENL, K)
