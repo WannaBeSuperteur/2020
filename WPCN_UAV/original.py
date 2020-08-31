@@ -3,6 +3,7 @@
 
 import math
 import numpy as np
+import random
 # from cvxpy import *
 
 ##############################################################
@@ -34,7 +35,7 @@ def maxSpeedConstraint(p, T, N, vmax):
 # 0-2. G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2) ... (3)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def getG(p, g0, x, y, n, k, H, r):
-    eucN = pow(eucNorm([p[n][0]-x[k], p[n][1]-y[k]]), 2) # ||p[n]-uk||^2
+    eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
     return g0/pow(pow(eucN, 2) + H*H, r/2)
 
 # 0-3. check condition for tk[n] ... (4)(5)
@@ -140,7 +141,7 @@ def avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r):
 #       = (t[n][0]*δN/a)*{M(1+a)/(1+a*e^((-b*g0*P^DL)/(||p[n]-uk||^2 + H^2)^(r/2))) - M} ... (22)
 #       = (t[n][0]*δN/a)*{M(1+a)/(1+a*e^(-b*G[n][k]*P^DL)) - M}
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def harvestedEnergy(t, n, T, N, alpha, M, beta, PDL, p, g0, x, y, H, r):
+def harvestedEnergy(t, n, k, T, N, alpha, M, beta, PDL, p, g0, x, y, H, r):
     sN = T/N # δN: length of each slot
     G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
     expPart = math.exp((-1)*beta*G*PDL) # e^(-b*G[n][k]*P^DL)
@@ -191,15 +192,17 @@ def pn(T, N, xFunc, yFunc):
 
 # to get x_p(t) and y_p(t)
 
-# 2-0. function to get x
-def xFunc():
+# 2-0. function to get x according to time t
+def xFunc(t):
+    # CORE FUNCTION -> ORIGINAL OR USE DEEP LEARNING
     # FILL IN THE BLANK
-    return -1
+    return -1 # temp
 
-# 2-1. function to get y
-def yFunc():
+# 2-1. function to get y according to time t
+def yFunc(t):
+    # CORE FUNCTION -> ORIGINAL OR USE DEEP LEARNING
     # FILL IN THE BLANK
-    return -1
+    return -1 # temp
 
 #######################################
 ###                                 ###
@@ -443,7 +446,7 @@ def checkCond28(PULmax, N, K, t, PUL):
 def checkCond34(p, x, y, H, z, r):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
-            eucN = pow(eucNorm([p[n][0]-x[k], p[n][1]-y[k]]), 2) # ||p[n]-uk||^2
+            eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
             if eucN*eucN + H*H <= pow(z[n][k], 2/r): return True
     return False
 
@@ -822,7 +825,14 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
 # time allocation algorithm
 # (P1.3) max(Rmin,{t[n][k]}) s.t. (4)(5)(23)(24)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def algorithmTimeAllocate(Rmin, t, n, p, g0, x, y, H, r, ng, o2, T, PUL, N, ENL, K):
+def algorithmTimeAllocate(Rmin, t, n, k, p, g0, x, y, H, r, ng, o2, T, PUL, N, K, alpha, M, beta, PDL):
+
+    # create E^NL array
+    # harvested energy E^NL[n][k] = (t[n][0]*δN/a)*{M(1+a)/(1+a*e^((-b*g0*P^DL)/(||p[n]-uk||^2 + H^2)^(r/2))) - M} ... (22)
+    ENL = [[0 for k_ in range(K+1)] for n_ in range(N+1)] # E^NL
+    for n_ in range(1, N+1):
+        for k_ in range(1, K+1):
+            ENL[n_][k_] = harvestedEnergy(t, n_, k_, T, N, alpha, M, beta, PDL, p, g0, x, y, H, r)
 
     # solve (P1.3A)
     # reference: https://stackoverrun.com/ko/q/8432547
@@ -872,6 +882,20 @@ if __name__ == '__main__':
     M = float(config[19].split(' ')[0]) # M
     g0 = float(config[20].split(' ')[0]) # g0 : reference channel gain
 
+    # P^UL (MUST BE <=PULmax)
+    PUL = [[0 for k in range(K+1)] for n in range(N+1)]
+    f = open('PUL.txt', 'r')
+    puls = f.readlines() # with n row(line)s and k columns
+    f.close()
+    
+    for n in range(N): # for each row (n rows)
+        thisLine = puls[n] # P^UL[n]
+        thisLineSplit = thisLine.split('\n')[0].split(' ') # each element of P^UL[n]
+        
+        for k in range(K): # for each cell(k columns) in each row
+            PUL[n+1][k+1] = float(thisLineSplit[k])
+            assert(PUL[n+1][k+1] <= PULmax)
+
     # options
     linear = config[23].split(' ')[0] # linear(l) non-linear(n)
     integ = config[24].split(' ')[0] # integrated(i) separated(s)
@@ -887,6 +911,10 @@ if __name__ == '__main__':
     print(K, N, T, H, HI, HE, vmax, vImax, vEmax)
     print(PDL, PULmax, r, o2, ng, s, Rmin, alpha, beta, M, g0)
     print(linear, integ, lenX, lenY, HstaticAP, iters)
+    print('')
+    print(' <<< P^UL >>>')
+    for i in range(1, N+1): print(PUL[i][1:K+1])
+    print('')
 
     ######################
     ###                ###
@@ -894,6 +922,53 @@ if __name__ == '__main__':
     ###                ###
     ######################
 
+    ### 7-0. location of GT k (k=1,2,...,K) -> place RANDOMLY
+    x = [] # x axis for each GT k
+    y = [] # y axis for each GT k
+    x.append(-1) # x[0] = -1
+    y.append(-1) # y[0] = -1
+    for k in range(K): # randomly place GT within lenX and lenY
+        x.append(random.random() * lenX)
+        y.append(random.random() * lenY)
+
+    ### 7-1. get p[n] first (using xFunc and yFunc function)
+    p = pn(T, N, xFunc, yFunc)
+
+    ### 7-2. let z[n][k] = (||p[n]-uk||^2 + H^2)^(r/2)
+    z = [[0 for k in range(K+1)] for n in range(N+1)]
+    for k in range(1, K+1):
+        for n in range(1, N+1):
+            eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
+            z[n][k] = pow(eucN*eucN + H*H, r/2)
+
+    ### 7-3. t = t[n][k] [NOT COMPLETED]
+    t = [[0 for k in range(K+1)] for n in range(N+1)]
+    for k in range(1, K+1):
+        for n in range(1, N+1):
+            t[n][k] = 0 # TEMP (find the value in the future)
+
+    ### 7-4. e = e[n][k] = sqrt(t[n][k]*P^UL[n][k]) ( >= 0 )
+    e = [[0 for k in range(K+1)] for n in range(N+1)]
+    for k in range(1, K+1):
+        for n in range(1, N+1):
+            e[n][k] = gete(t, PUL, n, k)
+
+    ### 7-5. w = w[n] = sqrt(t[n][0]) because t[n][0] = (w[n])^2
+    w = [0 for n in range(N+1)]
+    for n in range(1, N+1): w[n] = math.sqrt(t[n][0])
+
+    ### 7-6. initialize Hat values (zHat, eHat and wHat) as original values
+    zHat = [[0 for k in range(K+1)] for n in range(N+1)]
+    eHat = [[0 for k in range(K+1)] for n in range(N+1)]
+    wHat = [0 for n in range(N+1)]
+            
+    for n in range(1, N+1):
+        wHat[n] = w[n]
+        for k in range(1, K+1):
+            zHat[n][k] = z[n][k]
+            eHat[n][k] = e[n][k]
+            
+    ### 7-7. select algorithm
     algo = int(input('algorithm'))
 
     # Proposed Algorithm for (P1) With the Linear EH Model
@@ -909,4 +984,4 @@ if __name__ == '__main__':
     # time allocation algorithm
     elif algo == 3:
         print('\n <<< 3. execution result of time allocation algorithm >>>')
-        algorithmTimeAllocate(Rmin, t, n, p, g0, x, y, H, r, ng, o2, T, PUL, N, ENL, K)
+        algorithmTimeAllocate(Rmin, t, n, k, p, g0, x, y, H, r, ng, o2, T, PUL, N, K, alpha, M, beta, PDL)
