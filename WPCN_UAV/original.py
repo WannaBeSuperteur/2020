@@ -725,7 +725,7 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
     return (pStar, t0Star, PULStar, tStar)
 
 # Algorithm 2 Proposed Algorithm for (P1-NL) with the Non-Linear EH Model
-def algorithm2():
+def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
     q = 0
     tq = [] # refer form: tq[q][n][k] for q=0,1,2,..., n in N and k in K
     pq = [] # refer form: pq[q][n] for q=0,1,2,..., n in N
@@ -821,7 +821,8 @@ def algorithm2():
 
 # time allocation algorithm
 # (P1.3) max(Rmin,{t[n][k]}) s.t. (4)(5)(23)(24)
-def algorithmTimeAllocate():
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
+def algorithmTimeAllocate(Rmin, t, n, p, g0, x, y, H, r, ng, o2, T, PUL, N, ENL, K):
 
     # solve (P1.3A)
     # reference: https://stackoverrun.com/ko/q/8432547
@@ -892,4 +893,15 @@ if __name__ == '__main__':
     ###  7. execution  ###
     ###                ###
     ######################
-    print('\n <<< 1. execution result >>>')
+
+    # Proposed Algorithm for (P1) With the Linear EH Model
+    print('\n <<< 1. execution result of algorithm 1 >>>')
+    algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL)
+
+    # Proposed Algorithm for (P1-NL) with the Non-Linear EH Model
+    print('\n <<< 2. execution result of algorithm 2 >>>')
+    algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL)
+
+    # time allocation algorithm
+    print('\n <<< 3. execution result of time allocation algorithm >>>')
+    algorithmTimeAllocate(Rmin, t, n, p, g0, x, y, H, r, ng, o2, T, PUL, N, ENL, K)
