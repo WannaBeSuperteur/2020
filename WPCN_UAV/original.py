@@ -3,7 +3,7 @@
 
 import math
 import numpy as np
-from cvxpy import *
+# from cvxpy import *
 
 ##############################################################
 ###                                                        ###
@@ -32,6 +32,7 @@ def maxSpeedConstraint(p, T, N, vmax):
     return True
 
 # 0-2. G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2) ... (3)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def getG(p, g0, x, y, n, k, H, r):
     eucN = pow(eucNorm([p[n][0]-x[k], p[n][1]-y[k]]), 2) # ||p[n]-uk||^2
     return g0/pow(pow(eucN, 2) + H*H, r/2)
@@ -83,12 +84,14 @@ def uplinkPowerConstraint(n, k, T, N, s, G, PDL, t, PUL, K):
     return True
 
 # 0-7. R[n][k] = log2(1 + ngk*G[n][k]*PUL[n][k]/o^2) ... (9)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def getRnk(n, k, p, g0, x, y, H, r, ng, o2):
     G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
     return math.log(1 + ng*G*PUL[n][k]/o2, 2)
 
 # 0-8. R[k] = (1/T) * δN*Sum(n=2,N)t[n][k]*R[n][k]
 #           = (1/N) * Sum(n=2,N)t[n][k]*R[n][k]     ... (10)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t):
 
     # find Sum(n=2,N)t[n][k]*R[n][k]
@@ -104,6 +107,7 @@ def getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t):
 #         t[n][k]*P^UL[n][k] <= Sum(i=1,n-1)[{(t[i][0]*s*g0*P^DL)/(||pE[i]-uk||^2 + HE^2)^(r/2)} - t[i][k]*P^UL[i][k]] ... (16)
 #      => t[n][k]*P^UL[n][k] <= Sum(i=1,n-1)[(t[i][0]*s*GE[n][k]*P^DL) - t[i][k]*P^UL[i][k]]
 #         where GE[n][k] = g0/(||pE[i]-uk||^2 + HE^2)^(r/2)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def uplinkEnergyConstraint(t, n, k, PUL, s, PDL, pE, g0, x, y, HE, r):
 
     # t[n][k]*P^UL[n][k]
@@ -122,6 +126,7 @@ def uplinkEnergyConstraint(t, n, k, PUL, s, PDL, pE, g0, x, y, HE, r):
 #       = Sum(n=2,N)[(t[n][k]/N) * log2(1 + {(g0*ng/o^2)*P^UL[n][k]}/(||pI[n]-uk||^2 + HI^2)^(r/2)})] ... (17)
 #       = Sum(n=2,N)[(t[n][k]/N) * log2(1 + (GI[n][k]*ng/o^2)*P^UL[n][k])]
 #         where GI[n][k] = g0/(||pI[i]-uk||^2 + HI^2)^(r/2)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r):
     result = 0
     
@@ -134,6 +139,7 @@ def avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r):
 # 0-11. harvested energy E^NL[n][k]
 #       = (t[n][0]*δN/a)*{M(1+a)/(1+a*e^((-b*g0*P^DL)/(||p[n]-uk||^2 + H^2)^(r/2))) - M} ... (22)
 #       = (t[n][0]*δN/a)*{M(1+a)/(1+a*e^(-b*G[n][k]*P^DL)) - M}
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def harvestedEnergy(t, n, T, N, alpha, M, beta, PDL, p, g0, x, y, H, r):
     sN = T/N # δN: length of each slot
     G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
@@ -146,6 +152,11 @@ def harvestedEnergy(t, n, T, N, alpha, M, beta, PDL, p, g0, x, y, H, r):
 ###  1. other things (such as arrays and sets)  ###
 ###                                             ###
 ###################################################
+
+# distance between UAV p[n] whose location is p(nδN) = [xp(nδN), yp(nδN)]^T
+# so actual location is (xp(t), yp(t), H),
+# and GT k whose location is (x[k], y[k], 0)
+# is eventually sqrt(||p[n] - uk||^2 + H^2) -> (||p[n] - uk||^2 + H^2)^r/2 = (dist)^r
 
 # 1-0. K_ = {1,...,K} (also can used to get N_)
 def K_(K):
@@ -198,6 +209,7 @@ def yFunc():
 
 ### [ P1 ] - INTEGRATED ###
 # 3-0. Rk >= Rmin for k in K ... (11)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond11(Rmin, K, n, p, g0, x, y, H, r, ng, o2, T, t):
     for k in range(1, K+1):
         Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t) # get Rk
@@ -251,6 +263,7 @@ def checkCond15(PUL, n, k, PULmax, N, K):
 ### [ P2 ] - SEPARATED ###
 # 3-5. Rk,S >= Rmin for k in K ... (18)
 #      Rk,S is average throughput of GT k
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond18(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
     for k in range(1, K+1):
         RkS = avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r) # Rk,S
@@ -260,6 +273,7 @@ def checkCond18(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
 # 3-6. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= Sum(i=1,n-1){t[i][0]*g0*s*P^DL/(||pE[i]-uk||^2 + HE^2)^(r/2)} for n in ^N and k in K ... (19)
 #   => Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
 #      where GE[n][k] = g0/(||pE[i]-uk||^2 + HE^2)^(r/2)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K):
     NHat = Khat(N) # ^N
 
@@ -298,6 +312,7 @@ def checkCond21(pI, pE, N):
 
 ### [ P1-NL ] - NONLINEAR ###
 # 3-9. Rk >= Rmin for k in K ... (23)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond23(n, p, g0, x, y, H, r, ng, o2, T, t, Rmin):
     for k in range(1, K+1): # for k in K
         Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t) # Rk
@@ -368,6 +383,7 @@ def getAnk(e, z, eHat, zHat, n, k):
     return part0 + part1 - part2
 
 # 4-pre4. ||p[n]-uk||^2 <= array[n][k]^(2/r)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def pnUkArray(p, x, y, array, r):
     
     # ||p[n]-uk||^2
@@ -423,6 +439,7 @@ def checkCond28(PULmax, N, K, t, PUL):
     return True
 
 # 4-1. ||p[n]-uk||^2+H^2 <= (z[n][k])^(2/r) for n in N and k in K ... (34)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond34(p, x, y, H, z, r):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
@@ -436,6 +453,7 @@ def checkCond34(p, x, y, H, z, r):
 # 4-2. =>    Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
 #         >= Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k]))
 # G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z):
 
     # Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
@@ -456,6 +474,7 @@ def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z):
 
 # 4-3. Sum(i=1,n-1)t[i][0]*(g0*s*PDL)/(||p[n]-uk||^2 + H^2)^(r/2) >= Sum(i=1,n-1)g0*s*PDL*(w[i]^2/z[i][k]) ... (30)
 #   => Sum(i=1,n-1)(t[i][0]*G[n][k]*s*PDL) >= Sum(i=1,n-1)g0*s*PDL*(t[i][0]/z[i][k])
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond30(t, k, s, PDL, g0, z, p, x, y, H, r):
 
     # Sum(i=1,n-1)(t[i][0]*G[n][k]*s*PDL)
@@ -539,6 +558,7 @@ def checkCond42(N, t, g0, ng, o2, Y, Rmin, K):
 
 # 4-11. ||pI[n]-uk||^2 <= (zI[n][k])^(2/r) for n in N and k in K ... (45)
 # 4-12. ||pE[n]-uk||^2 <= (zE[n][k])^(2/r) for n in N and k in K ... (46)
+# location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
@@ -653,7 +673,7 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
 
         # solve P(1.1A) by using the CVX
         # reference: https://stackoverrun.com/ko/q/8432547
-        objective = Minimize(Rmin)
+        objective = Maximize(Rmin)
 
         Rmin_ = Variable(Rmin)
         e_ = Variable(e) # e[n][k]
@@ -757,7 +777,7 @@ def algorithm2():
             
             # solve (P1.2A) for given {t(q-1)[n][k]}
             # reference: https://stackoverrun.com/ko/q/8432547
-            objective = Minimize(Rmin)
+            objective = Maximize(Rmin)
 
             Rmin_ = Variable(Rmin) # Rmin
             PUL_ = Variable(PUL) # P^UL[n][k]
@@ -798,6 +818,25 @@ def algorithm2():
         # convergence heck for R^(q)_min
         # FILL IN THE BLANK
         if convergence == True: return
+
+# time allocation algorithm
+# (P1.3) max(Rmin,{t[n][k]}) s.t. (4)(5)(23)(24)
+def algorithmTimeAllocate():
+
+    # solve (P1.3A)
+    # reference: https://stackoverrun.com/ko/q/8432547
+    objective = Maximize(Rmin)
+
+    Rmin_ = Variable(Rmin) # Rmin
+    t_ = Variable(t) # t[n][k]
+
+    # solve the problem
+    constraints = [checkForT(t_),
+                   checkCond23(n, p, g0, x, y, H, r, ng, o2, T, t_, Rmin),
+                   checkCond24(t_, PUL, T, N, ENL, K)]
+
+    prob = Problem(objective, constraints)
+    result = prob.solve(verbose=True)
 
 ##########################
 ###                    ###
