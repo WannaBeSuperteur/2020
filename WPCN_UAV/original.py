@@ -4,7 +4,7 @@
 import math
 import numpy as np
 import random
-# from cvxpy import *
+from cvxpy import *
 
 ##############################################################
 ###                                                        ###
@@ -86,19 +86,19 @@ def uplinkPowerConstraint(n, k, T, N, s, G, PDL, t, PUL, K):
 
 # 0-7. R[n][k] = log2(1 + ngk*G[n][k]*PUL[n][k]/o^2) ... (9)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def getRnk(n, k, p, g0, x, y, H, r, ng, o2):
+def getRnk(n, k, p, g0, x, y, H, r, ng, o2, PUL):
     G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
     return math.log(1 + ng*G*PUL[n][k]/o2, 2)
 
 # 0-8. R[k] = (1/T) * δN*Sum(n=2,N)t[n][k]*R[n][k]
 #           = (1/N) * Sum(n=2,N)t[n][k]*R[n][k]     ... (10)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t):
+def getRk(n, k, p, g0, x, y, H, r, ng, o2, t, PUL):
 
     # find Sum(n=2,N)t[n][k]*R[n][k]
     result = 0
     for n in range(2, N+1):
-        Rnk = getRnk(n, k, p, g0, x, y, H, r, ng, o2) # R[n][k]
+        Rnk = getRnk(n, k, p, g0, x, y, H, r, ng, o2, PUL) # R[n][k]
         result += t[n][k]*Rnk
 
     result = result / N # 1/N
@@ -128,7 +128,7 @@ def uplinkEnergyConstraint(t, n, k, PUL, s, PDL, pE, g0, x, y, HE, r):
 #       = Sum(n=2,N)[(t[n][k]/N) * log2(1 + (GI[n][k]*ng/o^2)*P^UL[n][k])]
 #         where GI[n][k] = g0/(||pI[i]-uk||^2 + HI^2)^(r/2)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r):
+def avgThroughputForGT(N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r):
     result = 0
     
     for n in range(2, N+1): # n = 2 to N
@@ -213,9 +213,9 @@ def yFunc(t):
 ### [ P1 ] - INTEGRATED ###
 # 3-0. Rk >= Rmin for k in K ... (11)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond11(Rmin, K, n, p, g0, x, y, H, r, ng, o2, T, t):
+def checkCond11(Rmin, K, n, p, g0, x, y, H, r, ng, o2, t, PUL):
     for k in range(1, K+1):
-        Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t) # get Rk
+        Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, t, PUL) # get Rk
         if Rk < Rmin: return False
     return True
 
@@ -256,7 +256,7 @@ def checkCond14(p, N):
     return False
 
 # 3-4. 0 <= P^UL[n][k] <= P^UL_max for n in N and k in K ... (15)
-def checkCond15(PUL, n, k, PULmax, N, K):
+def checkCond15(PUL, n, k, PULmax):
     midSide = PUL[n][k] # P^UL[n][k]
     rightSide = PULmax # P^UL_max
 
@@ -267,9 +267,9 @@ def checkCond15(PUL, n, k, PULmax, N, K):
 # 3-5. Rk,S >= Rmin for k in K ... (18)
 #      Rk,S is average throughput of GT k
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond18(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
+def checkCond18(N, t, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
     for k in range(1, K+1):
-        RkS = avgThroughputForGT(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r) # Rk,S
+        RkS = avgThroughputForGT(N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r) # Rk,S
         if RkS < Rmin: return False
     return True
 
@@ -280,7 +280,7 @@ def checkCond18(n, N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
 def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K):
     NHat = Khat(N) # ^N
 
-    for n in range(NHat): # for n in ^N
+    for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
@@ -316,17 +316,18 @@ def checkCond21(pI, pE, N):
 ### [ P1-NL ] - NONLINEAR ###
 # 3-9. Rk >= Rmin for k in K ... (23)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond23(n, p, g0, x, y, H, r, ng, o2, T, t, Rmin):
+def checkCond23(n, p, g0, x, y, H, r, ng, o2, t, Rmin, PUL):
     for k in range(1, K+1): # for k in K
-        Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, T, t) # Rk
+        Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, t, PUL) # Rk
         if Rk < Rmin: return False
     return True
 
 # 3-10. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= (1/δN)*Sum(i=1,n-1)E^NL[i][k] for n in ^N and k in K ... (24)
 def checkCond24(t, PUL, T, N, ENL, K):
     sN = T/N # δN: length of each slot
+    NHat = Khat(N) # ^N
 
-    for n in range(NHat): # for n in ^N
+    for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
@@ -387,7 +388,7 @@ def getAnk(e, z, eHat, zHat, n, k):
 
 # 4-pre4. ||p[n]-uk||^2 <= array[n][k]^(2/r)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def pnUkArray(p, x, y, array, r):
+def pnUkArray(p, n, k, x, y, array, r):
     
     # ||p[n]-uk||^2
     eNorm = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||pI[n]-uk||
@@ -409,6 +410,7 @@ def getRkLB(n, k, z, PUL, zHat):
 #         + ((1+alpha)*(^Z[n][k])^2*exp(-^Z[n][k])*(z[n][k]-^z[n][k]))/(beta*g0*P^DL*(1+alpha*exp(-^Z[n][k]))^2)}
 #         + (Um/2)*(z[n][k]-^z[n][k])^2
 #         where ^Z[n][k] = b*g0*P^DL/^z[n][k] and Um = min(z[n][k] in R)(U(z[n][k]))
+# NOTE THAT ^Z is DIFFERENT from ^z
 def getENLkLB(n, k, N, K, z, zHat, M, alpha, beta, g0, PDL):
 
     ZHat = beta*g0*PDL/z[n][k] #^Z[n][k] = b*g0*P^DL/^z[n][k]
@@ -512,7 +514,7 @@ def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z):
 def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL):
     NHat = Khat(N) # ^N
     
-    for n in range(NHat): # for n in ^N
+    for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
 
             # Sum(i=2,n)(e[i][k])^2
@@ -576,7 +578,7 @@ def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
 def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K, g0, s, PDL):
     NHat = Khat(N) # ^N
     
-    for n in range(NHat): # for n in ^N
+    for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
 
             # Sum(i=2,n)(e[i][k])^2
@@ -623,7 +625,7 @@ def checkCond56(N, t, z, PUL, zHat, Rmin, K):
 def checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL):
     nHat = Khat(N) # ^N
 
-    for n in range(NHat): # for n in ^N
+    for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
@@ -843,7 +845,7 @@ def algorithmTimeAllocate(Rmin, t, n, k, p, g0, x, y, H, r, ng, o2, T, PUL, N, K
 
     # solve the problem
     constraints = [checkForT(t_),
-                   checkCond23(n, p, g0, x, y, H, r, ng, o2, T, t_, Rmin),
+                   checkCond23(n, p, g0, x, y, H, r, ng, o2, t_, Rmin, PUL),
                    checkCond24(t_, PUL, T, N, ENL, K)]
 
     prob = Problem(objective, constraints)
