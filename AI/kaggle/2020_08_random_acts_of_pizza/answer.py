@@ -69,9 +69,8 @@ def printDataAsSpace(n_cols, df_pca, title):
 # isTrain   : training(True) or not(False)
 # target    : target column if isTrain is True
 # tfCols    : columns that contains True or False values
-# textCols  : columns that contains text values
 # exceptCols: using the columns except for them
-def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
+def makeDataFrame(fn, isTrain, target, tfCols, exceptCols):
     print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
@@ -135,20 +134,17 @@ def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
         
         # not in targetCol and all of values are numeric -> dataPart
         if isTrain == True: # train mode -> targetCol exists
-            if col != targetCol and not col in textCols:
-                if max(json_data[col]) > min(json_data[col]):
-                    dataPart.append(col)
-                    extractCols.append(col)
-                    extractColInfo.append('data')
-                    dataPartAdded = True
+            if col != targetCol:
+                dataPart.append(col)
+                extractCols.append(col)
+                extractColInfo.append('data')
+                dataPartAdded = True
 
         else: # test mode -> targetCol does not exist
-            if not col in textCols:
-                if max(json_data[col]) > min(json_data[col]):
-                    dataPart.append(col)
-                    extractCols.append(col)
-                    extractColInfo.append('data')
-                    dataPartAdded = True
+            dataPart.append(col)
+            extractCols.append(col)
+            extractColInfo.append('data')
+            dataPartAdded = True
 
         # if equal to targetCol
         if isTrain == True and dataPartAdded == False:
@@ -170,7 +166,12 @@ def makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols):
     else: dataSet = {'data':json_data[dataPart]}
     
     dataSetDF = json_data[extractCols]
-    dataSetDF = dataSetDF.astype(float) # change dataSetDF into float type
+
+    # change dataSetDF into float type
+    try:
+        dataSetDF = dataSetDF.astype(float)
+    except:
+        doNothing = 0 # do nothing
 
     # return dataFrame
     print('\n<<< [2] dataSetDF >>>')
@@ -274,16 +275,15 @@ def predictDF(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
 # isTrain   : training(True) or not(False)
 # target    : target column if isTrain is True
 # tfCols    : columns that contains True or False values
-# textCols  : columns that contains text values
 # exceptCols: using the columns except for them
 # comp      : components of PCA used
 # exva      : explained variances of PCA used
 # mean      : mean of PCA used
-def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exva, mean, exceptTargetForPCA):
+def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols)
+    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True
@@ -493,7 +493,7 @@ if __name__ == '__main__':
     exceptTargetForPCA = False # except target column for PCA
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
+    method = 1 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
     DT_maxDepth = 10 # max depth of decision tree
     DT_criterion = 'gini' # 'gini' or 'entropy'
     DT_splitter = 'best' # 'best' or 'random'
@@ -502,7 +502,7 @@ if __name__ == '__main__':
     if method == 0 or method == 1:
 
         # get PCA (components and explained variances) for training data
-        (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols, exceptCols,
+        (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
                                                               None, None, None, exceptTargetForPCA)
 
         # remove target column from comp and mean
@@ -511,7 +511,7 @@ if __name__ == '__main__':
             mean = np.delete(mean, [targetCol], 0)
 
         # get PCA (components and explained variances) for test data
-        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols, exceptCols,
+        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
                                                                 comp, exva, mean, False)
 
         # use decision tree
@@ -531,7 +531,22 @@ if __name__ == '__main__':
 
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
     elif method == 2:
-        print('not implemented')
+
+        # get train and test dataFrame
+        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, [])
+        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, [])
+
+        # fit transform each column
+        # for i in 
+
+        print('\n<<< [19] train_df.columns >>>')
+        print(train_df.columns)
+        print('\n<<< [20] train_df >>>')
+        print(train_df)
+        print('\n<<< [21] test_df.columns >>>')
+        print(test_df.columns)
+        print('\n<<< [22] test_df >>>')
+        print(test_df)
 
     # write result
     jf = open(testName, 'r')
