@@ -16,6 +16,10 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.tree import export_text
 
+# for vectorization and naive bayes model
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
+
 # print data point as 2d or 3d space
 # data should be PCA-ed data
 # n_cols : number of columns (not include target)
@@ -489,38 +493,45 @@ if __name__ == '__main__':
     exceptTargetForPCA = False # except target column for PCA
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    useDecisionTree = True
+    method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
     DT_maxDepth = 10 # max depth of decision tree
     DT_criterion = 'gini' # 'gini' or 'entropy'
     DT_splitter = 'best' # 'best' or 'random'
 
-    # get PCA (components and explained variances) for training data
-    (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols, exceptCols,
-                                                          None, None, None, exceptTargetForPCA)
+    # method 0 or 1 -> use PCA    
+    if method == 0 or method == 1:
 
-    # remove target column from comp and mean
-    if exceptTargetForPCA == False:
-        comp = np.delete(comp, [targetCol], 1)
-        mean = np.delete(mean, [targetCol], 0)
+        # get PCA (components and explained variances) for training data
+        (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols, exceptCols,
+                                                              None, None, None, exceptTargetForPCA)
 
-    # get PCA (components and explained variances) for test data
-    (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols, exceptCols,
-                                                            comp, exva, mean, False)
+        # remove target column from comp and mean
+        if exceptTargetForPCA == False:
+            comp = np.delete(comp, [targetCol], 1)
+            mean = np.delete(mean, [targetCol], 0)
 
-    # use decision tree
-    if useDecisionTree == True:
-        
-        # make decision tree
-        DT = createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
+        # get PCA (components and explained variances) for test data
+        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols, exceptCols,
+                                                                comp, exva, mean, False)
 
-        # predict test data using decision tree
-        finalResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
+        # use decision tree
+        if method == 1:
+            
+            # make decision tree
+            DT = createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
 
-    # do not use decision tree
-    else:
+            # predict test data using decision tree
+            finalResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
-        # k-NN of test data
-        finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
+        # do not use decision tree
+        else:
+
+            # k-NN of test data
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
+
+    # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
+    elif method == 2:
+        print('not implemented')
 
     # write result
     jf = open(testName, 'r')
@@ -542,5 +553,7 @@ if __name__ == '__main__':
 # Decision Tree의 하위노드 개수, truncate되는 단계를 조정, best/random 설정 [ING]
 # -> https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
 # 학습단계에서 target column을 제외하고 PCA변환하는 것을 고려 [FIN]
+# Text Vectorizer 및 Naive Bayes 알고리즘 시도 [ING]
+# -> https://www.kaggle.com/alvations/basic-nlp-with-nltk
 # 전체 열에 대한 단일 Decision Tree를 이용하여 결정
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
