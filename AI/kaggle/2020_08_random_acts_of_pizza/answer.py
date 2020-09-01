@@ -275,15 +275,28 @@ def predictDF(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
 # comp      : components of PCA used
 # exva      : explained variances of PCA used
 # mean      : mean of PCA used
-def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exva, mean):
+def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exva, mean, exceptTargetForPCA):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
     (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, textCols, exceptCols)
+    DFtoFindPCA = dataSetDF # dataFrame to find PCA
+
+    # remove target column when exceptTargetForPCA is True
+    if exceptTargetForPCA == True:
+        newDataSetDF = dataSetDF.drop([target], axis='columns')
+
+        # print newDataSetDF
+        print('\n<<< [8] newDataSetDF.columns >>>')
+        print(newDataSetDF.columns)
+        print('\n<<< [9] newDataSetDF >>>')
+        print(newDataSetDF)
+
+        DFtoFindPCA = newDataSetDF
     
     # display correlation
     # https://seaborn.pydata.org/generated/seaborn.clustermap.html
-    df = dataSetDF.corr() # get correlation
+    df = DFtoFindPCA.corr() # get correlation
     seab.clustermap(df,
                     annot=True,
                     cmap='RdYlBu_r',
@@ -291,12 +304,12 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     plt.show()
 
     # to standard normal distribution
-    scaled = StandardScaler().fit_transform(dataSetDF)
+    scaled = StandardScaler().fit_transform(DFtoFindPCA)
     
     # PCA
     # https://medium.com/@john_analyst/pca-%EC%B0%A8%EC%9B%90-%EC%B6%95%EC%86%8C-%EB%9E%80-3339aed5afa1
     initializePCA = False # initializing PCA?
-    
+
     if str(comp) == 'None' or str(exva) == 'None' or str(mean) == 'None': # create PCA if does not exist
         pca = PCA(n_components=n_cols)
         pca.fit(scaled)
@@ -310,9 +323,9 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
 
     # https://machinelearningmastery.com/calculate-principal-component-analysis-scratch-python/
     # print pca.components_ and pca.explained_variance_
-    print('\n<<< [8] pca.components_ >>>\n' + str(comp))
-    print('\n<<< [9] pca.explained_variance_ >>>\n' + str(exva))
-    print('\n<<< [10] pca.mean_ >>>\n' + str(mean))
+    print('\n<<< [10] pca.components_ >>>\n' + str(comp))
+    print('\n<<< [11] pca.explained_variance_ >>>\n' + str(exva))
+    print('\n<<< [12] pca.mean_ >>>\n' + str(mean))
 
     # create PCA using comp and exva
     if initializePCA == False:
@@ -324,10 +337,10 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     # apply PCA to the data
     scaledPCA = pca.transform(scaled)
 
-    print('\n<<< [11] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
-    print('\n<<< [12] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
+    print('\n<<< [13] scaledPCA.shape >>>\n' + str(scaledPCA.shape))
+    print('\n<<< [14] scaledPCA.data.shape >>>\n' + str(scaledPCA.data.shape))
 
-    print('\n<<< [13] scaledPCA >>>')
+    print('\n<<< [15] scaledPCA >>>')
     print(scaledPCA)
 
     # name each column for PCA transformed data
@@ -336,7 +349,7 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, textCols, exceptCols, comp, exv
     df_pca = pd.DataFrame(scaledPCA, columns=pca_cols)
     if isTrain == True: df_pca['target'] = dataSetDF[target]
 
-    print('\n<<< [14] df_pca >>>')
+    print('\n<<< [16] df_pca >>>')
     print(df_pca)
 
     df_pcaCorr = df_pca.corr()
@@ -370,9 +383,9 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
     # convert to numpy array
     dfTrain = np.array(dfTrain)
     dfTest = np.array(dfTest)
-    print('\n<<< [15] dfTrain >>>')
+    print('\n<<< [17] dfTrain >>>')
     print(dfTrain)
-    print('\n<<< [16] dfTest >>>')
+    print('\n<<< [18] dfTest >>>')
     print(dfTest)
 
     # kNN classification result
@@ -450,7 +463,7 @@ if __name__ == '__main__':
     testName = 'test.json'
 
     # make PCA from training data
-    PCAdimen = 3 # dimension of PCA
+    PCAdimen = 2 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -473,24 +486,26 @@ if __name__ == '__main__':
                   "requester_upvotes_plus_downvotes_at_retrieval",
                   "requester_user_flair",
                   "unix_timestamp_of_request_utc"] # list of columns not used
+    exceptTargetForPCA = False # except target column for PCA
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    useDecisionTree = False
+    useDecisionTree = True
     DT_maxDepth = 10 # max depth of decision tree
     DT_criterion = 'gini' # 'gini' or 'entropy'
     DT_splitter = 'best' # 'best' or 'random'
 
     # get PCA (components and explained variances) for training data
     (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols, exceptCols,
-                                                          None, None, None)
+                                                          None, None, None, exceptTargetForPCA)
 
     # remove target column from comp and mean
-    comp = np.delete(comp, [targetCol], 1)
-    mean = np.delete(mean, [targetCol], 0)
+    if exceptTargetForPCA == False:
+        comp = np.delete(comp, [targetCol], 1)
+        mean = np.delete(mean, [targetCol], 0)
 
     # get PCA (components and explained variances) for test data
     (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols, exceptCols,
-                                                            comp, exva, mean)
+                                                            comp, exva, mean, False)
 
     # use decision tree
     if useDecisionTree == True:
@@ -526,6 +541,6 @@ if __name__ == '__main__':
 # 향후계획
 # Decision Tree의 하위노드 개수, truncate되는 단계를 조정, best/random 설정 [ING]
 # -> https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
-# 학습단계에서 target column을 제외하고 PCA변환하는 것을 고려
+# 학습단계에서 target column을 제외하고 PCA변환하는 것을 고려 [FIN]
 # 전체 열에 대한 단일 Decision Tree를 이용하여 결정
 # textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
