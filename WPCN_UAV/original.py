@@ -567,8 +567,8 @@ def checkCond42(N, t, g0, ng, o2, Y, Rmin, K):
 def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
-            pnUkCompareI = pnUkArray(pI, x, y, zI, r) # ||pI[n]-uk||^2 <= (zI[n][k])^(2/r)
-            pnUkCompareE = pnUkArray(pE, x, y, zE, r) # ||pE[n]-uk||^2 <= (zE[n][k])^(2/r)
+            pnUkCompareI = pnUkArray(pI, n, k, x, y, zI, r) # ||pI[n]-uk||^2 <= (zI[n][k])^(2/r)
+            pnUkCompareE = pnUkArray(pE, n, k, x, y, zE, r) # ||pE[n]-uk||^2 <= (zE[n][k])^(2/r)
 
             if pnUkComparI == False or pnUkCompareE == False: return False
 
@@ -679,23 +679,17 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
         # solve P(1.1A) by using the CVX
         # reference: https://stackoverrun.com/ko/q/8432547
         objective = Maximize(Rmin)
-
-        Rmin_ = Variable(Rmin)
-        e_ = Variable(e) # e[n][k]
-        p_ = Variable(p) # p[n]
-        t_ = Variable(t) # t[n][k]
-        z_ = Variable(z) # z[n][k]
-        w_ = Variable(w) # w[n]
+        n_ = Variable()
+        k_ = Variable()
 
         # X[n][k] = t[n][k]*PUL[n][k]/z[n][k]
         X = [[0 for k in range(K+1)] for n in range(N+1)]
         for n in range(N+1):
             for k in range(K+1):
                 X[n][k] = t[n][k]*PUL[n][k]/z[n][k]
-        X_ = Variable(X) # X[n][k]
 
         # solve the problem
-        constraints = [checkCond37(N, K, t_, PUL, w_, z_, wHat, zHat, g0, s, PDL)]
+        constraints = [checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL)]
 
         prob = Problem(objective, constraints)
         result = prob.solve(verbose=True)
