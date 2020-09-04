@@ -569,11 +569,44 @@ def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z, k_):
 
     return False
 
-# 4-5.
+# 4-5. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)(g0*s*P^DL*(w[i]^2/z[i][k])) for n in ^N and k in K ... (32)
+def checkCond32(N, K, t, PUL, g0, s, PDL, w, z, n_, k_):
+    NHat = Khat(N) # ^N
+    
+    for n in NHat: # for n in ^N
+        for k in range(1, K+1): # for k in K
 
-# 4-6.
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
-# 4-5. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k])) for n in ^N and k, in K... (37)
+            # Sum(i=2,n)(e[i][k])^2
+            leftSide = 0
+            for i in range(2, n+1): leftSide += pow(gete(t, PUL, i, k), 2)
+
+            # Sum(i=1,n-1)(g0*s*P^DL*(w[i]^2/z[i][k]))
+            rightSide = 0
+            for i in range(1, n): rightSide += g0*s*PDL*(w[i]*w[i]/z[i][k]) 
+
+            if leftSide > rightSide: return False
+
+    return True
+
+# 4-6. X[n][k] <= e[n][k]^2/z[n][k] for n in N and k in K ... (33)
+def checkCond33(N, K, t, PUL, z, n_, k_):
+    for n in range(1, N+1): # for n in N
+        for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
+            
+            Xnk = getX(t, PUL, n, k, z) # X[n][k]
+            enk = gete(t, PUL, n, k) # e[n][k]
+            
+            if Xnk > enk*enk/z[n][k]: return False
+
+    return True
+
+# 4-5. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k])) for n in ^N and k, in K ... (37)
 # n_, k_: check condition for only this n_ and k_ if specified (not None)
 def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL, n_, k_):
     NHat = Khat(N) # ^N
@@ -586,7 +619,7 @@ def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL, n_, k_):
 
             # Sum(i=2,n)(e[i][k])^2
             leftSide = 0
-            for i in range(2, n+1): leftSide += pow(gete(t, PUL, n, k), 2)
+            for i in range(2, n+1): leftSide += pow(gete(t, PUL, i, k), 2)
 
             # Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k]))
             rightSide = 0
@@ -794,7 +827,7 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
                 znk = Variable() # z[n][k]
                 wn = Variable() # w[n]
                 
-                constraints.append(checkCond31(N, g0, ng, o2, tnk, Rmin, K, PUL, z),
+                constraints.append(checkCond31(N, g0, ng, o2, tnk, Rmin, K, PUL, z))
                                    
 
         prob = Problem(objective, constraints)
