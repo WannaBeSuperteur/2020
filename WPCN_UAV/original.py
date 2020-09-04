@@ -65,7 +65,11 @@ def checkForT(t, n_, k_):
 # 0-4. E^L[n][k] = t[n][0]*δN*Sk*G[n][k]*P^DL ... (6)
 def getEL(n, k, T, N, s, G, PDL):
     sN = T/N # δN: length of each slot
-    return t[n][0]*sN*s*G[n][k]*PDL
+    
+    try:
+        return t[n][0]*sN*s*G[n][k]*PDL
+    except:
+        return t*sN*s*G*PDL
 
 # 0-5. ~E[n][k] = Sum(i=1,n-1)E^L[i][k] - Sum(i=1,n-1)t[i][k]*δN*P^UL[i][k] ... (7)
 def get_E(n, k, T, N, s, G, PDL, t, PUL):
@@ -77,7 +81,11 @@ def get_E(n, k, T, N, s, G, PDL, t, PUL):
 
     # Sum(i=1,n-1)t[i][k]*δN*P^UL[i][k]
     sum1 = 0
-    for i in range(1, n): sum1 += t[i][k]*sN*PUL[i][k]
+    for i in range(1, n):
+        try:
+            sum1 += t[i][k]*sN*PUL[i][k]
+        except:
+            sum1 += t*sN*PUL
 
     return sum0-sum1
 
@@ -88,7 +96,11 @@ def uplinkPowerConstraint(n, k, T, N, s, G, PDL, t, PUL, K):
     
     for n in Khat(N): # for n in ^N
         for k in K_(K): # for k in K_
-            leftSide = t[n][k]*sN*PUL[n][k] # t[n][k]*δN*P^UL[n][k]
+            try:
+                leftSide = t[n][k]*sN*PUL[n][k] # t[n][k]*δN*P^UL[n][k]
+            except:
+                leftSide = t*sN*PUL # t[n][k]*δN*P^UL[n][k]
+
             rightSide = get_E(n, k, T, N, s, G, PDL, t, PUL) # ~E[n][k]
             if leftSide > rightSide: return False
 
@@ -98,7 +110,11 @@ def uplinkPowerConstraint(n, k, T, N, s, G, PDL, t, PUL, K):
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def getRnk(n, k, p, g0, x, y, H, r, ng, o2, PUL):
     G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
-    return math.log(1 + ng*G*PUL[n][k]/o2, 2)
+
+    try:
+        return math.log(1 + ng*G*PUL[n][k]/o2, 2)
+    except:
+        return math.log(1 + ng*G*PUL/o2, 2)
 
 # 0-8. R[k] = (1/T) * δN*Sum(n=2,N)t[n][k]*R[n][k]
 #           = (1/N) * Sum(n=2,N)t[n][k]*R[n][k]     ... (10)
@@ -109,7 +125,11 @@ def getRk(k, p, g0, x, y, H, r, ng, o2, t, PUL):
     result = 0
     for n in range(2, N+1):
         Rnk = getRnk(n, k, p, g0, x, y, H, r, ng, o2, PUL) # R[n][k]
-        result += t[n][k]*Rnk
+
+        try:
+            result += t[n][k]*Rnk
+        except:
+            result += t*Rnk
 
     result = result / N # 1/N
     return result
@@ -122,7 +142,10 @@ def getRk(k, p, g0, x, y, H, r, ng, o2, t, PUL):
 def uplinkEnergyConstraint(t, n, k, PUL, s, PDL, pE, g0, x, y, HE, r):
 
     # t[n][k]*P^UL[n][k]
-    leftSide = t[n][k]*PUL[n][k]
+    try:
+        leftSide = t[n][k]*PUL[n][k]
+    except:
+        leftSide = t*PUL
 
     # Sum(i=1,n-1)[(t[i][0]*s*GE[n][k]*P^DL) - t[i][k]*P^UL[i][k]]
     rightSide = 0
@@ -143,7 +166,11 @@ def avgThroughputForGT(N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r):
     
     for n in range(2, N+1): # n = 2 to N
         GI = getG(pI, g0, x, y, n, k, HI, r) # GI[n][k]
-        result += (t[n][k]/N) * math.log(1 + (GI*ng/o2)*PUL[n][k], 2)
+
+        try:
+            result += (t[n][k]/N) * math.log(1 + (GI*ng/o2)*PUL[n][k], 2)
+        except:
+            result += (t/N) * math.log(1 + (GI*ng/o2)*PUL, 2)
 
     return result
 
@@ -155,8 +182,11 @@ def harvestedEnergy(t, n, k, T, N, alpha, M, beta, PDL, p, g0, x, y, H, r):
     sN = T/N # δN: length of each slot
     G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
     expPart = math.exp((-1)*beta*G*PDL) # e^(-b*G[n][k]*P^DL)
-    
-    return (t[n][0]*sN/alpha) * (M*(1 + alpha)/(1 + alpha*expPart) - M)
+
+    try:
+        return (t[n][0]*sN/alpha) * (M*(1 + alpha)/(1 + alpha*expPart) - M)
+    except:
+        return (t*sN/alpha) * (M*(1 + alpha)/(1 + alpha*expPart) - M)
 
 ###################################################
 ###                                             ###
@@ -247,27 +277,35 @@ def checkCond12(t, PUL, T, N, K, EL, n_, k_):
         
             # Sum(i=2,n)t[i][k]*P^UL[i][k]
             leftSide = 0
-            for i in range(2, n+1): leftSide += t[i][k] * PUL[i][k]
+            for i in range(2, n+1):
+                try: leftSide += t[i][k] * PUL[i][k]
+                except: leftSide += t*PUL
 
             # (1/δN)*Sum(i=1,n-1)E^L[i][k]
             rightSide = 0
-            for i in range(1, n): rightSide += EL[i][k]/sN
+            for i in range(1, n):
+                try: rightSide += EL[i][k]/sN
+                except: rightSide += EL/sN
 
             if leftSide > rightSide: return False
 
     return True
 
 # 3-2. ||p[n]-p[n-1]|| <= δN*vmax for n in ^N ... (13)
-# n_: check condition for only this n_ if specified (not None)
-def checkCond13(p, T, N, vmax, n_):
+# pBefore: p[n-1] when p is p[n]
+# n_     : check condition for only this n_ if specified (not None)
+def checkCond13(p, pBefore, T, N, vmax, n_):
     sN = T/N # δN: length of each slot
 
     for n in range(2, N+1): # for n in ^N
 
         # check for n_ and k_
         if n_ != None and n != n_: continue
-            
-        leftSide = eucNorm([p[n][0]-p[n-1][0], p[n][1]-p[n-1][1]]) # p[n]-p[n-1]
+
+        try:
+            leftSide = eucNorm([p[n][0]-p[n-1][0], p[n][1]-p[n-1][1]]) # p[n]-p[n-1]
+        except:
+            leftSide = eucNorm([p[0]-pBefore[0], p[1]-pBefore[1]]) # p[n]-p[n-1]
         rightSide = sN*vmax # δN*vmax
 
         if leftSide > rightSide: return False
@@ -281,7 +319,11 @@ def checkCond14(p, N):
 
 # 3-4. 0 <= P^UL[n][k] <= P^UL_max for n in N and k in K ... (15)
 def checkCond15(PUL, n, k, PULmax):
-    midSide = PUL[n][k] # P^UL[n][k]
+    try:
+        midSide = PUL[n][k] # P^UL[n][k]
+    except:
+        midSide = PUL
+    
     rightSide = PULmax # P^UL_max
 
     if 0 <= midSide and midSide <= rightSide: return True
@@ -318,13 +360,16 @@ def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K, n_, k_):
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
             leftSide = 0
-            for i in range(2, n+1): leftSide += t[i][k] * PUL[i][k]
+            for i in range(2, n+1):
+                try: leftSide += t[i][k] * PUL[i][k]
+                except: leftSide += t*PUL
 
             # Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
             rightSide = 0
             for i in range(1, n):
                 GE = getG(pE, g0, x, y, n, k, HE, r) # GE[n][k]
-                rightSide += t[i][0] * GE * s * PDL
+                try: rightSide += t[i][0] * GE * s * PDL
+                except: rightSide += t*GE*s*PDL
 
             if leftSide > rightSide: return False
 
@@ -332,8 +377,8 @@ def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K, n_, k_):
 
 # 3-7. ||px[n]-px[n-1]|| <= δN*vmax^x for x in {I,E} and n in ^N ... (20)
 def checkCond20(pI, pE, n, T, N, vImax, vEmax):
-    condForI = checkCond13(pI, T, N, vImax, None) # ||pI[n]-pI[n-1]|| <= δN*vmax^I for n in ^N
-    condForE = checkCond13(pE, T, N, vEmax, None) # ||pE[n]-pE[n-1]|| <= δN*vmax^E for n in ^N
+    condForI = checkCond13(pI, None, T, N, vImax, None) # ||pI[n]-pI[n-1]|| <= δN*vmax^I for n in ^N
+    condForE = checkCond13(pE, None, T, N, vEmax, None) # ||pE[n]-pE[n-1]|| <= δN*vmax^E for n in ^N
 
     if condForI == True and condForE == True: return True
     else: return False
@@ -374,11 +419,15 @@ def checkCond24(t, PUL, T, N, ENL, K, n_, k_):
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
             leftSide = 0
-            for i in range(2, n+1): leftSide += t[i][k] * PUL[i][k]
+            for i in range(2, n+1):
+                try: leftSide += t[i][k] * PUL[i][k]
+                except: leftSide += t*PUL
 
             # Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
             rightSide = 0
-            for i in range(1, n): rightSide += ENL[i][k] # Sum(i=1,n-1)E^NL[i][k]
+            for i in range(1, n):
+                try: rightSide += ENL[i][k] # Sum(i=1,n-1)E^NL[i][k]
+                except: rightSide += ENL
             rightSide /= sN # (1/δN)*Sum(i=1,n-1)E^NL[i][k]
 
             if leftSide > rightSide: return False
@@ -394,22 +443,35 @@ def checkCond24(t, PUL, T, N, ENL, K, n_, k_):
 ### commonly used ####
 # 4-pre0. e[n][k] = sqrt(t[n][k]*P^UL[n][k]) ( >= 0 )
 def gete(t, PUL, n, k):
-    return math.sqrt(t[n][k]*PUL[n][k])
+    try:
+        return math.sqrt(t[n][k]*PUL[n][k])
+    except:
+        return math.sqrt(t*PUL)
 
 # 4-pre1. X[n][k] = (e[n][k])^2/z[n][k]
 def getX(t, PUL, n, k, z):
     enk = gete(t, PUL, n, k)
-    return pow(enk, 2)/z[n][k]
+
+    try:
+        return pow(enk, 2)/z[n][k]
+    except:
+        return pow(enk, 2)/z
 
 # 4-pre2. EL_k,LB[n](w[n],z[n][k] | ^w[n],^z[n][k]) ... (35)
 #       = (g0*s*PDL*^w[n]/^z[n][k])(2w[n] - ^w[n] - ^w[n](z[n][k]-^z[n][k])/^z[n][k]) 
 def getELkLB(w, z, wHat, zHat, n, k, g0, s, PDL):
 
     # g0*s*PDL*^w[n]/^z[n][k]
-    part0 = g0*s*PDL*w[n]/z[n][k]
+    try:
+        part0 = g0*s*PDL*w[n]/z[n][k]
+    except:
+        part0 = g0*s*PDL*w/z
 
     # 2w[n] - ^w[n] - ^w[n](z[n][k]-^z[n][k])/^z[n][k]
-    part1 = 2*w[n] - wHat[n] - wHat[n]*(z[n][k]-zHat[n][k])/zHat[n][k]
+    try:
+        part1 = 2*w[n] - wHat[n] - wHat[n]*(z[n][k]-zHat[n][k])/zHat[n][k]
+    except:
+        part1 = 2*w - wHat - wHat*(z-zHat)/zHat
     
     return part0*part1
 
@@ -418,13 +480,22 @@ def getELkLB(w, z, wHat, zHat, n, k, g0, s, PDL):
 def getAnk(e, z, eHat, zHat, n, k):
 
     # (^e[n][k])^2/^z[n][k]
-    part0 = pow(eHat[n][k], 2)/zHat[n][k]
+    try:
+        part0 = pow(eHat[n][k], 2)/zHat[n][k]
+    except:
+        part0 = pow(eHat, 2)/zHat
 
     # (2*^e[n][k]/^z[n][k])(e[n][k]-^e[n][k])
-    part1 = (2*eHat[n][k]/zHat[n][k])*(e[n][k] - eHat[n][k])
+    try:
+        part1 = (2*eHat[n][k]/zHat[n][k])*(e[n][k] - eHat[n][k])
+    except:
+        part1 = (2*eHat/zHat)*(e - eHat)
 
     # ((^e[n][k])^2/(^z[n][k])^2)(z[n][k] - ^z[n][k])
-    part2 = (pow(eHat[n][k], 2)/pow(zHat[n][k], 2))*(z[n][k] - zHat[n][k])
+    try:
+        part2 = (pow(eHat[n][k], 2)/pow(zHat[n][k], 2))*(z[n][k] - zHat[n][k])
+    except:
+        part2 = (pow(eHat, 2)/pow(zHat, 2))*(z - zHat)
 
     return part0 + part1 - part2
 
@@ -433,11 +504,17 @@ def getAnk(e, z, eHat, zHat, n, k):
 def pnUkArray(p, n, k, x, y, array, r):
     
     # ||p[n]-uk||^2
-    eNorm = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||pI[n]-uk||
+    try:
+        eNorm = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||pI[n]-uk||
+    except:
+        eNorm = eucNorm([p[0]-x[k], p[1]-y[k]])
     leftSide = pow(eNorm, 2)
 
     # (array[n][k])^(2/r)
-    rightSide = pow(array[n][k], 2/r)
+    try:
+        rightSide = pow(array[n][k], 2/r)
+    except:
+        rightSide = pow(array, 2/r)
 
     if leftSide <= rightSide: return True
     return False
@@ -455,26 +532,39 @@ def getRkLB(n, k, z, PUL, zHat):
 # NOTE THAT ^Z is DIFFERENT from ^z
 def getENLkLB(n, k, N, K, z, zHat, M, alpha, beta, g0, PDL):
 
-    ZHat = beta*g0*PDL/z[n][k] #^Z[n][k] = b*g0*P^DL/^z[n][k]
-    Um = U(z[0][0]) # Um = min(z[n][k] in R)(U(z[n][k]))
-    for n in range(N+1):
-        for k in range(K+1):
-            if Um > U(z[n][k]): Um = U(z[n][k])
+    try:
+        ZHat = beta*g0*PDL/z[n][k] #^Z[n][k] = b*g0*P^DL/^z[n][k]
+        Um = U(z[0][0]) # Um = min(z[n][k] in R)(U(z[n][k]))
+        for n in range(N+1):
+            for k in range(K+1):
+                if Um > U(z[n][k]): Um = U(z[n][k])
+    except:
+        ZHat = beta*g0*PDL/z
+        Um = z
 
     # 1-exp(-^Z[n][k]))/(1+alpha*exp(-^Z[k][n])
     part0 = (1 - math.exp((-1)*ZHat))/(1 + alpha + math.exp((-1)*ZHat))
 
     # (1+alpha)*(^Z[n][k])^2*exp(-^Z[n][k])*(z[n][k]-^z[n][k])
-    part1 = (1 + alpha)*pow(ZHat, 2)*math.exp((-1)*ZHat)*(z[n][k]-zHat[n][k])
+    try:
+        part1 = (1 + alpha)*pow(ZHat, 2)*math.exp((-1)*ZHat)*(z[n][k]-zHat[n][k])
+    except:
+        part1 = (1 + alpha)*pow(ZHat, 2)*math.exp((-1)*ZHat)*(z-zHat)
 
     # beta*g0*P^DL*(1+alpha*exp(-^Z[n][k]))^2
     part2 = beta*g0*PDL*pow(1 + alpha + math.exp((-1)*ZHat), 2)
 
     # (Um/2)*(z[n][k]-^z[n][k])^2
-    part3 = (Um/2)*pow(z[n][k]-zHat[n][k], 2)
+    try:
+        part3 = (Um/2)*pow(z[n][k]-zHat[n][k], 2)
+    except:
+        part3 = (Um/2)*pow(z-zHat, 2)
 
     # E^NL_k,LB[n](z[n][k] | ^z[n][k])
-    return t[n][0]*M*(part0 + part1/part2 + part3)
+    try:
+        return t[n][0]*M*(part0 + part1/part2 + part3)
+    except:
+        return t*M*(part0 + part1/part2 + part3)
 
 # 4-0. (e[n][k])^2 <= P^ULmax*t[n][k] for n in N and k in K ... (28)
 def checkCond28(PULmax, N, K, t, PUL, n_, k_):
@@ -485,7 +575,11 @@ def checkCond28(PULmax, N, K, t, PUL, n_, k_):
             if n_ != None and k_ != None and (n != n_ or k != k_): continue
             
             enk = gete(t, PUL, n, k) # e[n][k]
-            if enk*enk > PULmax*t[n][k]: return False
+
+            try:
+                if enk*enk > PULmax*t[n][k]: return False
+            except:
+                if enk*enk > PULmax*t: return False
 
     return True
 
@@ -498,9 +592,13 @@ def checkCond34(p, x, y, H, z, r, n_, k_):
 
             # check for n_ and k_
             if n_ != None and k_ != None and (n != n_ or k != k_): continue
-            
-            eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
-            if eucN*eucN + H*H <= pow(z[n][k], 2/r): return True
+
+            try:
+                eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
+                if eucN*eucN + H*H <= pow(z[n][k], 2/r): return True
+            except:
+                eucN = eucNorm([p[0]-x[k], p[1]-y[k]]) # ||p[n]-uk||
+                if eucN*eucN + H*H <= pow(z, 2/r): return True
     return False
 
 ### [ P1.1A ] - INTEGRATED ###
@@ -522,7 +620,11 @@ def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z, n_):
         
         G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
         enk = gete(t, PUL, n, k) # e[n][k]
-        leftSide += (t[n][k]/N)*math.log(1 + (G*ng/o2)*pow(enk, 2)/t[n][k], 2)
+
+        try:
+            leftSide += (t[n][k]/N)*math.log(1 + (G*ng/o2)*pow(enk, 2)/t[n][k], 2)
+        except:
+            leftSide += (t/N)*math.log(1 + (G*ng/o2)*pow(enk, 2)/t, 2)
 
     # Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k]))
     rightSide = 0
@@ -532,7 +634,11 @@ def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z, n_):
         if n_ != None and n != n_: continue
         
         enk = gete(t, PUL, n, k) # e[n][k]
-        rightSide += (t[n][k]/N)*math.log(1 + ((g0*ng/o2)*pow(enk, 2))/(t[n][k]*z[n][k]), 2)
+
+        try:
+            rightSide += (t[n][k]/N)*math.log(1 + ((g0*ng/o2)*pow(enk, 2))/(t[n][k]*z[n][k]), 2)
+        except:
+            rightSide += (t/N)*math.log(1 + ((g0*ng/o2)*pow(enk, 2))/(t*z), 2)
 
     if leftSide >= rightSide: return True
     else: return False
@@ -546,11 +652,15 @@ def checkCond30(t, k, s, PDL, g0, z, p, x, y, H, r):
     leftSide = 0
     for i in range(1, n):
         G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
-        leftSide += t[i][0]*G*s*PDL
+
+        try: leftSide += t[i][0]*G*s*PDL
+        except: leftSide += t*G*s*PDL
 
     # Sum(i=1,n-1)g0*s*PDL*(t[i][0]/z[i][k])
     rightSide = 0
-    for i in range(1, n): rightSide += g0*s*PDL*t[i][0]/z[i][k]
+    for i in range(1, n):
+        try: rightSide += g0*s*PDL*t[i][0]/z[i][k]
+        except: rightSide += g0*s*PDL*t/z
 
     if leftSide >= rightSide: return True
     else: return False
@@ -594,7 +704,9 @@ def checkCond32(N, K, t, PUL, g0, s, PDL, w, z, n_, k_):
 
             # Sum(i=1,n-1)(g0*s*P^DL*(w[i]^2/z[i][k]))
             rightSide = 0
-            for i in range(1, n): rightSide += g0*s*PDL*(w[i]*w[i]/z[i][k]) 
+            for i in range(1, n):
+                try: rightSide += g0*s*PDL*(w[i]*w[i]/z[i][k])
+                except: rightSide += g0*s*PDL*(w*w/z)
 
             if leftSide > rightSide: return False
 
@@ -671,7 +783,10 @@ def checkCond42(N, t, g0, ng, o2, Y, Rmin, K, k_):
         # Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*Y[n][k]/t[n][k]))
         sumVal = 0
         for n in range(2, N+1):
-            sumVal += t[n][k]*math.log(1 + (g0*ng/o2)*Y[n][k]/t[n][k], 2)
+            try:
+                sumVal += t[n][k]*math.log(1 + (g0*ng/o2)*Y[n][k]/t[n][k], 2)
+            except:
+                sumVal += t*math.log(1 + (g0*ng/o2)*Y/t, 2)
         sumVal /= N # (1/N)*sumVal
 
         if sumVal < Rmin: return False
@@ -728,7 +843,8 @@ def checkCond48(Y, e, zI, eHat, zIHat, N, K, n_, k_):
             # check for n_ and k_
             if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
-            leftSide = Y[n][k] # Y[n][k]
+            try: leftSide = Y[n][k] # Y[n][k]
+            except: leftSide = Y
             rightSide = getAnk(e, zI, eHat, zIHat, n, k) # A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k])
 
             if leftSide > rightSide: return False
@@ -748,7 +864,8 @@ def checkCond56(N, t, z, PUL, zHat, Rmin, K, k_):
         sumVal = 0
         for n in range(2, N+1):
             RkLB = getRkLB(n, k, z, PUL, zHat) # R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
-            sumVal += t[n][k] * RkLB
+            try: sumVal += t[n][k] * RkLB
+            except: sumVal += t * RkLB
         sumVal /= N # (1/N)*sumVal
 
         if sumVal < Rmin: return False
@@ -768,7 +885,9 @@ def checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL, n_, k_):
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
             leftSide = 0
-            for i in range(2, n+1): leftSide += t[i][k]*PUL[i][k]
+            for i in range(2, n+1):
+                try: leftSide += t[i][k]*PUL[i][k]
+                except: leftSide += t*PUL
 
             # (1/δN)*Sum(i=1,n-1)E^NL_k,LB[i](z[i][k] | ^z[i][k])
             rightSide = 0
