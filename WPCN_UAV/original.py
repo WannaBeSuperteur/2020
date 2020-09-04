@@ -35,7 +35,12 @@ def maxSpeedConstraint(p, T, N, vmax):
 # 0-2. G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2) ... (3)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
 def getG(p, g0, x, y, n, k, H, r):
-    eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
+    
+    try: # p[dim0][dim1] form
+        eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
+    except: # p[dim0] form
+        eucN = eucNorm([p[0]-x[k], p[1]-y[k]]) # ||p[n]-uk||
+    
     return g0/pow(pow(eucN, 2) + H*H, r/2)
 
 # 0-3. check condition for tk[n] ... (4)(5)
@@ -44,7 +49,7 @@ def checkForT(t):
     for n in range(1, N+1): # for n in N_
 
         # Sum(k=0,K) t[n][k] > 1 for n in N_
-        if sum(tn) > 1: return False
+        if sum(t[n]) > 1: return False
 
         # 0 <= t[n][k] <= 1 for n in N_ and k in K_U{0}
         for k in range(K+1):
@@ -213,18 +218,27 @@ def yFunc(t):
 ### [ P1 ] - INTEGRATED ###
 # 3-0. Rk >= Rmin for k in K ... (11)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond11(Rmin, K, n, p, g0, x, y, H, r, ng, o2, t, PUL):
+# k_: check condition for only this k_ if specified (not None)
+def checkCond11(Rmin, K, n, p, g0, x, y, H, r, ng, o2, t, PUL, k_):
     for k in range(1, K+1):
+        
+        # check for n_ and k_
+        if k_ != None and k != k_: continue
+        
         Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, t, PUL) # get Rk
         if Rk < Rmin: return False
     return True
 
 # 3-1. Sum(i=2,n)t[i][k]*P^UL[i][k] <= (1/δN)*Sum(i=1,n-1)E^L[i][k] for n in ^N and k in K ... (12)
-def checkCond12(t, PUL, T, N, K, EL):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond12(t, PUL, T, N, K, EL, n_, k_):
     sN = T/N # δN: length of each slot
 
     for n in range(2, N+1): # for n in ^N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
         
             # Sum(i=2,n)t[i][k]*P^UL[i][k]
             leftSide = 0
@@ -239,10 +253,15 @@ def checkCond12(t, PUL, T, N, K, EL):
     return True
 
 # 3-2. ||p[n]-p[n-1]|| <= δN*vmax for n in ^N ... (13)
-def checkCond13(p, n, T, N, vmax):
+# n_: check condition for only this n_ if specified (not None)
+def checkCond13(p, T, N, vmax, n_):
     sN = T/N # δN: length of each slot
 
     for n in range(2, N+1): # for n in ^N
+
+        # check for n_ and k_
+        if n_ != None and n != n_: continue
+            
         leftSide = eucNorm([p[n][0]-p[n-1][0], p[n][1]-p[n-1][1]]) # p[n]-p[n-1]
         rightSide = sN*vmax # δN*vmax
 
@@ -267,8 +286,13 @@ def checkCond15(PUL, n, k, PULmax):
 # 3-5. Rk,S >= Rmin for k in K ... (18)
 #      Rk,S is average throughput of GT k
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond18(N, t, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
+# k_: check condition for only this k_ if specified (not None)
+def checkCond18(N, t, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin, k_):
     for k in range(1, K+1):
+
+        # check for n_ and k_
+        if k_ != None and k != k_: continue
+            
         RkS = avgThroughputForGT(N, t, k, ng, o2, PUL, pI, g0, x, y, HI, r) # Rk,S
         if RkS < Rmin: return False
     return True
@@ -277,11 +301,15 @@ def checkCond18(N, t, ng, o2, PUL, pI, g0, x, y, HI, r, Rmin):
 #   => Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= Sum(i=1,n-1)(t[i][0]*GE[n][k]*s*P^DL)
 #      where GE[n][k] = g0/(||pE[i]-uk||^2 + HE^2)^(r/2)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K, n_, k_):
     NHat = Khat(N) # ^N
 
     for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
             leftSide = 0
@@ -299,8 +327,8 @@ def checkCond19(t, PUL, g0, s, PDL, pE, x, y, HE, r, N, K):
 
 # 3-7. ||px[n]-px[n-1]|| <= δN*vmax^x for x in {I,E} and n in ^N ... (20)
 def checkCond20(pI, pE, n, T, N, vImax, vEmax):
-    condForI = checkCond13(pI, n, T, N, vImax) # ||pI[n]-pI[n-1]|| <= δN*vmax^I for n in ^N
-    condForE = checkCond13(pE, n, T, N, vEmax) # ||pE[n]-pE[n-1]|| <= δN*vmax^E for n in ^N
+    condForI = checkCond13(pI, T, N, vImax, None) # ||pI[n]-pI[n-1]|| <= δN*vmax^I for n in ^N
+    condForE = checkCond13(pE, T, N, vEmax, None) # ||pE[n]-pE[n-1]|| <= δN*vmax^E for n in ^N
 
     if condForI == True and condForE == True: return True
     else: return False
@@ -316,19 +344,28 @@ def checkCond21(pI, pE, N):
 ### [ P1-NL ] - NONLINEAR ###
 # 3-9. Rk >= Rmin for k in K ... (23)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond23(n, p, g0, x, y, H, r, ng, o2, t, Rmin, PUL):
+# k_: check condition for only this k_ if specified (not None)
+def checkCond23(n, p, g0, x, y, H, r, ng, o2, t, Rmin, PUL, k_):
     for k in range(1, K+1): # for k in K
+
+        # check for n_ and k_
+        if k_ != None and k != k_: continue
+        
         Rk = getRk(n, k, p, g0, x, y, H, r, ng, o2, t, PUL) # Rk
         if Rk < Rmin: return False
     return True
 
 # 3-10. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= (1/δN)*Sum(i=1,n-1)E^NL[i][k] for n in ^N and k in K ... (24)
-def checkCond24(t, PUL, T, N, ENL, K):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond24(t, PUL, T, N, ENL, K, n_, k_):
     sN = T/N # δN: length of each slot
     NHat = Khat(N) # ^N
 
     for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
             leftSide = 0
@@ -435,9 +472,13 @@ def getENLkLB(n, k, N, K, z, zHat, M, alpha, beta, g0, PDL):
     return t[n][0]*M*(part0 + part1/part2 + part3)
 
 # 4-0. (e[n][k])^2 <= P^ULmax*t[n][k] for n in N and k in K ... (28)
-def checkCond28(PULmax, N, K, t, PUL):
+def checkCond28(PULmax, N, K, t, PUL, n_, k_):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
+            
             enk = gete(t, PUL, n, k) # e[n][k]
             if enk*enk > PULmax*t[n][k]: return False
 
@@ -445,9 +486,14 @@ def checkCond28(PULmax, N, K, t, PUL):
 
 # 4-1. ||p[n]-uk||^2+H^2 <= (z[n][k])^(2/r) for n in N and k in K ... (34)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond34(p, x, y, H, z, r):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond34(p, x, y, H, z, r, n_, k_):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
+            
             eucN = eucNorm([p[n][0]-x[k], p[n][1]-y[k]]) # ||p[n]-uk||
             if eucN*eucN + H*H <= pow(z[n][k], 2/r): return True
     return False
@@ -455,15 +501,20 @@ def checkCond34(p, x, y, H, z, r):
 ### [ P1.1A ] - INTEGRATED ###
 # 4-2.       Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2/t[n][k])/(||p[n]-uk||^2 + H^2)^(r/2))
 #         >= Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k])) ... (29)
-# 4-2. =>    Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
+#      =>    Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
 #         >= Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k]))
 # G[n][k] = g0/(||p[n]-uk||^2 + H^2)^(r/2)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z):
+# n_: check condition for only this n_ if specified (not None)
+def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z, n_):
 
     # Sum(n=2,N)(t[n][k]/N)*log2(1 + (G[n][k]*ng/o^2)*(e[n][k])^2/t[n][k])
     leftSide = 0
     for n in range(2, N+1):
+
+        # check for n_ and k_
+        if n_ != None and n != n_: continue
+        
         G = getG(p, g0, x, y, n, k, H, r) # G[n][k]
         enk = gete(t, PUL, n, k) # e[n][k]
         leftSide += (t[n][k]/N)*math.log(1 + (G*ng/o2)*pow(enk, 2)/t[n][k], 2)
@@ -471,6 +522,10 @@ def checkCond29(N, t, k, ng, o2, PUL, p, g0, x, y, H, r, z):
     # Sum(n=2,N)(t[n][k]/N)*log2(1 + ((g0*ng/o^2)*(e[n][k])^2)/(t[n][k]*z[n][k]))
     rightSide = 0
     for n in range(2, N+1):
+
+        # check for n_ and k_
+        if n_ != None and n != n_: continue
+        
         enk = gete(t, PUL, n, k) # e[n][k]
         rightSide += (t[n][k]/N)*math.log(1 + ((g0*ng/o2)*pow(enk, 2))/(t[n][k]*z[n][k]), 2)
 
@@ -496,8 +551,12 @@ def checkCond30(t, k, s, PDL, g0, z, p, x, y, H, r):
     else: return False
 
 # 4-4. (1/N)*Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*X[n][k]/t[n][k]) >= Rmin for k in K ... (31)
-def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z):
+# k_: check condition for only this k_ if specified (not None)
+def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z, k_):
     for k in range(1, K+1): # for k in K
+
+        # check for n_ and k_
+        if k_ != None and k != k_: continue
         
         # Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*X[n][k]/t[n][k])
         sumVal = 0
@@ -510,12 +569,20 @@ def checkCond31(N, g0, ng, o2, t, Rmin, K, PUL, z):
 
     return False
 
+# 4-5.
+
+# 4-6.
+
 # 4-5. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)(EL_k,LB[i](w[i],z[i][k] | ^w[i],^z[i][k])) for n in ^N and k, in K... (37)
-def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL, n_, k_):
     NHat = Khat(N) # ^N
     
     for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             # Sum(i=2,n)(e[i][k])^2
             leftSide = 0
@@ -530,9 +597,13 @@ def checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL):
     return True
 
 # 4-6. X[n][k] <= A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k]) for n in N and k in K ... (38)
-def checkCond38(N, K, t, PUL, e, z, eHat, zHat):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond38(N, K, t, PUL, e, z, eHat, zHat, n_, k_):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             # A[n][k](e[n][k], z[n][k] | ^e[n][k], ^z[n][k])
             Xnk = getX(t, PUL, n, k, z) # X[n][k]
@@ -548,8 +619,12 @@ def checkCond38(N, K, t, PUL, e, z, eHat, zHat):
 
 ### [ P2.1A ] - SEPARATED ###
 # 4-10. (1/N)*Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*Y[n][k]/t[n][k])) >= Rmin for k in K ... (42)
-def checkCond42(N, t, g0, ng, o2, Y, Rmin, K):
+# k_: check condition for only this k_ if specified (not None)
+def checkCond42(N, t, g0, ng, o2, Y, Rmin, K, k_):
     for k in range(1, K+1): # for k in K
+
+        # check for n_ and k_
+        if k_ != None and k != k_: continue
 
         # Sum(n=2,N)(t[n][k]*log2(1 + (g0*ng/o^2)*Y[n][k]/t[n][k]))
         sumVal = 0
@@ -564,9 +639,14 @@ def checkCond42(N, t, g0, ng, o2, Y, Rmin, K):
 # 4-11. ||pI[n]-uk||^2 <= (zI[n][k])^(2/r) for n in N and k in K ... (45)
 # 4-12. ||pE[n]-uk||^2 <= (zE[n][k])^(2/r) for n in N and k in K ... (46)
 # location of GT: in the form of [[x[1], y[1]], [x[2], y[2]], ..., [x[k], y[k]]]
-def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K, n_, k_):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
+            
             pnUkCompareI = pnUkArray(pI, n, k, x, y, zI, r) # ||pI[n]-uk||^2 <= (zI[n][k])^(2/r)
             pnUkCompareE = pnUkArray(pE, n, k, x, y, zE, r) # ||pE[n]-uk||^2 <= (zE[n][k])^(2/r)
 
@@ -575,11 +655,15 @@ def checkCond45and46(pI, pE, x, y, zI, zE, r, N, K):
     return True
 
 # 4-13. Sum(i=2,n)(e[i][k])^2 <= Sum(i=1,n-1)EL_k,LB[i](w[i],zE[i][k] | ^w[i],^zE[i][k]) for n in ^N and k in K ... (47)
-def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K, g0, s, PDL):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K, g0, s, PDL, n_, k_):
     NHat = Khat(N) # ^N
     
     for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             # Sum(i=2,n)(e[i][k])^2
             leftSide = 0
@@ -594,9 +678,13 @@ def checkCond47(w, zE, wHat, zEHat, t, PUL, N, K, g0, s, PDL):
     return True
 
 # 4-14. Y[n][k] <= A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k]) for n in N and k in K ... (47)
-def checkCond48(Y, e, zI, eHat, zIHat, N, K):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond48(Y, e, zI, eHat, zIHat, N, K, n_, k_):
     for n in range(1, N+1): # for n in N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             leftSide = Y[n][k] # Y[n][k]
             rightSide = getAnk(e, zI, eHat, zIHat, n, k) # A[n][k](e[n][k],zI[n][k] | ^e[n][k],^zI[n][k])
@@ -607,8 +695,12 @@ def checkCond48(Y, e, zI, eHat, zIHat, N, K):
 
 ### [ P1.2A ] - NONLINEAR ###
 # 4-15. (1/N)*Sum(n=2,N)(t[n][k]*R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])) >= Rmin for k in K ... (56)
-def checkCond56(N, t, z, PUL, zHat, Rmin, K):
+# k_: check condition for only this k_ if specified (not None)
+def checkCond56(N, t, z, PUL, zHat, Rmin, K, k_):
     for k in range(1, K+1): # for k in K
+
+        # check for n_ and k_
+        if k_ != None and k != k_: continue
 
         # Sum(n=2,N)(t[n][k]*R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k]))
         sumVal = 0
@@ -622,11 +714,15 @@ def checkCond56(N, t, z, PUL, zHat, Rmin, K):
     return True
 
 # 4-16. Sum(i=2,n)(t[i][k]*P^UL[i][k]) <= (1/δN)*Sum(i=1,n-1)E^NL_k,LB[i](z[i][k] | ^z[i][k]) for n in ^N and k in K ... (57)
-def checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL):
+# n_, k_: check condition for only this n_ and k_ if specified (not None)
+def checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL, n_, k_):
     nHat = Khat(N) # ^N
 
     for n in NHat: # for n in ^N
         for k in range(1, K+1): # for k in K
+
+            # check for n_ and k_
+            if n_ != None and k_ != None and (n != n_ or k != k_): continue
 
             # Sum(i=2,n)(t[i][k]*P^UL[i][k])
             leftSide = 0
@@ -676,20 +772,30 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
                 eHat[n][k] = eq[q-1][n][k]
                 wHat[n] = wq[q-1][n]
 
-        # solve P(1.1A) by using the CVX
-        # reference: https://stackoverrun.com/ko/q/8432547
-        objective = Maximize(Rmin)
-        n_ = Variable()
-        k_ = Variable()
-
-        # X[n][k] = t[n][k]*PUL[n][k]/z[n][k]
+        # X[n][k] = t[n][k]*PUL[n][k]/z[n][k] (proved that it is the optimum)
         X = [[0 for k in range(K+1)] for n in range(N+1)]
         for n in range(N+1):
             for k in range(K+1):
                 X[n][k] = t[n][k]*PUL[n][k]/z[n][k]
 
+        # solve P(1.1A) by using the CVX
+        # reference: https://stackoverrun.com/ko/q/8432547
+        objective = Maximize(Rmin)
+
         # solve the problem
-        constraints = [checkCond37(N, K, t, PUL, w, z, wHat, zHat, g0, s, PDL)]
+        constraints = []
+        for n in range(1, N+1):
+            for k in range(1, K+1):
+
+                Rmin_ = Variable() # R_min
+                enk = Variable() # e[n][k]
+                pn = Variable() # p[n]
+                tnk = Variable() # t[n][k]
+                znk = Variable() # z[n][k]
+                wn = Variable() # w[n]
+                
+                constraints.append(checkCond31(N, g0, ng, o2, tnk, Rmin, K, PUL, z),
+                                   
 
         prob = Problem(objective, constraints)
         result = prob.solve(verbose=True)
