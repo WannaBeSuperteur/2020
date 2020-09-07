@@ -313,8 +313,11 @@ def checkCond13(p, pBefore, T, N, vmax, n_):
     return True
 
 # 3-3. p[0] == p[N] ... (14)
-def checkCond14(p, N):
-    if p[0][0] == p[N][0] and p[0][1] == p[N][1]: return True
+def checkCond14(p, p0, pN, N):
+    if p0 != None and pN != None:
+        if p[0][0] == p[N][0] and p[0][1] == p[N][1]: return True
+    else:
+        if p0[0] == pN[0] and p0[1] == pN[1]: return True
     return False
 
 # 3-4. 0 <= P^UL[n][k] <= P^UL_max for n in N and k in K ... (15)
@@ -384,9 +387,9 @@ def checkCond20(pI, pE, n, T, N, vImax, vEmax):
     else: return False
 
 # 3-8. px[0] == px[N] for x in {I,E} ... (21)
-def checkCond21(pI, pE, N):
-    condForI = checkCond14(pI, N) # pI[0] == pI[N]
-    condForE = checkCond14(pE, N) # pE[0] == pE[N]
+def checkCond21(pI, pI0, pIN, pE, pE0, pEN, N):
+    condForI = checkCond14(pI, pI0, pIN, N) # pI[0] == pI[N]
+    condForE = checkCond14(pE, pE0, pEN, N) # pE[0] == pE[N]
 
     if condForI == True and condForE == True: return True
     else: return False
@@ -946,29 +949,22 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
         # solve the problem
         # constraints: (4)(5)(13)(14)(28)(31)(32)(33)(34)
         constraints = []
-        constraints.append(checkCond14(p, N)) # (14)
-        
-        for n in range(1, N+1):
-            if n >= 2: constraints.append(checkCond13(p, T, N, vmax, n)) # (13) for n in ^N
-            
-            for k in range(0, K+1):
-                Rmin_ = Variable() # R_min
-                enk = Variable() # e[n][k]
-                pn = Variable() # p[n]
-                tnk = Variable() # t[n][k]
-                znk = Variable() # z[n][k]
-                wn = Variable() # w[n]
 
-                if k > 0:
-                    if n == 0:
-                        constraints.append(checkCond31(N, g0, ng, o2, tnk, Rmin_, K, PUL, z, k)) # (31) for k in K
-                    if n >= 2:
-                        constraints.append(checkCond32(N, K, tnk, PUL, g0, s, PDL, w, z, n, k)) # (32) for n in ^N and k in K
-                    constraints.append(checkCond33(N, K, t, PUL, z, n, k)) # (33) for n in N and k in K
-                    constraints.append(checkCond34(p, x, y, H, z, r, n, k)) # (34) for n in N and k in K
-                    constraints.append(checkCond28(PULmax, N, K, t, PUL, n, k)) # (28) for n in N and k in K
+        p_ = Variable((N+1, 2), PSD=False) # p[n]
+        Rmin_ = Variable() # R_min
+        e_ = Variable((N+1, K+1), PSD=False) # e[n][k]
+        t_ = Variable((N+1, K+1), PSD=False) # t[n][k]
+        z_ = Variable((N+1, K+1), PSD=False) # z[n][k]
+        w_ = Variable((N+1), PSD=False) # w[n]
 
-                constraints.append(checkForT(t, n, k)) # (4)(5) for n in N and k in {0,1,...,K}
+        constraints.append(checkForT(t_, n, k)) # (4)(5) for n in N and k in {0,1,...,K}
+        constraints.append(checkCond13(p_, T, N, vmax, n)) # (13) for n in ^N
+        constraints.append(checkCond14(p_, None, None, N)) # (14)
+        constraints.append(checkCond28(PULmax, N, K, t_, PUL, n, k)) # (28) for n in N and k in K
+        constraints.append(checkCond31(N, g0, ng, o2, t_, Rmin_, K, PUL, z_, k)) # (31) for k in K
+        constraints.append(checkCond32(N, K, t_, PUL, g0, s, PDL, w_, z_, n, k)) # (32) for n in ^N and k in K
+        constraints.append(checkCond33(N, K, t_, PUL, z_, n, k)) # (33) for n in N and k in K
+        constraints.append(checkCond34(p_, x, y, H, z_, r, n, k)) # (34) for n in N and k in K
 
         prob = Problem(objective, constraints)
         result = prob.solve(verbose=True)
@@ -1060,24 +1056,18 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
             # solve the problem
             # constraints: (13)(14)(15)(34)(56)(57)
             constraints = []
-            
-            constraints.append(checkCond14(p, N)) # (14)
-            
-            for n in range(1, N+1):
-                for k in range(1, K+1):
-                    Rmin_ = Variable() # R_min
-                    PULnk = Variable() # P^UL[n][k]
-                    pn = Variable() # p[n]
-                    znk = Variable() # z[n][k]
 
-                    if n == 0:
-                        constraints.append(checkCond56(N, t, z, PUL, zHat, Rmin_, K, k)) # (56) for k in K
-                    if n >= 2:
-                        constraints.append(checkCond57(t, PUL, T, N, z, zHat, K, M, alpha, beta, g0, PDL, n, k)) # (57) for n in ^N and k in K
-                        if k == 0: constraints.append(checkCond13(p, T, N, vmax, n)) # (13) for n in ^N
-                        
-                    constraints.append(checkCond15(PUL, n, k, PULmax)) # (15) for n in N and k in K
-                    constraints.append(checkCond34(p, x, y, H, z, r, n, k)) # (34) for n in N and k in K
+            p_ = Variable((N+1, 2), PSD=False) # p[n]
+            Rmin_ = Variable() # R_min
+            PUL_ = Variable((N+1, K+1), PSD=False) # P^UL[n][k]
+            z_ = Variable((N+1, K+1), PSD=False) # z[n][k]
+
+            constraints.append(checkCond13(p_, T, N, vmax, n)) # (13) for n in ^N
+            constraints.append(checkCond14(p_, N)) # (14)
+            constraints.append(checkCond15(PUL_, n, k, PULmax)) # (15) for n in N and k in K
+            constraints.append(checkCond34(p_, x, y, H, z_, r, n, k)) # (34) for n in N and k in K
+            constraints.append(checkCond56(N, t, z_, PUL_, zHat, Rmin_, K, k)) # (56) for k in K
+            constraints.append(checkCond57(t, PUL_, T, N, z_, zHat, K, M, alpha, beta, g0, PDL, n, k)) # (57) for n in ^N and k in K
 
             prob = Problem(objective, constraints)
             result = prob.solve(verbose=True)
@@ -1128,15 +1118,13 @@ def algorithmTimeAllocate(Rmin, t, n, k, p, g0, x, y, H, r, ng, o2, T, PUL, N, K
 
     # solve the problem
     constraints = []
-            
-    for n in range(1, N+1):
-        for k in range(0, K+1):
-            Rmin_ = Variable() # R_min
-            tnk = Variable() # t[n][k]
 
-            constraints.append(checkForT(t, n, k)) # (4)(5) for n in N and k in {0,1,...,K}
-            if n == 0: constraints.append(checkCond23(p, g0, x, y, H, r, ng, o2, t, Rmin_, PUL, k)) # (23) for k in K
-            if n >= 2: constraints.append(checkCond24(t, PUL, T, N, ENL, K, n, k)) # (24) for n in ^N and k in K
+    Rmin_ = Variable() # R_min
+    t_ = Variable() # t[n][k]
+            
+    constraints.append(checkForT(t_, n, k)) # (4)(5) for n in N and k in {0,1,...,K}
+    constraints.append(checkCond23(p, g0, x, y, H, r, ng, o2, t_, Rmin_, PUL, k)) # (23) for k in K
+    constraints.append(checkCond24(t_, PUL, T, N, ENL, K, n, k)) # (24) for n in ^N and k in K
 
     prob = Problem(objective, constraints)
     result = prob.solve(verbose=True)
