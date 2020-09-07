@@ -958,7 +958,7 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
         w_ = Variable((N+1), PSD=False) # w[n]
 
         constraints.append(checkForT(t_, n, k)) # (4)(5) for n in N and k in {0,1,...,K}
-        constraints.append(checkCond13(p_, T, N, vmax, n)) # (13) for n in ^N
+        constraints.append(checkCond13(p_, None, T, N, vmax, n)) # (13) for n in ^N
         constraints.append(checkCond14(p_, None, None, N)) # (14)
         constraints.append(checkCond28(PULmax, N, K, t_, PUL, n, k)) # (28) for n in N and k in K
         constraints.append(checkCond31(N, g0, ng, o2, t_, Rmin_, K, PUL, z_, k)) # (31) for k in K
@@ -1011,7 +1011,7 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
 
     # to prevent index error
     tq.append([[0 for k in range(K+1)] for n in range(N+1)])
-    pq.append([0 for n in range(N+1)])
+    pq.append([[0, 0] for n in range(N+1)])
     zqi.append([]) # append zqi[q]
     pqi.append([]) # append pqi[q]
     PULqi.append([]) # append PULqi[q]
@@ -1019,7 +1019,7 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
     # until Rminq converges
     while True:
         tq.append([[0 for k in range(K+1)] for n in range(N+1)])
-        pq.append([0 for n in range(N+1)])
+        pq.append([[0, 0] for n in range(N+1)])
         zqi.append([]) # append zqi[q]
         pqi.append([]) # append pqi[q]
         PULqi.append([]) # append PULqi[q]
@@ -1029,13 +1029,9 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
         i = 0
 
         # set z^(q,i)_k[n] = ||p^(q-1)[n] - uk||^2 for all n in N and all k in K
-        zqi[q].append([]) # append zqi[q][i]
-        pqi[q].append([]) # append pqi[q][i]
-        PULqi[q].append([]) # append PULqi[q][i]
-        
-        zqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append zqi[q][i][n][k]
-        pqi[q][i].append(0) # append pqi[q][i][n]
-        PULqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append PULqi[q][i][n][k]
+        zqi[q].append([[0 for k in range(K+1)] for n in range(N+1)]) # append zqi[q][i][n][k] (zqi[q][i] = ([n][k]))
+        pqi[q].append([0 for n in range(N+1)]) # append pqi[q][i][n] ((pqi[q][i] = ([n]))
+        PULqi[q].append([[0 for k in range(K+1)] for n in range(N+1)]) # append PULqi[q][i][n][k] (PULqi[q][i] = ([n][k]))
         
         for n in range(N+1):
             for k in range(K+1):
@@ -1062,8 +1058,8 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
             PUL_ = Variable((N+1, K+1), PSD=False) # P^UL[n][k]
             z_ = Variable((N+1, K+1), PSD=False) # z[n][k]
 
-            constraints.append(checkCond13(p_, T, N, vmax, n)) # (13) for n in ^N
-            constraints.append(checkCond14(p_, N)) # (14)
+            constraints.append(checkCond13(p_, None, T, N, vmax, n)) # (13) for n in ^N
+            constraints.append(checkCond14(p_, None, None, N)) # (14)
             constraints.append(checkCond15(PUL_, n, k, PULmax)) # (15) for n in N and k in K
             constraints.append(checkCond34(p_, x, y, H, z_, r, n, k)) # (34) for n in N and k in K
             constraints.append(checkCond56(N, t, z_, PUL_, zHat, Rmin_, K, k)) # (56) for k in K
@@ -1075,13 +1071,9 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
             # update: i <- i+1
             i += 1
             
-            zqi[q].append([]) # append zqi[q][i]
-            pqi[q].append([]) # append pqi[q][i]
-            PULqi[q].append([]) # append PULqi[q][i]
-        
-            zqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append zqi[q][i][n][k]
-            pqi[q][i].append(0) # append pqi[q][i][n]
-            PULqi[q][i].append([[0 for k in range(K+1)] for n in range(N+1)]) # append PULqi[q][i][n][k]
+            zqi[q].append([[0 for k in range(K+1)] for n in range(N+1)]) # append zqi[q][i][n][k] (zqi[q][i] = ([n][k]))
+            pqi[q].append([0 for n in range(N+1)]) # append pqi[q][i][n] ((pqi[q][i] = ([n]))
+            PULqi[q].append([[0 for k in range(K+1)] for n in range(N+1)]) # append PULqi[q][i][n][k] (PULqi[q][i] = ([n][k]))
 
             # convergence check
             # FILL IN THE BLANK
