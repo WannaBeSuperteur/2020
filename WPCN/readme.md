@@ -12,7 +12,7 @@
 * ```paper01_temporary.docx``` <strong>(updated for the issue)</strong>
 
 ### Experiment Result
-* refer to ```../report/200714_WPCN.pptx``` <strong>(not applied the issue)</strong>
+* refer to ```../report/200714_WPCN.pptx``` <strong>(updated for the issue)</strong>
 
 ### Python code
 #### main
