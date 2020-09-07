@@ -523,9 +523,17 @@ def pnUkArray(p, n, k, x, y, array, r):
     return False
 
 # 4-pre5. R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
-def getRkLB(n, k, z, PUL, zHat):
-    # FILL IN THE BLANK
-    return None
+# according to (54) in the paper, R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
+#       = log2(1 + (z[n][k] + g0*ng*P^UL[n][k]/o^2)/^z[n][k]) - (z[n][k] - ^z[n][k])/(^z[n][k]*ln2)
+def getRkLB(n, k, z, PUL, zHat, g0, ng):
+
+    # (z[n][k] + g0*ng*P^UL[n][k]/o^2)/^z[n][k]
+    part0 = (z[n][k] + (g0*ng*PUL[n][k])/o2)/zHat[n][k]
+
+    # (z[n][k] - ^z[n][k])/(^z[n][k]*ln2)
+    part1 = (z[n][k] - zHat[n][k])/(zHat[n][k]*math.log(2))
+    
+    return math.log(1+part0, 2) - part1
 
 # 4-pre6. E^NL_k,LB[n](z[n][k] | ^z[n][k]) ... (55)
 #       = t[n][0]*M * {(1-exp(-^Z[n][k]))/(1+alpha*exp(-^Z[k][n]))
@@ -857,7 +865,7 @@ def checkCond48(Y, e, zI, eHat, zIHat, N, K, n_, k_):
 ### [ P1.2A ] - NONLINEAR ###
 # 4-17. (1/N)*Sum(n=2,N)(t[n][k]*R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])) >= Rmin for k in K ... (56)
 # k_: check condition for only this k_ if specified (not None)
-def checkCond56(N, t, z, PUL, zHat, Rmin, K, k_):
+def checkCond56(N, t, z, PUL, zHat, Rmin, K, g0, ng, k_):
     for k in range(1, K+1): # for k in K
 
         # check for n_ and k_
@@ -866,7 +874,7 @@ def checkCond56(N, t, z, PUL, zHat, Rmin, K, k_):
         # Sum(n=2,N)(t[n][k]*R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k]))
         sumVal = 0
         for n in range(2, N+1):
-            RkLB = getRkLB(n, k, z, PUL, zHat) # R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
+            RkLB = getRkLB(n, k, z, PUL, zHat, g0, ng) # R_k,LB[n](z[n][k],P^UL[n][k] | ^z[n][k])
             try: sumVal += t[n][k] * RkLB
             except: sumVal += t * RkLB
         sumVal /= N # (1/N)*sumVal
@@ -999,7 +1007,7 @@ def algorithm1(z, e, w, N, K, zHat, eHat, wHat, Rmin, p, t, PUL):
     return (pStar, t0Star, PULStar, tStar)
 
 # Algorithm 2 Proposed Algorithm for (P1-NL) with the Non-Linear EH Model
-def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
+def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, ng, PDL):
     q = 0
     tq = [] # refer form: tq[q][n][k] for q=0,1,2,..., n in N and k in K
     pq = [] # refer form: pq[q][n] for q=0,1,2,..., n in N
@@ -1062,7 +1070,7 @@ def algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL):
             constraints.append(checkCond14(p_, None, None, N)) # (14)
             constraints.append(checkCond15(PUL_, n, k, PULmax)) # (15) for n in N and k in K
             constraints.append(checkCond34(p_, x, y, H, z_, r, n, k)) # (34) for n in N and k in K
-            constraints.append(checkCond56(N, t, z_, PUL_, zHat, Rmin_, K, k)) # (56) for k in K
+            constraints.append(checkCond56(N, t, z_, PUL_, zHat, Rmin_, K, g0, ng, k)) # (56) for k in K
             constraints.append(checkCond57(t, PUL_, T, N, z_, zHat, K, M, alpha, beta, g0, PDL, n, k)) # (57) for n in ^N and k in K
 
             prob = Problem(objective, constraints)
@@ -1251,7 +1259,7 @@ if __name__ == '__main__':
     # Proposed Algorithm for (P1-NL) with the Non-Linear EH Model
     elif algo == 2:
         print('\n <<< 2. execution result of algorithm 2 >>>')
-        algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, PDL)
+        algorithm2(K, N, Rmin, PUL, p, z, t, T, M, alpha, beta, g0, ng, PDL)
 
     # time allocation algorithm
     elif algo == 3:
