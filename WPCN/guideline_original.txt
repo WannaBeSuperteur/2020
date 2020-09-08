@@ -1,9 +1,14 @@
+0. To check the integrity of throughput maps,
+   follow the guide in 'guideline_throughputMaps.txt' first if you did not.
+   - If you did this step, you can pass step 1~4.
+
 1. Download the repository as *.ZIP file.
 
 2. You can delete folders except for DQN, WPCN.
 
 3. Extract zip files in these folders respectively:
- * form: originalMaps_(size)_(WDs)
+ * folder name form: originalMaps_(size)_(WDs)
+ * extract *.txt files IN THE SAME FOLDER as *.zip files
  - originalMaps_8_6
  - originalMaps_8_10
  - originalMaps_12_6
@@ -21,6 +26,16 @@
 16 16 10 900 100
 
 5. Run WPCN_paper_forPaper.py.
+ - the code uses [ /originalMaps_(size)_(WDs)/DL_WPCN_(num).txt ] (map files)
+   - size: 8, 12 or 16
+   - WDs: 6 or 10
+   - num: between 0000 and 0999 (including both end)
+ - the code uses [ map.txt ] (map config file)
+ - the code uses [ /optiInfoForMap/optiInfoForMap_(problemNo)_forPaper_(size)_(WDs).txt ] (throughput map files)
+   - problemNo: 1 for common throughput maximization
+   - size: 8, 12 or 16
+   - WDs: 6 or 10
+   - to compare the result values with maximum values of the throughput maps
 
 6. input 1 for the message below:
 0->sum throughtput maximization, 1->common throughtput maximization
@@ -31,11 +46,11 @@
 8. input your device name for the message below:
 device name (for example, cpu:0 or gpu:0)
 
-9. The code is ececuted.
+9. The code is executed.
 
 10. Check the result in the files below, after the code execution is finished.
- * form: DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt
- * form: DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt
+ * form: [ DL_WPCN_result_1_paper_forPaper_(size)_(WDs).txt ]
+ * form: [ DL_WPCN_result_1_paper_forPaper_(size)_(WDs)_print.txt ]
  - DL_WPCN_result_1_paper_forPaper_8_6.txt
  - DL_WPCN_result_1_paper_forPaper_8_6_print.txt
  - DL_WPCN_result_1_paper_forPaper_8_10.txt

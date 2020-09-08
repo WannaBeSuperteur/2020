@@ -1,0 +1,63 @@
+1. Download the repository as *.ZIP file.
+
+2. You can delete folders except for DQN, WPCN.
+
+3. Extract zip files in these folders respectively:
+ * folder name form: originalMaps_(size)_(WDs)
+ * extract *.txt files IN THE SAME FOLDER as *.zip files
+ - originalMaps_8_6
+ - originalMaps_8_10
+ - originalMaps_12_6
+ - originalMaps_12_10
+ - originalMaps_16_6
+ - originalMaps_16_10
+
+4. Edit map.txt file as below.
+ * form: (size) (size) (WDs) (# of train data) (# of test data)
+8 8 6 900 100
+8 8 10 900 100
+12 12 6 900 100
+12 12 10 900 100
+16 16 6 900 100
+16 16 10 900 100
+
+5. Delete /optiInfoForMap/optiInfoForMap_(problemNo)_forPaper_(size)_(WDs).txt (throughput map files).
+   - problemNo: 1 for common throughput maximization
+   - size: 8, 12 or 16
+   - WDs: 6 or 10
+   - to create new throughput map files (if exist, just read them)
+
+6. Run deepLearning_WPCN_forPaper.py. (DO NOT extract zip file in these folders)
+ - folder name form: originalMaps_(size)_(WDs)
+ - the code uses [ /originalMaps_(size)_(WDs)/DL_WPCN_(num).txt ] (map files)
+   - size: 8, 12 or 16
+   - WDs: 6 or 10
+   - num: between 0000 and 0999 (including both end)
+ - the code uses [ map.txt ] (map config file)
+
+7. input 1 for the message below:
+0->sum throughtput maximization, 1->common throughtput maximization
+
+8. input 0 for the message below:
+0->read files, 1->create new files
+
+9. input your device name for the message below:
+device name (for example, cpu:0 or gpu:0)
+
+10. input 0 for the message below:
+0: do not train and test / other: do train and test
+
+11. The code creates throughput map files:
+ - [ /optiInfoForMap/optiInfoForMap_(problemNo)_forPaper_(size)_(WDs).txt ] (throughput map files)
+   - problemNo: 1 for common throughput maximization
+   - size: 8, 12 or 16
+   - WDs: 6 or 10
+   - used for ORIGINAL and OUR METHOD (refer to guideline_original.txt and guideline_ourMethod.txt)
+
+12. Run /optiInfoForMap/compare.py for each size(8, 12 and 16) and WDs(6 and 10).
+ - input forPaper_(size)_(WDs) for the message 'version'.
+ - input (size) for the message 'size'.
+ - input 900 for the message 'number of train data'
+ - input 100 for the message 'number of test data'
+
+13. check the result is the as the same as '/optiInfoForMap/compare_result_200615.txt'.
