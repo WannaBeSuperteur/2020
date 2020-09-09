@@ -109,7 +109,7 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols):
     json_data = json_data.to_numpy()
 
     # modify values: True to 1, False to 0, and decimal to 0
-    for x in range(2):
+    for x in range(len(tfCols)):
 
         # True to 1, False to 0, and decimal to 0
         for i in range(len(json_data)):
@@ -571,7 +571,7 @@ if __name__ == '__main__':
     testName = 'test.json'
 
     # make PCA from training data
-    PCAdimen = 2 # dimension of PCA
+    PCAdimen = 5 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -597,7 +597,8 @@ if __name__ == '__main__':
                   "requester_username",
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
-    exceptTargetForPCA = False # except target column for PCA
+    exceptTargetForPCA = True # except target column for PCA
+    specificCols = 'request_text_edit_aware' # specific column to solve problem
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     method = 2 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
@@ -625,7 +626,7 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 16)
 
         # use decision tree
         elif method == 1:
@@ -660,11 +661,26 @@ if __name__ == '__main__':
         print('\n<<< [22] test_df >>>')
         print(test_df)
 
+        print('\n<<< [23] train_df[' + targetColName + '] >>>')
+        print(train_df[targetColName])
+
+        # change train_df['requester_received_pizza']
+        for i in range(len(train_df)):
+            if train_df.at[i, targetColName] == 1:
+                train_df.at[i, targetColName] = True
+            else:
+                train_df.at[i, targetColName] = False
+
         # fit transform each column for training data
         # In [51] and In [52] / In [55]:
-        trainSet = count_vect.fit_transform(train_df['request_text_edit_aware'])
-        trainTags = train_df['requester_received_pizza']
-        testSet = count_vect.transform(test_df['request_text_edit_aware'])
+        trainSet = count_vect.fit_transform(train_df[specificCols])
+        trainTags = train_df[targetColName].astype('bool')
+        testSet = count_vect.transform(test_df[specificCols])
+
+        print('\n<<< [24] trainSet >>>')
+        print(trainSet)
+        print('\n<<< [25] trainTags >>>')
+        print(trainTags)
 
         # In [53] / In [55]:
         clf = MultinomialNB()
@@ -673,7 +689,14 @@ if __name__ == '__main__':
         # In [56]:
         predictions = clf.predict(testSet)
 
+        print('\n<<< [26] predictions >>>')
         print(predictions)
+
+        # create finalResult based on predictions
+        finalResult = []
+        for i in range(len(predictions)):
+            if predictions[i] == True: finalResult.append(1)
+            else: finalResult.append(0)
 
     # write result
     jf = open(testName, 'r')
