@@ -17,8 +17,21 @@ from sklearn.decomposition import PCA
 from sklearn.tree import export_text
 
 # for vectorization and naive bayes model
+# source: https://www.kaggle.com/alvations/basic-nlp-with-nltk/
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.naive_bayes import MultinomialNB
+import nltk
+from nltk.corpus import webtext
+from nltk import sent_tokenize, word_tokenize
+from nltk.corpus import stopwords
+from string import punctuation
+from nltk.stem import PorterStemmer # porter
+from nltk.stem import WordNetLemmatizer # wml
+from nltk import pos_tag
+from collections import Counter
+from io import StringIO
+from operator import itemgetter
+from sklearn.model_selection import train_test_split
 
 # print data point as 2d or 3d space
 # data should be PCA-ed data
@@ -460,6 +473,97 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
     # return the result array
     return result
 
+# for method 2
+# source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
+def penn2morphy(penntag):
+    morphy_tag = {'NN':'n', 'JJ':'a',
+                  'VB':'v', 'RB':'r'}
+    try:
+        return morphy_tag[penntag[:2]]
+    except:
+        return 'n' # if mapping isn't found, fall back to Noun.
+    
+def lemmatize_sent(text):
+    wnl = WordNetLemmatizer()
+    
+    # Text input is string, returns lowercased strings.
+    return [wnl.lemmatize(word.lower(), pos=penn2morphy(tag)) 
+            for word, tag in pos_tag(word_tokenize(text))]
+
+def preprocess_text(text):
+    # Input: str, i.e. document/sentence
+    # Output: list(str) , i.e. list of lemmas
+
+    # In [26]:
+    stopwords_json = {"en":["a","a's","able","about","above","according","accordingly","across","actually",
+                            "after","afterwards","again","against","ain't","all","allow","allows","almost",
+                            "alone","along","already","also","although","always","am","among","amongst","an",
+                            "and","another","any","anybody","anyhow","anyone","anything","anyway","anyways",
+                            "anywhere","apart","appear","appreciate","appropriate","are","aren't","around",
+                            "as","aside","ask","asking","associated","at","available","away","awfully","b",
+                            "be","became","because","become","becomes","becoming","been","before","beforehand",
+                            "behind","being","believe","below","beside","besides","best","better","between",
+                            "beyond","both","brief","but","by","c","c'mon","c's","came","can","can't","cannot",
+                            "cant","cause","causes","certain","certainly","changes","clearly","co","com","come",
+                            "comes","concerning","consequently","consider","considering","contain","containing",
+                            "contains","corresponding","could","couldn't","course","currently","d","definitely",
+                            "described","despite","did","didn't","different","do","does","doesn't","doing","don't",
+                            "done","down","downwards","during","e","each","edu","eg","eight","either","else",
+                            "elsewhere","enough","entirely","especially","et","etc","even","ever","every",
+                            "everybody","everyone","everything","everywhere","ex","exactly","example","except",
+                            "f","far","few","fifth","first","five","followed","following","follows","for",
+                            "former","formerly","forth","four","from","further","furthermore","g","get","gets",
+                            "getting","given","gives","go","goes","going","gone","got","gotten","greetings",
+                            "h","had","hadn't","happens","hardly","has","hasn't","have","haven't","having",
+                            "he","he's","hello","help","hence","her","here","here's","hereafter","hereby",
+                            "herein","hereupon","hers","herself","hi","him","himself","his","hither","hopefully",
+                            "how","howbeit","however","i","i'd","i'll","i'm","i've","ie","if","ignored",
+                            "immediate","in","inasmuch","inc","indeed","indicate","indicated","indicates",
+                            "inner","insofar","instead","into","inward","is","isn't","it","it'd","it'll","it's",
+                            "its","itself","j","just","k","keep","keeps","kept","know","known","knows","l",
+                            "last","lately","later","latter","latterly","least","less","lest","let","let's",
+                            "like","liked","likely","little","look","looking","looks","ltd","m","mainly","many",
+                            "may","maybe","me","mean","meanwhile","merely","might","more","moreover","most",
+                            "mostly","much","must","my","myself","n","name","namely","nd","near","nearly",
+                            "necessary","need","needs","neither","never","nevertheless","new","next","nine",
+                            "no","nobody","non","none","noone","nor","normally","not","nothing","novel","now",
+                            "nowhere","o","obviously","of","off","often","oh","ok","okay","old","on","once",
+                            "one","ones","only","onto","or","other","others","otherwise","ought","our","ours",
+                            "ourselves","out","outside","over","overall","own","p","particular","particularly",
+                            "per","perhaps","placed","please","plus","possible","presumably","probably",
+                            "provides","q","que","quite","qv","r","rather","rd","re","really","reasonably",
+                            "regarding","regardless","regards","relatively","respectively","right","s","said",
+                            "same","saw","say","saying","says","second","secondly","see","seeing","seem","seemed",
+                            "seeming","seems","seen","self","selves","sensible","sent","serious","seriously",
+                            "seven","several","shall","she","should","shouldn't","since","six","so","some",
+                            "somebody","somehow","someone","something","sometime","sometimes","somewhat",
+                            "somewhere","soon","sorry","specified","specify","specifying","still","sub","such",
+                            "sup","sure","t","t's","take","taken","tell","tends","th","than","thank","thanks",
+                            "thanx","that","that's","thats","the","their","theirs","them","themselves","then",
+                            "thence","there","there's","thereafter","thereby","therefore","therein","theres",
+                            "thereupon","these","they","they'd","they'll","they're","they've","think","third",
+                            "this","thorough","thoroughly","those","though","three","through","throughout","thru",
+                            "thus","to","together","too","took","toward","towards","tried","tries","truly","try"
+                            ,"trying","twice","two","u","un","under","unfortunately","unless","unlikely","until",
+                            "unto","up","upon","us","use","used","useful","uses","using","usually","uucp","v",
+                            "value","various","very","via","viz","vs","w","want","wants","was","wasn't","way",
+                            "we","we'd","we'll","we're","we've","welcome","well","went","were","weren't","what",
+                            "what's","whatever","when","whence","whenever","where","where's","whereafter",
+                            "whereas","whereby","wherein","whereupon","wherever","whether","which","while",
+                            "whither","who","who's","whoever","whole","whom","whose","why","will","willing",
+                            "wish","with","within","without","won't","wonder","would","wouldn't","x","y",
+                            "yes","yet","you","you'd","you'll","you're","you've","your","yours","yourself",
+                            "yourselves","z","zero"]}
+    
+    stopwords_json_en = set(stopwords_json['en'])
+    stopwords_nltk_en = set(stopwords.words('english'))
+    stopwords_punct = set(punctuation)
+    stoplist_combined = set.union(stopwords_json_en, stopwords_nltk_en, stopwords_punct)
+    
+    return [word for word in lemmatize_sent(text) 
+            if word not in stoplist_combined
+            and not word.isdigit()]
+
 if __name__ == '__main__':
 
     # meta info
@@ -471,10 +575,11 @@ if __name__ == '__main__':
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
-    textCols = ['giver_username_if_known', 'request_id', 'request_text', 'request_text_edit_aware',
-                    'request_title', 'requester_subreddits_at_request', 'requester_user_flair',
-                    'requester_username']
-    exceptCols = ["number_of_downvotes_of_request_at_retrieval",
+    textCols = ['request_text', 'request_text_edit_aware',
+                    'request_title', 'requester_subreddits_at_request', 'requester_user_flair']
+    exceptCols = ["giver_username_if_known",
+                  "request_id",
+                  "number_of_downvotes_of_request_at_retrieval",
                   "number_of_upvotes_of_request_at_retrieval",
                   "post_was_edited",
                   "request_number_of_comments_at_retrieval",
@@ -489,11 +594,13 @@ if __name__ == '__main__':
                   "requester_upvotes_minus_downvotes_at_retrieval",
                   "requester_upvotes_plus_downvotes_at_retrieval",
                   "requester_user_flair",
+                  "requester_username",
                   "unix_timestamp_of_request_utc"] # list of columns not used
+    exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = False # except target column for PCA
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 1 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
+    method = 2 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
     DT_maxDepth = 10 # max depth of decision tree
     DT_criterion = 'gini' # 'gini' or 'entropy'
     DT_splitter = 'best' # 'best' or 'random'
@@ -514,8 +621,14 @@ if __name__ == '__main__':
         (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
                                                                 comp, exva, mean, False)
 
+        # do not use decision tree
+        if method == 0:
+
+            # k-NN of test data
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
+
         # use decision tree
-        if method == 1:
+        elif method == 1:
             
             # make decision tree
             DT = createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
@@ -523,21 +636,20 @@ if __name__ == '__main__':
             # predict test data using decision tree
             finalResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
-        # do not use decision tree
-        else:
-
-            # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 10)
-
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
+    # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
     elif method == 2:
+        nltk.download('punkt')
+        nltk.download('averaged_perceptron_tagger')
+        nltk.download('wordnet')
+        nltk.download('stopwords')
+
+        # create count vectorizer
+        count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, [])
-        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, [])
-
-        # fit transform each column
-        # for i in 
+        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2)
+        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2)
 
         print('\n<<< [19] train_df.columns >>>')
         print(train_df.columns)
@@ -547,6 +659,21 @@ if __name__ == '__main__':
         print(test_df.columns)
         print('\n<<< [22] test_df >>>')
         print(test_df)
+
+        # fit transform each column for training data
+        # In [51] and In [52] / In [55]:
+        trainSet = count_vect.fit_transform(train_df['request_text_edit_aware'])
+        trainTags = train_df['requester_received_pizza']
+        testSet = count_vect.transform(test_df['request_text_edit_aware'])
+
+        # In [53] / In [55]:
+        clf = MultinomialNB()
+        clf.fit(trainSet, trainTags)
+
+        # In [56]:
+        predictions = clf.predict(testSet)
+
+        print(predictions)
 
     # write result
     jf = open(testName, 'r')
