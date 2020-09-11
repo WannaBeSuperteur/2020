@@ -83,7 +83,8 @@ def printDataAsSpace(n_cols, df_pca, title):
 # target    : target column if isTrain is True
 # tfCols    : columns that contains True or False values
 # exceptCols: using the columns except for them
-def makeDataFrame(fn, isTrain, target, tfCols, exceptCols):
+# useLog    : using log for making dataFrame
+def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog):
     print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
@@ -292,11 +293,12 @@ def predictDF(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
 # comp      : components of PCA used
 # exva      : explained variances of PCA used
 # mean      : mean of PCA used
-def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA):
+# useLog    : using log for making dataFrame
+def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols)
+    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True
@@ -598,20 +600,21 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
+    useLog = False # using log for numeric data columns
     specificCols = 'request_text_edit_aware' # specific column to solve problem
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 2 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
-    DT_maxDepth = 10 # max depth of decision tree
-    DT_criterion = 'gini' # 'gini' or 'entropy'
-    DT_splitter = 'best' # 'best' or 'random'
+    method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
+    DT_maxDepth = 15 # max depth of decision tree
+    DT_criterion = 'entropy' # 'gini' or 'entropy'
+    DT_splitter = 'random' # 'best' or 'random'
 
     # method 0 or 1 -> use PCA    
     if method == 0 or method == 1:
 
         # get PCA (components and explained variances) for training data
         (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
-                                                              None, None, None, exceptTargetForPCA)
+                                                              None, None, None, exceptTargetForPCA, useLog)
 
         # remove target column from comp and mean
         if exceptTargetForPCA == False:
@@ -620,13 +623,13 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
-                                                                comp, exva, mean, False)
+                                                                comp, exva, mean, False, useLog)
 
         # do not use decision tree
         if method == 0:
 
             # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 16)
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 122)
 
         # use decision tree
         elif method == 1:
@@ -649,8 +652,8 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2)
-        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2)
+        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog)
+        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog)
 
         print('\n<<< [19] train_df.columns >>>')
         print(train_df.columns)
@@ -698,6 +701,11 @@ if __name__ == '__main__':
             if predictions[i] == True: finalResult.append(1)
             else: finalResult.append(0)
 
+    # method 3 -> use xgboost
+    # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
+    elif method == 3:
+        print('dddd')
+
     # write result
     jf = open(testName, 'r')
     json_file = jf.read()
@@ -718,7 +726,8 @@ if __name__ == '__main__':
 # Decision Tree의 하위노드 개수, truncate되는 단계를 조정, best/random 설정 [ING]
 # -> https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
 # 학습단계에서 target column을 제외하고 PCA변환하는 것을 고려 [FIN]
-# Text Vectorizer 및 Naive Bayes 알고리즘 시도 [ING]
+# Text Vectorizer 및 Naive Bayes 알고리즘 시도 [FIN]
 # -> https://www.kaggle.com/alvations/basic-nlp-with-nltk
-# 전체 열에 대한 단일 Decision Tree를 이용하여 결정
-# textCols에서 특정 텍스트의 등장여부를 열로 추가하여 PCA 분석에 추가하는 것을 고려
+# 원본 데이터에 log 등 다양한 변형을 적용 [ING]
+# xgboost 적용 [ING]
+# -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
