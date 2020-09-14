@@ -187,10 +187,20 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog):
     except:
         doNothing = 0 # do nothing
 
-    # return dataFrame
+    # print dataFrame
     print('\n<<< [2] dataSetDF >>>')
     print(dataSetDF)
 
+    # apply log for extractCols if useLog is true
+    if useLog == True:
+        for ec in extractCols:
+            for i in range(len(dataSetDF)):
+                dataSetDF.at[i, ec] = math.log(max(0, dataSetDF.at[i, ec])+1, 2)
+
+        print('\n<<< [2-1] dataSetDF log applied >>>')
+        print(dataSetDF)
+
+    # return dataFrame
     return (dataSetDF, targetCol)
 
 # create Decision Tree using DataFrame
@@ -573,7 +583,7 @@ if __name__ == '__main__':
     testName = 'test.json'
 
     # make PCA from training data
-    PCAdimen = 5 # dimension of PCA
+    PCAdimen = 4 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -600,7 +610,7 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
-    useLog = False # using log for numeric data columns
+    useLog = True # using log for numeric data columns
     specificCols = 'request_text_edit_aware' # specific column to solve problem
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
@@ -629,7 +639,7 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 122)
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 120)
 
         # use decision tree
         elif method == 1:
@@ -723,11 +733,7 @@ if __name__ == '__main__':
     f.close()
 
 # 향후계획
-# Decision Tree의 하위노드 개수, truncate되는 단계를 조정, best/random 설정 [ING]
-# -> https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html#sklearn.tree.DecisionTreeClassifier
-# 학습단계에서 target column을 제외하고 PCA변환하는 것을 고려 [FIN]
-# Text Vectorizer 및 Naive Bayes 알고리즘 시도 [FIN]
-# -> https://www.kaggle.com/alvations/basic-nlp-with-nltk
+# specificCols에서 자주 등장하는 단어의 등장여부를 dataFrame의 열로 추가하는 옵션 적용
 # 원본 데이터에 log 등 다양한 변형을 적용 [ING]
 # xgboost 적용 [ING]
 # -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
