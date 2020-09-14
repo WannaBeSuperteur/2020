@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import seaborn as seab
 import json
 import math
+import re
 
 # to make decision tree
 # https://scikit-learn.org/stable/modules/tree.html
@@ -78,13 +79,79 @@ def printDataAsSpace(n_cols, df_pca, title):
 
     else: print('n_cols should be 2 or 3 to print data as 2d/3d space')
 
-# fn        : file name
-# isTrain   : training(True) or not(False)
-# target    : target column if isTrain is True
-# tfCols    : columns that contains True or False values
-# exceptCols: using the columns except for them
-# useLog    : using log for making dataFrame
-def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog):
+# dataFrame  : original dataframe
+# specificCol: column -> columns that indicate the number of appearance of frequent words
+def appearanceOfFrequentWordsTest(dataFrame, specificCol):
+
+    numOfItems = 500 # number of items
+    print(dataFrame)
+
+    # find all words from specificCol (for first 100 items)
+    allWords = ''
+    for i in range(numOfItems):
+        allWords += str(dataFrame.at[i, specificCol]) + '/'
+
+    # make list for all words appeared in first 100 items
+    allWords = allWords.lower()
+    allWords = re.sub('[^a-z ]+', ' ', allWords)
+    allWordsList = list(set(allWords.split(' ')))
+    for i in range(len(allWordsList)): allWordsList[i] = (allWordsList[i], 0)
+    allWordsDict = dict(allWordsList)
+    allWordsDict.pop('') # remove blank
+
+    # count appearance (make dictionary)
+    for i in range(numOfItems):
+        words = str(dataFrame.at[i, specificCol])
+        words = words.lower()
+        words = re.sub('[^a-z ]+', ' ', words)
+        wordsList = list(set(words.split(' ')))
+
+        # remove blank from wordsList
+        try:
+            wordsList.remove('')
+        except:
+            doNothing = 0 # do nothing
+
+        # add 1 for each appearance of the word
+        for j in range(len(wordsList)): allWordsDict[wordsList[j]] += 1
+
+    # sort the array
+    allWordsDict = sorted(allWordsDict.items(), key=(lambda x:x[1]), reverse=True)
+    
+    print('\n\n======== TEST RESULT ========\n')
+    print(allWordsDict)
+    print('\n=============================\n')
+
+# dataFrame    : original dataframe
+# specificCol  : column -> columns that indicate the number of appearance of frequent words
+# frequentWords: list of frequent words
+def appearanceOfFrequentWords(dataFrame, specificCol, frequentWords):
+
+    # add column that indicates each frequence word appearance
+    for i in range(len(frequentWords)): # for each frequent word
+        colName = 'CT_' + frequentWords[i] # number of column
+
+        result = [] # check if each data include the word (then 1, else 0)
+        for j in range(len(dataFrame)):
+            if frequentWords[i] in dataFrame.at[j, specificCol]: result.append(1)
+            else: result.append(0)
+
+        dataFrame[colName] = result # add this column to dataframe
+
+    # remove specificCol from the dataFrame
+    dataFrame = dataFrame.drop([specificCol], axis='columns')
+
+    return dataFrame
+    
+# fn           : file name
+# isTrain      : training(True) or not(False)
+# target       : target column if isTrain is True
+# tfCols       : columns that contains True or False values
+# exceptCols   : using the columns except for them
+# useLog       : using log for making dataFrame
+# specificCol  : column -> columns that indicate the number of appearance of frequent words
+# frequentWords: list of frequent words
+def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, frequentWords):
     print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
@@ -200,6 +267,28 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog):
         print('\n<<< [2-1] dataSetDF log applied >>>')
         print(dataSetDF)
 
+    # add text column
+    # column -> columns that indicate the number of appearance of frequent words
+    if frequentWords != None:
+
+        # add specificCol to the dataFrame
+        dataSetDF = json_data[extractCols + [specificCol]]
+
+        # appearanceOfFrequentWordsTest(dataSetDF, specificCol)
+        dataSetDF = appearanceOfFrequentWords(dataSetDF, specificCol, frequentWords)
+
+        print('\n<<< [2-2] dataSetDF.columns with appearance of frequent words >>>')
+        print(dataSetDF.columns)
+
+        print('\n<<< [2-3] dataSetDF with appearance of frequent words >>>')
+        print(dataSetDF)
+
+    # again, change dataSetDF into float type
+    try:
+        dataSetDF = dataSetDF.astype(float)
+    except:
+        doNothing = 0 # do nothing
+
     # return dataFrame
     return (dataSetDF, targetCol)
 
@@ -294,21 +383,23 @@ def predictDF(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
 
     return DTresult
 
-# fn        : file name
-# n_cols    : number of columns(components) of PCA
-# isTrain   : training(True) or not(False)
-# target    : target column if isTrain is True
-# tfCols    : columns that contains True or False values
-# exceptCols: using the columns except for them
-# comp      : components of PCA used
-# exva      : explained variances of PCA used
-# mean      : mean of PCA used
-# useLog    : using log for making dataFrame
-def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog):
+# fn           : file name
+# n_cols       : number of columns(components) of PCA
+# isTrain      : training(True) or not(False)
+# target       : target column if isTrain is True
+# tfCols       : columns that contains True or False values
+# exceptCols   : using the columns except for them
+# comp         : components of PCA used
+# exva         : explained variances of PCA used
+# mean         : mean of PCA used
+# useLog       : using log for making dataFrame
+# specificCol  : column -> columns that indicate the number of appearance of frequent words
+# frequentWords: list of frequent words
+def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, specificCol, frequentWords):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog)
+    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, frequentWords)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True
@@ -583,7 +674,7 @@ if __name__ == '__main__':
     testName = 'test.json'
 
     # make PCA from training data
-    PCAdimen = 4 # dimension of PCA
+    PCAdimen = 3 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -611,7 +702,8 @@ if __name__ == '__main__':
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
     useLog = True # using log for numeric data columns
-    specificCols = 'request_text_edit_aware' # specific column to solve problem
+    specificCol = 'request_text_edit_aware' # specific column to solve problem
+    frequentWords = ['pizza'] # frequent words
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
@@ -624,7 +716,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for training data
         (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
-                                                              None, None, None, exceptTargetForPCA, useLog)
+                                                              None, None, None, exceptTargetForPCA, useLog, specificCol, frequentWords)
 
         # remove target column from comp and mean
         if exceptTargetForPCA == False:
@@ -633,7 +725,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
-                                                                comp, exva, mean, False, useLog)
+                                                                comp, exva, mean, False, useLog, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
@@ -662,8 +754,8 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog)
-        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog)
+        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, frequentWords)
+        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, frequentWords)
 
         print('\n<<< [19] train_df.columns >>>')
         print(train_df.columns)
@@ -686,9 +778,9 @@ if __name__ == '__main__':
 
         # fit transform each column for training data
         # In [51] and In [52] / In [55]:
-        trainSet = count_vect.fit_transform(train_df[specificCols])
+        trainSet = count_vect.fit_transform(train_df[specificCol])
         trainTags = train_df[targetColName].astype('bool')
-        testSet = count_vect.transform(test_df[specificCols])
+        testSet = count_vect.transform(test_df[specificCol])
 
         print('\n<<< [24] trainSet >>>')
         print(trainSet)
@@ -733,7 +825,7 @@ if __name__ == '__main__':
     f.close()
 
 # 향후계획
-# specificCols에서 자주 등장하는 단어의 등장여부를 dataFrame의 열로 추가하는 옵션 적용
+# specificCol에서 자주 등장하는 단어의 등장여부를 dataFrame의 열로 추가하는 옵션 적용 [ING]
 # 원본 데이터에 log 등 다양한 변형을 적용 [ING]
 # xgboost 적용 [ING]
 # -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
