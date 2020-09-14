@@ -258,15 +258,6 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, 
     print('\n<<< [2] dataSetDF >>>')
     print(dataSetDF)
 
-    # apply log for extractCols if useLog is true
-    if useLog == True:
-        for ec in extractCols:
-            for i in range(len(dataSetDF)):
-                dataSetDF.at[i, ec] = math.log(max(0, dataSetDF.at[i, ec])+1, 2)
-
-        print('\n<<< [2-1] dataSetDF log applied >>>')
-        print(dataSetDF)
-
     # add text column
     # column -> columns that indicate the number of appearance of frequent words
     if frequentWords != None:
@@ -277,10 +268,29 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, 
         # appearanceOfFrequentWordsTest(dataSetDF, specificCol)
         dataSetDF = appearanceOfFrequentWords(dataSetDF, specificCol, frequentWords)
 
-        print('\n<<< [2-2] dataSetDF.columns with appearance of frequent words >>>')
+        print('\n<<< [2-1] dataSetDF.columns with appearance of frequent words >>>')
         print(dataSetDF.columns)
 
-        print('\n<<< [2-3] dataSetDF with appearance of frequent words >>>')
+        print('\n<<< [2-2] dataSetDF with appearance of frequent words >>>')
+        print(dataSetDF)
+
+    # apply log for extractCols if useLog is true
+    if useLog == True:
+
+        # prevent error when frequentWords is None
+        if frequentWords == None: frequentWords = []
+
+        # actual column name is 'CT_' + each frequent word
+        CTfreqWords = []
+        for i in range(len(frequentWords)): CTfreqWords.append('CT_' + frequentWords[i])
+
+        # log
+        for col in extractCols + CTfreqWords:
+            print(col)
+            for i in range(len(dataSetDF)):
+                dataSetDF.at[i, col] = math.log(max(0, dataSetDF.at[i, col])+1, 2)
+
+        print('\n<<< [2-3] dataSetDF log applied >>>')
         print(dataSetDF)
 
     # again, change dataSetDF into float type
@@ -701,9 +711,9 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
-    useLog = True # using log for numeric data columns
+    useLog = False # using log for numeric data columns
     specificCol = 'request_text_edit_aware' # specific column to solve problem
-    frequentWords = ['pizza'] # frequent words
+    frequentWords = [] # frequent words
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
