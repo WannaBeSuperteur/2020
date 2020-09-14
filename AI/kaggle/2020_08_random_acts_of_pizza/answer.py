@@ -149,9 +149,10 @@ def appearanceOfFrequentWords(dataFrame, specificCol, frequentWords):
 # tfCols       : columns that contains True or False values
 # exceptCols   : using the columns except for them
 # useLog       : using log for making dataFrame
+# logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, frequentWords):
+def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
     print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
@@ -284,11 +285,13 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, 
         CTfreqWords = []
         for i in range(len(frequentWords)): CTfreqWords.append('CT_' + frequentWords[i])
 
-        # log
+        # using log: x -> log2(x + logConstant)
         for col in extractCols + CTfreqWords:
-            print(col)
+
+            if col == target: continue # except for target column
+            
             for i in range(len(dataSetDF)):
-                dataSetDF.at[i, col] = math.log(max(0, dataSetDF.at[i, col])+1, 2)
+                dataSetDF.at[i, col] = math.log(max(0, dataSetDF.at[i, col]) + logConstant, 2)
 
         print('\n<<< [2-3] dataSetDF log applied >>>')
         print(dataSetDF)
@@ -403,13 +406,14 @@ def predictDF(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
 # exva         : explained variances of PCA used
 # mean         : mean of PCA used
 # useLog       : using log for making dataFrame
+# logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, specificCol, frequentWords):
+def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, specificCol, frequentWords)
+    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True
@@ -711,7 +715,8 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
-    useLog = False # using log for numeric data columns
+    useLog = True # using log for numeric data columns
+    logConstant = 1000000 # x -> log2(x + logConstant)
     specificCol = 'request_text_edit_aware' # specific column to solve problem
     frequentWords = [] # frequent words
 
@@ -726,7 +731,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for training data
         (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
-                                                              None, None, None, exceptTargetForPCA, useLog, specificCol, frequentWords)
+                                                              None, None, None, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords)
 
         # remove target column from comp and mean
         if exceptTargetForPCA == False:
@@ -735,7 +740,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
-                                                                comp, exva, mean, False, useLog, specificCol, frequentWords)
+                                                                comp, exva, mean, False, useLog, logConstant, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
@@ -764,8 +769,8 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, frequentWords)
-        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, frequentWords)
+        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, frequentWords)
+        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, frequentWords)
 
         print('\n<<< [19] train_df.columns >>>')
         print(train_df.columns)
@@ -835,7 +840,8 @@ if __name__ == '__main__':
     f.close()
 
 # 향후계획
-# specificCol에서 자주 등장하는 단어의 등장여부를 dataFrame의 열로 추가하는 옵션 적용 [ING]
-# 원본 데이터에 log 등 다양한 변형을 적용 [ING]
+# specificCol에서 자주 등장하는 단어의 등장여부를 dataFrame의 열로 추가하는 옵션 적용 [FIN]
+# 원본 데이터에 log 등 다양한 변형을 적용 [FIN]
+# -> log에 log2(x+a)꼴로 a의 값을 조정하는 옵션 적용 [FIN]
 # xgboost 적용 [ING]
 # -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
