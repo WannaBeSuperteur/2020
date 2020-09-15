@@ -133,6 +133,9 @@ def appearanceOfFrequentWordsTest(dataFrame, specificCol):
 # frequentWords: list of frequent words
 def appearanceOfFrequentWords(dataFrame, specificCol, frequentWords):
 
+    # if one or more of specificCol or frequentWords are None, return initial dataFrame
+    if specificCol == None or frequentWords == None: return dataFrame
+
     # add column that indicates each frequence word appearance
     for i in range(len(frequentWords)): # for each frequent word
         colName = 'CT_' + frequentWords[i] # number of column
@@ -267,7 +270,7 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, 
 
     # add text column
     # column -> columns that indicate the number of appearance of frequent words
-    if frequentWords != None:
+    if specificCol != None and frequentWords != None:
 
         # add specificCol to the dataFrame
         dataSetDF = json_data[extractCols + [specificCol]]
@@ -701,11 +704,11 @@ def preprocess_text(text):
 # ref0: https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
 # ref1: https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
 # ref2: https://www.kaggle.com/jeremy123w/xgboost-with-roc-curve
-def usingXgBoost(df_pca_train, df_pca_test, name, rounding):
+def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding):
 
     # data/target for train and test
-    trainData = df_pca_train.drop(['target'], axis=1)
-    trainTarget = df_pca_train['target']
+    trainData = df_pca_train.drop([targetColName], axis=1)
+    trainTarget = df_pca_train[targetColName]
     testData = df_pca_test
 
     # change into np.array form
@@ -786,13 +789,13 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
-    useLog = True # using log for numeric data columns
+    useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
-    specificCol = 'request_text_edit_aware' # specific column to solve problem
+    specificCol = None # specific column to solve problem
     frequentWords = [] # frequent words
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 3 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost
+    method = 4 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
     kNN_k = 130 # number k for kNN
     DT_maxDepth = 15 # max depth of decision tree
@@ -847,7 +850,7 @@ if __name__ == '__main__':
 
             # iteratively testing
             for i in range(times):
-                (accuracy, ROC) = usingXgBoost(df_pca_train, df_pca_test, 'test ' + str(i), True)
+                (accuracy, ROC) = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True)
                 totalAccuracy += accuracy
                 totalROC += ROC
 
@@ -867,8 +870,8 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, frequentWords)
-        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, frequentWords)
+        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
         print('\n<<< [21] train_df.columns >>>')
         print(train_df.columns)
@@ -916,6 +919,23 @@ if __name__ == '__main__':
             if predictions[i] == True: finalResult.append(1)
             else: finalResult.append(0)
 
+    # xgboost only
+    elif method == 4:
+
+        # get train and test dataFrame
+        (df_pca_train, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse) = makeDataFrame(testName, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+
+        # print training and test data
+        print('\n<<< [29] df_pca_train method==4 >>>')
+        print(df_pca_train)
+
+        print('\n<<< [30] df_pca_test method==4 >>>')
+        print(df_pca_test)
+
+        # run xgboost
+        usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True)
+
     # write result
     jf = open(testName, 'r')
     json_file = jf.read()
@@ -937,4 +957,6 @@ if __name__ == '__main__':
 # 원본 데이터에 log 등 다양한 변형을 적용 [FIN]
 # -> log에 log2(x+a)꼴로 a의 값을 조정하는 옵션 적용 [FIN]
 # xgboost 적용 [ING]
+# -> xgboost 적용까지 완료 [FIN]
+# -> 예측값을 반환하도록 처리
 # -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
