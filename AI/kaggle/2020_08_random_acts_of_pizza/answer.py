@@ -275,6 +275,12 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, 
         print('\n<<< [2-2] dataSetDF with appearance of frequent words >>>')
         print(dataSetDF)
 
+     # again, change dataSetDF into float type
+    try:
+        dataSetDF = dataSetDF.astype(float)
+    except:
+        doNothing = 0 # do nothing
+
     # apply log for extractCols if useLog is true
     if useLog == True:
 
@@ -288,7 +294,7 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, 
         # using log: x -> log2(x + logConstant)
         for col in extractCols + CTfreqWords:
 
-            if col == target: continue # except for target column
+            if col == target or col[:3] == 'CT_': continue # except for target column and CT_ columns
             
             for i in range(len(dataSetDF)):
                 dataSetDF.at[i, col] = math.log(max(0, dataSetDF.at[i, col]) + logConstant, 2)
@@ -716,13 +722,13 @@ if __name__ == '__main__':
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
     useLog = True # using log for numeric data columns
-    logConstant = 1000000 # x -> log2(x + logConstant)
+    logConstant = 10000000 # x -> log2(x + logConstant)
     specificCol = 'request_text_edit_aware' # specific column to solve problem
     frequentWords = [] # frequent words
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
-    kNN_k = 120 # number k for kNN
+    kNN_k = 130 # number k for kNN
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
