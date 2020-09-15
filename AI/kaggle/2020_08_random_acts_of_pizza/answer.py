@@ -688,7 +688,7 @@ if __name__ == '__main__':
     testName = 'test.json'
 
     # make PCA from training data
-    PCAdimen = 3 # dimension of PCA
+    PCAdimen = 4 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -722,6 +722,7 @@ if __name__ == '__main__':
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
+    kNN_k = 120 # number k for kNN
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
@@ -746,7 +747,7 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, 120)
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k)
 
         # use decision tree
         elif method == 1:
