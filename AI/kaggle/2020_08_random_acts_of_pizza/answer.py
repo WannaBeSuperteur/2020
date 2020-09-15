@@ -34,6 +34,12 @@ from io import StringIO
 from operator import itemgetter
 from sklearn.model_selection import train_test_split
 
+# using xgboost
+import xgboost as xgb
+from xgboost import plot_importance
+from xgboost import XGBClassifier
+from sklearn.metrics import roc_curve, auc, recall_score, accuracy_score
+
 # print data point as 2d or 3d space
 # data should be PCA-ed data
 # n_cols : number of columns (not include target)
@@ -687,14 +693,73 @@ def preprocess_text(text):
             if word not in stoplist_combined
             and not word.isdigit()]
 
+# df_pca_train : training data (dataFrame) [pca0 pca1 ... pcaN target]
+# df_pca_test  : test data (dataFrame) [pca0 pca1 ... pcaN]
+# name         : name of this testing
+# rounding     : round to integer (True or False)
+
+# ref0: https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
+# ref1: https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
+# ref2: https://www.kaggle.com/jeremy123w/xgboost-with-roc-curve
+def usingXgBoost(df_pca_train, df_pca_test, name, rounding):
+
+    # data/target for train and test
+    trainData = df_pca_train.drop(['target'], axis=1)
+    trainTarget = df_pca_train['target']
+    testData = df_pca_test
+
+    # change into np.array form
+    trainData = np.array(trainData)
+    trainTarget = np.array(trainTarget)
+    testData = np.array(testData)
+
+    # split data into train and test dataset
+    seed = None
+    test_size = 0.2
+
+    xTrain, xTest, yTrain, yTest = train_test_split(trainData, trainTarget, test_size=test_size, random_state=seed)
+
+    # fit model to train dataset
+    model = XGBClassifier()
+    model.fit(xTrain, yTrain)
+
+    # make prediction
+    testOutput = model.predict(xTest)
+    
+    predictions = []
+    if rounding == True:
+        for i in range(len(testOutput)): predictions.append(round(testOutput[i], 0))
+    else: predictions = testOutput
+
+    # evaluate accuracy
+    accuracy = accuracy_score(yTest, predictions)
+
+    # evaluate ROC
+    fpr, tpr, _ = roc_curve(yTest, testOutput)
+    ROC = auc(fpr, tpr)
+    
+    # print evaluation result
+    print('\n<<< [19] xgBoost test result [ ' + name + ' ] >>>')
+    print('prediction (first 10) : ' + str(predictions[:10]))
+    print('accuracy              : ' + str(accuracy))
+    print('ROC                   : ' + str(ROC))
+    
+    return (accuracy, ROC)
+
 if __name__ == '__main__':
 
     # meta info
     trainName = 'train.json'
     testName = 'test.json'
 
+    #################################
+    ###                           ###
+    ###    model configuration    ###
+    ###                           ###
+    #################################
+    
     # make PCA from training data
-    PCAdimen = 4 # dimension of PCA
+    PCAdimen = 10 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -727,16 +792,24 @@ if __name__ == '__main__':
     frequentWords = [] # frequent words
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB
+    method = 3 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost
+
     kNN_k = 130 # number k for kNN
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
 
-    # method 0 or 1 -> use PCA    
-    if method == 0 or method == 1:
+    #################################
+    ###                           ###
+    ###      model execution      ###
+    ###                           ###
+    #################################
+
+    # method 0, 1 or 3 -> use PCA    
+    if method == 0 or method == 1 or method == 3:
 
         # get PCA (components and explained variances) for training data
+        # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
         (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
                                                               None, None, None, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords)
 
@@ -746,6 +819,7 @@ if __name__ == '__main__':
             mean = np.delete(mean, [targetCol], 0)
 
         # get PCA (components and explained variances) for test data
+        # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
         (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
                                                                 comp, exva, mean, False, useLog, logConstant, specificCol, frequentWords)
 
@@ -764,6 +838,23 @@ if __name__ == '__main__':
             # predict test data using decision tree
             finalResult = predictDF(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
+        # use xgBoost
+        # https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
+        elif method == 3:
+            totalAccuracy = 0 # total accuracy score
+            totalROC = 0 # total area under ROC
+            times = 20 # number of iterations (tests)
+
+            # iteratively testing
+            for i in range(times):
+                (accuracy, ROC) = usingXgBoost(df_pca_train, df_pca_test, 'test ' + str(i), True)
+                totalAccuracy += accuracy
+                totalROC += ROC
+
+            print('\n<<< [20] total accuracy and ROC for xgBoost >>>')
+            print('avg accuracy : ' + str(totalAccuracy / times))
+            print('avg ROC      : ' + str(totalROC / times))
+
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
     # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
     elif method == 2:
@@ -779,16 +870,16 @@ if __name__ == '__main__':
         (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, frequentWords)
         (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, frequentWords)
 
-        print('\n<<< [19] train_df.columns >>>')
+        print('\n<<< [21] train_df.columns >>>')
         print(train_df.columns)
-        print('\n<<< [20] train_df >>>')
+        print('\n<<< [22] train_df >>>')
         print(train_df)
-        print('\n<<< [21] test_df.columns >>>')
+        print('\n<<< [23] test_df.columns >>>')
         print(test_df.columns)
-        print('\n<<< [22] test_df >>>')
+        print('\n<<< [24] test_df >>>')
         print(test_df)
 
-        print('\n<<< [23] train_df[' + targetColName + '] >>>')
+        print('\n<<< [25] train_df[' + targetColName + '] >>>')
         print(train_df[targetColName])
 
         # change train_df['requester_received_pizza']
@@ -804,9 +895,9 @@ if __name__ == '__main__':
         trainTags = train_df[targetColName].astype('bool')
         testSet = count_vect.transform(test_df[specificCol])
 
-        print('\n<<< [24] trainSet >>>')
+        print('\n<<< [26] trainSet >>>')
         print(trainSet)
-        print('\n<<< [25] trainTags >>>')
+        print('\n<<< [27] trainTags >>>')
         print(trainTags)
 
         # In [53] / In [55]:
@@ -816,7 +907,7 @@ if __name__ == '__main__':
         # In [56]:
         predictions = clf.predict(testSet)
 
-        print('\n<<< [26] predictions >>>')
+        print('\n<<< [28] predictions >>>')
         print(predictions)
 
         # create finalResult based on predictions
@@ -824,11 +915,6 @@ if __name__ == '__main__':
         for i in range(len(predictions)):
             if predictions[i] == True: finalResult.append(1)
             else: finalResult.append(0)
-
-    # method 3 -> use xgboost
-    # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
-    elif method == 3:
-        print('dddd')
 
     # write result
     jf = open(testName, 'r')
