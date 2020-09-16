@@ -703,7 +703,7 @@ def preprocess_text(text):
 # rounding     : round to integer (True or False)
 # validation   : just validating xgBoost, not for obtaining result (True or False)
 # xgBoostLevel : 0 then just use xgBoost, 1 then improve accuracy (=performance)
-# info         : [epochs, boostRound, earlyStoppingRound, foldCount, countOf1s]
+# info         : [epochs, boostRound, earlyStoppingRound, foldCount, rateOf1s]
 
 # ref0: https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
 # ref1: https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
@@ -711,7 +711,7 @@ def preprocess_text(text):
 # ref3: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
 def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, validation, xgBoostLevel, info):
 
-    [epochs, boostRound, earlyStoppingRounds, foldCount, countOf1s] = info
+    [epochs, boostRound, earlyStoppingRounds, foldCount, rateOf1s] = info
 
     # initialize ROC as None
     ROC = None
@@ -728,6 +728,7 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
         testData = np.array(testData)
 
     # split data into train and test dataset
+    # length of finalCvPred (k-folded training data) is 3232 because test_size is 0.2 -> 4040 * (1 - 0.2) = 3232
     if validation == True: # validation (using some training data as test data)
         test_size = 0.2
         xTrain, xTest, yTrain, yTest = train_test_split(trainData, trainTarget, test_size=test_size, random_state=0)
@@ -806,13 +807,15 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
                 # when VALIDATION, round y values to show the result of validation
                 if validation == True:
 
-                    # only countOf1s values become 1
+                    # only rateOf1s values become 1
+                    #print(y_Predict[:30])
                     ySorted = sorted(y_Predict, reverse=True)
-                    cutline = y_Predict[int(countOf1s / foldCount)-1] # countOf1s-th largest value
+                    cutline = ySorted[int(0.5 * len(ySorted))-1] # top 50% largest value
                     
                     for j in range(len(y_Predict)):
                         if y_Predict[j] >= cutline: y_Predict[j] = 1
                         else: y_Predict[j] = 0
+                    #print(sum(y_Predict))
 
                 # evaluate ROC
                 fpr, tpr, _ = roc_curve(y_Test, y_Predict)
@@ -829,7 +832,7 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
                 # print('****' + str(cvPred[:20])) # temp
 
             # add to final result of cvPred and cvROC
-            cvPred /= foldCount
+            # cvPred /= foldCount
             cvROC /= foldCount
             finalCvPred += cvPred
             finalCvROC += cvROC
@@ -857,10 +860,10 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
         print('finalCvROC             : ' + str(finalCvROC))
         print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
 
-        # only countOf1s values become 1 for final result, when TESTING
+        # only rateOf1s values become 1 for final result, when TESTING
         # round y values to get the final result
         finalSorted = sorted(finalCvPred, reverse=True)
-        cutline = finalCvPred[int(countOf1s / foldCount)-1] # countOf1s-th largest value
+        cutline = finalSorted[int(rateOf1s * len(finalSorted))-1] # top 'rateOf1s' largest value
             
         for i in range(len(finalCvPred)):
             if finalCvPred[i] >= cutline: finalCvPred[i] = 1
@@ -974,8 +977,8 @@ if __name__ == '__main__':
     boostRound = 10000
     earlyStoppingRounds = 10
     foldCount = 5
-    countOf1s = 100 # number of 1's (largest countOf1s values become 1 and others become 0)
-    info = [epochs, boostRound, earlyStoppingRounds, foldCount, countOf1s]
+    rateOf1s = 0.15 # rate of 1's (using this, portion of 1 should be rateOf1s)
+    info = [epochs, boostRound, earlyStoppingRounds, foldCount, rateOf1s]
 
     #################################
     ###                           ###
@@ -1120,7 +1123,7 @@ if __name__ == '__main__':
         print(df_pca_test)
 
         # run xgboost
-        # when setting validation as True, finally, always return error (both xgBoostLevel=0 and xgBoostLevel=1)
+        # when setting validation as True, finally, always return error at [33] (both xgBoostLevel=0 and xgBoostLevel=1)
         finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, True, xgBoostLevel, info)
 
         print('\n<<< [33] len of finalResult >>>')
