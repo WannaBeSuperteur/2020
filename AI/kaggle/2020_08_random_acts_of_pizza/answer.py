@@ -5,6 +5,7 @@ import seaborn as seab
 import json
 import math
 import re
+import random
 
 # to make decision tree
 # https://scikit-learn.org/stable/modules/tree.html
@@ -32,7 +33,7 @@ from nltk import pos_tag
 from collections import Counter
 from io import StringIO
 from operator import itemgetter
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split, StratifiedKFold
 
 # using xgboost
 import xgboost as xgb
@@ -698,14 +699,22 @@ def preprocess_text(text):
 
 # df_pca_train : training data (dataFrame) [pca0 pca1 ... pcaN target]
 # df_pca_test  : test data (dataFrame) [pca0 pca1 ... pcaN]
-# name         : name of this testing
+# name         : name of this validation/test
 # rounding     : round to integer (True or False)
-# isTesting    : just testing xgBoost, not for obtaining result (True or False)
+# validation   : just validating xgBoost, not for obtaining result (True or False)
+# xgBoostLevel : 0 then just use xgBoost, 1 then improve accuracy (=performance)
+# info         : [epochs, boostRound, earlyStoppingRound, foldCount, countOf1s]
 
 # ref0: https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
 # ref1: https://scikit-learn.org/stable/auto_examples/model_selection/plot_roc.html
 # ref2: https://www.kaggle.com/jeremy123w/xgboost-with-roc-curve
-def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, isTesting):
+# ref3: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
+def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, validation, xgBoostLevel, info):
+
+    [epochs, boostRound, earlyStoppingRounds, foldCount, countOf1s] = info
+
+    # initialize ROC as None
+    ROC = None
 
     # data/target for train and test
     trainData = df_pca_train.drop([targetColName], axis=1)
@@ -713,42 +722,156 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, isTes
     testData = df_pca_test
 
     # change into np.array form
-    trainData = np.array(trainData)
-    trainTarget = np.array(trainTarget)
-    testData = np.array(testData)
+    if xgBoostLevel == 0:
+        trainData = np.array(trainData)
+        trainTarget = np.array(trainTarget)
+        testData = np.array(testData)
 
     # split data into train and test dataset
-    seed = None
-    test_size = 0.2
-
-    if isTesting == True: xTrain, xTest, yTrain, yTest = train_test_split(trainData, trainTarget, test_size=test_size, random_state=seed)
+    if validation == True: # validation (using some training data as test data)
+        test_size = 0.2
+        xTrain, xTest, yTrain, yTest = train_test_split(trainData, trainTarget, test_size=test_size, random_state=0)
     else:
         xTrain = trainData
         yTrain = trainTarget
         xTest = testData
 
-    # fit model to train dataset
-    model = XGBClassifier()
-    model.fit(xTrain, yTrain)
+    # if xgBoostLevel is 0, then fit model to train dataset
+    if xgBoostLevel == 0:
+        model = XGBClassifier()
+        model.fit(xTrain, yTrain)
 
-    # make prediction
-    testOutput = model.predict(xTest)
-    
+        # make prediction
+        testOutput = model.predict(xTest)
+        
+    # if xgBoostLevel is 1, then improve performance
+    # ref: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
+    elif xgBoostLevel == 1:
+
+        # define param first
+        param = {'objective':'binary:logistic', 'random_seed':0, 'eta':0.5}
+
+        # final result
+        finalCvPred = np.zeros(len(xTrain))
+        finalCvROC = 0
+
+        for i in range(epochs): # for each epoch
+            rd = random.randint(0, 100)
+            stratifiedkfold = StratifiedKFold(n_splits=foldCount, random_state=rd, shuffle=True)
+
+            # result of this time (epoch i)
+            cvPred = np.zeros(len(xTrain))
+            cvROC = 0
+
+            # transform into matrices
+            xTrainMatrix = xTrain.values
+            yTrainMatrix = yTrain.values
+            count = 0 # for 'for' loop below
+
+            # use k-fold method
+            for trainIndex, testIndex in stratifiedkfold.split(xTrainMatrix, yTrainMatrix):
+                count += 1
+
+                # check trainIndex and testIndex
+                # print('\n\n\n\n\n\ntestIndex: ' + str(testIndex[:5])) # temp
+
+                x_Train, x_Test = xTrainMatrix[trainIndex], xTrainMatrix[testIndex]
+                y_Train, y_Test = yTrainMatrix[trainIndex], yTrainMatrix[testIndex]
+
+                # using xgb.DMatrix
+                dTrain = xgb.DMatrix(x_Train, label=y_Train)
+                dTest = xgb.DMatrix(x_Test, label=y_Test)
+
+                watchList = [(dTest, 'eval', dTrain, 'train')]
+                model = xgb.train(param, dTrain, num_boost_round=boostRound, evals=watchList,
+                                  early_stopping_rounds=earlyStoppingRounds, verbose_eval=False)
+
+                # make prediction
+                y_Predict = model.predict(dTest, ntree_limit=model.best_ntree_limit)
+                
+                # print evaluation result for this epoch and count, when VALIDATION
+                # when VALIDATION, round y values to show the result of validation
+                if validation == True:
+
+                    # only countOf1s values become 1
+                    ySorted = sorted(y_Predict, reverse=True)
+                    cutline = y_Predict[int(countOf1s / foldCount)-1] # countOf1s-th largest value
+                    
+                    for j in range(len(y_Predict)):
+                        if y_Predict[j] >= cutline: y_Predict[j] = 1
+                        else: y_Predict[j] = 0
+
+                # evaluate ROC
+                fpr, tpr, _ = roc_curve(y_Test, y_Predict)
+                thisROC = auc(fpr, tpr)
+                    
+                print('\n<<< [19-0] xgBoost ROC result [ epoch=' + str(i) + ',count=' + str(count) + ' ] >>>')
+                print('validation           : ' + str(validation))
+                print('y_Predict (first 10) : ' + str(y_Predict[:10]) + ' / len=' + str(len(y_Predict)))
+                print('thisROC              : ' + str(thisROC))
+
+                # add to cvPred and cvROC
+                for j in range(len(y_Predict)): cvPred[testIndex[j]] += y_Predict[j]
+                cvROC += thisROC
+                # print('****' + str(cvPred[:20])) # temp
+
+            # add to final result of cvPred and cvROC
+            cvROC /= foldCount
+            finalCvPred += cvPred
+            finalCvROC += cvROC
+
+            # print evaluation result for this epoch
+            print('\n<<< [19-1] xgBoost ROC result [ epoch=' + str(i) + ' ] >>>')
+            print('cvPred (first 10) : ' + str(cvPred[:10]) + ' / len=' + str(len(cvPred)))
+            print('cvROC             : ' + str(cvROC))
+
+        # print evaluation result
+        finalCvROC /= epochs
+        
+        print('\n<<< [19-2] xgBoost ROC result >>>')
+        print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
+        print('finalCvROC             : ' + str(finalCvROC))
+
+        # only countOf1s values become 1 for final result, when TESTING
+        # when TESTING, round y values to get the final result
+        if validation == False:
+            finalSorted = sorted(finalCvPred, reverse=True)
+            cutline = finalCvPred[int(countOf1s / foldCount)-1] # countOf1s-th largest value
+            
+            for i in range(len(finalCvPred)):
+                if finalCvPred[i] >= cutline: finalCvPred[i] = 1
+                else: finalCvPred[i] = 0
+
+            # return final result (testOutput and ROC)
+            testOutput = finalCvPred
+            ROC = finalCvROC
+
+        # print evaluation result
+        print('\n<<< [19-3] xgBoost ROC result (after rounding) >>>')
+        print('validation             : ' + str(validation))
+        print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
+        print('finalCvROC             : ' + str(finalCvROC))
+
+        # finish when validation
+        if validation == True: return
+
+    # save predictions into the array
+    # 'predictions' is corresponding to 'testOutput'
     predictions = []
     if rounding == True:
         for i in range(len(testOutput)): predictions.append(round(testOutput[i], 0))
     else: predictions = testOutput
 
     # evaluate and return predictions
-    print('\n<<< [19] xgBoost test result [ ' + name + ' ] >>>')
-    if isTesting == True:
+    print('\n<<< [20] xgBoost test result [ ' + name + ' ] >>>')
+    if validation == True:
         
         # evaluate accuracy
         accuracy = accuracy_score(yTest, predictions)
 
         # evaluate ROC
         fpr, tpr, _ = roc_curve(yTest, testOutput)
-        ROC = auc(fpr, tpr)
+        if ROC == None: ROC = auc(fpr, tpr)
         
         # print evaluation result
         print('prediction (first 10) : ' + str(predictions[:10]))
@@ -774,7 +897,7 @@ if __name__ == '__main__':
     #################################
     
     # make PCA from training data
-    PCAdimen = 10 # dimension of PCA
+    PCAdimen = 4 # dimension of PCA
     idCol = 'request_id'
     targetColName = 'requester_received_pizza'
     tfCols = ['post_was_edited', 'requester_received_pizza']
@@ -801,18 +924,27 @@ if __name__ == '__main__':
                   "unix_timestamp_of_request_utc"] # list of columns not used
     exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
-    useLog = True # using log for numeric data columns
+    useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
     specificCol = None # specific column to solve problem (eg: 'request_text_edit_aware')
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 3 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 4 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
     kNN_k = 130 # number k for kNN
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
+
+    # for method 4
+    xgBoostLevel = 1 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+    epochs = 100
+    boostRound = 10000
+    earlyStoppingRounds = 10
+    foldCount = 5
+    countOf1s = 100 # number of 1's (largest countOf1s values become 1 and others become 0)
+    info = [epochs, boostRound, earlyStoppingRounds, foldCount, countOf1s]
 
     #################################
     ###                           ###
@@ -855,23 +987,24 @@ if __name__ == '__main__':
 
         # use xgBoost
         # https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
+        # if xgBoostLevel=1 then using like https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
         elif method == 3:
             totalAccuracy = 0 # total accuracy score
             totalROC = 0 # total area under ROC
             times = 20 # number of iterations (tests)
 
-            # iteratively testing
+            # iteratively validation
             for i in range(times):
-                (accuracy, ROC, _) = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True)
+                (accuracy, ROC, _) = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True, xgBoostLevel, info)
                 totalAccuracy += accuracy
                 totalROC += ROC
 
-            print('\n<<< [20] total accuracy and ROC for xgBoost >>>')
+            print('\n<<< [21] total accuracy and ROC for xgBoost >>>')
             print('avg accuracy : ' + str(totalAccuracy / times))
             print('avg ROC      : ' + str(totalROC / times))
 
             # predict values
-            finalResult = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False)
+            finalResult = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, xgBoostLevel, info)
 
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
     # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
@@ -893,16 +1026,16 @@ if __name__ == '__main__':
         (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
         (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
-        print('\n<<< [21] train_df.columns >>>')
+        print('\n<<< [22] train_df.columns >>>')
         print(train_df.columns)
-        print('\n<<< [22] train_df >>>')
+        print('\n<<< [23] train_df >>>')
         print(train_df)
-        print('\n<<< [23] test_df.columns >>>')
+        print('\n<<< [24] test_df.columns >>>')
         print(test_df.columns)
-        print('\n<<< [24] test_df >>>')
+        print('\n<<< [25] test_df >>>')
         print(test_df)
 
-        print('\n<<< [25] train_df[' + targetColName + '] >>>')
+        print('\n<<< [26] train_df[' + targetColName + '] >>>')
         print(train_df[targetColName])
 
         # change train_df['requester_received_pizza']
@@ -918,9 +1051,9 @@ if __name__ == '__main__':
         trainTags = train_df[targetColName].astype('bool')
         testSet = count_vect.transform(test_df[specificCol])
 
-        print('\n<<< [26] trainSet >>>')
+        print('\n<<< [27] trainSet >>>')
         print(trainSet)
-        print('\n<<< [27] trainTags >>>')
+        print('\n<<< [28] trainTags >>>')
         print(trainTags)
 
         # In [53] / In [55]:
@@ -930,7 +1063,7 @@ if __name__ == '__main__':
         # In [56]:
         predictions = clf.predict(testSet)
 
-        print('\n<<< [28] predictions >>>')
+        print('\n<<< [29] predictions >>>')
         print(predictions)
 
         # create finalResult based on predictions
@@ -940,21 +1073,23 @@ if __name__ == '__main__':
             else: finalResult.append(0)
 
     # xgboost only
+    # if xgBoostLevel = 1 then as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+    #                          (ref: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html)
     elif method == 4:
-
+        
         # get train and test dataFrame
         (df_pca_train, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
         (df_pca_test, noUse) = makeDataFrame(testName, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
-        print('\n<<< [29] df_pca_train method==4 >>>')
+        print('\n<<< [30] df_pca_train method==4 >>>')
         print(df_pca_train)
 
-        print('\n<<< [30] df_pca_test method==4 >>>')
+        print('\n<<< [31] df_pca_test method==4 >>>')
         print(df_pca_test)
 
         # run xgboost
-        finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False)
+        finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, True, xgBoostLevel, info)
 
     # write result
     jf = open(testName, 'r')
@@ -979,4 +1114,5 @@ if __name__ == '__main__':
 # xgboost 적용 [ING]
 # -> xgboost 적용까지 완료 [FIN]
 # -> 예측값을 반환하도록 처리 [FIN]
-# -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+# -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost [ING]
+# (추후 output이 3개이상인 dataset 발생시) xgBoost 옵션 추가
