@@ -748,12 +748,28 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
     # ref: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
     elif xgBoostLevel == 1:
 
+        # print shape info
+        print('\n<<< [19] shape of xTrain, xTest, yTrain and yTest ] >>>')
+        if validation == True:
+            print('xTrain : ' + str(len(xTrain)) + ',' + str(len(xTrain.columns)))
+            print('xTest  : ' + str(len(xTest)) + ',' + str(len(xTest.columns)))
+            print('yTrain : ' + str(len(yTrain)))
+            print('yTest  : ' + str(len(yTest)))
+        else:
+            print('xTrain : ' + str(len(xTrain)) + ',' + str(len(xTrain.columns)))
+            print('xTest  : ' + str(len(xTest)) + ',' + str(len(xTest.columns)))
+            print('yTrain : ' + str(len(yTrain)))
+
         # define param first
         param = {'objective':'binary:logistic', 'random_seed':0, 'eta':0.5}
 
         # final result
         finalCvPred = np.zeros(len(xTrain))
         finalCvROC = 0
+
+        # transform into matrices
+        xTrainMatrix = xTrain.values
+        yTrainMatrix = yTrain.values
 
         for i in range(epochs): # for each epoch
             rd = random.randint(0, 100)
@@ -763,9 +779,6 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
             cvPred = np.zeros(len(xTrain))
             cvROC = 0
 
-            # transform into matrices
-            xTrainMatrix = xTrain.values
-            yTrainMatrix = yTrain.values
             count = 0 # for 'for' loop below
 
             # use k-fold method
@@ -805,7 +818,7 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
                 fpr, tpr, _ = roc_curve(y_Test, y_Predict)
                 thisROC = auc(fpr, tpr)
                     
-                print('\n<<< [19-0] xgBoost ROC result [ epoch=' + str(i) + ',count=' + str(count) + ' ] >>>')
+                print('\n<<< [20-0] xgBoost ROC result [ epoch=' + str(i) + ',count=' + str(count) + ' ] >>>')
                 print('validation           : ' + str(validation))
                 print('y_Predict (first 10) : ' + str(y_Predict[:10]) + ' / len=' + str(len(y_Predict)))
                 print('thisROC              : ' + str(thisROC))
@@ -816,45 +829,63 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
                 # print('****' + str(cvPred[:20])) # temp
 
             # add to final result of cvPred and cvROC
+            cvPred /= foldCount
             cvROC /= foldCount
             finalCvPred += cvPred
             finalCvROC += cvROC
 
+            # evaluate ROC (using cvPred instead of y_Predict)
+            fpr, tpr, _ = roc_curve(yTrainMatrix[:len(y_Test)], cvPred[:len(y_Test)])
+            cvROC_cvPred = auc(fpr, tpr)
+
             # print evaluation result for this epoch
-            print('\n<<< [19-1] xgBoost ROC result [ epoch=' + str(i) + ' ] >>>')
+            print('\n<<< [20-1] xgBoost ROC result [ epoch=' + str(i) + ' ] >>>')
             print('cvPred (first 10) : ' + str(cvPred[:10]) + ' / len=' + str(len(cvPred)))
             print('cvROC             : ' + str(cvROC))
+            print('cvROC_cvPred      : ' + str(cvROC_cvPred))
 
         # print evaluation result
+        finalCvPred /= epochs
         finalCvROC /= epochs
+
+        # evaluate ROC (using finalCvPred instead of y_Predict)
+        fpr, tpr, _ = roc_curve(yTrainMatrix[:len(y_Test)], finalCvPred[:len(y_Test)])
+        cvROC_finalCvPred = auc(fpr, tpr)
         
-        print('\n<<< [19-2] xgBoost ROC result >>>')
+        print('\n<<< [20-2] xgBoost ROC result >>>')
         print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
         print('finalCvROC             : ' + str(finalCvROC))
+        print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
 
         # only countOf1s values become 1 for final result, when TESTING
-        # when TESTING, round y values to get the final result
-        if validation == False:
-            finalSorted = sorted(finalCvPred, reverse=True)
-            cutline = finalCvPred[int(countOf1s / foldCount)-1] # countOf1s-th largest value
+        # round y values to get the final result
+        finalSorted = sorted(finalCvPred, reverse=True)
+        cutline = finalCvPred[int(countOf1s / foldCount)-1] # countOf1s-th largest value
             
-            for i in range(len(finalCvPred)):
-                if finalCvPred[i] >= cutline: finalCvPred[i] = 1
-                else: finalCvPred[i] = 0
+        for i in range(len(finalCvPred)):
+            if finalCvPred[i] >= cutline: finalCvPred[i] = 1
+            else: finalCvPred[i] = 0
 
-            # return final result (testOutput and ROC)
-            testOutput = finalCvPred
-            ROC = finalCvROC
+        # return final result (testOutput and ROC)
+        testOutput = finalCvPred
+        ROC = finalCvROC
+
+        # compute cvROC_finalCVPred (using finalCvPred instead of y_Predict)
+        fpr, tpr, _ = roc_curve(yTrainMatrix[:len(y_Test)], finalCvPred[:len(y_Test)])
+        cvROC_finalCvPred = auc(fpr, tpr)
 
         # print evaluation result
-        print('\n<<< [19-3] xgBoost ROC result (after rounding) >>>')
+        print('\n<<< [20-3] xgBoost ROC result (after rounding) >>>')
         print('validation             : ' + str(validation))
         print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
-        print('finalCvROC             : ' + str(finalCvROC))
+        print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
 
-        # finish when validation
+        # finish when VALIDATION
         if validation == True: return
 
+        # proceed when TESTING
+
+    # for XG_BOOST_LEVEL 0
     # save predictions into the array
     # 'predictions' is corresponding to 'testOutput'
     predictions = []
@@ -863,7 +894,7 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
     else: predictions = testOutput
 
     # evaluate and return predictions
-    print('\n<<< [20] xgBoost test result [ ' + name + ' ] >>>')
+    print('\n<<< [21] xgBoost test result [ ' + name + ' ] >>>')
     if validation == True:
         
         # evaluate accuracy
@@ -999,7 +1030,7 @@ if __name__ == '__main__':
                 totalAccuracy += accuracy
                 totalROC += ROC
 
-            print('\n<<< [21] total accuracy and ROC for xgBoost >>>')
+            print('\n<<< [22] total accuracy and ROC for xgBoost >>>')
             print('avg accuracy : ' + str(totalAccuracy / times))
             print('avg ROC      : ' + str(totalROC / times))
 
@@ -1026,16 +1057,16 @@ if __name__ == '__main__':
         (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
         (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
-        print('\n<<< [22] train_df.columns >>>')
+        print('\n<<< [23] train_df.columns >>>')
         print(train_df.columns)
-        print('\n<<< [23] train_df >>>')
+        print('\n<<< [24] train_df >>>')
         print(train_df)
-        print('\n<<< [24] test_df.columns >>>')
+        print('\n<<< [25] test_df.columns >>>')
         print(test_df.columns)
-        print('\n<<< [25] test_df >>>')
+        print('\n<<< [26] test_df >>>')
         print(test_df)
 
-        print('\n<<< [26] train_df[' + targetColName + '] >>>')
+        print('\n<<< [27] train_df[' + targetColName + '] >>>')
         print(train_df[targetColName])
 
         # change train_df['requester_received_pizza']
@@ -1051,9 +1082,9 @@ if __name__ == '__main__':
         trainTags = train_df[targetColName].astype('bool')
         testSet = count_vect.transform(test_df[specificCol])
 
-        print('\n<<< [27] trainSet >>>')
+        print('\n<<< [28] trainSet >>>')
         print(trainSet)
-        print('\n<<< [28] trainTags >>>')
+        print('\n<<< [29] trainTags >>>')
         print(trainTags)
 
         # In [53] / In [55]:
@@ -1063,7 +1094,7 @@ if __name__ == '__main__':
         # In [56]:
         predictions = clf.predict(testSet)
 
-        print('\n<<< [29] predictions >>>')
+        print('\n<<< [30] predictions >>>')
         print(predictions)
 
         # create finalResult based on predictions
@@ -1082,14 +1113,18 @@ if __name__ == '__main__':
         (df_pca_test, noUse) = makeDataFrame(testName, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
-        print('\n<<< [30] df_pca_train method==4 >>>')
+        print('\n<<< [31] df_pca_train method==4 >>>')
         print(df_pca_train)
 
-        print('\n<<< [31] df_pca_test method==4 >>>')
+        print('\n<<< [32] df_pca_test method==4 >>>')
         print(df_pca_test)
 
         # run xgboost
+        # when setting validation as True, finally, always return error (both xgBoostLevel=0 and xgBoostLevel=1)
         finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, True, xgBoostLevel, info)
+
+        print('\n<<< [33] len of finalResult >>>')
+        print(len(finalResult))
 
     # write result
     jf = open(testName, 'r')
@@ -1115,4 +1150,7 @@ if __name__ == '__main__':
 # -> xgboost 적용까지 완료 [FIN]
 # -> 예측값을 반환하도록 처리 [FIN]
 # -> https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost [ING]
+#   -> train-validation [FIN]
+#   -> train-validation에서 평균데이터에 대한 ROC 계산 [FIN]
+#   -> test 결과 출력
 # (추후 output이 3개이상인 dataset 발생시) xgBoost 옵션 추가
