@@ -728,10 +728,12 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
         testData = np.array(testData)
 
     # split data into train and test dataset
-    # length of finalCvPred (k-folded training data) is 3232 because test_size is 0.2 -> 4040 * (1 - 0.2) = 3232
+    # when validation is True, length of finalCvPred (k-folded training data) is 3232
+    # because test_size is 0.2 -> 4040 * (1 - 0.2) = 3232
     if validation == True: # validation (using some training data as test data)
+        rd = random.randint(0, 9999)
         test_size = 0.2
-        xTrain, xTest, yTrain, yTest = train_test_split(trainData, trainTarget, test_size=test_size, random_state=0)
+        xTrain, xTest, yTrain, yTest = train_test_split(trainData, trainTarget, test_size=test_size, random_state=rd)
     else:
         xTrain = trainData
         yTrain = trainTarget
@@ -773,7 +775,7 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
         yTrainMatrix = yTrain.values
 
         for i in range(epochs): # for each epoch
-            rd = random.randint(0, 100)
+            rd = random.randint(0, 9999)
             stratifiedkfold = StratifiedKFold(n_splits=foldCount, random_state=rd, shuffle=True)
 
             # result of this time (epoch i)
@@ -856,9 +858,11 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
         cvROC_finalCvPred = auc(fpr, tpr)
         
         print('\n<<< [20-2] xgBoost ROC result >>>')
-        print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
-        print('finalCvROC             : ' + str(finalCvROC))
-        print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
+        print('xTrain index (first 50) :\n' + str(np.array(xTrain.index)[:50]))
+        print('validation              : ' + str(validation))
+        print('finalCvPred (first 50)  :\n' + str(finalCvPred[:50]) + ' / len=' + str(len(finalCvPred)))
+        print('finalCvROC              : ' + str(finalCvROC))
+        print('cvROC_finalCvPred       : ' + str(cvROC_finalCvPred))
 
         # only rateOf1's values become 1 for final result
         # round y values to get the final result
@@ -880,9 +884,10 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
 
             # print evaluation result
             print('\n<<< [20-3] xgBoost ROC result (after rounding) >>>')
-            print('validation             : ' + str(validation))
-            print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
-            print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
+            print('xTrain index (first 50) :\n' + str(np.array(xTrain.index)[:50]))
+            print('validation              : ' + str(validation))
+            print('finalCvPred (first 50)  :\n' + str(finalCvPred[:50]) + ' / len=' + str(len(finalCvPred)))
+            print('cvROC_finalCvPred       : ' + str(cvROC_finalCvPred))
 
         # finish when VALIDATION
         if validation == True: return
