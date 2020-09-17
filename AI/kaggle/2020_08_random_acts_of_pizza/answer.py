@@ -523,7 +523,8 @@ def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, e
 # targetCol  : target column for dfTrain
 # targetIndex: index for the target column
 # k          : number of neighbors
-def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
+# useAverage : return average value
+def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
     print('\n ######## kNN function ########')
 
     # count of each value for training data
@@ -575,20 +576,36 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k):
             vote[thisMark] = vote[thisMark] + len(dfTrain) / classCount[thisMark]
 
         # find max vote item
-        largestVoteVal = -1 # number of votes of largest voted target value
-        largestVoteTargetVal = -1 # largest voted target value
-
-        # key: class targetVals[j], value: vote score of targetVals[j]
-        for key in vote.keys():
-            value = vote[key]
+        if useAverage == True:
+            sumOfVote = 0.0 # sum of (vote weight)
+            sumOfKeyVal = 0.0 # sum of (key value)*(vote weight)
             
-            if value > largestVoteVal:
-                largestVoteVal = value
-                largestVoteTargetVal = key
+            for key in vote.keys():
+                sumOfVote += vote[key]
+                sumOfKeyVal += key * vote[key]
 
-        # append the vote result (=prediction) to result array
-        result.append(largestVoteTargetVal)
-        resultT.append([largestVoteTargetVal])
+            avgVoteVal = sumOfKeyVal / sumOfVote
+
+            # append the average vote result (=prediction) to result array
+            result.append(avgVoteVal)
+            resultT.append([avgVoteVal])
+
+        # use average vote value
+        else:
+            largestVoteVal = -1 # number of votes of largest voted target value
+            largestVoteTargetVal = -1 # largest voted target value
+
+            # key: class targetVals[j], value: vote score of targetVals[j]
+            for key in vote.keys():
+                value = vote[key]
+                
+                if value > largestVoteVal:
+                    largestVoteVal = value
+                    largestVoteTargetVal = key
+
+            # append the largest vote result (=prediction) to result array
+            result.append(largestVoteTargetVal)
+            resultT.append([largestVoteTargetVal])
 
     # add vote result value
     # https://rfriend.tistory.com/352
@@ -874,10 +891,6 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
                 if finalCvPred[i] >= cutline: finalCvPred[i] = 1
                 else: finalCvPred[i] = 0
 
-            # return final result (testOutput and ROC)
-            testOutput = finalCvPred
-            ROC = finalCvROC
-
             # compute cvROC_finalCVPred (using finalCvPred instead of y_Predict)
             fpr, tpr, _ = roc_curve(yTrainMatrix[:len(y_Test)], finalCvPred[:len(y_Test)])
             cvROC_finalCvPred = auc(fpr, tpr)
@@ -889,13 +902,20 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
             print('finalCvPred (first 50)  :\n' + str(finalCvPred[:50]) + ' / len=' + str(len(finalCvPred)))
             print('cvROC_finalCvPred       : ' + str(cvROC_finalCvPred))
 
+        # return final result (testOutput and ROC)
+        testOutput = finalCvPred
+        ROC = finalCvROC
+
         # finish when VALIDATION
         if validation == True: return
 
         ##### EXECUTED FOR TESTING ONLY #####
         # proceed when TESTING
-        
-        return
+
+        # use kNN algorithm
+
+        # return test output
+        return testOutput
 
     # for XG_BOOST_LEVEL 0
     # save predictions into the array
@@ -973,9 +993,13 @@ if __name__ == '__main__':
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 4 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
+    # for method 0
     kNN_k = 130 # number k for kNN
+    useAverage = True # use average voting for kNN
+
+    # for method 2
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
@@ -1017,7 +1041,7 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k)
+            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, useAverage)
 
         # use decision tree
         elif method == 1:
@@ -1133,7 +1157,7 @@ if __name__ == '__main__':
 
         # run xgboost
         # when setting validation as True, finally, always return error at [33] (both xgBoostLevel=0 and xgBoostLevel=1)
-        finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, True, xgBoostLevel, info)
+        finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False, xgBoostLevel, info)
 
         print('\n<<< [33] len of finalResult >>>')
         print(len(finalResult))
