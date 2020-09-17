@@ -860,33 +860,37 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
         print('finalCvROC             : ' + str(finalCvROC))
         print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
 
-        # only rateOf1s values become 1 for final result, when TESTING
+        # only rateOf1's values become 1 for final result
         # round y values to get the final result
-        finalSorted = sorted(finalCvPred, reverse=True)
-        cutline = finalSorted[int(rateOf1s * len(finalSorted))-1] # top 'rateOf1s' largest value
-            
-        for i in range(len(finalCvPred)):
-            if finalCvPred[i] >= cutline: finalCvPred[i] = 1
-            else: finalCvPred[i] = 0
+        if rounding == True:
+            finalSorted = sorted(finalCvPred, reverse=True)
+            cutline = finalSorted[int(rateOf1s * len(finalSorted))-1] # top 'rateOf1s' largest value
+                
+            for i in range(len(finalCvPred)):
+                if finalCvPred[i] >= cutline: finalCvPred[i] = 1
+                else: finalCvPred[i] = 0
 
-        # return final result (testOutput and ROC)
-        testOutput = finalCvPred
-        ROC = finalCvROC
+            # return final result (testOutput and ROC)
+            testOutput = finalCvPred
+            ROC = finalCvROC
 
-        # compute cvROC_finalCVPred (using finalCvPred instead of y_Predict)
-        fpr, tpr, _ = roc_curve(yTrainMatrix[:len(y_Test)], finalCvPred[:len(y_Test)])
-        cvROC_finalCvPred = auc(fpr, tpr)
+            # compute cvROC_finalCVPred (using finalCvPred instead of y_Predict)
+            fpr, tpr, _ = roc_curve(yTrainMatrix[:len(y_Test)], finalCvPred[:len(y_Test)])
+            cvROC_finalCvPred = auc(fpr, tpr)
 
-        # print evaluation result
-        print('\n<<< [20-3] xgBoost ROC result (after rounding) >>>')
-        print('validation             : ' + str(validation))
-        print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
-        print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
+            # print evaluation result
+            print('\n<<< [20-3] xgBoost ROC result (after rounding) >>>')
+            print('validation             : ' + str(validation))
+            print('finalCvPred (first 20) : ' + str(finalCvPred[:20]) + ' / len=' + str(len(finalCvPred)))
+            print('cvROC_finalCvPred      : ' + str(cvROC_finalCvPred))
 
         # finish when VALIDATION
         if validation == True: return
 
+        ##### EXECUTED FOR TESTING ONLY #####
         # proceed when TESTING
+        
+        return
 
     # for XG_BOOST_LEVEL 0
     # save predictions into the array
