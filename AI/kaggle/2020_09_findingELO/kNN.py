@@ -1,3 +1,6 @@
+import numpy as np
+import math
+
 # k Nearest Neighbor algorithm
 # dfTrain    : dataframe for training data
 # dfTest     : dataframe for test data

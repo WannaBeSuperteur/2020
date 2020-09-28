@@ -1,8 +1,10 @@
-import makeDF as MDF
+import makeDF as _MDF
+import printData as _PD
 import matplotlib.pyplot as plt
 import seaborn as seab
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
+import pandas as pd
 
 # fn           : file name
 # ftype        : file type (json, csv, txt)
@@ -24,7 +26,7 @@ def makePCA(fn, ftype, fcols, n_cols, isTrain, target, tfCols, exceptCols, comp,
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = MDF.makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
+    (dataSetDF, targetCol) = _MDF.makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True
@@ -108,6 +110,6 @@ def makePCA(fn, ftype, fcols, n_cols, isTrain, target, tfCols, exceptCols, comp,
     if isTrain == False: return (df_pca, comp, exva, mean, targetCol)
 
     # print data as 2d or 3d space (run only on training data)
-    printDataAsSpace(n_cols, df_pca, '(PCA) training data')
+    _PD.printDataAsSpace(n_cols, df_pca, '(PCA) training data')
 
     return (df_pca, comp, exva, mean, targetCol)

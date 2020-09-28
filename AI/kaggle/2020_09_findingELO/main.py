@@ -56,7 +56,8 @@ if __name__ == '__main__':
     trainName = 'data_trainPgn.txt'
     testName = 'data_testPgn.txt'
     ftype = 'txt'
-    fcols = None
+    fcolsTrain = ['id', 'result', 'welo', 'belo', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9']
+    fcolsTest = ['id', 'result', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9']
 
     #################################
     ###                           ###
@@ -66,12 +67,12 @@ if __name__ == '__main__':
     
     # make PCA from training data
     PCAdimen = 4 # dimension of PCA
-    idCol = 'col0'
-    targetColName = 'col2'
+    idCol = 'id'
+    targetColName = 'welo'
     tfCols = []
-    textCols = ['col1']
-    exceptCols = [] # list of columns not used
-    exceptColsForMethod2 = [] # list of columns not used for method 2
+    textCols = ['result']
+    exceptCols = ['id', 'belo'] # list of columns not used
+    exceptColsForMethod2 = ['id', 'belo'] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
     useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
@@ -110,7 +111,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for training data
         # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
-        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, ftype, fcols, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
+        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, ftype, fcolsTrain, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
                                                               None, None, None, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords)
 
         # remove target column from comp and mean
@@ -120,14 +121,14 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
-        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, ftype, fcols, PCAdimen, False, None, tfCols, textCols+exceptCols,
+        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, ftype, fcolsTest, PCAdimen, False, None, tfCols, textCols+exceptCols,
                                                                 comp, exva, mean, False, useLog, logConstant, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
 
             # k-NN of test data
-            finalResult = _kNN.kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, useAverage)
+            finalResult = _KNN.kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, useAverage)
 
         # use decision tree
         elif method == 1:
@@ -176,8 +177,8 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcols, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
-        (test_df, noUse) = _DF.makeDataFrame(testName, ftype, fcols, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (test_df, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
         print('\n<<< [23] train_df.columns >>>')
         print(train_df.columns)
@@ -231,8 +232,8 @@ if __name__ == '__main__':
     elif method == 4:
         
         # get train and test dataFrame
-        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcols, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-        (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcols, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
         print('\n<<< [31] df_pca_train method==4 >>>')
@@ -263,3 +264,5 @@ if __name__ == '__main__':
     f = open('result.csv', 'w')
     f.write(result)
     f.close()
+
+    # 향후계획: method 5로 딥러닝, method 6으로 PCA 없는 딥러닝 추가
