@@ -80,7 +80,7 @@ if __name__ == '__main__':
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 4 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 1 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
     # for method 0
     kNN_k = 120 # number k for kNN
@@ -249,18 +249,47 @@ if __name__ == '__main__':
         print('\n<<< [33] len of finalResult >>>')
         print(len(finalResult))
 
-    # write result (modify later)
-    jf = open(testName, 'r')
-    json_file = jf.read()
-    jf.close()
-
-    json_data = json.loads(json_file)
-    
+    # write result
     result = str(idCol) + ',' + str(targetColName) + '\n'
-    for i in range(len(json_data)):
-        x = json_data[i][idCol]
-        result += str(x) + ',' + str(finalResult[i]) + '\n'
+    
+    if ftype == 'json': # type is 'json'
+        jf = open(testName, 'r')
+        json_file = jf.read()
+        jf.close()
 
+        json_data = json.loads(json_file)
+
+        # make result for each line
+        for i in range(len(json_data)):
+            x = json_data[i][idCol]
+            result += str(x) + ',' + str(finalResult[i]) + '\n'
+
+    elif ftype == 'csv': # type is 'csv'
+        csv_df = pd.read_csv(fn)
+
+        # make result for each line
+        for i in range(len(csv_df)):
+            x = csv_df[i][idCol]
+            result += str(x) + ',' + str(finalResult[i]) + '\n'
+
+    elif ftype == 'txt': # type is 'txt'
+        f_ = open(testName, 'r')
+        fl = f_.readlines()
+        f_.close()
+
+        # find the index of idcol
+        idColIndex = 0
+        for i in range(len(fcolsTest)):
+            if fcolsTest[i] == idCol:
+                idColIndex = i
+                break
+
+        # make result for each line
+        for i in range(len(fl)):
+            x = fl[i].split('\t')[0]
+            result += str(x) + ',' + str(finalResult[i]) + '\n'
+
+    # write the result to file
     f = open('result.csv', 'w')
     f.write(result)
     f.close()
