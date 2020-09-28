@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 # lineStart : start with this symbol, for example (data.pgm), it is '[Event'
 # nsTrain   : for example (data.pgm), to obtain 'Event', 'Result', 'WhiteElo' and 'BlackElo',
@@ -64,8 +65,8 @@ def saveArray(fn, _2dArray):
     # append to result
     for i in range(rows):
         for j in range(cols):
-            if j < cols-1: result += _2dArray[i][j] + '\t'
-            else: result += _2dArray[i][j]
+            if j < cols-1: result += str(_2dArray[i][j]) + '\t'
+            else: result += str(_2dArray[i][j])
 
         result += '\n'
 
@@ -98,11 +99,53 @@ def loadArray(fn):
     # return the result array
     return result
 
+# get loged value
+def getLogVal(val):
+    try: x = float(val)
+    except: x = 0
+                
+    if x < 0: return -math.log(1-x, 10)
+    else: return math.log(1+x, 10)
+
 # test
 if __name__ == '__main__':
+    # read from original data
     (trainPgn, testPgn) = readPGN('data.pgn', '[Event', [[0, 8, 2], [6, 9, 2], [7, 11, 2], [8, 11, 2]],
                                   [[0, 8, 2], [6, 9, 2]], 25000)
-    
+
+    # read from stockfish.csv
+    fs = open('stockfish.csv', 'r')
+    fsLines = fs.readlines()
+    rows = len(fsLines)
+    fs.close()
+
+    for i in range(50000):
+        fsLines[i+1] = fsLines[i+1].split('\n')[0] # remove new-line character from the line
+        thisLineSplit = fsLines[i+1].split(',')[1].split(' ') # split moveScores
+        gameLength = len(thisLineSplit)
+
+        # extract data from moveScores
+        gameData = []
+        N = 10 # number of points to extract data
+        for j in range(N): gameData.append(thisLineSplit[int(gameLength*j/N)])
+
+        # handle NA data
+        for j in range(len(gameData)):
+            if gameData[j] == 'NA': gameData[j] = gameData[j-1]
+
+        # add this data to trainPgn or testPgn
+        if i < 25000: # training data -> add to trainPgn
+            for j in range(len(gameData)):
+                trainPgn[i].append(getLogVal(gameData[j]))
+                
+        else: # test data -> add to testPgn
+            for j in range(len(gameData)):
+                testPgn[i-25000].append(getLogVal(gameData[j]))
+
+    print(np.array(trainPgn))
+    print(np.array(testPgn))
+
+    # save array
     saveArray('data_trainPgn.txt', trainPgn)
     saveArray('data_testPgn.txt', testPgn)
     
