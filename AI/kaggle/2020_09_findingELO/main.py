@@ -53,8 +53,10 @@ import textVec as _TV
 if __name__ == '__main__':
 
     # meta info
-    trainName = 'train.json'
-    testName = 'test.json'
+    trainName = 'data_trainPgn.txt'
+    testName = 'data_testPgn.txt'
+    ftype = 'txt'
+    fcols = None
 
     #################################
     ###                           ###
@@ -64,31 +66,12 @@ if __name__ == '__main__':
     
     # make PCA from training data
     PCAdimen = 4 # dimension of PCA
-    idCol = 'request_id'
-    targetColName = 'requester_received_pizza'
-    tfCols = ['post_was_edited', 'requester_received_pizza']
-    textCols = ['request_text', 'request_text_edit_aware',
-                    'request_title', 'requester_subreddits_at_request', 'requester_user_flair']
-    exceptCols = ["giver_username_if_known",
-                  "request_id",
-                  "number_of_downvotes_of_request_at_retrieval",
-                  "number_of_upvotes_of_request_at_retrieval",
-                  "post_was_edited",
-                  "request_number_of_comments_at_retrieval",
-                  "request_text",
-                  "requester_account_age_in_days_at_retrieval",
-                  "requester_days_since_first_post_on_raop_at_retrieval",
-                  "requester_number_of_comments_at_retrieval",
-                  "requester_number_of_comments_in_raop_at_retrieval",
-                  "requester_number_of_posts_at_retrieval",
-                  "requester_number_of_posts_on_raop_at_retrieval",
-                  "requester_subreddits_at_request",
-                  "requester_upvotes_minus_downvotes_at_retrieval",
-                  "requester_upvotes_plus_downvotes_at_retrieval",
-                  "requester_user_flair",
-                  "requester_username",
-                  "unix_timestamp_of_request_utc"] # list of columns not used
-    exceptColsForMethod2 = ["giver_username_if_known", "request_id", "requester_username"] # list of columns not used for method 2
+    idCol = 'col0'
+    targetColName = 'col2'
+    tfCols = []
+    textCols = ['col1']
+    exceptCols = [] # list of columns not used
+    exceptColsForMethod2 = [] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
     useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
@@ -127,7 +110,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for training data
         # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
-        (df_pca_train, comp, exva, mean, targetCol) = makePCA(trainName, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
+        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, ftype, fcols, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
                                                               None, None, None, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords)
 
         # remove target column from comp and mean
@@ -137,23 +120,23 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
-        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = makePCA(testName, PCAdimen, False, None, tfCols, textCols+exceptCols,
+        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, ftype, fcols, PCAdimen, False, None, tfCols, textCols+exceptCols,
                                                                 comp, exva, mean, False, useLog, logConstant, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
 
             # k-NN of test data
-            finalResult = kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, useAverage)
+            finalResult = _kNN.kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, useAverage)
 
         # use decision tree
         elif method == 1:
             
             # make decision tree
-            DT = createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
+            DT = _DT.createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
 
             # predict test data using decision tree
-            finalResult = predictDT(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
+            finalResult = _DT.predictDT(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
         # use xgBoost
         # https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
@@ -165,7 +148,7 @@ if __name__ == '__main__':
 
             # iteratively validation
             for i in range(times):
-                (accuracy, ROC, _) = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True, xgBoostLevel, info)
+                (accuracy, ROC, _) = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True, xgBoostLevel, info)
                 totalAccuracy += accuracy
                 totalROC += ROC
 
@@ -174,7 +157,7 @@ if __name__ == '__main__':
             print('avg ROC      : ' + str(totalROC / times))
 
             # predict values
-            finalResult = usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, xgBoostLevel, info)
+            finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, xgBoostLevel, info)
 
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
     # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
@@ -193,8 +176,8 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
-        (test_df, noUse) = makeDataFrame(testName, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcols, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (test_df, noUse) = _DF.makeDataFrame(testName, ftype, fcols, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
         print('\n<<< [23] train_df.columns >>>')
         print(train_df.columns)
@@ -248,8 +231,8 @@ if __name__ == '__main__':
     elif method == 4:
         
         # get train and test dataFrame
-        (df_pca_train, targetColOfTrainDataFrame) = makeDataFrame(trainName, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-        (df_pca_test, noUse) = makeDataFrame(testName, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcols, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcols, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
         print('\n<<< [31] df_pca_train method==4 >>>')
@@ -260,7 +243,7 @@ if __name__ == '__main__':
 
         # run xgboost
         # when setting validation as True, finally, always return error at [33] (both xgBoostLevel=0 and xgBoostLevel=1)
-        finalResult = usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False, xgBoostLevel, info)
+        finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False, xgBoostLevel, info)
 
         print('\n<<< [33] len of finalResult >>>')
         print(len(finalResult))

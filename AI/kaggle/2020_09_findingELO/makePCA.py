@@ -1,4 +1,13 @@
+import makeDF as MDF
+import matplotlib.pyplot as plt
+import seaborn as seab
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
 # fn           : file name
+# ftype        : file type (json, csv, txt)
+# fcols        : columns (if ftype is 'txt' and fcols is None, use default name)
+
 # n_cols       : number of columns(components) of PCA
 # isTrain      : training(True) or not(False)
 # target       : target column if isTrain is True
@@ -11,11 +20,11 @@
 # logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makePCA(fn, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords):
+def makePCA(fn, ftype, fcols, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
+    (dataSetDF, targetCol) = MDF.makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True

@@ -1,4 +1,11 @@
+import pandas as pd
+import numpy as np
+import readData as RD
+
 # fn           : file name
+# ftype        : file type (json, csv, txt)
+# fcols        : columns (if ftype is 'txt' and fcols is None, use default name)
+
 # isTrain      : training(True) or not(False)
 # target       : target column if isTrain is True
 # tfCols       : columns that contains True or False values
@@ -7,13 +14,26 @@
 # logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
+def makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
     print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
-    jf = open(fn, 'r')
-    json_loaded = json.load(jf)
-    json_data = pd.DataFrame(json_loaded)
+    if ftype == 'json': # type is 'json'
+        jf = open(fn, 'r')
+        df_loaded = json.load(jf)
+        df_data = pd.DataFrame(df_loaded)
+        
+    elif ftype == 'csv': # type is 'csv'
+        df_data = pd.read_csv(fn)
+        
+    elif ftype == 'txt': # type is 'txt'
+        df_array = RD.loadArray(fn)
+        if fcols != None: df_data = pd.DataFrame(data=df_array, columns=fcols)
+        else:
+            cols = []
+            for i in range(len(df_array[0])): cols.append('col' + str(i))
+            df_data = pd.DataFrame(data=df_array, columns=cols)
+    
     targetCol = -1 # index of target column
 
     # True to 1, False to 0, and decimal to 0
@@ -22,28 +42,28 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, 
     for i in range(len(tfCols)): tfColsIndex.append(-1) # column indices of tfCols
 
     # initialize tfColsIndex
-    for i in range(len(json_data.columns)):
+    for i in range(len(df_data.columns)):
         for j in range(len(tfCols)):
-            if json_data.columns[i] == tfCols[j]: tfColsIndex[j] = i
+            if df_data.columns[i] == tfCols[j]: tfColsIndex[j] = i
 
     # extract column name before change into np.array
-    dataCols = np.array(json_data.columns)
+    dataCols = np.array(df_data.columns)
 
-    # change json_data into np.array
-    json_data = json_data.to_numpy()
+    # change df_data into np.array
+    df_data = df_data.to_numpy()
 
     # modify values: True to 1, False to 0, and decimal to 0
     for x in range(len(tfCols)):
 
         # True to 1, False to 0, and decimal to 0
-        for i in range(len(json_data)):
-            if str(json_data[i][tfColsIndex[x]]) == 'True':
-                json_data[i][tfColsIndex[x]] = 1
+        for i in range(len(df_data)):
+            if str(df_data[i][tfColsIndex[x]]) == 'True':
+                df_data[i][tfColsIndex[x]] = 1
             else:
-                json_data[i][tfColsIndex[x]] = 0
+                df_data[i][tfColsIndex[x]] = 0
 
-    json_data = pd.DataFrame(json_data, columns=dataCols)
-    print('\n<<< [0] json_data.shape >>>\n' + str(json_data.shape))
+    df_data = pd.DataFrame(df_data, columns=dataCols)
+    print('\n<<< [0] df_data.shape >>>\n' + str(df_data.shape))
 
     # create data
     # .data and .target
@@ -99,10 +119,10 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, 
     for i in range(len(extractCols)): print(extractCols[i] + ' : ' + extractColInfo[i])
 
     # bind the data and target
-    if isTrain == True: dataSet = {'data':json_data[dataPart], 'target':json_data[targetPart]}
-    else: dataSet = {'data':json_data[dataPart]}
+    if isTrain == True: dataSet = {'data':df_data[dataPart], 'target':df_data[targetPart]}
+    else: dataSet = {'data':df_data[dataPart]}
     
-    dataSetDF = json_data[extractCols]
+    dataSetDF = df_data[extractCols]
 
     # change dataSetDF into float type
     try:
@@ -119,7 +139,7 @@ def makeDataFrame(fn, isTrain, target, tfCols, exceptCols, useLog, logConstant, 
     if specificCol != None and frequentWords != None:
 
         # add specificCol to the dataFrame
-        dataSetDF = json_data[extractCols + [specificCol]]
+        dataSetDF = df_data[extractCols + [specificCol]]
 
         # appearanceOfFrequentWordsTest(dataSetDF, specificCol)
         dataSetDF = appearanceOfFrequentWords(dataSetDF, specificCol, frequentWords)
