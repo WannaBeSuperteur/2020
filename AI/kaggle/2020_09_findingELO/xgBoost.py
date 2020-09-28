@@ -1,3 +1,10 @@
+import math
+import random
+from sklearn.model_selection import train_test_split, StratifiedKFold
+import numpy as np
+import xgboost as xgb
+from xgboost import XGBClassifier
+
 # df_pca_train : training data (dataFrame) [pca0 pca1 ... pcaN target]
 # df_pca_test  : test data (dataFrame) [pca0 pca1 ... pcaN]
 # name         : name of this validation/test
@@ -95,7 +102,7 @@ def usingXgBoost(df_pca_train, df_pca_test, targetColName, name, rounding, valid
                 x_Train, x_Test = xTrainMatrix[trainIndex], xTrainMatrix[testIndex]
                 y_Train, y_Test = yTrainMatrix[trainIndex], yTrainMatrix[testIndex]
 
-                # using xgb.DMatrix
+                # using xgb.DMatrix (LABEL MUST BE IN [0,1] for LOGISTIC REGRESSION)
                 dTrain = xgb.DMatrix(x_Train, label=y_Train)
                 dTest = xgb.DMatrix(x_Test, label=y_Test)
 

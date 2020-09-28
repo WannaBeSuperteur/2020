@@ -1,3 +1,9 @@
+from nltk.corpus import stopwords
+from string import punctuation
+from nltk.stem import WordNetLemmatizer # wnl
+from nltk import pos_tag
+from nltk import sent_tokenize, word_tokenize
+
 # for method 2
 # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
 def penn2morphy(penntag):

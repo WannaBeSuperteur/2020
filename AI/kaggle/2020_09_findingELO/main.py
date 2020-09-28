@@ -28,7 +28,7 @@ from nltk import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from string import punctuation
 from nltk.stem import PorterStemmer # porter
-from nltk.stem import WordNetLemmatizer # wml
+from nltk.stem import WordNetLemmatizer # wnl
 from nltk import pos_tag
 from collections import Counter
 from io import StringIO
@@ -76,11 +76,11 @@ if __name__ == '__main__':
     exceptTargetForPCA = True # except target column for PCA
     useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
-    specificCol = None # specific column to solve problem (eg: 'request_text_edit_aware')
+    specificCol = 'score0' # specific column to solve problem (eg: 'request_text_edit_aware')
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 0 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 4 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
     # for method 0
     kNN_k = 120 # number k for kNN
@@ -92,7 +92,7 @@ if __name__ == '__main__':
     DT_splitter = 'random' # 'best' or 'random'
 
     # for method 4
-    xgBoostLevel = 1 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+    xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
     epochs = 100
     boostRound = 10000
     earlyStoppingRounds = 10
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         nltk.download('stopwords')
 
         # create count vectorizer
-        count_vect = CountVectorizer(analyzer=preprocess_text)
+        count_vect = CountVectorizer(analyzer=_TV.preprocess_text)
 
         # get train and test dataFrame
         (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
@@ -249,7 +249,7 @@ if __name__ == '__main__':
         print('\n<<< [33] len of finalResult >>>')
         print(len(finalResult))
 
-    # write result
+    # write result (modify later)
     jf = open(testName, 'r')
     json_file = jf.read()
     jf.close()

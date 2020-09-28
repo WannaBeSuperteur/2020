@@ -1,3 +1,8 @@
+import numpy as np
+from sklearn import tree
+from sklearn.tree import export_text
+import pandas as pd
+
 # create Decision Tree using DataFrame
 # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
 # dataSetDF    : dataframe to create Decision Tree
