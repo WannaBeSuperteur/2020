@@ -50,6 +50,10 @@ import printData as _PD
 import xgBoost as _XB
 import textVec as _TV
 
+# deep Learning
+import deepLearning_main as DL
+import deepLearning_GPU_helper as helper
+
 if __name__ == '__main__':
 
     # meta info
@@ -68,11 +72,11 @@ if __name__ == '__main__':
     # make PCA from training data
     PCAdimen = 4 # dimension of PCA
     idCol = 'id'
-    targetColName = 'welo'
+    targetColName = 'belo'
     tfCols = []
     textCols = ['result']
-    exceptCols = ['id', 'belo'] # list of columns not used
-    exceptColsForMethod2 = ['id', 'belo'] # list of columns not used for method 2
+    exceptCols = ['id', 'welo'] # list of columns not used
+    exceptColsForMethod2 = ['id', 'welo'] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
     useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
@@ -80,7 +84,7 @@ if __name__ == '__main__':
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 1 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 5 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
     # for method 0
     kNN_k = 120 # number k for kNN
@@ -100,14 +104,18 @@ if __name__ == '__main__':
     rateOf1s = 0.15 # rate of 1's (using this, portion of 1 should be rateOf1s)
     info = [epochs, boostRound, earlyStoppingRounds, foldCount, rateOf1s]
 
+    # for deep learning (method 5 and 6)
+    deepLearningFn = ['data_train_i.txt', 'data_train_o.txt', 'data_test_i.txt', 'data_test_o.txt']
+    valid = 0
+
     #################################
     ###                           ###
     ###      model execution      ###
     ###                           ###
     #################################
 
-    # method 0, 1 or 3 -> use PCA    
-    if method == 0 or method == 1 or method == 3:
+    # method 0, 1, 3 or 5 -> use PCA    
+    if method == 0 or method == 1 or method == 3 or method == 5:
 
         # get PCA (components and explained variances) for training data
         # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
@@ -160,6 +168,19 @@ if __name__ == '__main__':
             # predict values
             finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, xgBoostLevel, info)
 
+        # use Deep Learning for PCA-ed data
+        elif method == 5:
+            
+            # save data as file
+            DL.dataFromDF(df_pca_train, df_pca_test, 'target', [], deepLearningFn)
+
+            # deep learning procedure (using file and valid value)
+            finalResult = DL.deepLearningProcedure(deepLearningFn, valid)
+
+            # print final result
+            print('\n<<< [23] len of finalResult >>>')
+            print(len(finalResult))
+            
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
     # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
     elif method == 2:
@@ -180,16 +201,16 @@ if __name__ == '__main__':
         (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
         (test_df, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
-        print('\n<<< [23] train_df.columns >>>')
+        print('\n<<< [24] train_df.columns >>>')
         print(train_df.columns)
-        print('\n<<< [24] train_df >>>')
+        print('\n<<< [25] train_df >>>')
         print(train_df)
-        print('\n<<< [25] test_df.columns >>>')
+        print('\n<<< [26] test_df.columns >>>')
         print(test_df.columns)
-        print('\n<<< [26] test_df >>>')
+        print('\n<<< [27] test_df >>>')
         print(test_df)
 
-        print('\n<<< [27] train_df[' + targetColName + '] >>>')
+        print('\n<<< [28] train_df[' + targetColName + '] >>>')
         print(train_df[targetColName])
 
         # change train_df['requester_received_pizza']
@@ -205,9 +226,9 @@ if __name__ == '__main__':
         trainTags = train_df[targetColName].astype('bool')
         testSet = count_vect.transform(test_df[specificCol])
 
-        print('\n<<< [28] trainSet >>>')
+        print('\n<<< [29] trainSet >>>')
         print(trainSet)
-        print('\n<<< [29] trainTags >>>')
+        print('\n<<< [30] trainTags >>>')
         print(trainTags)
 
         # In [53] / In [55]:
@@ -217,7 +238,7 @@ if __name__ == '__main__':
         # In [56]:
         predictions = clf.predict(testSet)
 
-        print('\n<<< [30] predictions >>>')
+        print('\n<<< [31] predictions >>>')
         print(predictions)
 
         # create finalResult based on predictions
@@ -236,17 +257,41 @@ if __name__ == '__main__':
         (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
-        print('\n<<< [31] df_pca_train method==4 >>>')
+        print('\n<<< [32] df_pca_train method==4 >>>')
         print(df_pca_train)
 
-        print('\n<<< [32] df_pca_test method==4 >>>')
+        print('\n<<< [33] df_pca_test method==4 >>>')
         print(df_pca_test)
 
         # run xgboost
         # when setting validation as True, finally, always return error at [33] (both xgBoostLevel=0 and xgBoostLevel=1)
         finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False, xgBoostLevel, info)
 
-        print('\n<<< [33] len of finalResult >>>')
+        print('\n<<< [34] len of finalResult >>>')
+        print(len(finalResult))
+
+    # use Deep Learning
+    elif method == 6:
+
+        # get train and test dataFrame
+        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+
+        # print training and test data
+        print('\n<<< [35] df_pca_train method==4 >>>')
+        print(df_pca_train)
+
+        print('\n<<< [36] df_pca_test method==4 >>>')
+        print(df_pca_test)
+
+        # save data as file
+        DL.dataFromDF(df_pca_train, df_pca_test, targetColName, exceptCols, deepLearningFn)
+
+        # deep learning procedure (using file and valid value)
+        finalResult = DL.deepLearningProcedure(deepLearningFn, valid)
+
+        # print final result
+        print('\n<<< [37] len of finalResult >>>')
         print(len(finalResult))
 
     # write result
@@ -294,4 +339,5 @@ if __name__ == '__main__':
     f.write(result)
     f.close()
 
-    # 향후계획: method 5로 딥러닝, method 6으로 PCA 없는 딥러닝 추가
+    # 향후계획: method 5로 딥러닝, method 6으로 PCA 없는 딥러닝 추가 [ING: method 5 valid=0까지 완료]
+    #           딥러닝을 위한 학습 데이터를 가져올 때 출력을 표준정규분포로 표준화 옵션 추가
