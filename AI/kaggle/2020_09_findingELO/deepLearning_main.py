@@ -217,6 +217,16 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn, normalizeTarget):
     # remove columns
     dfTrainInput = np.delete(dfTrainInput, colsToRemoveIndexTrain, 1)
     dfTestInput = np.delete(dfTestInput, colsToRemoveIndexTest, 0)
+
+    # print each dataFrame
+    print('\n *** dataFrame (training input) ***')
+    print(dfTrainInput)
+
+    print('\n *** dataFrame (test input) ***')
+    print(dfTestInput)
+
+    print('\n *** dataFrame (training output) ***')
+    print(dfTrainOutput)
     
     # make train input, train output, and test input array
     dfTrainInputArray = np.array(dfTrainInput)
@@ -228,7 +238,7 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn, normalizeTarget):
     dfTrainOutputStddev = np.std(dfTrainOutputArray) # stddev of dfTrainOutputArray
     
     for i in range(len(dfTrainOutputArray)):
-        dfTrainOutputArray = (dfTrainOutputArray - dfTrainOutputMean)/dfTrainOutputStddev
+        dfTrainOutputArray[i] = (dfTrainOutputArray[i] - dfTrainOutputMean)/dfTrainOutputStddev
 
     # train output array -> [a, b, c, ...] to [[a], [b], [c], ...]
     dfTrainOutputArray_ = []
