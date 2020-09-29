@@ -58,6 +58,9 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
         op = helper.getOptimizer(modelInfo) # optimizer
 
+        #print(trainI[:5])
+        #print(trainO[:5])
+
         try: # try reading test.h5 and test.json
             newModel = deepLearning_GPU.deepLearningModel(modelName, True)
             testOutput = deepLearning_GPU.modelOutput(newModel, testI)
@@ -176,12 +179,13 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         print('accuracy : ' + str(round(accuracy, 6)))
 
 # extract train input, train output, and test input from dataFrame and save them as a file
-# dfTrain       : original dataFrame for training
-# dfTest        : original dataFrame for test
-# targetColName : target column name for both training and test data
-# exceptCols    : except for these columns for both training and test
-# fn            : [train input file name, train output file name, test input file name, test output file name]
-def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn):
+# dfTrain         : original dataFrame for training
+# dfTest          : original dataFrame for test
+# targetColName   : target column name for both training and test data
+# exceptCols      : except for these columns for both training and test
+# fn              : [train input file name, train output file name, test input file name, test output file name]
+# normalizeTarget : normalize target(output) value?
+def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn, normalizeTarget):
 
     # make train input, train output, and test input dataFrame
     dfTrainInput = dfTrain.copy()
@@ -218,6 +222,13 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn):
     dfTrainInputArray = np.array(dfTrainInput)
     dfTrainOutputArray = np.array(dfTrainOutput)
     dfTestInputArray = np.array(dfTestInput)
+
+    # normalize training output data
+    dfTrainOutputMean = np.mean(dfTrainOutputArray) # mean of dfTrainOutputArray
+    dfTrainOutputStddev = np.std(dfTrainOutputArray) # stddev of dfTrainOutputArray
+    
+    for i in range(len(dfTrainOutputArray)):
+        dfTrainOutputArray = (dfTrainOutputArray - dfTrainOutputMean)/dfTrainOutputStddev
 
     # train output array -> [a, b, c, ...] to [[a], [b], [c], ...]
     dfTrainOutputArray_ = []
