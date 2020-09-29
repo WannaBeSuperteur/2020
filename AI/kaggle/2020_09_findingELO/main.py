@@ -106,7 +106,7 @@ if __name__ == '__main__':
 
     # for deep learning (method 5 and 6)
     deepLearningFn = ['data_train_i.txt', 'data_train_o.txt', 'data_test_i.txt', 'data_test_o.txt']
-    valid = 0 # portion of valid data
+    valid = 0.25 # portion of valid data
     normalizeTarget = True # normalize training output value?
 
     #################################
@@ -176,9 +176,10 @@ if __name__ == '__main__':
             DL.dataFromDF(df_pca_train, df_pca_test, 'target', [], deepLearningFn, normalizeTarget)
 
             # deep learning procedure (using file and valid value)
-            finalResult = DL.deepLearningProcedure(deepLearningFn, valid)
+            finalResult = DL.deepLearningProcedure(deepLearningFn, valid, normalizeTarget)
 
             # print final result
+            # "if valid > 0, ERROR is occurred"
             print('\n<<< [23] len of finalResult >>>')
             print(len(finalResult))
             
@@ -289,9 +290,10 @@ if __name__ == '__main__':
         DL.dataFromDF(df_pca_train, df_pca_test, targetColName, exceptCols, deepLearningFn, normalizeTarget)
 
         # deep learning procedure (using file and valid value)
-        finalResult = DL.deepLearningProcedure(deepLearningFn, valid)
+        finalResult = DL.deepLearningProcedure(deepLearningFn, valid, normalizeTarget)
 
         # print final result
+        # "if valid > 0, ERROR is occurred"
         print('\n<<< [37] len of finalResult >>>')
         print(len(finalResult))
 
@@ -340,5 +342,5 @@ if __name__ == '__main__':
     f.write(result)
     f.close()
 
-    # 향후계획: method 5로 딥러닝, method 6으로 PCA 없는 딥러닝 추가 [ING: method 5 valid=0까지 완료]
+    # 향후계획: method 5로 딥러닝, method 6으로 PCA 없는 딥러닝 추가 [ING: method 5 valid>0까지 완료]
     #           딥러닝을 위한 학습 데이터를 가져올 때 출력을 표준정규분포로 표준화 옵션 추가 [FIN]

@@ -14,18 +14,24 @@ import readData as RD
 # testOutputFileName : test output data file
 # valid              : portion of validation data
 #                      if >0, do not use test dataset and return validation input and output from input and output data
+# normalizeTarget    : normalize target(output) value?
 def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName, valid,
-                 deviceName, epoch, printed, modelName):
+                 deviceName, epoch, printed, modelName, normalizeTarget):
 
     # read files
+    # trainO : (originalOutput - meanOriginalOutput)/stdOriginalOutput
     trainI = helper.getDataFromFile(inputFileName, None) # input train data
     trainO = helper.getDataFromFile(outputFileName, None) # output train data (Sigmoid applied)
     testI = helper.getDataFromFile(testFileName, None) # test input data (set nullValue to 0)
 
-    # apply sigmoid to both train input and train output data
+    # apply sigmoid to train output data
+    # trainO :   sigmoid(normalize(originalOutput))
+    #          = sigmoid((originalOutput - meanOriginalOutput)/stdOriginalOutput)
     for i in range(len(trainO)):
         for j in range(len(trainO[0])):
             trainO[i][j] = helper.sigmoid(trainO[i][j])
+
+    # for i in range(15): print(trainO[i])
 
     print('')
     print(' ---- number of rows ----')
@@ -50,6 +56,13 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
     f = open('deepLearning_model.txt', 'r')
     modelInfo = f.readlines()
     f.close()
+
+    # read normalization info
+    if normalizeTarget == True:
+        fnorm = open('data_normalizeInfo.txt', 'r')
+        fnormInfo = fnorm.readlines()
+        fnormMean = float(fnormInfo[0].split(' ')[0]) # mean of training data
+        fnormStd = float(fnormInfo[0].split(' ')[1]) # stddev of training data
 
     #### TEST when the value of valid is 0 ####
     if valid == 0:
@@ -80,9 +93,13 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         outputLayer = testOutput[len(testOutput)-1]
 
         # inverse sigmoid
+        # output:   denormalize(invSigmoid(sigmoid(normalize(originalOutput))))
+        #         = denormalize((originalOutput - meanOriginalOutput)/stdOriginalOutput)
+        #         = originalOutput
         for i in range(len(outputLayer)): # for each output data
             for j in range(len(outputLayer[0])): # for each value of output data
                 outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
+                if normalizeTarget == True: outputLayer[i][j] = outputLayer[i][j] * fnormStd + fnormMean
 
         # write to file
         result = ''
@@ -91,7 +108,6 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             for j in range(len(outputLayer[0])): # for each value of output data
                 result += str(outputLayer[i][j]) + '\t'
             result += '\n'
-        print(result)
 
         f = open(testOutputFileName.split('.')[0] + '_prediction.txt', 'w')
         f.write(result)
@@ -102,12 +118,14 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         for i in range(len(outputLayer)): # for each output data
             finalResult.append(outputLayer[i][0])
 
+        return finalResult
+
     #### VALIDATION when the value of valid is >0 ####
     else:
 
         # make index-list of validation data
         inputSize = len(trainI)
-        validSize = inputSize * valid
+        validSize = int(inputSize * valid)
         trainSize = inputSize - validSize
 
         validArray = []
@@ -116,6 +134,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             validArray[random.randint(0, inputSize-1)] = 1
 
         # make train and validation data
+        # _TrainO, _ValidO : sigmoid((originalOutput - meanOriginalOutput)/stdOriginalOutput)
         _TrainI = [] # training input
         _TrainO = [] # training output
         _ValidI = [] # valid input
@@ -144,6 +163,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             print('\n <<<< LEARNING >>>>\n')
 
             # False, True는 각각 dataPrint(학습데이터 출력 여부), modelPrint(model의 summary 출력 여부)
+            # _TrainO : sigmoid((originalOutput - meanOriginalOutput)/stdOriginalOutput)
             deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', _TrainI, _TrainO, newModelName, epoch, False, True, deviceName)
 
             validModel = deepLearning_GPU.deepLearningModel(newModelName, True)
@@ -157,26 +177,44 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         accuracy = 0 # accuracy
 
         outputLayer = predictedValidOutput[len(predictedValidOutput)-1]
-
+        
         # inverse sigmoid
+        # output :   invSigmoid(sigmoid(normalize(originalOutput)))
+        #          = (originalOutput - meanOriginalOutput)/stdOriginalOutput
         for i in range(len(outputLayer)): # for each output data
             for j in range(len(outputLayer[0])): # for each value of output data
                 outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
         
         # compute error
+        # output  : denormalize((originalOutput - meanOriginalOutput)/stdOriginalOutput)
+        #           = originalOutput
+        # _Valid0 : denormalize(invSigmoid(sigmoid((originalOutput - meanOriginalOutput)/stdOriginalOutput)))
+        #           = denormalize((originalOutput - meanOriginalOutput)/stdOriginalOutput)
+        #           = originalOutput
+        for i in range(len(outputLayer)): # for each output data
+            for j in range(len(outputLayer[0])): # for each value of output data
+                _ValidO[i][j] = helper.invSigmoid(_ValidO[i][j])
+                if normalizeTarget == True:
+                    _ValidO[i][j] = _ValidO[i][j] * fnormStd + fnormMean
+                    outputLayer[i][j] = outputLayer[i][j] * fnormStd + fnormMean
+
+        # compute error
         for i in range(validSize):
             MAE += abs(_ValidO[i][0] - outputLayer[i][0])
             MSE += pow(_ValidO[i][0] - outputLayer[i][0], 2)
-            if ValidO[i][0] == outputLayer[i][0]: accuracy += 1
+            if _ValidO[i][0] == outputLayer[i][0]: accuracy += 1
 
         MAE /= validSize
         MSE /= validSize
         accuracy /= validSize
 
         # print evaluation result
-        print('MAE      : ' + str(round(MAE, 6)))
-        print('MSE      : ' + str(round(MSE, 6)))
-        print('accuracy : ' + str(round(accuracy, 6)))
+        print('input size : ' + str(inputSize))
+        print('train size : ' + str(trainSize))
+        print('valid size : ' + str(validSize))
+        print('MAE        : ' + str(round(MAE, 6)))
+        print('MSE        : ' + str(round(MSE, 6)))
+        print('accuracy   : ' + str(round(accuracy, 6)))
 
 # extract train input, train output, and test input from dataFrame and save them as a file
 # dfTrain         : original dataFrame for training
@@ -234,11 +272,12 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn, normalizeTarget):
     dfTestInputArray = np.array(dfTestInput)
 
     # normalize training output data
-    dfTrainOutputMean = np.mean(dfTrainOutputArray) # mean of dfTrainOutputArray
-    dfTrainOutputStddev = np.std(dfTrainOutputArray) # stddev of dfTrainOutputArray
-    
-    for i in range(len(dfTrainOutputArray)):
-        dfTrainOutputArray[i] = (dfTrainOutputArray[i] - dfTrainOutputMean)/dfTrainOutputStddev
+    if normalizeTarget == True:
+        dfTrainOutputMean = np.mean(dfTrainOutputArray) # mean of dfTrainOutputArray
+        dfTrainOutputStddev = np.std(dfTrainOutputArray) # stddev of dfTrainOutputArray
+        
+        for i in range(len(dfTrainOutputArray)):
+            dfTrainOutputArray[i] = (dfTrainOutputArray[i] - dfTrainOutputMean)/dfTrainOutputStddev
 
     # train output array -> [a, b, c, ...] to [[a], [b], [c], ...]
     dfTrainOutputArray_ = []
@@ -249,11 +288,16 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, fn, normalizeTarget):
     RD.saveArray(fn[1], dfTrainOutputArray_)
     RD.saveArray(fn[2], dfTestInputArray)
 
+    if normalizeTarget == True:
+        fnorm = open('data_normalizeInfo.txt', 'w')
+        fnorm.write(str(dfTrainOutputMean) + ' ' + str(dfTrainOutputStddev) + ' ')
+        fnorm.close()
+
 # deep learning procedure
 # valid = 0 : training -> test
 # valid > 0 : training -> validation (vaildation data rate = valid)
 # return final result (None if valid > 0)
-def deepLearningProcedure(fn, valid):
+def deepLearningProcedure(fn, valid, normalizeTarget):
 
     # deep learning configuration
     deviceName = input('device name (for example, cpu:0 or gpu:0)')
@@ -262,8 +306,8 @@ def deepLearningProcedure(fn, valid):
 
     # training and return result
     if valid == 0:
-        finalResult = deepLearning(fn[0], fn[1], fn[2], fn[3], 0, deviceName, epoch, printed, 'test')
+        finalResult = deepLearning(fn[0], fn[1], fn[2], fn[3], 0, deviceName, epoch, printed, 'test', normalizeTarget)
         return finalResult
     else:
-        deepLearning(fn[0], fn[1], fn[2], fn[3], valid, deviceName, epoch, printed, 'test')
+        deepLearning(fn[0], fn[1], fn[2], fn[3], valid, deviceName, epoch, printed, 'test', normalizeTarget)
         return None
