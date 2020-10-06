@@ -158,7 +158,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         # output for validation        
         try: # try reading testValid.h5 and test.json
             validModel = deepLearning_GPU.deepLearningModel(newModelName, True)
-            predictedValidOutput = deepLearning_GPU.modelOutput(validModel, _ValidI)
+            predictedValidO = deepLearning_GPU.modelOutput(validModel, _ValidI)
         except: # do learning if testValid.h5 and test.json does not exist
             print('\n <<<< LEARNING >>>>\n')
 
@@ -167,7 +167,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', _TrainI, _TrainO, newModelName, epoch, False, True, deviceName)
 
             validModel = deepLearning_GPU.deepLearningModel(newModelName, True)
-            predictedValidOutput = deepLearning_GPU.modelOutput(validModel, _ValidI)
+            predictedValidO = deepLearning_GPU.modelOutput(validModel, _ValidI)
 
         # evaluation
         print('\n <<<< VALID >>>>\n')
@@ -176,7 +176,8 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         MSE = 0 # mean square error
         accuracy = 0 # accuracy
 
-        outputLayer = predictedValidOutput[len(predictedValidOutput)-1]
+        # predicted validation output
+        outputLayer = predictedValidO[len(predictedValidO)-1]
         
         # inverse sigmoid
         # output :   invSigmoid(sigmoid(normalize(originalOutput)))
@@ -199,10 +200,26 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
                     outputLayer[i][j] = outputLayer[i][j] * fnormStd + fnormMean
 
         # compute error
-        for i in range(validSize):
-            MAE += abs(_ValidO[i][0] - outputLayer[i][0])
-            MSE += pow(_ValidO[i][0] - outputLayer[i][0], 2)
-            if _ValidO[i][0] == outputLayer[i][0]: accuracy += 1
+        validCount = 0
+        resultToWrite = ''
+        for i in range(inputSize):
+            if validArray[i] == 1:
+
+                # compute errors and accuracy
+                thisAE = abs(_ValidO[validCount][0] - outputLayer[validCount][0])
+                thisSE = pow(_ValidO[validCount][0] - outputLayer[validCount][0], 2)
+                MAE += thisAE
+                MSE += thisSE
+                if thisSE <= 0.5: accuracy += 1
+
+                # print and write result
+                newResultToWrite = ('[' + str(i) + '] pred = ' + str(int(outputLayer[validCount][0])) +
+                                    ', real = ' + str(int(_ValidO[validCount][0])) +
+                                    ', AE = ' + str(int(thisAE)) + ', SE = ' + str(int(thisSE)))
+                resultToWrite = newResultToWrite
+                print(newResultToWrite)
+
+                validCount += 1
 
         MAE /= validSize
         MSE /= validSize
@@ -215,6 +232,13 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         print('MAE        : ' + str(round(MAE, 6)))
         print('MSE        : ' + str(round(MSE, 6)))
         print('accuracy   : ' + str(round(accuracy, 6)))
+        print('pred avg   : ' + str(np.average(outputLayer, axis=0)))
+        print('real avg   : ' + str(np.average(_ValidO, axis=0)))
+
+        # write result file
+        fvalid = open('data_valid_result.txt', 'w')
+        fvalid.write(resultToWrite)
+        fvalid.close()
 
 # extract train input, train output, and test input from dataFrame and save them as a file
 # dfTrain         : original dataFrame for training

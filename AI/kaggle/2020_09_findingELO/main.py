@@ -60,8 +60,14 @@ if __name__ == '__main__':
     trainName = 'data_trainPgn.txt'
     testName = 'data_testPgn.txt'
     ftype = 'txt'
-    fcolsTrain = ['id', 'result', 'welo', 'belo', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9']
-    fcolsTest = ['id', 'result', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9']
+    fcolsTrain = ['id', 'result', 'welo', 'belo',
+                  'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
+                  'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
+                  'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
+    fcolsTest = ['id', 'result',
+                 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
+                 'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
+                 'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
 
     #################################
     ###                           ###
@@ -84,7 +90,7 @@ if __name__ == '__main__':
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 5 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 6 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
 
     # for method 0
     kNN_k = 120 # number k for kNN
