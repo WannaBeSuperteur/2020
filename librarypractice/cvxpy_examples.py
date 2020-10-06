@@ -115,5 +115,44 @@ def P4():
     print('a=' + str(a.value))
     print('result=' + str(result))
 
+def P5():
+    # predefined variables
+    n = 6
+
+    # variables
+    a = Variable((n, n))
+    b = Variable(n)
+    c = Variable(n)
+
+    object_ = sum(b)
+    objective = Maximize(object_)
+
+    # constraints
+    constraints = []
+    for i in range(n): # 0 <= a[i][j] <= b[i] + c[j], i=0,...,n-1, j=0,...,n-1
+        for j in range(n):
+            constraints.append(a[i][j] >= 0)
+            constraints.append(a[i][j] <= b[i] + c[j])
+    for i in range(n): # 0 <= b[i] <= i, 0 <= c[i] <= 0.25 * b[i] + 0.25, |b[i]-c[i]| <= 5, i=0,...,n-1
+        constraints.append(b[i] >= 0)
+        constraints.append(b[i] <= i)
+        constraints.append(c[i] >= 0)
+        constraints.append(c[i] <= 0.25 * b[i] + 0.25)
+        constraints.append(abs(b[i]-c[i]) <= 5)
+
+    # problem solving
+    prob = cvx.Problem(objective, constraints)
+    result = prob.solve(verbose=True)
+
+    print(' -------- Result --------')
+    print('a=' + str(a.value))
+    print('b=' + str(b.value))
+    print('c=' + str(c.value))
+    print('result=' + str(result))
+
 if __name__ == '__main__':
+    P1()
+    P2()
+    P3()
     P4()
+    P5()
