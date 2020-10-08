@@ -119,7 +119,8 @@ def getDataFromFile(fn, height):
 
 # modelInfo에 따라 신경망 반환
 ## layers
-# FI                     (tf.keras.layers.Flatten(input_shape=(len(trainI[0]),)))
+# I 60                   (keras.layers.InputLayer(input_shape=(60,)))
+# FI                     (keras.layers.Flatten(input_shape=(len(trainI[0]),)))
 # F                      (keras.layers.Flatten())
 # D 16 relu              (keras.layers.Dense(16, activation='relu'))
 # DO sigmoid             (keras.layers.Dense(len(trainO[0]), activation='sigmoid'))
@@ -130,8 +131,8 @@ def getDataFromFile(fn, height):
 # C2DI 32 3 3 12 12 relu (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
 # C2D 32 3 3 relu        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 # MP2D 2                 (keras.layers.MaxPooling2D(pool_size=2))
-# R1 12                  (tf.keras.layers.Reshape((12, 1), input_shape=(12,))
-# R2 12 12               (tf.keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
+# R1 12                  (keras.layers.Reshape((12, 1), input_shape=(12,))
+# R2 12 12               (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 def getNN(modelInfo, trainI, trainO):
     NN = []
     code = ''
@@ -182,10 +183,10 @@ def getNN(modelInfo, trainI, trainO):
             code += 'NN.append(keras.layers.MaxPooling2D(pool_size=' + infoSplit[1] + '))\n'
         elif infoSplit[0] == 'R1':
             NN.append(tf.keras.layers.Reshape((int(infoSplit[1]), 1), input_shape=(int(infoSplit[1]),)))
-            code += 'NN.append(tf.keras.layers.Reshape((' + infoSplit[1] + ', 1), input_shape=(' + infoSplit[1] + ',)))\n'
+            code += 'NN.append(keras.layers.Reshape((' + infoSplit[1] + ', 1), input_shape=(' + infoSplit[1] + ',)))\n'
         elif infoSplit[0] == 'R2':
             NN.append(tf.keras.layers.Reshape((int(infoSplit[1]), int(infoSplit[2]), 1), input_shape=(int(infoSplit[1])*int(infoSplit[2]),)))
-            code += 'NN.append(tf.keras.layers.Reshape((' + infoSplit[1] + ', ' + infoSplit[2] + ', 1), input_shape=(' + (int(infoSplit[1])*int(infoSplit[2])) + ',)))\n'
+            code += 'NN.append(keras.layers.Reshape((' + infoSplit[1] + ', ' + infoSplit[2] + ', 1), input_shape=(' + (int(infoSplit[1])*int(infoSplit[2])) + ',)))\n'
 
     # print code result
     print('\n <<< model code >>>')

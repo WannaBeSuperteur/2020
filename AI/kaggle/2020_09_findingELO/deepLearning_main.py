@@ -216,7 +216,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
                 newResultToWrite = ('[' + str(i) + '] pred = ' + str(int(outputLayer[validCount][0])) +
                                     ', real = ' + str(int(_ValidO[validCount][0])) +
                                     ', AE = ' + str(int(thisAE)) + ', SE = ' + str(int(thisSE)))
-                resultToWrite = newResultToWrite
+                resultToWrite += newResultToWrite + '\n'
                 print(newResultToWrite)
 
                 validCount += 1
@@ -226,14 +226,17 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         accuracy /= validSize
 
         # print evaluation result
-        print('input size : ' + str(inputSize))
-        print('train size : ' + str(trainSize))
-        print('valid size : ' + str(validSize))
-        print('MAE        : ' + str(round(MAE, 6)))
-        print('MSE        : ' + str(round(MSE, 6)))
-        print('accuracy   : ' + str(round(accuracy, 6)))
-        print('pred avg   : ' + str(np.average(outputLayer, axis=0)))
-        print('real avg   : ' + str(np.average(_ValidO, axis=0)))
+        resultSummary = ''
+        resultSummary += 'input size : ' + str(inputSize) + '\n'
+        resultSummary += 'train size : ' + str(trainSize) + '\n'
+        resultSummary += 'valid size : ' + str(validSize) + '\n'
+        resultSummary += 'MAE        : ' + str(round(MAE, 6)) + '\n'
+        resultSummary += 'MSE        : ' + str(round(MSE, 6)) + '\n'
+        resultSummary += 'accuracy   : ' + str(round(accuracy, 6)) + '\n'
+        resultSummary += 'pred avg   : ' + str(np.average(outputLayer, axis=0)) + '\n'
+        resultSummary += 'real avg   : ' + str(np.average(_ValidO, axis=0)) + '\n'
+        print(resultSummary)
+        resultToWrite += resultSummary
 
         # write result file
         fvalid = open('data_valid_result.txt', 'w')

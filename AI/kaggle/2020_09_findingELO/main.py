@@ -347,6 +347,3 @@ if __name__ == '__main__':
     f = open('result.csv', 'w')
     f.write(result)
     f.close()
-
-    # 향후계획: method 5로 딥러닝, method 6으로 PCA 없는 딥러닝 추가 [ING: method 5 valid>0까지 완료]
-    #           딥러닝을 위한 학습 데이터를 가져올 때 출력을 표준정규분포로 표준화 옵션 추가 [FIN]
