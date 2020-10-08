@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # for deep learning (method 5 and 6)
     deepLearningFn = ['data_train_i.txt', 'data_train_o.txt', 'data_test_i.txt', 'data_test_o.txt']
-    valid = 0.25 # portion of valid data
+    valid = 0.25 # portion of valid data (0.0 for training, >0.0 for training->validation)
     normalizeTarget = True # normalize training output value?
 
     #################################

@@ -124,34 +124,72 @@ def getDataFromFile(fn, height):
 # D 16 relu              (keras.layers.Dense(16, activation='relu'))
 # DO sigmoid             (keras.layers.Dense(len(trainO[0]), activation='sigmoid'))
 # Drop 0.25              (keras.layers.Dropout(0.25))
-# C2DI 32 3 3 12 12 relu (keras.layers.Conv2D(32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
-# C2D 32 3 3 relu        (keras.layers.Conv2D(32, (3, 3), activation='relu'))
-# MP 2                   (keras.layers.MaxPooling2D(pool_size=2))
-# R 12 12                (tf.keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
+# C1DI 32 3 60 relu      (keras.layers.Conv1D(filters=32, kernel_size=3, input_shape=(60, 1), activation='relu'))
+# C1D 32 3 relu          (keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu'))
+# MP1D 2                 (keras.layers.MaxPooling1D(pool_size=2))
+# C2DI 32 3 3 12 12 relu (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
+# C2D 32 3 3 relu        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+# MP2D 2                 (keras.layers.MaxPooling2D(pool_size=2))
+# R1 12                  (tf.keras.layers.Reshape((12, 1), input_shape=(12,))
+# R2 12 12               (tf.keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 def getNN(modelInfo, trainI, trainO):
     NN = []
+    code = ''
     
     for i in range(len(modelInfo)):
         info = modelInfo[i].split('\n')[0]
         infoSplit = info.split(' ')
 
         # add layers to Neural Network as below
-        if info == 'FI': NN.append(tf.keras.layers.Flatten(input_shape=(len(trainI[0]),)))
-        elif info == 'F': NN.append(keras.layers.Flatten())
-        elif infoSplit[0] == 'D': NN.append(keras.layers.Dense(int(infoSplit[1]), activation=infoSplit[2]))
-        elif infoSplit[0] == 'DO': NN.append(keras.layers.Dense(len(trainO[0]), activation=infoSplit[1]))
-        elif infoSplit[0] == 'Drop': NN.append(keras.layers.Dropout(float(infoSplit[1])))
+        if infoSplit[0] == 'I':
+            NN.append(keras.layers.InputLayer(input_shape=(int(infoSplit[1]),)))
+            code += 'NN.append(keras.layers.InputLayer(input_shape=(' + infoSplit[1] + ',)))\n'        
+        elif info == 'FI':
+            NN.append(keras.layers.Flatten(input_shape=(len(trainI[0]),)))
+            code += 'NN.append(keras.layers.Flatten(input_shape=(' + str(len(trainI[0])) + ',)))\n'
+        elif info == 'F':
+            NN.append(keras.layers.Flatten())
+            code += 'NN.append(keras.layers.Flatten())\n'
+        elif infoSplit[0] == 'D':
+            NN.append(keras.layers.Dense(int(infoSplit[1]), activation=infoSplit[2]))
+            code += 'NN.append(keras.layers.Dense(' + infoSplit[1] + ', activation="' + infoSplit[2] + '"))\n'
+        elif infoSplit[0] == 'DO':
+            NN.append(keras.layers.Dense(len(trainO[0]), activation=infoSplit[1]))
+            code += 'NN.append(keras.layers.Dense(' + str(len(trainO[0])) + ', activation="' + infoSplit[1] + '"))\n'
+        elif infoSplit[0] == 'Drop':
+            NN.append(keras.layers.Dropout(float(infoSplit[1])))
+            code += 'NN.append(keras.layers.Dropout(' + infoSplit[1] + '))\n'
+        elif infoSplit[0] == 'C1DI':
+            NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=int(infoSplit[2]), input_shape=(int(infoSplit[3]), 1), activation=infoSplit[4]))
+            code += ('NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=' + infoSplit[2] + ', input_shape=(' + infoSplit[3] + ', 1), '
+                     + 'activation=' + infoSplit[4] + '))\n')
+        elif infoSplit[0] == 'C1D':
+            NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=int(infoSplit[2]), activation=infoSplit[3]))
+            code += 'NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=' + infoSplit[2] + ', activation="' + infoSplit[3] + '"))\n'
+        elif infoSplit[0] == 'MP1D':
+            NN.append(keras.layers.MaxPooling1D(pool_size=int(infoSplit[1])))
+            code += 'NN.append(keras.layers.MaxPooling1D(pool_size=' + infoSplit[1] + '))\n'
         elif infoSplit[0] == 'C2DI':
-            NN.append(keras.layers.Conv2D(int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
+            NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
                                           input_shape=(int(infoSplit[4]), int(infoSplit[5]), 1), activation=infoSplit[6]))
+            code += ('NN.append(keras.layers.Conv2D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + ', ' + infoSplit[3] + '), input_shape=('
+                     + infoSplit[4] + ', ' + infoSplit[5] + ', 1), activation="' + infoSplit[6] + '"))\n')
         elif infoSplit[0] == 'C2D':
-            NN.append(keras.layers.Conv2D(int(infoSplit[1]), (int(infoSplit[2]), int(infoSplit[3])),
-                                          activation=infoSplit[4]))
-        elif infoSplit[0] == 'MP':
+            NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])), activation=infoSplit[4]))
+            code += 'NN.append(keras.layers.Conv2D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + ', ' + infoSplit[3] + '), activation="' + infoSplit[4] + '"))\n'
+        elif infoSplit[0] == 'MP2D':
             NN.append(keras.layers.MaxPooling2D(pool_size=int(infoSplit[1])))
-        elif infoSplit[0] == 'R':
-            NN.append(tf.keras.layers.Reshape((int(infoSplit[1]), int(infoSplit[2]), 1),
-                                              input_shape=(int(infoSplit[1])*int(infoSplit[2]),)))
+            code += 'NN.append(keras.layers.MaxPooling2D(pool_size=' + infoSplit[1] + '))\n'
+        elif infoSplit[0] == 'R1':
+            NN.append(tf.keras.layers.Reshape((int(infoSplit[1]), 1), input_shape=(int(infoSplit[1]),)))
+            code += 'NN.append(tf.keras.layers.Reshape((' + infoSplit[1] + ', 1), input_shape=(' + infoSplit[1] + ',)))\n'
+        elif infoSplit[0] == 'R2':
+            NN.append(tf.keras.layers.Reshape((int(infoSplit[1]), int(infoSplit[2]), 1), input_shape=(int(infoSplit[1])*int(infoSplit[2]),)))
+            code += 'NN.append(tf.keras.layers.Reshape((' + infoSplit[1] + ', ' + infoSplit[2] + ', 1), input_shape=(' + (int(infoSplit[1])*int(infoSplit[2])) + ',)))\n'
+
+    # print code result
+    print('\n <<< model code >>>')
+    print(code)
 
     return NN
 

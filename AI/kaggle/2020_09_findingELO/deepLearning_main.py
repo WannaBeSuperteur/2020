@@ -152,7 +152,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         newModelName = modelName + 'Valid'
 
         # NN and optimizer
-        NN = helper.getNN(modelInfo, _TrainI, _TrainO) # Neural Network    
+        NN = helper.getNN(modelInfo, _TrainI, _TrainO) # Neural Network
         op = helper.getOptimizer(modelInfo) # optimizer
 
         # output for validation        
