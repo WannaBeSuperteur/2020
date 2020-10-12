@@ -105,7 +105,7 @@ if __name__ == '__main__':
     u1 = 3 # additional path loss for LoS
     u2 = 23 # additional path loss for NLoS
     alphaL = 0.0001 # learning rate for DQN
-    r = 0.7 # discount factor
+    r_ = 0.7 # discount factor
 
     M = 1000 # M = 1000 episodes
     L = 3 # L = 3 UAVs
@@ -113,4 +113,4 @@ if __name__ == '__main__':
     H = 15 # H = 15m
 
     # run
-    algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
+    algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
