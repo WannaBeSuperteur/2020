@@ -1,0 +1,43 @@
+copy one of below:
+
+## basic neural network ##
+I 4
+D 10 relu
+D 10 relu
+D 10 relu
+DO sigmoid
+OP adam0 0.001
+
+## for image data and using CNN ##
+FI
+R2 80 80
+C2D 32 3 3 relu
+MP2D 2
+C2D 32 3 3 relu
+MP2D 2
+C2D 32 3 3 relu
+MP2D 2
+C2D 32 3 3 relu
+F
+D 200 relu
+D 200 relu
+D 200 relu
+D 200 relu
+D 200 relu
+DO sigmoid
+OP adam0 0.001
+
+## for image data and using CNN ##
+R2 80 80
+C2DI 32 3 3 80 80 relu
+MP2D 2
+Drop 0.25
+C2D 32 3 3 relu
+Drop 0.25
+C2D 32 3 3 relu
+F
+Drop 0.25
+D 40 relu
+D 40 relu
+DO sigmoid
+OP adam0 0.001
