@@ -45,6 +45,17 @@ def AIbase_deeplearning():
         elif configSplit[0] == 'valid_report': valid_report = configSplit[1]
         elif configSplit[0] == 'modelConfig': modelConfig = configSplit[1]
 
+        # convert 'None' to None
+        if trainInputFile == 'None': trainInputFile = None
+        if trainOutputFile == 'None': trainOutputFile = None
+        if testInputFile == 'None': testInputFile = None
+        if testOutputFile == 'None': testOutputFile = None
+        if testOutputReal == 'None': testOutputReal = None
+        if test_report == 'None': test_report = None
+        if valid_rate == 'None': valid_rate = None
+        if valid_report == 'None': valid_report = None
+        if modelConfig == 'None': modelConfig = None
+
     # do Deep Learning
     # if the file for training/test data already exists, just write prediction for deep learning
     deviceName = input('device name (for example, cpu:0 or gpu:0)')

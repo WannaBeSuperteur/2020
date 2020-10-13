@@ -7,6 +7,26 @@ import math
 from tensorflow import keras
 from keras.models import Model, model_from_json
 
+# save result array
+def saveArray(fn, _2dArray):
+    
+    result = ''
+    rows = len(_2dArray) # rows of 2d array
+    cols = len(_2dArray[0]) # cols of 2d array
+
+    # append to result
+    for i in range(rows):
+        for j in range(cols):
+            if j < cols-1: result += str(_2dArray[i][j]) + '\t'
+            else: result += str(_2dArray[i][j])
+
+        result += '\n'
+
+    # write to file
+    f = open(fn, 'w')
+    f.write(result)
+    f.close()
+
 # inputFileName      : train input data file name
 # outputFileName     : train output data file name
 # testFileName       : test input data file name
@@ -307,3 +327,106 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
         # return final result
         return (MAE, MSE, accuracy, np.average(_ValidOP, axis=0), np.average(_ValidO, axis=0))
+
+# extract train input, train output, and test input from dataFrame and save them as a file
+# dfTrain         : original dataFrame for training
+# dfTest          : original dataFrame for test
+# targetColName   : target column name for both training and test data
+# exceptCols      : except for these columns for both training and test
+# fn              : [train input file name, train output file name, test input file name, test output file name]
+# normalizeTarget : normalize target(output) value?
+def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
+
+    # read configuration file
+    f = open('config.txt', 'r')
+    fl = f.readlines()
+    f.close()
+    for i in range(len(fl)): fl[i] = fl[i].split('\n')[0]
+
+    # init values as None
+    fn = [None, None, None]
+
+    # extract configuration
+    # trainInput     : train input data file name
+    # trainOutput    : train output data file name
+    # testInput      : test input data file name
+    for i in range(len(fl)):
+        configSplit = fl[i].split(' ') # split
+
+        if configSplit[0] == 'trainInput': fn[0] = configSplit[1]
+        elif configSplit[0] == 'trainOutput': fn[1] = configSplit[1]
+        elif configSplit[0] == 'testInput': fn[2] = configSplit[1]
+
+    # make train input, train output, and test input dataFrame
+    dfTrainInput = dfTrain.copy()
+    dfTestInput = dfTest.copy()
+    dfTrainOutput = dfTrain[targetColName]
+
+    ### remove target column and except columns from training and test dataFrame ###
+    colsToRemove = [targetColName] + exceptCols # columns to remove (do not use these columns)
+    colsToRemoveIndexTrain = [] # indices for colsToRemove (training data)
+    colsToRemoveIndexTest = [] # indices for colsToRemove (test data)
+
+    print('\n *** columns to remove ***')
+    print(colsToRemove)
+
+    # get indices of columns to remove
+    for i in range(len(dfTrainInput.columns)):
+        if dfTrainInput.columns[i] in colsToRemove: colsToRemoveIndexTrain.append(i)
+    for i in range(len(dfTestInput.columns)):
+        if dfTestInput.columns[i] in colsToRemove: colsToRemoveIndexTest.append(i)
+
+    print('\n *** columns to remove (indices) ***')
+    print('train : ' + str(colsToRemoveIndexTrain))
+    print('test  : ' + str(colsToRemoveIndexTest))
+
+    # change into np.array
+    dfTrainInput = np.array(dfTrainInput)
+    dfTestInput = np.array(dfTestInput)
+    
+    # remove columns
+    dfTrainInput = np.delete(dfTrainInput, colsToRemoveIndexTrain, 1)
+    dfTestInput = np.delete(dfTestInput, colsToRemoveIndexTest, 0)
+
+    # print each dataFrame
+    print('\n *** dataFrame (training input) ***')
+    print(dfTrainInput)
+
+    print('\n *** dataFrame (test input) ***')
+    print(dfTestInput)
+
+    print('\n *** dataFrame (training output - not normalized) ***')
+    print(dfTrainOutput)
+    
+    # make train input, train output, and test input array
+    dfTrainInputArray = np.array(dfTrainInput)
+    dfTrainOutputArray = np.array(dfTrainOutput)
+    dfTestInputArray = np.array(dfTestInput)
+
+    # normalize training output data
+    if normalizeTarget == True:
+        dfTrainOutputMean = np.mean(dfTrainOutputArray) # mean of dfTrainOutputArray
+        dfTrainOutputStddev = np.std(dfTrainOutputArray) # stddev of dfTrainOutputArray
+        
+        for i in range(len(dfTrainOutputArray)):
+            dfTrainOutputArray[i] = (dfTrainOutputArray[i] - dfTrainOutputMean)/dfTrainOutputStddev
+
+    print('\n *** dataFrame (training output - normalized) ***')
+    for i in range(5): print(dfTrainOutputArray[i])
+    print('...')
+    for i in range(len(dfTrainOutputArray)-5, len(dfTrainOutputArray)): print(dfTrainOutputArray[i])
+    print('')
+
+    # train output array -> [a, b, c, ...] to [[a], [b], [c], ...]
+    dfTrainOutputArray_ = []
+    for i in range(len(dfTrainOutputArray)): dfTrainOutputArray_.append([dfTrainOutputArray[i]])
+
+    # make train input, train output, and test output file
+    saveArray(fn[0], dfTrainInputArray)
+    saveArray(fn[1], dfTrainOutputArray_)
+    saveArray(fn[2], dfTestInputArray)
+
+    if normalizeTarget == True:
+        fnorm = open('data_normalizeInfo.txt', 'w')
+        fnorm.write(str(dfTrainOutputMean) + ' ' + str(dfTrainOutputStddev) + ' ')
+        fnorm.close()

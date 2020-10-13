@@ -150,6 +150,15 @@ def getNN(modelInfo, trainI, trainO):
         elif infoSplit[0] == 'Drop':
             NN.append(keras.layers.Dropout(float(infoSplit[1])))
             code += 'NN.append(keras.layers.Dropout(' + infoSplit[1] + '))\n'
+        elif infoSplit[0] == 'C1DI':
+            NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), input_shape=(int(infoSplit[3]), 1), activation=infoSplit[4]))
+            code += ('NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + '), input_shape=(' + infoSplit[3] + ', 1), '
+                     + 'activation=' + infoSplit[4] + '))\n')
+        elif infoSplit[0] == 'C1D':
+            NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), activation=infoSplit[3]))
+            code += 'NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + '), activation="' + infoSplit[3] + '"))\n'
+        elif infoSplit[0] == 'MP1D':
+            NN.append(keras.layers.MaxPooling1D(pool_size=int(infoSplit[1])))
         elif infoSplit[0] == 'C2DI':
             NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
                                           input_shape=(int(infoSplit[4]), int(infoSplit[5]), 1), activation=infoSplit[6]))
