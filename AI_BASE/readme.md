@@ -32,6 +32,7 @@ test_report TE_Report.txt
 valid_rate 0
 valid_report VA_Report.txt
 modelConfig modelConfig.txt
+normalizeName dddd.txt
 ```
 
 ## ```modelConfig``` file
