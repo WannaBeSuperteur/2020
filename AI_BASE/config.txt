@@ -4,7 +4,7 @@ testInput TE_I.txt
 testOutput TE_O.txt
 testOutputReal TE_OR.txt
 test_report TE_Report.txt
-valid_rate 0
+valid_rate 0.2
 valid_report VA_Report.txt
 modelConfig modelConfig.txt
-normalizeName None
+normalizeName dddd.txt
