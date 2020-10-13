@@ -33,6 +33,7 @@ def AIbase_deeplearning():
     # valid_rate     : rate of validation data among training data (0 -> use test data)
     # valid_report   : vaildation report file name
     # modelConfig    : model configuration file name
+    # normalizeName  : normalize info (average and stddev) file name
     for i in range(len(fl)):
         configSplit = fl[i].split(' ') # split
 

@@ -27,6 +27,47 @@ def saveArray(fn, _2dArray):
     f.write(result)
     f.close()
 
+# denormalize if normalized info is available
+# normalizeName     : normalize info (average and stddev) file name
+# testSize          : number of records (=number of rows) of test data
+# testCols          : number of columns of test data
+# testO_pred        : prediction of test output
+# trainOutputAvg    : average of training output (each column, so array form)
+# trainOutputStddev : stddev of training output (each column, so array form)
+def denormalize(normalizeName, testSize, testCols, testO_pred, trainOutputAvg, trainOutputStddev):
+    
+    if normalizeName != None:
+        print('[26] denormalizing prediction output and real value...')
+
+        for i in range(testSize):
+            for j in range(testCols):
+                testO_pred[i][j] = testO_pred[i][j] * trainOutputStddev[j] + trainOutputAvg[j]
+    else:
+        print('[27] Do not denormalizing prediction output and real value because avg and std of them are not available.')
+
+# write normalize info (average and stddev) of train output array
+# trainOutputArray : train output array
+# normalizeName    : normalize info (average and stddev) file name
+def writeNormalizeInfo(trainOutputArray, normalizeName):
+
+    normalizeInfo = ''
+    
+    for i in range(len(trainOutputArray[0])):
+
+        # write normalize info
+        trainOutputMean = np.mean(trainOutputArray, axis=0)[i] # mean of dfTrainOutputArray
+        trainOutputStddev = np.std(trainOutputArray, axis=0)[i] # stddev of dfTrainOutputArray
+        normalizeInfo += str(trainOutputMean) + ' ' + str(trainOutputStddev) + '\n'
+
+        # normalize output data
+        for j in range(len(trainOutputArray)):
+            trainOutputArray[j][i] = (trainOutputArray[j][i] - trainOutputMean)/trainOutputStddev
+
+    # write average and stddev of train output column
+    fnorm = open(normalizeName, 'w')
+    fnorm.write(normalizeInfo)
+    fnorm.close()
+
 # inputFileName      : train input data file name
 # outputFileName     : train output data file name
 # testFileName       : test input data file name
@@ -46,12 +87,47 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
     ##############################
     
     # read files
-    print('[00] reading files...')
+    print('[00] reading train input / train output / test input files...')
     trainI = helper.getDataFromFile(inputFileName) # input train data
     trainO = helper.getDataFromFile(outputFileName) # output train data (Sigmoid applied)
     testI = helper.getDataFromFile(testFileName) # test input data (set nullValue to 0)
 
+    # read configuration file (to get normalization info)
+    print('[01] reading configuration files...')
+    f = open('config.txt', 'r')
+    fl = f.readlines()
+    f.close()
+    for i in range(len(fl)): fl[i] = fl[i].split('\n')[0]
+
+    normalizeName = None
+
+    # extract configuration
+    # trainInput     : train input data file name
+    # trainOutput    : train output data file name
+    # testInput      : test input data file name
+    for i in range(len(fl)):
+        configSplit = fl[i].split(' ') # split
+        if configSplit[0] == 'normalizeName':
+            normalizeName = configSplit[1]
+            if normalizeName == 'None': normalizeName = None
+            break
+
+    # read normalization info file
+    if normalizeName != None:
+        print('[02] calculating and writing average and stddev...')
+        
+        trainOutputAvg = np.mean(trainO, axis=0) # average of train output value
+        trainOutputStddev = np.std(trainO, axis=0) # stddev of train output value
+
+        # normalize training output data and write avg and stddev
+        writeNormalizeInfo(trainO, normalizeName)
+    else:
+        print('[03] Reading average and stddev failed.')
+        trainOutputAvg = None
+        trainOutputStddev = None
+
     # apply sigmoid to train output data
+    print('[04] applying sigmoid to train output data...')
     for i in range(len(trainO)):
         for j in range(len(trainO[0])):
             trainO[i][j] = helper.sigmoid(trainO[i][j])
@@ -151,13 +227,16 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             testO_pred = helper.getDataFromFile(testOutputFileName) # prediction of test
             testO_real = helper.getDataFromFile(testOutputReal) # real value
 
-            # assertion for length of data
-            assert(len(testO_pred) == len(testO_real))
-            assert(len(testO_pred[0]) == len(testO_real[0]))
-
             testSize = len(testO_pred) # number of test data
             testCols = len(testO_pred[0]) # number of columns in each test data
             report = 'predict\treal\t' * testCols + '\n' # content of the report file
+
+            # denormalize if normalized info is available
+            denormalize(normalizeName, testSize, testCols, testO_pred, trainOutputAvg, trainOutputStddev)
+
+            # assertion for length of data
+            assert(len(testO_pred) == len(testO_real))
+            assert(len(testO_pred[0]) == len(testO_real[0]))
 
             for i in range(testSize):
                 for j in range(testCols):
@@ -204,7 +283,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         ##############################
         
         # make index-list of validation data
-        print('[26] deciding data to validate...')
+        print('[28] deciding data to validate...')
         inputSize = len(trainI)
         validSize = int(inputSize * validRate)
         trainSize = inputSize - validSize
@@ -237,7 +316,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
         # model name for validation
         newModelName = modelName + 'Valid'
-        print('[27] training [ ' + newModelName + ' ]...')
+        print('[29] training [ ' + newModelName + ' ]...')
 
         # NN and optimizer
         NN = helper.getNN(modelInfo, _TrainI, _TrainO) # Neural Network
@@ -257,7 +336,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         ##     2B-2. VALIDATION     ##
         ##                          ##
         ##############################
-        print('[28] validating and writing result [ ' + valid_report + ' ]...')
+        print('[30] validating and writing result [ ' + valid_report + ' ]...')
         
         MAE = 0 # mean absolute error
         MSE = 0 # mean square error
@@ -275,6 +354,10 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         for i in range(len(_ValidO)): # for each output data
             for j in range(len(_ValidO[0])): # for each value of output data
                 _ValidO[i][j] = helper.invSigmoid(_ValidO[i][j])
+
+        # denormalize if normalized info is available (denormalize whole trainO)
+        denormalize(normalizeName, len(_ValidOP), len(_ValidOP[0]), _ValidOP, trainOutputAvg, trainOutputStddev)
+        denormalize(normalizeName, len(_ValidO), len(_ValidO[0]), _ValidO, trainOutputAvg, trainOutputStddev)
         
         # compute error
         validCount = 0
@@ -363,10 +446,10 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
         elif configSplit[0] == 'normalizeName': normalizeName = configSplit[1]
 
         # convert 'None' into None
-        if fn[0] == 'None': fn[0] == None
-        if fn[1] == 'None': fn[1] == None
-        if fn[2] == 'None': fn[2] == None
-        if normalizeName == 'None': normalizeName == None
+        if fn[0] == 'None': fn[0] = None
+        if fn[1] == 'None': fn[1] = None
+        if fn[2] == 'None': fn[2] = None
+        if normalizeName == 'None': normalizeName = None
 
     # make train input, train output, and test input dataFrame
     dfTrainInput = dfTrain.copy()
@@ -399,28 +482,30 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
     dfTrainInput = np.delete(dfTrainInput, colsToRemoveIndexTrain, 1)
     dfTestInput = np.delete(dfTestInput, colsToRemoveIndexTest, 0)
 
-    # print each dataFrame
-    print('\n *** dataFrame (training input) ***')
-    print(dfTrainInput)
-
-    print('\n *** dataFrame (test input) ***')
-    print(dfTestInput)
-
-    print('\n *** dataFrame (training output - not normalized) ***')
-    print(dfTrainOutput)
-    
     # make train input, train output, and test input array
     dfTrainInputArray = np.array(dfTrainInput)
     dfTrainOutputArray = np.array(dfTrainOutput)
     dfTestInputArray = np.array(dfTestInput)
 
-    # normalize training output data
-    if normalizeTarget == True:
-        dfTrainOutputMean = np.mean(dfTrainOutputArray) # mean of dfTrainOutputArray
-        dfTrainOutputStddev = np.std(dfTrainOutputArray) # stddev of dfTrainOutputArray
-        
-        for i in range(len(dfTrainOutputArray)):
-            dfTrainOutputArray[i] = (dfTrainOutputArray[i] - dfTrainOutputMean)/dfTrainOutputStddev
+    # print each dataFrame array
+    print('\n *** dataFrame (training input) ***')
+    print(dfTrainInputArray)
+
+    print('\n *** dataFrame (test input) ***')
+    print(dfTestInputArray)
+
+    print('\n *** dataFrame (training output - not normalized) ***')
+    print(dfTrainOutputArray)
+
+    # train output array -> [a, b, c, ...] to [[a], [b], [c], ...]
+    dfTrainOutputArray_ = []
+    for i in range(len(dfTrainOutputArray)): dfTrainOutputArray_.append([dfTrainOutputArray[i]])
+
+    # make test output file (before normalization)
+    saveArray(fn[1].split('.')[0] + '_not_normalized.txt', dfTrainOutputArray_)
+
+    # normalize training output data and write avg and stddev
+    if normalizeTarget == True: writeNormalizeInfo(dfTrainOutputArray_, normalizeName)
 
     print('\n *** dataFrame (training output - normalized) ***')
     for i in range(5): print(dfTrainOutputArray[i])
@@ -428,16 +513,7 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
     for i in range(len(dfTrainOutputArray)-5, len(dfTrainOutputArray)): print(dfTrainOutputArray[i])
     print('')
 
-    # train output array -> [a, b, c, ...] to [[a], [b], [c], ...]
-    dfTrainOutputArray_ = []
-    for i in range(len(dfTrainOutputArray)): dfTrainOutputArray_.append([dfTrainOutputArray[i]])
-
     # make train input, train output, and test output file
     saveArray(fn[0], dfTrainInputArray)
     saveArray(fn[1], dfTrainOutputArray_)
     saveArray(fn[2], dfTestInputArray)
-
-    if normalizeTarget == True:
-        fnorm = open(normalizeName, 'w')
-        fnorm.write(str(dfTrainOutputMean) + ' ' + str(dfTrainOutputStddev) + ' ')
-        fnorm.close()
