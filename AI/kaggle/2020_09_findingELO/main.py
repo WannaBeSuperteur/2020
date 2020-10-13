@@ -286,10 +286,10 @@ if __name__ == '__main__':
         (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
-        print('\n<<< [35] df_pca_train method==4 >>>')
+        print('\n<<< [35] df_pca_train >>>')
         print(df_pca_train)
 
-        print('\n<<< [36] df_pca_test method==4 >>>')
+        print('\n<<< [36] df_pca_test >>>')
         print(df_pca_test)
 
         # save data as file
