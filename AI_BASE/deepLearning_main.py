@@ -333,8 +333,11 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 # dfTest          : original dataFrame for test
 # targetColName   : target column name for both training and test data
 # exceptCols      : except for these columns for both training and test
-# fn              : [train input file name, train output file name, test input file name, test output file name]
 # normalizeTarget : normalize target(output) value?
+
+# variables not given as argument of this function
+# fn              : [train input file name, train output file name, test input file name, test output file name]
+# normalizeName   : normalize info (average and stddev) file name
 def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
 
     # read configuration file
@@ -345,6 +348,7 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
 
     # init values as None
     fn = [None, None, None]
+    normalizeName = None
 
     # extract configuration
     # trainInput     : train input data file name
@@ -356,6 +360,13 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
         if configSplit[0] == 'trainInput': fn[0] = configSplit[1]
         elif configSplit[0] == 'trainOutput': fn[1] = configSplit[1]
         elif configSplit[0] == 'testInput': fn[2] = configSplit[1]
+        elif configSplit[0] == 'normalizeName': normalizeName = configSplit[1]
+
+        # convert 'None' into None
+        if fn[0] == 'None': fn[0] == None
+        if fn[1] == 'None': fn[1] == None
+        if fn[2] == 'None': fn[2] == None
+        if normalizeName == 'None': normalizeName == None
 
     # make train input, train output, and test input dataFrame
     dfTrainInput = dfTrain.copy()
@@ -427,6 +438,6 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
     saveArray(fn[2], dfTestInputArray)
 
     if normalizeTarget == True:
-        fnorm = open('data_normalizeInfo.txt', 'w')
+        fnorm = open(normalizeName, 'w')
         fnorm.write(str(dfTrainOutputMean) + ' ' + str(dfTrainOutputStddev) + ' ')
         fnorm.close()

@@ -21,6 +21,7 @@ def AIbase_deeplearning():
     valid_rate = None
     valid_report = None
     modelConfig = None
+    normalizeName = None
 
     # extract configuration
     # trainInput     : train input data file name
@@ -44,6 +45,7 @@ def AIbase_deeplearning():
         elif configSplit[0] == 'valid_rate': valid_rate = float(configSplit[1])
         elif configSplit[0] == 'valid_report': valid_report = configSplit[1]
         elif configSplit[0] == 'modelConfig': modelConfig = configSplit[1]
+        elif configSplit[0] == 'normalizeName': normalizeName = configSplit[1]
 
         # convert 'None' to None
         if trainInputFile == 'None': trainInputFile = None
@@ -55,6 +57,7 @@ def AIbase_deeplearning():
         if valid_rate == 'None': valid_rate = None
         if valid_report == 'None': valid_report = None
         if modelConfig == 'None': modelConfig = None
+        if normalizeName == 'None': normalizeName = None
 
     # do Deep Learning
     # if the file for training/test data already exists, just write prediction for deep learning
