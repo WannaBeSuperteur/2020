@@ -51,10 +51,17 @@ import xgBoost as _XB
 import textVec as _TV
 
 # deep Learning
-import deepLearning_main as DL
+import sys
+sys.path.insert(0, '../../../../AI_BASE')
+import deepLearning_GPU as DL
 import deepLearning_GPU_helper as helper
+import deepLearning_main as DLmain
+import AIBASE_main as AImain
 
 if __name__ == '__main__':
+
+    # define final result (init as None)
+    finalResult = None
 
     # meta info
     trainName = 'data_trainPgn.txt'
@@ -111,8 +118,6 @@ if __name__ == '__main__':
     info = [epochs, boostRound, earlyStoppingRounds, foldCount, rateOf1s]
 
     # for deep learning (method 5 and 6)
-    deepLearningFn = ['data_train_i.txt', 'data_train_o.txt', 'data_test_i.txt', 'data_test_o.txt']
-    valid = 0.25 # portion of valid data (0.0 for training, >0.0 for training->validation)
     normalizeTarget = True # normalize training output value?
 
     #################################
@@ -179,15 +184,10 @@ if __name__ == '__main__':
         elif method == 5:
             
             # save data as file
-            DL.dataFromDF(df_pca_train, df_pca_test, 'target', [], deepLearningFn, normalizeTarget)
+            DLmain.dataFromDF(df_pca_train, df_pca_test, 'target', [], normalizeTarget)
 
-            # deep learning procedure (using file and valid value)
-            finalResult = DL.deepLearningProcedure(deepLearningFn, valid, normalizeTarget)
-
-            # print final result
-            # "if valid > 0, ERROR is occurred"
-            print('\n<<< [23] len of finalResult >>>')
-            print(len(finalResult))
+            # deep learning
+            AImain.AIbase_deeplearning()
             
     # method 2 -> do not use Decision Tree, use text vectorization + Naive Bayes
     # source: https://www.kaggle.com/alvations/basic-nlp-with-nltk
@@ -293,17 +293,15 @@ if __name__ == '__main__':
         print(df_pca_test)
 
         # save data as file
-        DL.dataFromDF(df_pca_train, df_pca_test, targetColName, exceptCols, deepLearningFn, normalizeTarget)
+        DLmain.dataFromDF(df_pca_train, df_pca_test, targetColName, exceptCols, normalizeTarget)
 
-        # deep learning procedure (using file and valid value)
-        finalResult = DL.deepLearningProcedure(deepLearningFn, valid, normalizeTarget)
+        # deep learning
+        AImain.AIbase_deeplearning()
 
-        # print final result
-        # "if valid > 0, ERROR is occurred"
-        print('\n<<< [37] len of finalResult >>>')
-        print(len(finalResult))
+    # exit if final result does not exist
+    if finalResult == None: exit()
 
-    # write result
+    # write result if final result exists
     result = str(idCol) + ',' + str(targetColName) + '\n'
     
     if ftype == 'json': # type is 'json'
