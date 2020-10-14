@@ -508,9 +508,9 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
     if normalizeTarget == True: writeNormalizeInfo(dfTrainOutputArray_, normalizeName)
 
     print('\n *** dataFrame (training output - normalized) ***')
-    for i in range(5): print(dfTrainOutputArray[i])
+    for i in range(5): print(dfTrainOutputArray_[i])
     print('...')
-    for i in range(len(dfTrainOutputArray)-5, len(dfTrainOutputArray)): print(dfTrainOutputArray[i])
+    for i in range(len(dfTrainOutputArray_)-5, len(dfTrainOutputArray_)): print(dfTrainOutputArray_[i])
     print('')
 
     # make train input, train output, and test output file
