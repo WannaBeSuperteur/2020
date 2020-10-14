@@ -505,13 +505,14 @@ def dataFromDF(dfTrain, dfTest, targetColName, exceptCols, normalizeTarget):
     saveArray(fn[1].split('.')[0] + '_not_normalized.txt', dfTrainOutputArray_)
 
     # normalize training output data and write avg and stddev
-    if normalizeTarget == True: writeNormalizeInfo(dfTrainOutputArray_, normalizeName)
+    if normalizeTarget == True:
+        writeNormalizeInfo(dfTrainOutputArray_, normalizeName)
 
-    print('\n *** dataFrame (training output - normalized) ***')
-    for i in range(5): print(dfTrainOutputArray_[i])
-    print('...')
-    for i in range(len(dfTrainOutputArray_)-5, len(dfTrainOutputArray_)): print(dfTrainOutputArray_[i])
-    print('')
+        print('\n *** dataFrame (training output - normalized) ***')
+        for i in range(5): print(dfTrainOutputArray_[i])
+        print('...')
+        for i in range(len(dfTrainOutputArray_)-5, len(dfTrainOutputArray_)): print(dfTrainOutputArray_[i])
+        print('')
 
     # make train input, train output, and test output file
     saveArray(fn[0], dfTrainInputArray)
