@@ -118,7 +118,7 @@ if __name__ == '__main__':
     info = [epochs, boostRound, earlyStoppingRounds, foldCount, rateOf1s]
 
     # for deep learning (method 5 and 6)
-    normalizeTarget = True # normalize training output value?
+    normalizeTarget = False # normalize training output value? (False because automatically normalized)
 
     #################################
     ###                           ###
