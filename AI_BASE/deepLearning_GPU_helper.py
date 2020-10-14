@@ -113,11 +113,15 @@ def getDataFromFile(fn):
 # return Neural Network
 ## layers
 # I 60                   (keras.layers.InputLayer(input_shape=(60,)))
+# I1 60                  (keras.layers.InputLayer(input_shape=(60, 1)))
 # FI                     (keras.layers.Flatten(input_shape=(len(trainI[0]),)))
 # F                      (keras.layers.Flatten())
 # D 16 relu              (keras.layers.Dense(16, activation='relu'))
 # DO sigmoid             (keras.layers.Dense(len(trainO[0]), activation='sigmoid'))
 # Drop 0.25              (keras.layers.Dropout(0.25))
+# C1DI 32 3 60 relu      (keras.layers.Conv1D(filters=32, kernel_size=3, input_shape=(60, 1), activation='relu'))
+# C1D 32 3 relu          (keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu'))
+# MP1D 2                 (keras.layers.MaxPooling1D(pool_size=2))
 # C2DI 32 3 3 12 12 relu (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
 # C2D 32 3 3 relu        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
 # MP2D 2                 (keras.layers.MaxPooling2D(pool_size=2))
@@ -134,7 +138,10 @@ def getNN(modelInfo, trainI, trainO):
         # add layers to Neural Network as below
         if infoSplit[0] == 'I':
             NN.append(keras.layers.InputLayer(input_shape=(int(infoSplit[1]),)))
-            code += 'NN.append(keras.layers.InputLayer(input_shape=(' + infoSplit[1] + ',)))\n'        
+            code += 'NN.append(keras.layers.InputLayer(input_shape=(' + infoSplit[1] + ',)))\n'
+        elif infoSplit[0] == 'I1':
+            NN.append(keras.layers.InputLayer(input_shape=(int(infoSplit[1]), 1)))
+            code += 'NN.append(keras.layers.InputLayer(input_shape=(' + infoSplit[1] + ', 1)))\n'
         elif info == 'FI':
             NN.append(keras.layers.Flatten(input_shape=(len(trainI[0]),)))
             code += 'NN.append(keras.layers.Flatten(input_shape=(' + str(len(trainI[0])) + ',)))\n'
