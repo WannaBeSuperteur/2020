@@ -1,0 +1,10 @@
+trainInput data_train_i.txt
+trainOutput data_train_o.txt
+testInput data_test_i.txt
+testOutput data_test_o.txt
+testOutputReal None
+test_report data_test_Report.txt
+valid_rate 0
+valid_report data_valid_Report.txt
+modelConfig modelConfig.txt
+normalizeName data_normalize_avg_std.txt
