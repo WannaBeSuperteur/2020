@@ -67,14 +67,10 @@ if __name__ == '__main__':
     trainName = 'data_trainPgn.txt'
     testName = 'data_testPgn.txt'
     ftype = 'txt'
-    fcolsTrain = ['id', 'result', 'welo', 'belo',
-                  'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
-                  'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
-                  'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
-    fcolsTest = ['id', 'result',
-                 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
-                 'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
-                 'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
+
+    scores = []
+    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
+    fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
 
     #################################
     ###                           ###
@@ -83,7 +79,7 @@ if __name__ == '__main__':
     #################################
     
     # make PCA from training data
-    PCAdimen = 4 # dimension of PCA
+    PCAdimen = 10 # dimension of PCA
     idCol = 'id'
     targetColName = 'belo'
     tfCols = []
@@ -345,3 +341,7 @@ if __name__ == '__main__':
     f = open('result.csv', 'w')
     f.write(result)
     f.close()
+
+# 향후계획:
+# 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가
+# 성능 평가를 여러 번 연속으로 실시하여 성능 비교

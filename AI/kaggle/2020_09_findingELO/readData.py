@@ -107,8 +107,38 @@ def getLogVal(val):
     if x < 0: return -math.log(1-x, 10)
     else: return math.log(1+x, 10)
 
+# convert text column into one-hot column (only used for 2d array)
+def textColumnToOneHot(array, colIndex, colItems):
+    resultArray = [] # final array to return
+
+    rows = len(array) # number of rows in original array
+    columns = len(array[0]) # number of columns in original array
+
+    # make resultArray
+    for i in range(rows):
+        thisRow = [] # each row of resultArray
+
+        # for each atomic cell in original array
+        for j in range(columns):
+
+            # append as original for non-colIndex column
+            if j != colIndex: thisRow.append(array[i][j])
+
+            # append as one-hot for colIndex column
+            else:
+                for k in range(itemKinds):
+                    if colItems[k] == array[i][j]: thisRow.append(1)
+                    else: thisRow.append(0)
+
+        # append to finalResult
+        resultArray.append(thisRow)
+
+    # return final result array
+    return resultArray
+
 # test
 if __name__ == '__main__':
+    
     # read from original data
     (trainPgn, testPgn) = readPGN('data.pgn', '[Event', [[0, 8, 2], [6, 9, 2], [7, 11, 2], [8, 11, 2]],
                                   [[0, 8, 2], [6, 9, 2]], 25000)
@@ -126,8 +156,8 @@ if __name__ == '__main__':
 
         # extract data from moveScores
         gameData = []
-        N = 30 # number of points to extract data
-        for j in range(N): gameData.append(thisLineSplit[int(gameLength*j/N)])
+        N = 100 # number of points to extract data
+        for j in [0, 1, 2, 97, 98, 99]: gameData.append(thisLineSplit[int(gameLength*j/N)])
 
         # handle NA data
         for j in range(len(gameData)):
@@ -142,12 +172,40 @@ if __name__ == '__main__':
             for j in range(len(gameData)):
                 testPgn[i-25000].append(getLogVal(gameData[j]))
 
+    # print the result (before conversion)
+    print('\n <<< trainPgn (before conversion) >>>')
     print(np.array(trainPgn))
+
+    print('\n <<< testPgn (before conversion) >>>')
+    print(np.array(testPgn))
+
+    # list of item for specified column (colIndex = 1)
+    colIndex = 1
+    
+    thisCol = np.array(trainPgn)[:,colIndex]
+    colItems = list(set(thisCol))
+    itemKinds = len(colItems)
+    
+    print('\n <<< item list >>>')
+    print(colItems)
+
+    # convert index 1 column (win-lose) to one-hot
+    trainPgn = textColumnToOneHot(trainPgn, colIndex, colItems)
+    testPgn = textColumnToOneHot(testPgn, colIndex, colItems)
+
+    # print the result (after conversion)
+    print('\n <<< trainPgn (after conversion) >>>')
+    print(np.array(trainPgn))
+
+    print('\n <<< testPgn (after conversion) >>>')
     print(np.array(testPgn))
 
     # save array
     saveArray('data_trainPgn.txt', trainPgn)
     saveArray('data_testPgn.txt', testPgn)
-    
+
+    print('\n <<< trainPgn File >>>')
     print(np.array(loadArray('data_trainPgn.txt')))
+
+    print('\n <<< testPgn File >>>')
     print(np.array(loadArray('data_testPgn.txt')))
