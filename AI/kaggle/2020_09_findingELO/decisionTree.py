@@ -59,7 +59,10 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
 # DT_criterion : 'gini' or 'entropy'
 # DT_splitter  : 'best' or 'random'
 def predictDT(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_splitter):
-    print('\n ######## predictDT function ########')
+    print('')
+    print('+========================+')
+    print('|  Function : predictDT  |')
+    print('+========================+')
 
     # get prediction
     DTresult = DT.predict(df_pca_test)

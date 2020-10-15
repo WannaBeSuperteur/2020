@@ -49,6 +49,7 @@ import makePCA as _PCA
 import printData as _PD
 import xgBoost as _XB
 import textVec as _TV
+import compareValid as _CV
 
 # deep Learning
 import sys
@@ -82,11 +83,13 @@ if __name__ == '__main__':
     fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
 
     # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
-    globalValidationRate = 0.0 # ** IMPORTANT ** validation rate (if >0, then split training data into training and validation data, randomly)
-    validationExceptCols = [4, 5] # except for these columns for training data for validation
+    globalValidationRate = 0 # ** IMPORTANT ** validation rate (if >0, then split training data into training and validation data, randomly)
+
+    validationExceptCols = [4, 5] # except for these columns for validation data
+    validationCol = 5 # compare finalResult with column of this index of validation data file (according to targetColName)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 6 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
+    method = 1 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
 
     #################################
     ###                           ###
@@ -400,6 +403,12 @@ if __name__ == '__main__':
         # deep learning
         AImain.AIbase_deeplearning()
 
+    #################################
+    ###                           ###
+    ###        model test         ###
+    ###                           ###
+    #################################
+
     # exit if final result does not exist (method 5 or method 6)
     if method == 5 or method == 6:
         print('\nfinish')
@@ -418,9 +427,15 @@ if __name__ == '__main__':
     f.write(result)
     f.close()
 
+    # compare final result with validation data
+    if globalValidationRate > 0:
+        _CV.compare(finalResult, testName, validationCol, trainValid_validRows)
+
 # 향후계획:
 # 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (ING)
 #     train_df와 valid_df로 구분, normal mode method=0,1,5,6 및 validation mode method=0,1 에서 작동 확인 (FIN)
-#     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력
+#     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
+#     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용
+#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험
 #     성능 평가 시 finalResult와 실제 값을 비교하여 MAE, MSE, accuracy 등을 평가
 #     validation에서 성능 평가를 여러 번 연속으로 실시하여 성능 비교
