@@ -12,7 +12,10 @@ import pandas as pd
 # DT_criterion : 'gini' or 'entropy'
 # DT_splitter  : 'best' or 'random'
 def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion, DT_splitter):
-    print('\n ######## createDTfromDF function ########')
+    print('')
+    print('+=============================+')
+    print('|  Function : createDTfromDF  |')
+    print('+=============================+')
 
     cols = len(dataSetDF.columns) # number of columns
 

@@ -3,6 +3,7 @@ import numpy as np
 import readData as RD
 
 # fn           : file name
+# validExcept  : except for these columns for training data for validation
 # rows         : rows to use, in 1d array form (if None, use all rows)
 # ftype        : file type (json, csv, txt)
 # fcols        : columns (if ftype is 'txt' and fcols is None, use default name)
@@ -14,20 +15,35 @@ import readData as RD
 # logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makeDataFrame(fn, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
-    print('\n ######## makeDataFrame function ########')
+def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
+    print('')
+    print('+============================+')
+    print('|  Function : makeDataFrame  |')
+    print('+============================+')
     
     # open and show plt data
     if ftype == 'json': # type is 'json'
         jf = open(fn, 'r')
         df_loaded = json.load(jf)
         df_data = pd.DataFrame(df_loaded)
+
+        # NOT TESTED FOR THIS CASE - SO THERE MAY BE SOME ERRORS
         
     elif ftype == 'csv': # type is 'csv'
         df_data = pd.read_csv(fn)
+
+        # NOT TESTED FOR THIS CASE - SO THERE MAY BE SOME ERRORS
         
     elif ftype == 'txt': # type is 'txt'
         df_array = RD.loadArray(fn)
+
+        # remove columns indexed by elements of validExcept
+        # (used in training but not used in validation)
+        if validExcept != None:
+            for i in range(len(validExcept)):
+                df_array = np.delete(df_array, validExcept[i], 1)
+
+        # make dataframe using df_array
         if fcols != None: df_data = pd.DataFrame(data=df_array, columns=fcols)
         else:
             cols = []
@@ -63,7 +79,9 @@ def makeDataFrame(fn, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, u
                 df_data[i][tfColsIndex[x]] = 0
 
     df_data = pd.DataFrame(df_data, columns=dataCols)
-    print('\n<<< [0] df_data.shape >>>\n' + str(df_data.shape))
+    print('\n<<< [0] df_data.shape >>>')
+    print('columns : ' + str(df_data.columns))
+    print('shape   : ' + str(df_data.shape))
 
     # create data
     # .data and .target
@@ -192,6 +210,11 @@ def makeDataFrame(fn, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, u
 
         print('\n<<< [2-5] dataSetDF after row extraction >>>')
         print(dataSetDF)
+
+    print('')
+    print('+========================+')
+    print('|  Exit : makeDataFrame  |')
+    print('+========================+')
 
     # return dataFrame
     return (dataSetDF, targetCol)

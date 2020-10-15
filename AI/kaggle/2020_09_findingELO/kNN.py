@@ -9,20 +9,24 @@ import math
 # k          : number of neighbors
 # useAverage : return average value
 def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
-    print('\n ######## kNN function ########')
+    print('')
+    print('+=======================+')
+    print('|    Function : kNN     |')
+    print('+=======================+')
 
     # count of each value for training data
     targetVals = list(set(dfTrain[targetCol].values)) # set of target values
     classCount = dfTrain[targetCol].value_counts() # class count for each target value
 
+    print('\n<<< [17] dataFrame for training >>>')
+    print(dfTrain)
+    print('\n<<< [18] dataFrame for test >>>')
+    print(dfTest)
+
     # convert to numpy array
     dfTrain = np.array(dfTrain)
     dfTest = np.array(dfTest)
-    print('\n<<< [17] dfTrain >>>')
-    print(dfTrain)
-    print('\n<<< [18] dfTest >>>')
-    print(dfTest)
-
+    
     # kNN classification result
     result = []
     resultT = [] # transport of result

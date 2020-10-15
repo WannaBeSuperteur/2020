@@ -60,6 +60,15 @@ import AIBASE_main as AImain
 
 if __name__ == '__main__':
 
+    #################################
+    ###                           ###
+    ###    basic configuration    ###
+    ###                           ###
+    #################################
+
+    # global validation == 0 for all methods
+    # global validation > 0 for method 0 and 1
+
     # define final result (init as None)
     finalResult = None
 
@@ -72,8 +81,12 @@ if __name__ == '__main__':
     fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
     fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
 
-    # global validation rate is used on method 0, 1, 2, 3 and 5 (that is, except for deep learning)
-    globalValidationRate = 0.15 # validation rate (if >0, then split training data into training and validation data, randomly)
+    # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
+    globalValidationRate = 0.0 # ** IMPORTANT ** validation rate (if >0, then split training data into training and validation data, randomly)
+    validationExceptCols = [4, 5] # except for these columns for training data for validation
+
+    # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+    method = 6 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
 
     #################################
     ###                           ###
@@ -95,14 +108,11 @@ if __name__ == '__main__':
     specificCol = 'score0' # specific column to solve problem (eg: 'request_text_edit_aware')
     frequentWords = None # frequent words (if not None, do word appearance check)
 
-    # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 6 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
-
     # for method 0
     kNN_k = 120 # number k for kNN
     useAverage = True # use average voting for kNN
 
-    # for method 2
+    # for method 1 (for only when target value is binary, that is 0 or 1)
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
@@ -165,7 +175,11 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for training data
         # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
-        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, trainValid_trainRows, ftype, fcolsTrain, PCAdimen, True, targetColName,
+        print('')
+        print('+-----------------------+')
+        print('|     Training Data     |')
+        print('+-----------------------+')
+        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, None, trainValid_trainRows, ftype, fcolsTrain, PCAdimen, True, targetColName,
                                                                    tfCols, textCols+exceptCols, None, None, None, exceptTargetForPCA, useLog,
                                                                    logConstant, specificCol, frequentWords)
 
@@ -176,9 +190,22 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
-        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, trainValid_validRows, ftype, fcolsTest, PCAdimen, False, None,
-                                                                     tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
-                                                                     logConstant, specificCol, frequentWords)
+        if globalValidationRate == 0: # normal mode
+            print('')
+            print('+-----------------------+')
+            print('|       Test Data       |')
+            print('+-----------------------+')
+            (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, None, None, ftype, fcolsTest, PCAdimen, False, None,
+                                                                         tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
+                                                                         logConstant, specificCol, frequentWords)
+        else: # validation mode
+            print('')
+            print('+-----------------------+')
+            print('|    Validation Data    |')
+            print('+-----------------------+')
+            (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(trainName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, PCAdimen, False, None,
+                                                                         tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
+                                                                         logConstant, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
@@ -242,11 +269,29 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=_TV.preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
+        print('')
+        print('+-----------------------+')
+        print('|     Training Data     |')
+        print('+-----------------------+')
+        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, None, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
                                                                   tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
-        (test_df, noUse) = _DF.makeDataFrame(testName, trainValid_validRows, ftype, fcolsTest, False, targetColName,
-                                             tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
+        if globalValidationRate == 0: # normal mode
+            print('')
+            print('+-----------------------+')
+            print('|       Test Data       |')
+            print('+-----------------------+')
+            (test_df, noUse) = _DF.makeDataFrame(testName, None, None, ftype, fcolsTest, False, targetColName,
+                                                 tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        else: # validation mode
+            print('')
+            print('+-----------------------+')
+            print('|    Validation Data    |')
+            print('+-----------------------+')
+            (test_df, noUse) = _DF.makeDataFrame(testName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+                                                 tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+
+        # print dataFrames
         print('\n<<< [24] train_df.columns >>>')
         print(train_df.columns)
         print('\n<<< [25] train_df >>>')
@@ -260,6 +305,7 @@ if __name__ == '__main__':
         print(train_df[targetColName])
 
         # change train_df['requester_received_pizza']
+        # if method == 2 and target value is not binary(0 or 1), it may cause error
         for i in range(len(train_df)):
             if train_df.at[i, targetColName] == 1:
                 train_df.at[i, targetColName] = True
@@ -293,16 +339,36 @@ if __name__ == '__main__':
             if predictions[i] == True: finalResult.append(1)
             else: finalResult.append(0)
 
+    # method 4 or method 6 (xgboost only or deep learning)
+    if method == 4 or method == 6:
+
+        # get train and test dataFrame
+        print('')
+        print('+-----------------------+')
+        print('|     Training Data     |')
+        print('+-----------------------+')
+        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, None, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
+                                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+
+        if globalValidationRate == 0: # normal mode
+            print('')
+            print('+-----------------------+')
+            print('|       Test Data       |')
+            print('+-----------------------+')
+            (df_pca_test, noUse) = _DF.makeDataFrame(testName, None, None, ftype, fcolsTest, False, targetColName,
+                                                     tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        else: # validation mode
+            print('')
+            print('+-----------------------+')
+            print('|    Validation Data    |')
+            print('+-----------------------+')
+            (df_pca_test, noUse) = _DF.makeDataFrame(testName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+                                                     tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+
     # xgboost only
     # if xgBoostLevel = 1 then as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
     #                          (ref: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html)
-    elif method == 4:
-        
-        # get train and test dataFrame
-        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
-                                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-        (df_pca_test, noUse) = _DF.makeDataFrame(testName, trainValid_validRows, ftype, fcolsTest, False, targetColName,
-                                                 tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+    if method == 4:
 
         # print training and test data
         print('\n<<< [32] df_pca_train method==4 >>>')
@@ -321,12 +387,6 @@ if __name__ == '__main__':
     # use Deep Learning
     elif method == 6:
 
-        # get train and test dataFrame
-        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
-                                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-        (df_pca_test, noUse) = _DF.makeDataFrame(testName, trainValid_validRows, ftype, fcolsTest, False, targetColName,
-                                                 tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-
         # print training and test data
         print('\n<<< [35] df_pca_train >>>')
         print(df_pca_train)
@@ -340,48 +400,18 @@ if __name__ == '__main__':
         # deep learning
         AImain.AIbase_deeplearning()
 
-    # exit if final result does not exist
-    if finalResult == None: exit()
+    # exit if final result does not exist (method 5 or method 6)
+    if method == 5 or method == 6:
+        print('\nfinish')
+        exit()
+
+    # for method 5 and method 6, this causes error because finalResult is None
+    print('\n<<< [37] final result (len=' + str(len(finalResult)) + ') >>>')
+    print(np.array(finalResult))
 
     # write result if final result exists
-    result = str(idCol) + ',' + str(targetColName) + '\n'
-    
-    if ftype == 'json': # type is 'json'
-        jf = open(testName, 'r')
-        json_file = jf.read()
-        jf.close()
-
-        json_data = json.loads(json_file)
-
-        # make result for each line
-        for i in range(len(json_data)):
-            x = json_data[i][idCol]
-            result += str(x) + ',' + str(finalResult[i]) + '\n'
-
-    elif ftype == 'csv': # type is 'csv'
-        csv_df = pd.read_csv(fn)
-
-        # make result for each line
-        for i in range(len(csv_df)):
-            x = csv_df[i][idCol]
-            result += str(x) + ',' + str(finalResult[i]) + '\n'
-
-    elif ftype == 'txt': # type is 'txt'
-        f_ = open(testName, 'r')
-        fl = f_.readlines()
-        f_.close()
-
-        # find the index of idcol
-        idColIndex = 0
-        for i in range(len(fcolsTest)):
-            if fcolsTest[i] == idCol:
-                idColIndex = i
-                break
-
-        # make result for each line
-        for i in range(len(fl)):
-            x = fl[i].split('\t')[0]
-            result += str(x) + ',' + str(finalResult[i]) + '\n'
+    result = str(targetColName) + '\n'
+    for i in range(len(finalResult)): result += str(finalResult[i]) + '\n'
 
     # write the result to file
     f = open('result.csv', 'w')
@@ -390,5 +420,7 @@ if __name__ == '__main__':
 
 # 향후계획:
 # 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (ING)
+#     train_df와 valid_df로 구분, normal mode method=0,1,5,6 및 validation mode method=0,1 에서 작동 확인 (FIN)
+#     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력
 #     성능 평가 시 finalResult와 실제 값을 비교하여 MAE, MSE, accuracy 등을 평가
 #     validation에서 성능 평가를 여러 번 연속으로 실시하여 성능 비교
