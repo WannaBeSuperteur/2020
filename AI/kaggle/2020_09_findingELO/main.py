@@ -72,6 +72,9 @@ if __name__ == '__main__':
     fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
     fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
 
+    # global validation rate is used on method 0, 1, 2, 3 and 5 (that is, except for deep learning)
+    globalValidationRate = 0.15 # validation rate (if >0, then split training data into training and validation data, randomly)
+
     #################################
     ###                           ###
     ###    model configuration    ###
@@ -79,7 +82,7 @@ if __name__ == '__main__':
     #################################
     
     # make PCA from training data
-    PCAdimen = 10 # dimension of PCA
+    PCAdimen = 4 # dimension of PCA
     idCol = 'id'
     targetColName = 'belo'
     tfCols = []
@@ -93,7 +96,7 @@ if __name__ == '__main__':
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 6 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only
+    method = 6 # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
 
     # for method 0
     kNN_k = 120 # number k for kNN
@@ -118,6 +121,41 @@ if __name__ == '__main__':
 
     #################################
     ###                           ###
+    ### split data into train/val ###
+    ###                           ###
+    #################################
+
+    trainValid_trainRows = None # rows for training (for train-valid mode where globalValidationRate > 0)
+    trainValid_validRows = None # rows for validation (for train-valid mode where globalValidationRate > 0)
+
+    # validation mode & method <= 4 (not deep learning method, returns finalResult)
+    if globalValidationRate > 0 and method <= 4:
+        testName = trainName # because test (validation) using training data
+
+        # get the number of rows of training data
+        ft = open(trainName)
+        ftrows = len(ft.readlines())
+        ft.close()
+
+        print('ftrows = ' + str(ftrows))
+
+        # specify rows for training and test
+        valid = []
+        for i in range(ftrows): valid.append(0)
+
+        while sum(valid) < ftrows * globalValidationRate:
+            valid[random.randint(0, ftrows-1)] = 1
+
+        # update trainValid_trainRows and trainValid_validRows
+        trainValid_trainRows = []
+        trainValid_validRows = []
+        
+        for i in range(ftrows):
+            if valid[i] == 1: trainValid_validRows.append(i)
+            else: trainValid_trainRows.append(i)
+
+    #################################
+    ###                           ###
     ###      model execution      ###
     ###                           ###
     #################################
@@ -127,8 +165,9 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for training data
         # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
-        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, ftype, fcolsTrain, PCAdimen, True, targetColName, tfCols, textCols+exceptCols,
-                                                              None, None, None, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, trainValid_trainRows, ftype, fcolsTrain, PCAdimen, True, targetColName,
+                                                                   tfCols, textCols+exceptCols, None, None, None, exceptTargetForPCA, useLog,
+                                                                   logConstant, specificCol, frequentWords)
 
         # remove target column from comp and mean
         if exceptTargetForPCA == False:
@@ -137,8 +176,9 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
-        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, ftype, fcolsTest, PCAdimen, False, None, tfCols, textCols+exceptCols,
-                                                                comp, exva, mean, False, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, trainValid_validRows, ftype, fcolsTest, PCAdimen, False, None,
+                                                                     tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
+                                                                     logConstant, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
@@ -202,8 +242,10 @@ if __name__ == '__main__':
         count_vect = CountVectorizer(analyzer=_TV.preprocess_text)
 
         # get train and test dataFrame
-        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
-        (test_df, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (train_df, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
+                                                                  tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
+        (test_df, noUse) = _DF.makeDataFrame(testName, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+                                             tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
         print('\n<<< [24] train_df.columns >>>')
         print(train_df.columns)
@@ -257,8 +299,10 @@ if __name__ == '__main__':
     elif method == 4:
         
         # get train and test dataFrame
-        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-        (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
+                                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse) = _DF.makeDataFrame(testName, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+                                                 tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
         print('\n<<< [32] df_pca_train method==4 >>>')
@@ -278,8 +322,10 @@ if __name__ == '__main__':
     elif method == 6:
 
         # get train and test dataFrame
-        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, ftype, fcolsTrain, True, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
-        (df_pca_test, noUse) = _DF.makeDataFrame(testName, ftype, fcolsTest, False, targetColName, tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
+                                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+        (df_pca_test, noUse) = _DF.makeDataFrame(testName, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+                                                 tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # print training and test data
         print('\n<<< [35] df_pca_train >>>')
@@ -343,5 +389,6 @@ if __name__ == '__main__':
     f.close()
 
 # 향후계획:
-# 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가
-# 성능 평가를 여러 번 연속으로 실시하여 성능 비교
+# 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (ING)
+#     성능 평가 시 finalResult와 실제 값을 비교하여 MAE, MSE, accuracy 등을 평가
+#     validation에서 성능 평가를 여러 번 연속으로 실시하여 성능 비교

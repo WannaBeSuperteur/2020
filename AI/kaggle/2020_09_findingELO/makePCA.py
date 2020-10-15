@@ -7,9 +7,9 @@ from sklearn.decomposition import PCA
 import pandas as pd
 
 # fn           : file name
+# rows         : rows to use, in 1d array form (if None, use all rows)
 # ftype        : file type (json, csv, txt)
 # fcols        : columns (if ftype is 'txt' and fcols is None, use default name)
-
 # n_cols       : number of columns(components) of PCA
 # isTrain      : training(True) or not(False)
 # target       : target column if isTrain is True
@@ -22,11 +22,11 @@ import pandas as pd
 # logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makePCA(fn, ftype, fcols, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords):
+def makePCA(fn, rows, ftype, fcols, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords):
     print('\n ######## makePCA function ########')
 
     # get dataFrame
-    (dataSetDF, targetCol) = _MDF.makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
+    (dataSetDF, targetCol) = _MDF.makeDataFrame(fn, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True

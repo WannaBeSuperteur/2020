@@ -3,9 +3,9 @@ import numpy as np
 import readData as RD
 
 # fn           : file name
+# rows         : rows to use, in 1d array form (if None, use all rows)
 # ftype        : file type (json, csv, txt)
 # fcols        : columns (if ftype is 'txt' and fcols is None, use default name)
-
 # isTrain      : training(True) or not(False)
 # target       : target column if isTrain is True
 # tfCols       : columns that contains True or False values
@@ -14,7 +14,7 @@ import readData as RD
 # logConstant  : x -> log2(x + logConstant)
 # specificCol  : column -> columns that indicate the number of appearance of frequent words
 # frequentWords: list of frequent words
-def makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
+def makeDataFrame(fn, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
     print('\n ######## makeDataFrame function ########')
     
     # open and show plt data
@@ -182,6 +182,16 @@ def makeDataFrame(fn, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog,
         dataSetDF = dataSetDF.astype(float)
     except:
         doNothing = 0 # do nothing
+
+    print('\n<<< [2-4] dataSetDF original >>>')
+    print(dataSetDF)
+
+    # remove rows not included in 'rows'
+    if rows != None:
+        dataSetDF = dataSetDF.iloc[rows]
+
+        print('\n<<< [2-5] dataSetDF after row extraction >>>')
+        print(dataSetDF)
 
     # return dataFrame
     return (dataSetDF, targetCol)
