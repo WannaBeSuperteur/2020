@@ -15,12 +15,12 @@ import numpy as np
 # PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
 # check if UAV i files beyound the border
-def beyondBorder(i, border):
+def beyondBorder(UAV_i, border):
     # ( [0] check if UAV i files beyond the border )
     return True
 
 # check if UAV i's trajectory and UAV j's trajectory is crossed
-def IsTrajectoryCrossed(i, j):
+def IsTrajectoryCrossed(UAV_i, UAV_j):
     # ( [1] check if UAV i's trajectory and UAV j's trajectory is crossed )
     return True
 
@@ -41,8 +41,12 @@ def isMinThroughputOfAllDevicesDoesNotInc():
 # L                  : number of UAVs
 # fc, B, o2, b1, b2, : parameters (as Table 1)
 # alpha, u1, u2,
-# alphaL, r 
+# alphaL, r
 def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
+
+    # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
+    QTable = [] # Q table
+    UAVs = [] # info about all UAVs
 
     # ( [4] init target network and online network )
     # ( [5] init UAV's location and IoT devices' location )
@@ -57,16 +61,25 @@ def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
                 # ( [8] get UAV i's next location )
 
                 # if UAV i files beyond the border
-                if beyondBorder(i, border) == True:
+                if beyondBorder(UAV_i, border) == True:
                     # ( [9] UAV i stays at the border )
-                    # ( [10] UAV i gets a penalty of -1 )
+                    
+                    # UAV i gets a penalty of -1
+                    s_i = dq.getS(UAV_i, q, n, l, a, k, R)
+                    dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
             for i in range(1, L+1): # each UAV
 
                 # UAV i and j's trajectory exists cross
-                if IsTrajectoryCrossed(i, j) == True:
+                if IsTrajectoryCrossed(UAV_i, UAV_j) == True:
                     # ( [11] UAV i and UAV j stay at the previous location )
-                    # ( [12] UAV i and UAV j get a penalty of -1 )
+
+                    # UAV i and UAV j get a penalty of -1
+                    s_i = dq.getS(UAV_i, q, n, l, a, k, R)
+                    dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
+
+                    s_j = dq.getS(UAV_j, q, n, l, a, k, R)
+                    dq.updateQvalue(Q, s_j, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
                 beforeThroughput = 0 # ( [13] get throughput )
 
@@ -77,17 +90,25 @@ def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
 
                 # device t's throughput does not increase
                 if afterThroughput <= beforeThroughput:
-                    # ( [17] UAV i gets a penalty of -1 )
+                    
+                    # UAV i gets a penalty of -1
+                    s_i = dq.getS(UAV_i, q, n, l, a, k, R)
+                    dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
             # if time slot is T
             if t == T:
                 # if minimum throughput of all devices in a cluster == 0
                 if isMinThroughputOfAllDevicesInCluster0(t) == True:
+
                     # ( [18] The UAV get a penalty of -2 )
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc == True:
-                    # ( [19] All UAVs get a penalty of -1 )
+
+                    # All UAVs get a penalty of -1
+                    for UAV in UAVs:
+                        s_UAV = dq.getS(UAV, q, n, l, a, k, R)
+                        dq.updateQvalue(Q, s_UAV, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
             # ( [20] store (s,a,r,s') into replay buffer )
             # ( [21] Randomly select a minibatch of H samples from replay buffer )
