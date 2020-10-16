@@ -11,7 +11,10 @@ import pandas as pd
 # DT_maxDepth  : max depth of decision tree
 # DT_criterion : 'gini' or 'entropy'
 # DT_splitter  : 'best' or 'random'
-def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion, DT_splitter):
+# numericRange : convert to mean of each range when target column is numeric
+#                (available only when target column is numeric)
+#                for example, if [100, 200, 300, 450], convert 115, 150, 190 to mean of [100, 200] = 150
+def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion, DT_splitter, numericRange):
     print('')
     print('+=============================+')
     print('|  Function : createDTfromDF  |')
@@ -29,6 +32,20 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
     # extract input and output data of dataSetDF
     inputData = np.array(dataSetDF.iloc[:, inputIndex])
     outputData = np.array(dataSetDF.iloc[:, outputIndex]).flatten()
+
+    # print output data
+    print('\n<<< [3-pre0] output data (first 100 elements) >>>')
+    print(outputData[:min(len(outputData), 100)])
+
+    # convert using numericRange
+    for i in range(len(outputData)):
+        for j in range(len(numericRange)-1):
+            if outputData[i] >= numericRange[j] and outputData[i] < numericRange[j+1]:
+                outputData[i] = (numericRange[j] + numericRange[j+1]) / 2
+
+    # print output data
+    print('\n<<< [3-pre1] output data (first 100 elements) >>>')
+    print(outputData[:min(len(outputData), 100)])
 
     # create Decision Tree using input and output data
     DT = tree.DecisionTreeClassifier(max_depth=DT_maxDepth, criterion=DT_criterion, splitter=DT_splitter)
@@ -68,7 +85,7 @@ def predictDT(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
     DTresult = DT.predict(df_pca_test)
 
     # print prediction
-    print('\n<<< [4] DTresult (first 100 elements) >>>')
+    print('\n<<< [4-0] DTresult (first 100 elements) >>>')
     print(DTresult[:min(len(DTresult), 100)])
 
     # display as chart

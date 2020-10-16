@@ -90,7 +90,7 @@ if __name__ == '__main__':
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     # validation mode is not available for method 5 and method 6
-    method = 6 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
+    method = 1 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
 
     #################################
     ###                           ###
@@ -114,24 +114,27 @@ if __name__ == '__main__':
 
     # for method 0
     kNN_k = 120 # number k for kNN
-    useAverage = True # use average voting for kNN
+    kNN_useAverage = True # use average voting for kNN
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
     DT_maxDepth = 15 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
 
-    # for method 4
-    xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
-    epochs = 100
-    boostRound = 10000
-    earlyStoppingRounds = 10
-    foldCount = 5
-    rateOf1s = 0.15 # rate of 1's (using this, portion of 1 should be rateOf1s)
-    info = [epochs, boostRound, earlyStoppingRounds, foldCount, rateOf1s]
+    # convert to mean of each range when target column is numeric
+    DT_numericRange = [1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400]
+
+    # for method 3 and 4
+    XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+    XG_epochs = 100 # xgboost training epochs
+    XG_boostRound = 10000 # num_boost_round for xgb.train
+    XG_earlyStoppingRounds = 10 # early_stopping_rounds for xgb.train
+    XG_foldCount = 5 # XG_foldCount = N -> (N-1)/N of whole dataset is for training, 1/N is for test
+    XG_rateOf1s = 0.15 # rate of 1's (using this, portion of 1 should be XG_rateOf1s)
+    XG_info = [XG_epochs, XG_boostRound, XG_earlyStoppingRounds, XG_foldCount, XG_rateOf1s]
 
     # for deep learning (method 5 and 6)
-    normalizeTarget = False # normalize training output value? (False because automatically normalized)
+    DL_normalizeTarget = False # normalize training output value? (False because automatically normalized)
 
     #################################
     ###                           ###
@@ -215,20 +218,20 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = _KNN.kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, useAverage)
+            finalResult = _KNN.kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, kNN_useAverage)
 
         # use decision tree
         elif method == 1:
             
             # make decision tree
-            DT = _DT.createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter)
+            DT = _DT.createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter, DT_numericRange)
 
             # predict test data using decision tree
             finalResult = _DT.predictDT(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
 
         # use xgBoost
         # https://machinelearningmastery.com/develop-first-xgboost-model-python-scikit-learn/
-        # if xgBoostLevel=1 then using like https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
+        # if XG_xgBoostLevel=1 then using like https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html
         elif method == 3:
             totalAccuracy = 0 # total accuracy score
             totalROC = 0 # total area under ROC
@@ -236,7 +239,7 @@ if __name__ == '__main__':
 
             # iteratively validation
             for i in range(times):
-                (accuracy, ROC, _) = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True, xgBoostLevel, info)
+                (accuracy, ROC, _) = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True, XG_xgBoostLevel, XG_info)
                 totalAccuracy += accuracy
                 totalROC += ROC
 
@@ -245,13 +248,13 @@ if __name__ == '__main__':
             print('avg ROC      : ' + str(totalROC / times))
 
             # predict values
-            finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, xgBoostLevel, info)
+            finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, XG_xgBoostLevel, XG_info)
 
         # use Deep Learning for PCA-ed data
         elif method == 5:
             
             # save data as file
-            DLmain.dataFromDF(df_pca_train, df_pca_test, 'target', [], normalizeTarget)
+            DLmain.dataFromDF(df_pca_train, df_pca_test, 'target', [], DL_normalizeTarget)
 
             # deep learning
             AImain.AIbase_deeplearning()
@@ -370,7 +373,7 @@ if __name__ == '__main__':
                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
     # xgboost only
-    # if xgBoostLevel = 1 then as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+    # if XG_xgBoostLevel = 1 then as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
     #                          (ref: https://swlock.blogspot.com/2019/02/xgboost-stratifiedkfold-kfold.html)
     if method == 4:
 
@@ -382,8 +385,8 @@ if __name__ == '__main__':
         print(df_pca_test)
 
         # run xgboost
-        # when setting validation as True, finally, always return error at [33] (both xgBoostLevel=0 and xgBoostLevel=1)
-        finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False, xgBoostLevel, info)
+        # when setting validation as True, finally, always return error at [33] (both XG_xgBoostLevel=0 and XG_xgBoostLevel=1)
+        finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, targetColName, 'method4', True, False, XG_xgBoostLevel, XG_info)
 
         print('\n<<< [34] len of finalResult >>>')
         print(len(finalResult))
@@ -399,7 +402,7 @@ if __name__ == '__main__':
         print(df_pca_test)
 
         # save data as file
-        DLmain.dataFromDF(df_pca_train, df_pca_test, targetColName, exceptCols, normalizeTarget)
+        DLmain.dataFromDF(df_pca_train, df_pca_test, targetColName, exceptCols, DL_normalizeTarget)
 
         # deep learning
         AImain.AIbase_deeplearning()
@@ -436,6 +439,6 @@ if __name__ == '__main__':
 # 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (ING)
 #     train_df와 valid_df로 구분, normal mode method=0,1,5,6 및 validation mode method=0,1 에서 작동 확인 (FIN)
 #     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
-#     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용
-#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험
+#     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용 (FIN)
+#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1)
 #     validation에서 성능 평가를 여러 번 연속으로 실시하여 성능 비교
