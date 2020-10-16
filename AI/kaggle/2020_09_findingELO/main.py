@@ -83,13 +83,14 @@ if __name__ == '__main__':
     fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
 
     # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
-    globalValidationRate = 0 # ** IMPORTANT ** validation rate (if >0, then split training data into training and validation data, randomly)
+    globalValidationRate = 0.15 # ** IMPORTANT ** validation rate (if >0, then split training data into training and validation data, randomly)
 
     validationExceptCols = [4, 5] # except for these columns for validation data
     validationCol = 5 # compare finalResult with column of this index of validation data file (according to targetColName)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
-    method = 1 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
+    # validation mode is not available for method 5 and method 6
+    method = 6 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
 
     #################################
     ###                           ###
@@ -193,7 +194,7 @@ if __name__ == '__main__':
 
         # get PCA (components and explained variances) for test data
         # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
-        if globalValidationRate == 0: # normal mode
+        if globalValidationRate == 0 or method == 5: # normal mode
             print('')
             print('+-----------------------+')
             print('|       Test Data       |')
@@ -353,7 +354,7 @@ if __name__ == '__main__':
         (df_pca_train, targetColOfTrainDataFrame) = _DF.makeDataFrame(trainName, None, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
                                                                       tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
-        if globalValidationRate == 0: # normal mode
+        if globalValidationRate == 0 or method == 6: # normal mode
             print('')
             print('+-----------------------+')
             print('|       Test Data       |')
@@ -437,5 +438,4 @@ if __name__ == '__main__':
 #     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
 #     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용
 #     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험
-#     성능 평가 시 finalResult와 실제 값을 비교하여 MAE, MSE, accuracy 등을 평가
 #     validation에서 성능 평가를 여러 번 연속으로 실시하여 성능 비교
