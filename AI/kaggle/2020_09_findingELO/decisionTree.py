@@ -38,10 +38,11 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
     print(outputData[:min(len(outputData), 100)])
 
     # convert using numericRange
-    for i in range(len(outputData)):
-        for j in range(len(numericRange)-1):
-            if outputData[i] >= numericRange[j] and outputData[i] < numericRange[j+1]:
-                outputData[i] = (numericRange[j] + numericRange[j+1]) / 2
+    if numericRange != None:
+        for i in range(len(outputData)):
+            for j in range(len(numericRange)-1):
+                if outputData[i] >= numericRange[j] and outputData[i] < numericRange[j+1]:
+                    outputData[i] = (numericRange[j] + numericRange[j+1]) / 2
 
     # print output data
     print('\n<<< [3-pre1] output data (first 100 elements) >>>')

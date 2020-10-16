@@ -122,7 +122,7 @@ if __name__ == '__main__':
     DT_splitter = 'random' # 'best' or 'random'
 
     # convert to mean of each range when target column is numeric
-    DT_numericRange = [1500, 1600, 1700, 1800, 1900, 2000, 2100, 2200, 2300, 2400]
+    DT_numericRange = None
 
     # for method 3 and 4
     XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
