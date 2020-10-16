@@ -24,6 +24,16 @@ def getActionSpace():
 def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
+# get max(a')Q(s', a') (s' = nextState, a' = a_)
+def getMaxQ(s, a, q, n, l, k, R, actionSpace):
+    maxQ = -999999 # max(a')Q(s', a')
+    for a_ in range(len(actionSpace)):
+        if useDL == True: QofNextStateAction = # ( [1] obtain Q(s', a') using deep learning )
+        else: QofNextStateAction = 0
+
+        # update max(a')Q(s', a')
+        if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+
 # update Q value
 
 # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -47,14 +57,7 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, q, n, l, k, R, useDL):
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     nextState = getNextState(s, a, q, n, l, k, R)
-
-    maxQ = -999999 # max(a')Q(s', a')
-    for a_ in range(len(actionSpace)):
-        if useDL == True: QofNextStateAction = # ( [1] obtain Q(s', a') using deep learning )
-        else: QofNextStateAction = 0
-
-        # update max(a')Q(s', a')
-        if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+    maxQ = getMaxQ(s, a, q, n, l, k, R, actionSpace)
         
     # update Q value
     sFound = False # find corresponding state?
@@ -83,9 +86,10 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, q, n, l, k, R, useDL):
 def getNextState(s, a, q, n, l, k, R):
     # ( [4] get next state )
 
-# yt = r + r_*max(a')Q(s', a', w)
-def yt(r, r_, Q, s_, a_, w):
-    # ( [5] get the value of yt )
+# target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
+def yt(r, r_, Q, s, a, q, n, l, k, R):
+    maxQ = getMaxQ(s, a, q, n, l, k, R, actionSpace)
+    return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
 def Qpi(r_, r, t, k, s, a, pi):
