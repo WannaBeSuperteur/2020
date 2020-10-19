@@ -69,17 +69,25 @@ def isMinThroughputOfAllDevicesDoesNotInc(t):
 # 3D trajectory design and time resource allocation solution based on DQL
 # M                  : number of episodes
 # T                  : number of time slots
+# Litalic            : number of clusters
 # L                  : number of UAVs
+# width, height      : width and height of the board
 # fc, B, o2, b1, b2, : parameters (as Table 1)
 # alpha, u1, u2,
 # alphaL, r
-def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
+def algorithm1(M, T, Litalic, L, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
 
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     QTable = [] # Q table
 
     # info about all UAVs : [UAV0, UAV1, ...] = [[x0, y0, h0], [x1, y1, h1], ...]
     UAVs = []
+
+    # randomly place UAVs
+    # (    )
+
+    # cluster UAVs using K-means clustering
+    # (    )
 
     # ( [4] init target network and online network )
     # ( [5] init UAV's location and IoT devices' location )
@@ -162,10 +170,14 @@ if __name__ == '__main__':
     alphaL = 0.0001 # learning rate for DQN
     r_ = 0.7 # discount factor
 
+    width = 50 # width (m)
+    height = 50 # height (m)
+
     M = 1000 # M = 1000 episodes
-    L = 3 # L = 3 UAVs
+    Litalic = 3 # Litalic = 3 clusters
+    L = 50 # L = 50 UAVs
     T = 1 # T = 1s
     H = 15 # H = 15m
 
     # run
-    algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
+    algorithm1(M, T, Litalic, L, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
