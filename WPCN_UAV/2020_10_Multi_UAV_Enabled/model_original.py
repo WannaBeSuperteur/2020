@@ -11,26 +11,57 @@ import deepQ as dq
 import math
 import random
 import numpy as np
+from shapely.geometry import LineString
 
 # PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
+# each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
+# each element of x0, y0 and h0 is the vector of location, from previous t to current t
+# where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
+#       y0 = [y00, y01, ..., y0t], ...
+#       h0 = [h00, h01, ..., h0t], ...
+
 # check if UAV i files beyound the border
-def beyondBorder(UAV_i, border):
+def beyondBorder(UAVi, t, border):
     # ( [0] check if UAV i files beyond the border )
     return True
 
 # check if UAV i's trajectory and UAV j's trajectory is crossed
-def IsTrajectoryCrossed(UAV_i, UAV_j):
-    # ( [1] check if UAV i's trajectory and UAV j's trajectory is crossed )
-    return True
+def IsTrajectoryCrossed(UAVi, UAVj, t):
+    
+    # trajectory: location of UAV i between time slot t-1 ~ t
+    #             location of UAV j between time slot t-1 ~ t
+
+    # get position of UAVi and UAVj at time t-1 and t
+    xi_before = UAVi[0][t-1]
+    yi_before = UAVi[1][t-1]
+    xi_after = UAVi[0][t]
+    yi_after = UAVi[1][t]
+
+    xj_before = UAVj[0][t-1]
+    yj_before = UAVj[1][t-1]
+    xj_after = UAVj[0][t]
+    yj_after = UAVj[1][t]
+
+    # decide there is crossing of trajectory
+    UAVi_before = (xi_before, yi_before) # location of UAVi at time t-1
+    UAVi_after = (xi_after, yi_after) # location of UAVi at time t
+    UAVj_before = (xj_before, yj_before) # location of UAVj at time t-1
+    UAVj_after = (xj_after, yj_after) # location of UAVj at time t
+
+    # check if the segments intersect
+    UAVi_line = LineString([UAVi_before, UAVi_after])
+    UAVj_line = LineString([UAVj_before, UAVj_after])
+
+    return UAVi_line.intersects(UAVj_line)
 
 # check if minimum throughput of all devices in a cluster == 0
-def isMinThroughputOfAllDevicesInCluster0(device):
+def isMinThroughputOfAllDevicesInCluster0(t):
     # ( [2] check )
     return True
 
 # check if minimum throughput of all devices does not increase
-def isMinThroughputOfAllDevicesDoesNotInc():
+def isMinThroughputOfAllDevicesDoesNotInc(t):
     # ( [3] check )
     return True
 
@@ -46,7 +77,9 @@ def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
 
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     QTable = [] # Q table
-    UAVs = [] # info about all UAVs
+
+    # info about all UAVs : [UAV0, UAV1, ...] = [[x0, y0, h0], [x1, y1, h1], ...]
+    UAVs = []
 
     # ( [4] init target network and online network )
     # ( [5] init UAV's location and IoT devices' location )
@@ -61,25 +94,26 @@ def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
                 # ( [8] get UAV i's next location )
 
                 # if UAV i files beyond the border
-                if beyondBorder(UAV_i, border) == True:
+                if beyondBorder(UAV[i], t, border) == True:
                     # ( [9] UAV i stays at the border )
                     
                     # UAV i gets a penalty of -1
-                    s_i = dq.getS(UAV_i, q, n, l, a, k, R)
+                    s_i = dq.getS(UAV[i], q, n, l, a, k, R)
                     dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
-            for i in range(1, L+1): # each UAV
+            for i in range(1, L+1): # each UAV i
+                for j in range(1, i): # each UAV j
 
-                # UAV i and j's trajectory exists cross
-                if IsTrajectoryCrossed(UAV_i, UAV_j) == True:
-                    # ( [11] UAV i and UAV j stay at the previous location )
+                    # UAV i and j's trajectory exists cross
+                    if IsTrajectoryCrossed(UAV[i], UAV[j], t) == True:
+                        # ( [11] UAV i and UAV j stay at the previous location )
 
-                    # UAV i and UAV j get a penalty of -1
-                    s_i = dq.getS(UAV_i, q, n, l, a, k, R)
-                    dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
+                        # UAV i and UAV j get a penalty of -1
+                        s_i = dq.getS(UAV[i], q, n, l, a, k, R)
+                        dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
-                    s_j = dq.getS(UAV_j, q, n, l, a, k, R)
-                    dq.updateQvalue(Q, s_j, a, -1, alpha, lb, q, n, l, k, R, useDL)
+                        s_j = dq.getS(UAV[j], q, n, l, a, k, R)
+                        dq.updateQvalue(Q, s_j, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
                 beforeThroughput = 0 # ( [13] get throughput )
 
@@ -92,7 +126,7 @@ def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
                 if afterThroughput <= beforeThroughput:
                     
                     # UAV i gets a penalty of -1
-                    s_i = dq.getS(UAV_i, q, n, l, a, k, R)
+                    s_i = dq.getS(UAV[i], q, n, l, a, k, R)
                     dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
             # if time slot is T
@@ -103,7 +137,7 @@ def algorithm1(M, T, L, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
                     # ( [18] The UAV get a penalty of -2 )
 
                 # if minimum throughput of all devices does not increase
-                if isMinThroughputOfAllDevicesDoesNotInc == True:
+                if isMinThroughputOfAllDevicesDoesNotInc(t) == True:
 
                     # All UAVs get a penalty of -1
                     for UAV in UAVs:
