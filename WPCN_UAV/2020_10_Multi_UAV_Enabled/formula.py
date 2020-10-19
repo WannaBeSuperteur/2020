@@ -13,9 +13,9 @@ def d_nlkl(n, l, k, x, y, h):
     return math.sqrt(pow(x[n][l]-x[k[l]], 2) + pow(y[n][l]-y[k[l]], 2) + pow(h[n][l], 2))
 
 # the collected energy of each IoT device k[l] at period T
-# E[k[l]] = Sum(i=1,Litalic)(ng * alpha * T * a[0][i] * g[0][i][k[l]] * P^D), ... (6)
-#           where all l in Ls, kl in K
-def E_kl(Ls, Litalic, ng, alpha, T, a, g, k, l, PD):
+# E[k[l]] = Sum(i=1,L)(ng * alpha * T * a[0][i] * g[0][i][k[l]] * P^D), ... (6)
+#           where all l in deviceList, kl in K
+def E_kl(deviceList, L, ng, alpha, T, a, g, k, l, PD):
     result = 0
     for i in range(1, Litalic+1):
         result += ng * alpha * T * a[0][i] * g[0][i][k[l]] * PD

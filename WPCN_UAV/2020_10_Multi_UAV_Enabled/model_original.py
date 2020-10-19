@@ -7,6 +7,7 @@ import AIBASE_main as main
 
 import formula as f
 import deepQ as dq
+import algorithms as algo
 
 import math
 import random
@@ -56,8 +57,14 @@ def IsTrajectoryCrossed(UAVi, UAVj, t):
     return UAVi_line.intersects(UAVj_line)
 
 # check if minimum throughput of all devices in a cluster == 0
-def isMinThroughputOfAllDevicesInCluster0(t):
-    # ( [2] check )
+# cluster : clusters[i]
+def isMinThroughputOfAllDevicesInCluster0(cluster, T, N, l, k, B, n, PU, g, I_, o2):
+
+    for i in range(len(cluster)):
+        R_kl(T, N, l, k, B, n, PU, g, I_, o2):
+
+        # NOT COMPLETED
+
     return True
 
 # check if minimum throughput of all devices does not increase
@@ -69,34 +76,42 @@ def isMinThroughputOfAllDevicesDoesNotInc(t):
 # 3D trajectory design and time resource allocation solution based on DQL
 # M                  : number of episodes
 # T                  : number of time slots
-# Litalic            : number of clusters
-# L                  : number of UAVs
+# L                  : number of clusters = number of UAVs
+# H                  : height of UAVs
+# devices            : number of devices
 # width, height      : width and height of the board
 # fc, B, o2, b1, b2, : parameters (as Table 1)
 # alpha, u1, u2,
 # alphaL, r
-def algorithm1(M, T, Litalic, L, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
+def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
 
+    ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     QTable = [] # Q table
 
-    # info about all UAVs : [UAV0, UAV1, ...] = [[x0, y0, h0], [x1, y1, h1], ...]
-    UAVs = []
+    # info about all devices: [dev0, dev1, ...] = [[X0, Y0], [X1, Y1]]
+    deviceList = []
 
-    # randomly place UAVs
-    # (    )
+    # randomly place devices
+    for i in range(L):
+        xVal = random.random() * width
+        yVal = random.random() * height
+        device_i = [xVal, yVal]
+        deviceList.append(device_i)
 
     # cluster UAVs using K-means clustering
-    # (    )
+    # clusters (number of clusters = L, number of total devices = devices)
+    (UAVs, clusters) = algo.kMeansClustering(L, deviceList)
 
     # ( [4] init target network and online network )
     # ( [5] init UAV's location and IoT devices' location )
     # ( [6] init border )
 
+    ### TRAIN ###
     for episode in range(1, M+1):
         for t in range(1, T+1): # each time slot
             
-            for i in range(1, L+1): # each UAV
+            for i in range(1, L+1): # for each UAV = each cluster
 
                 # ( [7] choose action with e-greedy while e increases )
                 # ( [8] get UAV i's next location )
@@ -140,8 +155,9 @@ def algorithm1(M, T, Litalic, L, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             # if time slot is T
             if t == T:
                 # if minimum throughput of all devices in a cluster == 0
-                if isMinThroughputOfAllDevicesInCluster0(t) == True:
+                if isMinThroughputOfAllDevicesInCluster0(clusters[i], t) == True:
 
+                    # NOT COMPLETED
                     # ( [18] The UAV get a penalty of -2 )
 
                 # if minimum throughput of all devices does not increase
@@ -174,10 +190,10 @@ if __name__ == '__main__':
     height = 50 # height (m)
 
     M = 1000 # M = 1000 episodes
-    Litalic = 3 # Litalic = 3 clusters
-    L = 50 # L = 50 UAVs
+    L = 3 # L = 3 clusters = 3 UAVs
+    devices = 50 # 50 devices
     T = 1 # T = 1s
     H = 15 # H = 15m
 
     # run
-    algorithm1(M, T, Litalic, L, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
+    algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
