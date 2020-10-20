@@ -122,7 +122,7 @@ if __name__ == '__main__':
     DT_splitter = 'random' # 'best' or 'random'
 
     # convert to mean of each range when target column is numeric
-    DT_numericRange = None
+    DT_numericRange = [1600, 2000, 2400, 2800]
 
     # for method 3 and 4
     XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
@@ -441,4 +441,3 @@ if __name__ == '__main__':
 #     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
 #     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용 (FIN)
 #     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1)
-#     validation에서 성능 평가를 여러 번 연속으로 실시하여 성능 비교

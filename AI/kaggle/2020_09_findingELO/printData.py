@@ -7,6 +7,9 @@ import matplotlib.pyplot as plt
 # title  : title of displayed chart
 def printDataAsSpace(n_cols, df_pca, title):
 
+    targetMax = max(df_pca['target'].astype('float'))
+    targetMin = min(df_pca['target'].astype('float'))
+
     # set markers
     markers = ['^', 'o']
 
@@ -35,7 +38,8 @@ def printDataAsSpace(n_cols, df_pca, title):
         fig.suptitle(title)
         
         ax = fig.add_subplot(111, projection='3d')
-        ax.scatter(df_pca['pca0'], df_pca['pca1'], df_pca['pca2'], c=df_pca['target'], s=1)
+        color = (df_pca['target'].astype('float') - targetMin)/(targetMax - targetMin)
+        ax.scatter(df_pca['pca0'], df_pca['pca1'], df_pca['pca2'], c=color, s=1)
 
         # set labels and show
         ax.set_xlabel('pca0')

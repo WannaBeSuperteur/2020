@@ -2,6 +2,7 @@ import numpy as np
 from sklearn import tree
 from sklearn.tree import export_text
 import pandas as pd
+import printData as _PD
 
 # create Decision Tree using DataFrame
 # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
@@ -48,6 +49,10 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
     print('\n<<< [3-pre1] output data (first 100 elements) >>>')
     print(outputData[:min(len(outputData), 100)])
 
+    # type setting for data
+    inputData = inputData.astype('float')
+    outputData = outputData.astype('str')
+
     # create Decision Tree using input and output data
     DT = tree.DecisionTreeClassifier(max_depth=DT_maxDepth, criterion=DT_criterion, splitter=DT_splitter)
     DT = DT.fit(inputData, outputData)
@@ -63,9 +68,9 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
         
         # print data as 2d or 3d space
         if cols == 3: # 2 except for target col
-            printDataAsSpace(2, pd.DataFrame(dataSetDF, columns=['pca0', 'pca1', 'target']), title)
+            _PD.printDataAsSpace(2, pd.DataFrame(dataSetDF, columns=['pca0', 'pca1', 'target']), title)
         elif cols == 4: # 3 except for target col
-            printDataAsSpace(3, pd.DataFrame(dataSetDF, columns=['pca0', 'pca1', 'pca2', 'target']), title)
+            _PD.printDataAsSpace(3, pd.DataFrame(dataSetDF, columns=['pca0', 'pca1', 'pca2', 'target']), title)
     
     return DT
 
@@ -112,8 +117,8 @@ def predictDT(df_pca_test, DT, displayChart, DT_maxDepth, DT_criterion, DT_split
         
         # print data as 2d or 3d space
         if len(df_pca_array[0]) == 3: # 2 except for target col
-            printDataAsSpace(2, pd.DataFrame(df_pca_test_new, columns=['pca0', 'pca1', 'target']), title)
+            _PD.printDataAsSpace(2, pd.DataFrame(df_pca_test_new, columns=['pca0', 'pca1', 'target']), title)
         elif len(df_pca_array[0]) == 4: # 3 except for target col
-            printDataAsSpace(3, pd.DataFrame(df_pca_test_new, columns=['pca0', 'pca1', 'pca2', 'target']), title)
+            _PD.printDataAsSpace(3, pd.DataFrame(df_pca_test_new, columns=['pca0', 'pca1', 'pca2', 'target']), title)
 
     return DTresult

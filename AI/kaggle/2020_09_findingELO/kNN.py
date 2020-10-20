@@ -1,5 +1,7 @@
 import numpy as np
 import math
+import pandas as pd
+import printData as PD_
 
 # k Nearest Neighbor algorithm
 # dfTrain    : dataframe for training data
@@ -104,9 +106,9 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
 
     # print data as 2d or 3d space
     if len(dfTest[0]) == 3: # 2 except for target col
-        printDataAsSpace(2, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'target']), title)
+        PD_.printDataAsSpace(2, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'target']), title)
     elif len(dfTest[0]) == 4: # 3 except for target col
-        printDataAsSpace(3, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'pca2', 'target']), title)
+        PD_.printDataAsSpace(3, pd.DataFrame(dfTest, columns=['pca0', 'pca1', 'pca2', 'target']), title)
             
     # return the result array
     return result
