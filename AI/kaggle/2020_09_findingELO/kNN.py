@@ -62,6 +62,7 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
         vote = {} # vote result for each class: [class targetVals[j], vote score of targetVals[j]]
         for j in range(len(classCount)): vote[targetVals[j]] = 0 # initialize dictionary vote
         for j in range(k): # count the vote using k nearest neighbors
+            
             thisMark = distAndMark[j][1] # mark of this 'neighbor'
             vote[thisMark] = vote[thisMark] + len(dfTrain) / classCount[thisMark]
 

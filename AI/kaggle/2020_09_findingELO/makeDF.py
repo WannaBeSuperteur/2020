@@ -44,7 +44,8 @@ def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, 
                 df_array = np.delete(df_array, validExcept[i], 1)
 
         # make dataframe using df_array
-        if fcols != None: df_data = pd.DataFrame(data=df_array, columns=fcols)
+        if fcols != None:
+            df_data = pd.DataFrame(data=df_array, columns=fcols)
         else:
             cols = []
             for i in range(len(df_array[0])): cols.append('col' + str(i))

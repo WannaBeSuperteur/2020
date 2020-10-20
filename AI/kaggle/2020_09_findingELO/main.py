@@ -74,23 +74,25 @@ if __name__ == '__main__':
     finalResult = None
 
     # meta info
-    trainName = 'data_trainPgn.txt'
-    testName = 'data_testPgn.txt'
+    trainName = 'TRAIN.txt'
+    testName = 'TE_I.txt'
     ftype = 'txt'
 
     scores = []
-    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
-    fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
+    fcolsTrain = ['id', 'input0', 'input1', 'input2', 'input3', 'output']
+    fcolsTest = ['id', 'input0', 'input1', 'input2', 'input3']
 
     # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
     globalValidationRate = 0.15 # ** IMPORTANT ** validation rate (if >0, then split training data into training and validation data, randomly)
 
-    validationExceptCols = [4, 5] # except for these columns for validation data
+    validationExceptCols = [5] # except for these columns for validation data
     validationCol = 5 # compare finalResult with column of this index of validation data file (according to targetColName)
 
     # ref: https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
     # validation mode is not available for method 5 and method 6
-    method = 1 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
+    method = 0 # ** IMPORTANT ** 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
+
+    usePCA = False
 
     #################################
     ###                           ###
@@ -101,19 +103,19 @@ if __name__ == '__main__':
     # make PCA from training data
     PCAdimen = 4 # dimension of PCA
     idCol = 'id'
-    targetColName = 'belo'
+    targetColName = 'output'
     tfCols = []
-    textCols = ['result']
-    exceptCols = ['id', 'welo'] # list of columns not used
-    exceptColsForMethod2 = ['id', 'welo'] # list of columns not used for method 2
+    textCols = ['']
+    exceptCols = ['id'] # list of columns not used
+    exceptColsForMethod2 = ['id'] # list of columns not used for method 2
     exceptTargetForPCA = True # except target column for PCA
     useLog = False # using log for numeric data columns
     logConstant = 10000000 # x -> log2(x + logConstant)
-    specificCol = 'score0' # specific column to solve problem (eg: 'request_text_edit_aware')
+    specificCol = 'dddd' # specific column to solve problem (eg: 'request_text_edit_aware')
     frequentWords = None # frequent words (if not None, do word appearance check)
 
     # for method 0
-    kNN_k = 120 # number k for kNN
+    kNN_k = 4 # number k for kNN
     kNN_useAverage = True # use average voting for kNN
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
@@ -122,7 +124,7 @@ if __name__ == '__main__':
     DT_splitter = 'random' # 'best' or 'random'
 
     # convert to mean of each range when target column is numeric
-    DT_numericRange = [1600, 2000, 2400, 2800]
+    DT_numericRange = [-3, -2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3]
 
     # for method 3 and 4
     XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
@@ -180,45 +182,85 @@ if __name__ == '__main__':
     # method 0, 1, 3 or 5 -> use PCA    
     if method == 0 or method == 1 or method == 3 or method == 5:
 
+        # set target column name
+        targetColumn = 'target'
+        if usePCA == False: targetColumn = targetColName
+
         # get PCA (components and explained variances) for training data
         # df_pca_train: dataFrame with columns including target column [pca0 pca1 ... pcaN target]
-        print('')
-        print('+-----------------------+')
-        print('|     Training Data     |')
-        print('+-----------------------+')
-        (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, None, trainValid_trainRows, ftype, fcolsTrain, PCAdimen, True, targetColName,
-                                                                   tfCols, textCols+exceptCols, None, None, None, exceptTargetForPCA, useLog,
-                                                                   logConstant, specificCol, frequentWords)
+        if usePCA == True:
 
-        # remove target column from comp and mean
-        if exceptTargetForPCA == False:
-            comp = np.delete(comp, [targetCol], 1)
-            mean = np.delete(mean, [targetCol], 0)
-
-        # get PCA (components and explained variances) for test data
-        # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
-        if globalValidationRate == 0 or method == 5: # normal mode
+            # obtaining traing data
             print('')
             print('+-----------------------+')
-            print('|       Test Data       |')
+            print('|     Training Data     |')
             print('+-----------------------+')
-            (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, None, None, ftype, fcolsTest, PCAdimen, False, None,
-                                                                         tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
-                                                                         logConstant, specificCol, frequentWords)
-        else: # validation mode
+            (df_pca_train, comp, exva, mean, targetCol) = _PCA.makePCA(trainName, None, trainValid_trainRows, ftype, fcolsTrain, PCAdimen, True, targetColName,
+                                                                       tfCols, textCols+exceptCols, None, None, None, exceptTargetForPCA, useLog,
+                                                                       logConstant, specificCol, frequentWords)
+
+            # remove target column from comp and mean
+            if exceptTargetForPCA == False:
+                comp = np.delete(comp, [targetCol], 1)
+                mean = np.delete(mean, [targetCol], 0)
+
+            # get PCA (components and explained variances) for test data
+            # df_pca_test: dateFrame with columns except for target column [pca0 pca1 ... pcaN]
+
+            # normal mode
+            if globalValidationRate == 0 or method == 5:
+                print('')
+                print('+-----------------------+')
+                print('|       Test Data       |')
+                print('+-----------------------+')
+                (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(testName, None, None, ftype, fcolsTest, PCAdimen, False, None,
+                                                                             tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
+                                                                             logConstant, specificCol, frequentWords)
+
+            # validation mode
+            else:
+                print('')
+                print('+-----------------------+')
+                print('|    Validation Data    |')
+                print('+-----------------------+')
+                (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(trainName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, PCAdimen, False, None,
+                                                                             tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
+                                                                             logConstant, specificCol, frequentWords)
+
+        # do not use PCA
+        else:
+
+            # obtaining traing data
             print('')
             print('+-----------------------+')
-            print('|    Validation Data    |')
+            print('|     Training Data     |')
             print('+-----------------------+')
-            (df_pca_test, noUse0, noUse1, noUse2, noUse3) = _PCA.makePCA(trainName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, PCAdimen, False, None,
-                                                                         tfCols, textCols+exceptCols, comp, exva, mean, False, useLog,
-                                                                         logConstant, specificCol, frequentWords)
+            (df_pca_train, targetCol) = _DF.makeDataFrame(trainName, None, trainValid_trainRows, ftype, fcolsTrain, True, targetColName,
+                                                          tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+
+            # normal mode
+            if globalValidationRate == 0 or method == 5:
+                print('')
+                print('+-----------------------+')
+                print('|       Test Data       |')
+                print('+-----------------------+')
+                (df_pca_test, noUse) = _DF.makeDataFrame(testName, None, None, ftype, fcolsTest, False, targetColName,
+                                                     tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
+
+            # validation mode
+            else:
+                print('')
+                print('+-----------------------+')
+                print('|    Validation Data    |')
+                print('+-----------------------+')
+                (df_pca_test, noUse) = _DF.makeDataFrame(trainName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+                                                     tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
         # do not use decision tree
         if method == 0:
 
             # k-NN of test data
-            finalResult = _KNN.kNN(df_pca_train, df_pca_test, 'target', PCAdimen, kNN_k, kNN_useAverage)
+            finalResult = _KNN.kNN(df_pca_train, df_pca_test, targetColumn, PCAdimen, kNN_k, kNN_useAverage)
 
         # use decision tree
         elif method == 1:
@@ -239,7 +281,7 @@ if __name__ == '__main__':
 
             # iteratively validation
             for i in range(times):
-                (accuracy, ROC, _) = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, True, XG_xgBoostLevel, XG_info)
+                (accuracy, ROC, _) = _XB.usingXgBoost(df_pca_train, df_pca_test, targetColumn, 'test ' + str(i), True, True, XG_xgBoostLevel, XG_info)
                 totalAccuracy += accuracy
                 totalROC += ROC
 
@@ -248,13 +290,13 @@ if __name__ == '__main__':
             print('avg ROC      : ' + str(totalROC / times))
 
             # predict values
-            finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, 'target', 'test ' + str(i), True, False, XG_xgBoostLevel, XG_info)
+            finalResult = _XB.usingXgBoost(df_pca_train, df_pca_test, targetColumn, 'test ' + str(i), True, False, XG_xgBoostLevel, XG_info)
 
         # use Deep Learning for PCA-ed data
         elif method == 5:
             
             # save data as file
-            DLmain.dataFromDF(df_pca_train, df_pca_test, 'target', [], DL_normalizeTarget)
+            DLmain.dataFromDF(df_pca_train, df_pca_test, targetColumn, [], DL_normalizeTarget)
 
             # deep learning
             AImain.AIbase_deeplearning()
@@ -295,7 +337,7 @@ if __name__ == '__main__':
             print('+-----------------------+')
             print('|    Validation Data    |')
             print('+-----------------------+')
-            (test_df, noUse) = _DF.makeDataFrame(testName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+            (test_df, noUse) = _DF.makeDataFrame(trainName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
                                                  tfCols, exceptColsForMethod2, useLog, logConstant, specificCol, frequentWords)
 
         # print dataFrames
@@ -369,7 +411,7 @@ if __name__ == '__main__':
             print('+-----------------------+')
             print('|    Validation Data    |')
             print('+-----------------------+')
-            (df_pca_test, noUse) = _DF.makeDataFrame(testName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
+            (df_pca_test, noUse) = _DF.makeDataFrame(trainName, validationExceptCols, trainValid_validRows, ftype, fcolsTest, False, targetColName,
                                                      tfCols, textCols+exceptCols, useLog, logConstant, specificCol, frequentWords)
 
     # xgboost only
@@ -440,4 +482,6 @@ if __name__ == '__main__':
 #     train_df와 valid_df로 구분, normal mode method=0,1,5,6 및 validation mode method=0,1 에서 작동 확인 (FIN)
 #     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
 #     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용 (FIN)
-#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1)
+#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1) 및 문제 해결 (ING)
+#     PCA 없이 method 0,1,3,5 실행 (normal 0,1,5 and valid 0,1) (ING)
+#     method 2,4,6에서 validation dataset을 trainName에서 가져온다고 설정했으므로 재실험 (valid 6) (fcolsTest에서 id col 제외) (ING)
