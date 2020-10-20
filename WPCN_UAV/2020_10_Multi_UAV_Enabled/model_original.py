@@ -104,7 +104,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     deviceList = []
 
     # randomly place devices
-    for i in range(L):
+    for i in range(devices):
         xVal = random.random() * width
         yVal = random.random() * height
         device_i = [xVal, yVal]
@@ -112,7 +112,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
     # cluster UAVs using K-means clustering
     # clusters (number of clusters = L, number of total devices = devices)
-    (UAVs, clusters) = algo.kMeansClustering(L, deviceList)
+    (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False)
 
     # ( [4] init target network and online network )
     # ( [5] init UAV's location and IoT devices' location )
