@@ -22,9 +22,20 @@ from shapely.geometry import LineString
 #       y0 = [y00, y01, ..., y0t], ...
 #       h0 = [h00, h01, ..., h0t], ...
 
-# check if UAV i files beyound the border
-def beyondBorder(UAVi, t, border):
-    # ( [0] check if UAV i files beyond the border )
+# check if UAV i files beyond the border
+# (THERE IS NO CASE that location of UAV at time t-1 and t is both within the border,
+#  but the UAV files beyond the border between time t-1 and t.) 
+def beyondBorder(UAVi, t, width, height):
+    
+    xi = UAVi[0] # x axis for UAVi
+    yi = UAVi[1] # y axis for UAVi
+    hi = UAVi[2] # height for UAVi
+
+    if xi[t-1] < 0 or xi[t-1] > width: return True
+    elif xi[t] < 0 or xi[t] > width: return True
+    elif yi[t-1] < 0 or yi[t-1] > height: return True
+    elif yi[t] < 0 or yi[t] > height: return True
+
     return True
 
 # check if UAV i's trajectory and UAV j's trajectory is crossed
@@ -117,8 +128,14 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # ( [8] get UAV i's next location )
 
                 # if UAV i files beyond the border
-                if beyondBorder(UAV[i], t, border) == True:
-                    # ( [9] UAV i stays at the border )
+                if beyondBorder(UAV[i], t, width, height) == True:
+                    
+                    # UAV i stays at the border
+                    if UAV[i][0][t] < 0: UAV[i][0][t] = 0 # x value < 0
+                    elif UAV[i][0][t] > width: UAV[i][0][t] = width # x value > width
+                    
+                    if UAV[i][1][t] < 0: UAV[i][1][t] = 0 # y value < 0
+                    elif UAV[i][1][t] > height: UAV[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAV[i], q, n, l, a, k, R)
