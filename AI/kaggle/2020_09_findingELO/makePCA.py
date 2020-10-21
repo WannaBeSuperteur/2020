@@ -15,23 +15,20 @@ import numpy as np
 # n_cols       : number of columns(components) of PCA
 # isTrain      : training(True) or not(False)
 # target       : target column if isTrain is True
-# tfCols       : columns that contains True or False values
 # exceptCols   : using the columns except for them
 # comp         : components of PCA used
 # exva         : explained variances of PCA used
 # mean         : mean of PCA used
 # useLog       : using log for making dataFrame
 # logConstant  : x -> log2(x + logConstant)
-# specificCol  : column -> columns that indicate the number of appearance of frequent words
-# frequentWords: list of frequent words
-def makePCA(fn, validExcept, rows, ftype, fcols, n_cols, isTrain, target, tfCols, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant, specificCol, frequentWords):
+def makePCA(fn, validExcept, rows, ftype, fcols, n_cols, isTrain, target, exceptCols, comp, exva, mean, exceptTargetForPCA, useLog, logConstant):
     print('')
     print('+=======================+')
     print('|  Function : makePCA   |')
     print('+=======================+')
 
     # get dataFrame
-    (dataSetDF, targetCol) = _MDF.makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords)
+    (dataSetDF, targetCol) = _MDF.makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, exceptCols, useLog, logConstant)
     DFtoFindPCA = dataSetDF # dataFrame to find PCA
 
     # remove target column when exceptTargetForPCA is True

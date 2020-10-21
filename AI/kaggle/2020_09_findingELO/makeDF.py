@@ -2,24 +2,34 @@ import pandas as pd
 import numpy as np
 import readData as RD
 
+# get index of the column from df_array, using original fcols
+# the column of colName is also removed from originalFcols 
+def getIndex(colName, originalFcols):
+    for i in range(len(originalFcols)):
+        if originalFcols[i] == colName:
+            originalFcols.remove(colName)
+            return i
+    return None
+
 # fn           : file name
 # validExcept  : except for these columns for training data for validation
 # rows         : rows to use, in 1d array form (if None, use all rows)
 # ftype        : file type (json, csv, txt)
 # fcols        : columns (if ftype is 'txt' and fcols is None, use default name)
 # isTrain      : training(True) or not(False)
-# target       : target column if isTrain is True
-# tfCols       : columns that contains True or False values
+# target       : target column name for training data (removed for test data)
 # exceptCols   : using the columns except for them
 # useLog       : using log for making dataFrame
 # logConstant  : x -> log2(x + logConstant)
-# specificCol  : column -> columns that indicate the number of appearance of frequent words
-# frequentWords: list of frequent words
-def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, exceptCols, useLog, logConstant, specificCol, frequentWords):
+def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, exceptCols, useLog, logConstant):
     print('')
     print('+============================+')
     print('|  Function : makeDataFrame  |')
     print('+============================+')
+
+    # copy fcols (original fcols)
+    originalFcols = []
+    for i in range(len(fcols)): originalFcols.append(fcols[i])
     
     # open and show plt data
     if ftype == 'json': # type is 'json'
@@ -37,11 +47,50 @@ def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, 
     elif ftype == 'txt': # type is 'txt'
         df_array = RD.loadArray(fn)
 
+        print('\n<<< [before] fcols >>>')
+        print(fcols)
+        print('\n<<< [before] data array [0:5] >>>')
+        print(df_array[:5])
+
         # remove columns indexed by elements of validExcept
         # (used in training but not used in validation)
         if validExcept != None:
             for i in range(len(validExcept)):
-                df_array = np.delete(df_array, validExcept[i], 1)
+                try:
+                    fcols.remove(validExcept[i])
+                except:
+                    print('validExcept remove error (0) : ' + str(validExcept[i]))
+                try:
+                    df_array = np.delete(df_array, getIndex(validExcept[i], originalFcols), 1)
+                except:
+                    print('validExcept remove error (1) : ' + str(validExcept[i]))
+
+        # remove target column for test data
+        if isTrain == False:
+            try:
+                fcols.remove(target)
+            except:
+                print('target      remove error (0) : ' + str(target))
+            try:
+                df_array = np.delete(df_array, getIndex(target, originalFcols), 1)
+            except:
+                print('target      remove error (1) : ' + str(target))
+
+        # remove except column from both fcols and df_array
+        for exceptCol in exceptCols:
+            try:
+                fcols.remove(exceptCol)
+            except:
+                print('exceptCol   remove error (0) : ' + str(exceptCol))
+            try:
+                df_array = np.delete(df_array, getIndex(exceptCol, originalFcols), 1)
+            except:
+                print('exceptCol   remove error (1) : ' + str(exceptCol))
+
+        print('\n<<< [after] fcols >>>')
+        print(fcols)
+        print('\n<<< [after] data array [0:5] >>>')
+        print(df_array[:5])
 
         # make dataframe using df_array
         if fcols != None:
@@ -53,32 +102,11 @@ def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, 
     
     targetCol = -1 # index of target column
 
-    # True to 1, False to 0, and decimal to 0
-    # https://stackoverflow.com/questions/29960733/how-to-convert-true-false-values-in-dataframe-as-1-for-true-and-0-for-false
-    tfColsIndex = []
-    for i in range(len(tfCols)): tfColsIndex.append(-1) # column indices of tfCols
-
-    # initialize tfColsIndex
-    for i in range(len(df_data.columns)):
-        for j in range(len(tfCols)):
-            if df_data.columns[i] == tfCols[j]: tfColsIndex[j] = i
-
     # extract column name before change into np.array
     dataCols = np.array(df_data.columns)
 
     # change df_data into np.array
     df_data = df_data.to_numpy()
-
-    # modify values: True to 1, False to 0, and decimal to 0
-    for x in range(len(tfCols)):
-
-        # True to 1, False to 0, and decimal to 0
-        for i in range(len(df_data)):
-            if str(df_data[i][tfColsIndex[x]]) == 'True':
-                df_data[i][tfColsIndex[x]] = 1
-            else:
-                df_data[i][tfColsIndex[x]] = 0
-
     df_data = pd.DataFrame(df_data, columns=dataCols)
     print('\n<<< [0] df_data.shape >>>')
     print('columns : ' + str(df_data.columns))
@@ -152,22 +180,6 @@ def makeDataFrame(fn, validExcept, rows, ftype, fcols, isTrain, target, tfCols, 
     # print dataFrame
     print('\n<<< [2] dataSetDF >>>')
     print(dataSetDF)
-
-    # add text column
-    # column -> columns that indicate the number of appearance of frequent words
-    if specificCol != None and frequentWords != None:
-
-        # add specificCol to the dataFrame
-        dataSetDF = df_data[extractCols + [specificCol]]
-
-        # appearanceOfFrequentWordsTest(dataSetDF, specificCol)
-        dataSetDF = appearanceOfFrequentWords(dataSetDF, specificCol, frequentWords)
-
-        print('\n<<< [2-1] dataSetDF.columns with appearance of frequent words >>>')
-        print(dataSetDF.columns)
-
-        print('\n<<< [2-2] dataSetDF with appearance of frequent words >>>')
-        print(dataSetDF)
 
      # again, change dataSetDF into float type
     try:
