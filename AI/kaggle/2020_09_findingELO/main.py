@@ -93,7 +93,7 @@ if __name__ == '__main__':
 
     # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
     # validation rate (if >0, then split training data into training and validation data, randomly)
-    globalValidationRate = 0
+    globalValidationRate = 0.05
 
     # validation mode is not available for method 5 and method 6
     # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
@@ -491,10 +491,10 @@ if __name__ == '__main__':
         _CV.compare(finalResult, testName, validationCol, trainValid_validRows)
 
 # 향후계획:
-# 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (ING)
+# 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (FIN)
 #     train_df와 valid_df로 구분, normal mode method=0,1,5,6 및 validation mode method=0,1 에서 작동 확인 (FIN)
 #     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
 #     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용 (FIN)
-#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1) 및 문제 해결 (ING)
+#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1) 및 문제 해결 (FIN)
 #     textCols, TFcols 등을 모두 삭제하고 exceptCols만을 이용 (FIN)
 #     모든 작업 완료 후 usePCA, not usePCA, normal, valid 조건에서 method 0, 1, 5, 6 모두 실험 (refer to test options.txt) (FIN)

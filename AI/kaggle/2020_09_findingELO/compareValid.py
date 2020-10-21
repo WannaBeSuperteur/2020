@@ -16,7 +16,8 @@ def compare(finalResult, validName, validationCol, trainValid_validRows):
     # read data
     validData = RD.loadArray(validName) # original validation data array
     validResult = [] # validation data array
-    for i in range(dataLen): validResult.append(validData[i][validationCol])
+    for i in range(dataLen):
+        validResult.append(validData[trainValid_validRows[i]][validationCol])
     validResult = np.array(validResult)
 
     # compute MAE and MSE
