@@ -78,16 +78,16 @@ if __name__ == '__main__':
 
     ### meta info (file name) ###
     
-    trainName = 'TRAIN.txt'
-    testName = 'TEST.txt'
+    trainName = 'data_trainPgn.txt'
+    testName = 'data_testPgn.txt'
     ftype = 'txt'
 
     ### column settings ###
     
-    fcolsTrain = ['id', 'input0', 'input1', 'input2', 'input3', 'output']
-    fcolsTest = ['id', 'input0', 'input1', 'input2', 'input3']
-    targetColName = 'output'
-    exceptCols = ['id'] # list of columns not used
+    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
+    fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score97', 'score98', 'score99']
+    targetColName = 'belo'
+    exceptCols = ['id', 'welo'] # list of columns not used
 
     ### important settings ###
 
@@ -97,13 +97,13 @@ if __name__ == '__main__':
 
     # validation mode is not available for method 5 and method 6
     # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
-    method = 6
+    method = 0
 
     # use PCA?
     usePCA = False
 
     # except for these columns for validation data (normaliy target column)
-    validationExceptCols = ['output']
+    validationExceptCols = ['welo', 'belo']
 
     # compare finalResult with column of this index of validation data file (according to targetColName)
     validationCol = 5
@@ -134,7 +134,7 @@ if __name__ == '__main__':
     DT_numericRange = [-3, -2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3]
 
     # for method 2
-    exceptColsForMethod2 = [] # list of columns not used for method 2
+    exceptColsForMethod2 = ['id', 'welo'] # list of columns not used for method 2
 
     # for method 3 and 4
     XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
