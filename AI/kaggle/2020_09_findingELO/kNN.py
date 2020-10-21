@@ -16,14 +16,33 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
     print('|    Function : kNN     |')
     print('+=======================+')
 
+    print('\n<<< [17-before] dataFrame for training >>>')
+    print(dfTrain)
+    print('\n<<< [18] dataFrame for test >>>')
+    print(dfTest)
+
+    # When using kNN, this is the final use of dfTrain and dfTest, so coverting of them does not cause any problem.
+    # move target column of dfTrain to the most-right of dfTrain
+    
+    # find target column index of dfTrain
+    cols = dfTrain.columns.tolist()
+    targetColIndex = -1
+    
+    for i in range(len(cols)):
+        if cols[i] == targetCol:
+            targetColIndex = i
+            break
+
+    # move target column of dfTrain
+    cols = cols[:targetColIndex] + cols[targetColIndex+1:] + [cols[targetColIndex]]
+    dfTrain = dfTrain[cols]
+
     # count of each value for training data
     targetVals = list(set(dfTrain[targetCol].values)) # set of target values
     classCount = dfTrain[targetCol].value_counts() # class count for each target value
 
-    print('\n<<< [17] dataFrame for training >>>')
+    print('\n<<< [17-after] dataFrame for training >>>')
     print(dfTrain)
-    print('\n<<< [18] dataFrame for test >>>')
-    print(dfTest)
 
     # convert to numpy array
     dfTrain = np.array(dfTrain)
@@ -48,12 +67,12 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
 
             # calculate distance from the test data
             thisDistSquare = 0
-            for l in range(len(dfTrain[0])):
+            for l in range(len(dfTest[0])): # because test data contain all input columns
                 if l == targetIndex: continue
                 thisDistSquare = thisDistSquare + pow(thisTestData[l] - thisTrainData[l], 2)
 
-            # add to distAndMark
-            distAndMark.append([math.sqrt(thisDistSquare), thisTrainData[targetIndex]])
+            # add to distAndMark (now, train output is at the right end of each training data row)
+            distAndMark.append([math.sqrt(thisDistSquare), thisTrainData[len(thisTrainData)-1]])
 
         # sort distAndMark array
         distAndMark = sorted(distAndMark, key=lambda x:x[0], reverse=False)
@@ -61,8 +80,8 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
         # count the vote for each class (using weight = len(dfTrain)/trainCount)
         vote = {} # vote result for each class: [class targetVals[j], vote score of targetVals[j]]
         for j in range(len(classCount)): vote[targetVals[j]] = 0 # initialize dictionary vote
+
         for j in range(k): # count the vote using k nearest neighbors
-            
             thisMark = distAndMark[j][1] # mark of this 'neighbor'
             vote[thisMark] = vote[thisMark] + len(dfTrain) / classCount[thisMark]
 

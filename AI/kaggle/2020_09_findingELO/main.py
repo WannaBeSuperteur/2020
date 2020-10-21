@@ -122,7 +122,7 @@ if __name__ == '__main__':
     logConstant = 10000000 # x -> log2(x + logConstant)
 
     # for method 0
-    kNN_k = 4 # number k for kNN
+    kNN_k = 30 # number k for kNN
     kNN_useAverage = True # use average voting for kNN
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
