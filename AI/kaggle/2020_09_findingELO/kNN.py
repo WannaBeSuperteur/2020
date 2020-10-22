@@ -4,13 +4,14 @@ import pandas as pd
 import printData as PD_
 
 # k Nearest Neighbor algorithm
-# dfTrain    : dataframe for training data
-# dfTest     : dataframe for test data
-# targetCol  : target column for dfTrain
-# targetIndex: index for the target column
-# k          : number of neighbors
-# useAverage : return average value
-def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
+# dfTrain      : dataframe for training data
+# dfTest       : dataframe for test data
+# dfTestWeight : weight of each test data column
+# targetCol    : target column for dfTrain
+# targetIndex  : index for the target column
+# k            : number of neighbors
+# useAverage   : return average value
+def kNN(dfTrain, dfTest, dfTestWeight, targetCol, targetIndex, k, useAverage):
     print('')
     print('+=======================+')
     print('|    Function : kNN     |')
@@ -52,6 +53,9 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
     result = []
     resultT = [] # transport of result
 
+    # if dfTestWeight is None, use equal weight for all test columns
+    if dfTestWeight == None: dfTestWeight = [1]*len(dfTest[0])
+
     # mark the result using k-nearest neighbor
     for i in range(len(dfTest)): # for each test data
         if i % 10 == 0: print('test data ' + str(i))
@@ -65,11 +69,11 @@ def kNN(dfTrain, dfTest, targetCol, targetIndex, k, useAverage):
         for j in range(len(dfTrain)):
             thisTrainData = dfTrain[j]
 
-            # calculate distance from the test data
+            # calculate distance (using the weight) from the test data
             thisDistSquare = 0
             for l in range(len(dfTest[0])): # because test data contain all input columns
                 if l == targetIndex: continue
-                thisDistSquare = thisDistSquare + pow(thisTestData[l] - thisTrainData[l], 2)
+                thisDistSquare = thisDistSquare + dfTestWeight[l] * pow(thisTestData[l] - thisTrainData[l], 2)
 
             # add to distAndMark (now, train output is at the right end of each training data row)
             distAndMark.append([math.sqrt(thisDistSquare), thisTrainData[len(thisTrainData)-1]])

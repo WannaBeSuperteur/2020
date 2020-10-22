@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     # validation mode is not available for method 5 and method 6
     # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
-    method = 1
+    method = 0
 
     # use PCA?
     usePCA = False
@@ -124,6 +124,7 @@ if __name__ == '__main__':
     # for method 0
     kNN_k = 5 # number k for kNN
     kNN_useAverage = True # use average voting for kNN
+    kNN_weight = [1, 1, 1, 1, 1, 1, 1, 1, 1] # weight for kNN (for each test data column)
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
     DT_maxDepth = 8 # max depth of decision tree
@@ -271,7 +272,7 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = _KNN.kNN(df_pca_train, df_pca_test, targetColumn, PCAdimen, kNN_k, kNN_useAverage)
+            finalResult = _KNN.kNN(df_pca_train, df_pca_test, kNN_weight, targetColumn, PCAdimen, kNN_k, kNN_useAverage)
 
         # use decision tree
         elif method == 1:
