@@ -122,9 +122,10 @@ if __name__ == '__main__':
     logConstant = 10000000 # x -> log2(x + logConstant)
 
     # for method 0
-    kNN_k = 5 # number k for kNN
+    kNN_k = 300 # number k for kNN
     kNN_useAverage = True # use average voting for kNN
-    kNN_weight = [1, 1, 1, 1, 1, 1, 1, 1, 1] # weight for kNN (for each test data column)
+    kNN_useCaseWeight = False # use case weight (weight by number of cases from training data) for kNN
+    kNN_weight = [1, 1, 1, 0, 0, 0, 0, 0, 0] # weight for kNN (for each test data column)
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
     DT_maxDepth = 8 # max depth of decision tree
@@ -272,7 +273,7 @@ if __name__ == '__main__':
         if method == 0:
 
             # k-NN of test data
-            finalResult = _KNN.kNN(df_pca_train, df_pca_test, kNN_weight, targetColumn, PCAdimen, kNN_k, kNN_useAverage)
+            finalResult = _KNN.kNN(df_pca_train, df_pca_test, kNN_weight, kNN_useCaseWeight, targetColumn, PCAdimen, kNN_k, kNN_useAverage)
 
         # use decision tree
         elif method == 1:

@@ -7,11 +7,12 @@ import printData as PD_
 # dfTrain      : dataframe for training data
 # dfTest       : dataframe for test data
 # dfTestWeight : weight of each test data column
+# caseWeight   : weight by number of cases from training data
 # targetCol    : target column for dfTrain
 # targetIndex  : index for the target column
 # k            : number of neighbors
 # useAverage   : return average value
-def kNN(dfTrain, dfTest, dfTestWeight, targetCol, targetIndex, k, useAverage):
+def kNN(dfTrain, dfTest, dfTestWeight, caseWeight, targetCol, targetIndex, k, useAverage):
     print('')
     print('+=======================+')
     print('|    Function : kNN     |')
@@ -87,9 +88,10 @@ def kNN(dfTrain, dfTest, dfTestWeight, targetCol, targetIndex, k, useAverage):
 
         for j in range(k): # count the vote using k nearest neighbors
             thisMark = distAndMark[j][1] # mark of this 'neighbor'
-            vote[thisMark] = vote[thisMark] + len(dfTrain) / classCount[thisMark]
+            if caseWeight == True: vote[thisMark] = vote[thisMark] + len(dfTrain) / classCount[thisMark]
+            else: vote[thisMark] = vote[thisMark] + 1
 
-        # find max vote item
+        # use average vote value
         if useAverage == True:
             sumOfVote = 0.0 # sum of (vote weight)
             sumOfKeyVal = 0.0 # sum of (key value)*(vote weight)
@@ -104,7 +106,7 @@ def kNN(dfTrain, dfTest, dfTestWeight, targetCol, targetIndex, k, useAverage):
             result.append(avgVoteVal)
             resultT.append([avgVoteVal])
 
-        # use average vote value
+        # find max-voted item
         else:
             largestVoteVal = -1 # number of votes of largest voted target value
             largestVoteTargetVal = -1 # largest voted target value
