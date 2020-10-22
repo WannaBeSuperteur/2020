@@ -21,22 +21,29 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
     print('|  Function : createDTfromDF  |')
     print('+=============================+')
 
+    print('\n<<< [3-pre0] dataset columns and target column >>>')
+    print(dataSetDF.columns)
+    print('targetCol: ' + str(targetCol))
+
     cols = len(dataSetDF.columns) # number of columns
 
     # designate index for input data and output(target) data
     inputIndex = []
-    for i in range(cols):
+    for i in dataSetDF.columns:
         if i != targetCol: inputIndex.append(i)
 
     outputIndex = [targetCol]
 
+    print('inputIndex  : ' + str(inputIndex))
+    print('outputIndex : ' + str(outputIndex))
+
     # extract input and output data of dataSetDF
-    inputData = np.array(dataSetDF.iloc[:, inputIndex])
-    outputData = np.array(dataSetDF.iloc[:, outputIndex]).flatten()
+    inputData = np.array(dataSetDF[inputIndex])
+    outputData = np.array(dataSetDF[outputIndex]).flatten()
 
     # print output data
-    print('\n<<< [3-pre0] output data (first 100 elements) >>>')
-    print(outputData[:min(len(outputData), 100)])
+    print('\n<<< [3-pre1] output data (first 100 elements) >>>')
+    print(np.array(outputData[:min(len(outputData), 100)]))
 
     # convert using numericRange
     if numericRange != None:
@@ -46,8 +53,8 @@ def createDTfromDF(dataSetDF, targetCol, displayChart, DT_maxDepth, DT_criterion
                     outputData[i] = (numericRange[j] + numericRange[j+1]) / 2
 
     # print output data
-    print('\n<<< [3-pre1] output data (first 100 elements) >>>')
-    print(outputData[:min(len(outputData), 100)])
+    print('\n<<< [3-pre2] output data (first 100 elements) >>>')
+    print(np.array(outputData[:min(len(outputData), 100)]))
 
     # type setting for data
     inputData = inputData.astype('float')

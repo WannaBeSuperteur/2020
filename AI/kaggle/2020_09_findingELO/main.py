@@ -97,7 +97,7 @@ if __name__ == '__main__':
 
     # validation mode is not available for method 5 and method 6
     # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
-    method = 0
+    method = 1
 
     # use PCA?
     usePCA = False
@@ -122,16 +122,16 @@ if __name__ == '__main__':
     logConstant = 10000000 # x -> log2(x + logConstant)
 
     # for method 0
-    kNN_k = 30 # number k for kNN
+    kNN_k = 5 # number k for kNN
     kNN_useAverage = True # use average voting for kNN
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
-    DT_maxDepth = 15 # max depth of decision tree
+    DT_maxDepth = 8 # max depth of decision tree
     DT_criterion = 'entropy' # 'gini' or 'entropy'
     DT_splitter = 'random' # 'best' or 'random'
 
     # convert to mean of each range when target column is numeric
-    DT_numericRange = [-3, -2.5, -2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5, 3]
+    DT_numericRange = range(1600, 2500, 30)
 
     # for method 2
     exceptColsForMethod2 = ['id', 'welo'] # list of columns not used for method 2
@@ -277,7 +277,7 @@ if __name__ == '__main__':
         elif method == 1:
             
             # make decision tree
-            DT = _DT.createDTfromDF(df_pca_train, PCAdimen, True, DT_maxDepth, DT_criterion, DT_splitter, DT_numericRange)
+            DT = _DT.createDTfromDF(df_pca_train, targetColumn, True, DT_maxDepth, DT_criterion, DT_splitter, DT_numericRange)
 
             # predict test data using decision tree
             finalResult = _DT.predictDT(df_pca_test, DT, True, DT_maxDepth, DT_criterion, DT_splitter)
