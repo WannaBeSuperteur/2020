@@ -157,7 +157,11 @@ if __name__ == '__main__':
         # extract data from moveScores
         gameData = []
         N = 30 # number of points to extract data
-        for j in range(N): gameData.append(thisLineSplit[int(gameLength*j/N)])
+        for j in range(N):
+            try:
+                gameData.append(thisLineSplit[int(j)])
+            except:
+                gameData.append(0)
 
         # handle NA data
         for j in range(len(gameData)):
