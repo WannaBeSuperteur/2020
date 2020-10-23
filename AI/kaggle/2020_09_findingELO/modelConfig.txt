@@ -1,22 +1,4 @@
-# I 30
-# D 10 relu
-# D 10 relu
-# D 10 relu
-# DO sigmoid
-# OP adam0 0.001
-I 9
-# R1 1
-# C1D 32 3 relu
-# MP1D 2
-# C1D 32 3 relu
-# MP1D 2
-# C1D 32 3 relu
-# F
-# D 30 relu
-# D 30 relu
-# D 30 relu
-D 30 relu
-D 30 relu
-D 30 relu
+I 33
+D 150 relu
 DO sigmoid
 OP adam0 0.001
