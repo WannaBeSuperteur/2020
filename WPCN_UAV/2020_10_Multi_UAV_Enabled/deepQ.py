@@ -11,7 +11,11 @@ import AIBASE_main as main
 #       y0 = [y00, y01, ..., y0t], ...
 #       h0 = [h00, h01, ..., h0t], ...
 def getS(UAV, q, n, l, a, k, R):
-    # ( [0] get state )
+
+    # q[n][l]      : the location of UAV l
+    # a[n][l][k_l] : the number of times that each device communicates with UAV l
+    # R[n][k_l]    : the average throughput of devices in l-th cluster
+    return [q[n][l], a[n][l][k], R[n][l][k]]
 
 # get action space: from (-1, -1, -1) to (1, 1, 1)
 def getActionSpace():

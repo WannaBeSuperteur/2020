@@ -14,6 +14,8 @@ import random
 import numpy as np
 from shapely.geometry import LineString
 
+# in the future, modify all '1...N+1's to '0...N'
+
 # PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
 # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
@@ -66,6 +68,29 @@ def IsTrajectoryCrossed(UAVi, UAVj, t):
     UAVj_line = LineString([UAVj_before, UAVj_after])
 
     return UAVi_line.intersects(UAVj_line)
+
+# for compatibility between UAVi[0...2][t] and (x, y or h)[n][l] (or q[n][l])
+# UAVs    : list of UAV -> [UAV0, UAV1, ...], shape of (# UAVs, 3(for x, y and h), # time slots)
+# element : 'x' for x, 'y' for y, or 'h' for h
+# T       : number of time slots
+def getXYH_ofUAV(UAVs, element, T):
+
+    # decide what to return (x -> UAVs[UAV][0][t], y -> UAVs[UAV][1][t], h -> UAVs[UAV][2][t])
+    if element == 'x': xyh = 0
+    elif element == 'y': xyh = 1
+    elif element == 'h': xyh = 2
+
+    # the format of result : q[n][l] where n indicates time slot and l indicates each UAV
+    result = []
+
+    # create and return result array
+    for t in range(len(T)): # for each time slot ('t' in UAVs and 'n' in q)
+        forTimeSlotT = [] # q[n]
+        for UAV in range(len(UAVs)): # for each UAV ('UAV' in UAVs and 'l' in q)
+            forTimeSlotT.append(UAVs[UAV][xyh][t]) # q[n][l]
+        result.append(forTimeSlotT)
+
+    return result
 
 # check if minimum throughput of all devices in a cluster == 0
 # ASSUMPTION: 'a cluster' means the cluster with index l

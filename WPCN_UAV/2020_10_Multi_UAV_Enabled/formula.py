@@ -33,8 +33,10 @@ import numpy as np
 # o2     : Noise power spectral = -110dBm
 
 # compute q[n][l] = (x[n][l], y[n][l], h[n][l])
-def getq_nl():
-    # BLANK
+def getq(x, y, h):
+    return [x, y, h]
+def getq_nl(x, y, h, n, l):
+    return [x[n][l], y[n][l], h[n][l]]
 
 # ||.|| (Euclidean norm)
 def eucNorm(array):
