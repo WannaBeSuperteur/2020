@@ -68,6 +68,63 @@ def writeNormalizeInfo(trainOutputArray, normalizeName):
     fnorm.write(normalizeInfo)
     fnorm.close()
 
+# write test result
+# test_report        : test report file name
+# testOutputFileName : test output (prediction) data file name
+# testOutputReal     : test output (real) data file name (if not None, compare output prediction with real test output data)
+# normalizeName      : normalize info (average and stddev) file name
+# trainOutputAvg     : average of training output (each column, so array form)
+# trainOutputStddev  : stddev of training output (each column, so array form)
+def writeTestResult(test_report, testOutputFileName, testOutputReal, normalizeName, trainOutputAvg, trainOutputStddev):
+    print('[25] writing report for test result, to file [ ' + test_report + ' ]...')
+            
+    MAE = 0 # mean absolute error
+    MSE = 0 # mean square error
+    accuracy = 0 # accuracy
+        
+    testO_pred = helper.getDataFromFile(testOutputFileName) # prediction of test
+    testO_real = helper.getDataFromFile(testOutputReal) # real value
+
+    testSize = len(testO_pred) # number of test data
+    testCols = len(testO_pred[0]) # number of columns in each test data
+    report = 'predict\treal\t' * testCols + '\n' # content of the report file
+
+    # denormalize if normalized info is available
+    denormalize(normalizeName, testSize, testCols, testO_pred, trainOutputAvg, trainOutputStddev)
+
+    # assertion for length of data
+    assert(len(testO_pred) == len(testO_real))
+    assert(len(testO_pred[0]) == len(testO_real[0]))
+
+    for i in range(testSize):
+        for j in range(testCols):
+
+            # compute errors and accuracy
+            MAE += abs(testO_pred[i][j] - testO_real[i][j])
+            MSE += pow(testO_pred[i][j] - testO_real[i][j], 2)
+
+            report += str(testO_pred[i][j]) + '\t' + str(testO_real[i][j]) + '\t'
+
+        # compute accuracy
+        if helper.argmax(testO_pred[i]) == helper.argmax(testO_real[i]): accuracy += 1
+                
+        report += '\n'
+
+    # get the average of MAE, MSE and accuracy
+    MAE /= (testSize * testCols)
+    MSE /= (testSize * testCols)
+    accuracy /= testSize
+
+    # write report file
+    report = ('MAE=' + str(MAE) + ' MSE=' + str(MSE) + ' accuracy=' + str(accuracy) + '\n') + report
+            
+    f = open(test_report, 'w')
+    f.write(report)
+    f.close()
+
+    # return final result (-1 means not used)
+    return (MAE, MSE, accuracy, -1, -1)
+
 # inputFileName      : train input data file name
 # outputFileName     : train output data file name
 # testFileName       : test input data file name
@@ -80,6 +137,11 @@ def writeNormalizeInfo(trainOutputArray, normalizeName):
 def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName, testOutputReal,
                  test_report, validRate, valid_report, modelConfig, deviceName, epoch, printed, modelName):
 
+    # You can do only 'training' or 'testing' by setting some arguments as None.
+    # inputFileName == None and outputFileName == None -> testing only
+    # testFileName == None                             -> training only
+    # for validation, you can set testFileName == None <- validation uses training data only
+
     ##############################
     ##                          ##
     ##       0. READ DATA       ##
@@ -88,9 +150,13 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
     
     # read files
     print('[00] reading train input / train output / test input files...')
-    trainI = helper.getDataFromFile(inputFileName) # input train data
-    trainO = helper.getDataFromFile(outputFileName) # output train data (Sigmoid applied)
-    testI = helper.getDataFromFile(testFileName) # test input data (set nullValue to 0)
+    
+    trainI = None
+    trainO = None
+    testI = None
+    if inputFileName != None: trainI = helper.getDataFromFile(inputFileName) # input train data
+    if outputFileName != None: trainO = helper.getDataFromFile(outputFileName) # output train data (Sigmoid applied)
+    if testFileName != None: testI = helper.getDataFromFile(testFileName) # test input data (set nullValue to 0)
 
     # read configuration file (to get normalization info)
     print('[01] reading configuration files...')
@@ -113,7 +179,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             break
 
     # read normalization info file
-    if normalizeName != None:
+    if normalizeName != None and trainO != None:
         print('[02] calculating and writing average and stddev...')
         
         trainOutputAvg = np.mean(trainO, axis=0) # average of train output value
@@ -127,21 +193,25 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         trainOutputStddev = None
 
     # apply sigmoid to train output data
-    print('[04] applying sigmoid to train output data...')
-    for i in range(len(trainO)):
-        for j in range(len(trainO[0])):
-            trainO[i][j] = helper.sigmoid(trainO[i][j])
+    if trainO != None:
+        print('[04] applying sigmoid to train output data...')
+        for i in range(len(trainO)):
+            for j in range(len(trainO[0])):
+                trainO[i][j] = helper.sigmoid(trainO[i][j])
 
     # print input, output, and test data
     if printed != 0:
-        print('\n ---- original input data (' + str(len(trainI)) + ') ----\n')
-        for i in range(len(trainI)): print(helper.roundedArray(trainI[i], 6))
+        if trainI != None:
+            print('\n ---- original input data (' + str(len(trainI)) + ') ----\n')
+            for i in range(len(trainI)): print(helper.roundedArray(trainI[i], 6))
 
-        print('\n ---- original output data (' + str(len(trainO)) + ') ----\n')
-        for i in range(len(trainO)): print(helper.roundedArray(trainO[i], 6))
+        if trainO != None:
+            print('\n ---- original output data (' + str(len(trainO)) + ') ----\n')
+            for i in range(len(trainO)): print(helper.roundedArray(trainO[i], 6))
 
-        print('\n ---- original test data (' + str(len(testI)) + ') ----\n')
-        for i in range(len(testI)): print(helper.roundedArray(testI[i], 6))
+        if testI != None:
+            print('\n ---- original test data (' + str(len(testI)) + ') ----\n')
+            for i in range(len(testI)): print(helper.roundedArray(testI[i], 6))
 
     ##############################
     ##                          ##
@@ -168,8 +238,10 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
         # NN and optimizer
         print('[11] obtaining neural network and optimizer info...')
-        NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
-        op = helper.getOptimizer(modelInfo) # optimizer
+
+        if trainI != None and trainO != None:
+            NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
+            op = helper.getOptimizer(modelInfo) # optimizer
         
         try: # try reading test.h5 and test.json
             print('[20] reading model [ ' + modelName + ' ]...')
@@ -185,7 +257,13 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
             print('[22] reading learned model [ ' + modelName + ' ]...')
             newModel = deepLearning_GPU.deepLearningModel(modelName, True)
-            testO = deepLearning_GPU.modelOutput(newModel, testI)
+
+            # get test output if testI is not None
+            if testI == None:
+                print('test input file name (testInput) is None.')
+                return
+            else:
+                testO = deepLearning_GPU.modelOutput(newModel, testI)
 
         # test
         print('[23] testing...')
@@ -218,54 +296,10 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
         # compare prediction output data with real output data and write report
         if testOutputReal != None:
-            print('[25] writing report for test result, to file [ ' + test_report + ' ]...')
-            
-            MAE = 0 # mean absolute error
-            MSE = 0 # mean square error
-            accuracy = 0 # accuracy
-        
-            testO_pred = helper.getDataFromFile(testOutputFileName) # prediction of test
-            testO_real = helper.getDataFromFile(testOutputReal) # real value
-
-            testSize = len(testO_pred) # number of test data
-            testCols = len(testO_pred[0]) # number of columns in each test data
-            report = 'predict\treal\t' * testCols + '\n' # content of the report file
-
-            # denormalize if normalized info is available
-            denormalize(normalizeName, testSize, testCols, testO_pred, trainOutputAvg, trainOutputStddev)
-
-            # assertion for length of data
-            assert(len(testO_pred) == len(testO_real))
-            assert(len(testO_pred[0]) == len(testO_real[0]))
-
-            for i in range(testSize):
-                for j in range(testCols):
-
-                    # compute errors and accuracy
-                    MAE += abs(testO_pred[i][j] - testO_real[i][j])
-                    MSE += pow(testO_pred[i][j] - testO_real[i][j], 2)
-
-                    report += str(testO_pred[i][j]) + '\t' + str(testO_real[i][j]) + '\t'
-
-                # compute accuracy
-                if helper.argmax(testO_pred[i]) == helper.argmax(testO_real[i]): accuracy += 1
-                
-                report += '\n'
-
-            # get the average of MAE, MSE and accuracy
-            MAE /= (testSize * testCols)
-            MSE /= (testSize * testCols)
-            accuracy /= testSize
-
-            # write report file
-            report = ('MAE=' + str(MAE) + ' MSE=' + str(MSE) + ' accuracy=' + str(accuracy) + '\n') + report
-            
-            f = open(test_report, 'w')
-            f.write(report)
-            f.close()
-
-            # return final result (-1 means not used)
-            return (MAE, MSE, accuracy, -1, -1)
+            try:
+                writeTestResult(test_report, testOutputFileName, testOutputReal, normalizeName, trainOutputAvg, trainOutputStddev)
+            except:
+                pass
 
     ##############################
     ##                          ##
