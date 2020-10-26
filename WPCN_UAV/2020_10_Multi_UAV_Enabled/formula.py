@@ -44,8 +44,10 @@ def eucNorm(array):
 
 # the distance between UAV l and device k_l
 # d[n][l][k_l] = sqrt((x[n][l] - x[k_l])^2 + (y[n][l] - y[k_l])^2 + h[n][l]^2)
+# x, y, and h : for each UAV (cluster) (moving, h>0)
+# xd and yd   : for each device (not moving, h=0)
 def d_nlkl(n, l, k, x, y, h):
-    return math.sqrt(pow(x[n][l]-x[l][k], 2) + pow(y[n][l]-y[l][k], 2) + pow(h[n][l], 2))
+    return math.sqrt(pow(x[n][l]-xd[l][k], 2) + pow(y[n][l]-yd[l][k], 2) + pow(h[n][l], 2))
 
 # probability of LoS : line-of-sight (PLoS) and probability of NLoS : non-line-of-sight (PNLoS)
 # isNot              : get PLoS if False, get PNLoS if True
@@ -75,7 +77,7 @@ def g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, x, y, h, a):
 def getI(L, PU, n, k, l, gArray):
     result = 0
     for j in range(1, L+1):
-        if j != l: result += PU[n][k] * gArray[n][j][k]
+        if j != l: result += PU[n][j][k] * gArray[n][j][k]
         
     return result
 
@@ -102,7 +104,7 @@ def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
 # R_[n][k_l] = B[k_l]*log2(1 + r[n][k_l]) ... (10)
 #               where r[n][k_l] = P^U[n][k_l]*g[n][l][k_l] / (I_[n][k_l] + o^2)
 def R_nkl(B, k, l, n, PU, g, I_, o2):
-    r = PU[n][l][k] * g[n][l][l][k] / (I_[n][l][k] + o2)
+    r = PU[n][l][k] * g[n][l][k] / (I_[n][l][k] + o2)
     return B[l][k] * math.log(1+r, 2)
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T
