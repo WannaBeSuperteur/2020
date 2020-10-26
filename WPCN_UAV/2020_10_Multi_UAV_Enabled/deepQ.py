@@ -30,13 +30,71 @@ def getActionIndex(action):
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
 def getMaxQ(s, a, q, n, l, k, R, actionSpace):
+
+    # get Q values for the action space of next state s'
+    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, q, n, l, k, R))
+
+    # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
     for a_ in range(len(actionSpace)):
-        if useDL == True: QofNextStateAction = # ( [1] obtain Q(s', a') using deep learning )
+
+        # when using deep learning, Q value is the maximum value among rewards for actions on the next state
+        # otherwise,                Q value is 0
+        if useDL == True: QofNextStateAction = max(rewardsOfActionsOfNextState)
         else: QofNextStateAction = 0
 
         # update max(a')Q(s', a')
         if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+
+# convert [state] = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
+def stateTo1dArray(state):
+    # BLANK
+
+# deep Learning using Q table (training function)
+# printed : print the detail?
+def deepLearningQ_training(Q, deviceName, epoch, printed):
+    
+    # Q Table           = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
+    # convert to input  = converted version of [[s0], [s1], ...]
+    #            output = original  version of [[q00, q01, ...], [q10, q11, ...], ...]
+
+    # input array (need to convert original array [s0])
+    inputData = []
+    for i in range(len(Q)): inputData.append(stateTo1dArray(Q[i][0]))
+
+    # output array (as original)
+    outputData = []
+    for i in range(len(Q)): outputData.append(Q[i][1])
+
+    # save input and output array as file
+    helper.saveArray('Q_input.txt', inputData)
+    helper.saveArray('Q_output.txt', outputData)
+
+    # train using deep learning and save the model (testInputFile and testOutputFile is None)
+    # need: modelConfig.txt
+    # DON'T NEED TO APPLY SIGMOID to training output data, because DL.deeplearning applies it
+    DL.deepLearning('Q_input.txt', 'Q_output.txt', None, None, None,
+                    None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
+
+# deep Learning using Q table (test function -> return reward values for each action)
+def deepLearningQ_test(state):
+
+    # convert state into 1d array
+    stateArray = stateTo1dArray(state)
+
+    # get reward values of the state
+    # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
+    trainedModel = deepLearning_GPU.deepLearningModel('deepQ_model', True)
+    testO = deepLearning_GPU.modelOutput(trainedModel, stateArray)
+    outputLayer = testO[len(testO)-1]
+
+    # apply inverse sigmoid to output values
+    for i in range(len(outputLayer)): # for each output data
+        for j in range(len(outputLayer[0])): # for each value of output data
+            outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
+
+    # return output layer
+    return outputLayer
 
 # update Q value
 
