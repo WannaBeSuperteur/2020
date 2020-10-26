@@ -10,12 +10,13 @@ import AIBASE_main as main
 # where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
 #       y0 = [y00, y01, ..., y0t], ...
 #       h0 = [h00, h01, ..., h0t], ...
-def getS(UAV, q, n, l, a, k, R):
+def getS(UAV, q, n, l, a, R):
 
-    # q[n][l]      : the location of UAV l
-    # a[n][l][k_l] : the number of times that each device communicates with UAV l
-    # R[n][k_l]    : the average throughput of devices in l-th cluster
-    return [q[n][l], a[n][l][k], R[n][l][k]]
+    # q[n][l]      (q[n][l]) : the location of UAV l (1d array - x, y and h)
+    # a[n][l][k_l] (a[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
+    # R[n][k_l]    (R[n][l]) : the average throughput of devices (for each device k),
+    #                          in l-th cluster (1d array, for the devices in l-th cluster)
+    return [q[n][l], a[n][l], R[n][l]]
 
 # get action space: from (-1, -1, -1) to (1, 1, 1)
 def getActionSpace():
@@ -51,8 +52,12 @@ def getMaxQ(s, a, q, n, l, k, R, actionSpace):
         if QofNextStateAction > maxQ: maxQ = QofNextStateAction
 
 # convert [state] = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
+# q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
 def stateTo1dArray(state):
-    # BLANK
+    q = state[0]
+    a = state[1]
+    R = state[2]
+    return q + a + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
 
 # deep Learning using Q table (training function)
 # printed : print the detail?
@@ -129,8 +134,8 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, q, n, l, k, R, useDL):
     sFound = False # find corresponding state?
     for i in range(len(Q)):
         if Q[i][0][0] == s: # Q[i] = [[s0], [q00, q01, ...]], Q[i][0] = [s0], Q[i][0][0] = s0
-            int actionIndex = getActionIndex(a)
-            Q[i][1][a] = (1 - alpha)*Q[i][1][a] + alpha*(directReward + lb*maxQ)
+            actionIndex = getActionIndex(a)
+            Q[i][1][actionIndex] = (1 - alpha)*Q[i][1][actionIndex] + alpha*(directReward + lb*maxQ)
 
             sFound = True
             break
@@ -142,13 +147,16 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, q, n, l, k, R, useDL):
         # and modify the value with corresponding index to the q value for action a
         qs = []
         for i in range(27): qs.append(0)
-        int actionIndex = getActionIndex(a)
-        qs[a] = (1 - alpha)*qs[a] + alpha*(directReward + lb*maxQ)
+        actionIndex = getActionIndex(a)
+        qs[actionIndex] = (1 - alpha)*qs[actionIndex] + alpha*(directReward + lb*maxQ)
 
         # append the state-action-reward [[s], qs] to Q table
         Q.append([[s], qs])
 
 # get next state
+# s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+# q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
+# a       : action ([-1, -1, -1] to [1, 1, 1])
 def getNextState(s, a, q, n, l, k, R):
     # ( [4] get next state )
 
