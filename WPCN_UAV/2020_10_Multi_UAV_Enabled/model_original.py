@@ -124,6 +124,19 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # info about all devices: [dev0, dev1, ...] = [[X0, Y0], [X1, Y1]]
     deviceList = []
 
+    # init UAV's location and IoT devices' location
+    
+    # **** UAVs: [UAV0, UAV1, ...] ****
+    # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
+    # each element of x0, y0 and h0 is the vector of location, from previous t to current t
+    # where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
+    #       y0 = [y00, y01, ..., y0t], ...
+    #       h0 = [h00, h01, ..., h0t], ...
+
+    # **** clusters: [c0_deviceList, c1_deviceList, ...] ****
+    # cK_deviceList: device list of cluster k,
+    #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
+
     # randomly place devices
     for i in range(devices):
         xVal = random.random() * width
@@ -136,8 +149,6 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False)
 
     # ( [4] init target network and online network )
-    # ( [5] init UAV's location and IoT devices' location )
-    # ( [6] init border )
 
     ### TRAIN ###
     for episode in range(1, M+1):
