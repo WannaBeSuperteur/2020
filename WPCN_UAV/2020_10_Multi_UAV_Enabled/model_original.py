@@ -68,20 +68,41 @@ def IsTrajectoryCrossed(UAVi, UAVj, t):
     return UAVi_line.intersects(UAVj_line)
 
 # check if minimum throughput of all devices in a cluster == 0
-# cluster : clusters[i]
-def isMinThroughputOfAllDevicesInCluster0(cluster, T, N, l, k, B, n, PU, g, I_, o2):
+# ASSUMPTION: 'a cluster' means the cluster with index l
+def isMinThroughputOfAllDevicesInCluster0(clusters, T, N, l, k, B, n, PU, g, I_, o2):
 
-    for i in range(len(cluster)):
-        R_kl(T, N, l, k, B, n, PU, g, I_, o2):
+    # minimum throughput == 0 <=> there are some devices with throughput == 0
+    # clusters[l] = cluster l, and k[l] = a device in K[l] (cluster l)
+    for k in range(len(clusters[l])):
+        thrput = R_kl(T, N, l, k, B, n, PU, g, I_, o2)
+        if thrput == 0: return True # return True if the throughput is 0
 
-        # NOT COMPLETED
-
-    return True
+    return False
 
 # check if minimum throughput of all devices does not increase
-def isMinThroughputOfAllDevicesDoesNotInc(t):
-    # ( [3] check )
-    return True
+# ASSUMPTION: between time n-1(= t-1), time n(= t)
+def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, B, n, PU, g, I_, o2):
+
+    # clusters[l] = cluster l (total L clusters), and k[l] = a device in K[l] (cluster l)
+    for l in range(L):
+
+        # get throughput for (cluster l, device k)
+        for k in range(len(clusters[l])):
+            thrputBefore = R_kl(T, N, l, k, B, n-1, PU, g, I_, o2) # throughput at time n-1 = t-1
+            thrputAfter = R_kl(T, N, l, k, B, n, PU, g, I_, o2) # throughput at time n = t
+
+        # initialize minThroughputBefore and minThroughputAfter as that of (cluster l=0, device k=0)
+        if l == 0 and k == 0:
+            minThroughputBefore = thrputBefore
+            minThroughputAfter = thrputAfter
+        # else, update them
+        else:
+            if thrputBefore < minThroughputBefore: minThroughputBefore = thrputBefore
+            if thrputAfter > minThroughputAfter: minThroughputAfter = thrputAfter
+
+    # compare minThroughputBefore and minThroughputAfter, and return
+    if minThroughputBefore < minThroughputAfter: return True
+    else: return False
 
 # ALGORITHM 1
 # 3D trajectory design and time resource allocation solution based on DQL

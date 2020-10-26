@@ -6,9 +6,10 @@ import numpy as np
 # N      : number of time slots = N+1
 # l      : (lowercase L) a UAV = a cluster
 # L      : number of UAVs = number of clusters
-# k      : k[l] is a deivce in K[l]
+# k      : k[l] is a device in K[l] (cluster l)
 # K      : IoT device K1, K2, ..., and KL
-# t,T    : specific flight period of UAVs, t in [0, T]
+# T      : flight cycle
+# t      : specific flight period of UAVs, t in [0, T]
 # q      : q[l](t) = q[l][t] = (x[l](t), y[l](t), h[l](t))
 #          q[n][l] = q[n][l] = (x[n][l], y[n][l], h[n][l])
 # x      : x[l](t): the x value of UAV l at time t
