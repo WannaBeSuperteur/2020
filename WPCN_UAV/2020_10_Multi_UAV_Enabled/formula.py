@@ -10,8 +10,8 @@ import numpy as np
 # K      : IoT device K1, K2, ..., and KL
 # T      : flight cycle
 # t      : specific flight period of UAVs, t in [0, T]
-# q      : q[l](t) = q[l][t] = (x[l](t), y[l](t), h[l](t))
-#          q[n][l] = q[n][l] = (x[n][l], y[n][l], h[n][l])
+# q      : q[l](t) = (x[l](t), y[l](t), h[l](t))
+#          q[n][l] = (x[n][l], y[n][l], h[n][l])
 # x      : x[l](t) = x[n][l]: the x value of UAV l at time t
 # y      : y[l](t) = y[n][l]: the y value of UAV l at time t
 # h      : h[l](t) = h[n][l]: the altutude(height) of UAV l at time t
@@ -51,12 +51,17 @@ def eucNorm(array):
 def d_nlkl(n, l, k, x, y, h):
     return math.sqrt(pow(x[n][l]-xd[l][k], 2) + pow(y[n][l]-yd[l][k], 2) + pow(h[n][l], 2))
 
+# get theta value for getPLoS function
+# theta[l][k_l][n] = sin^-1(h[n][l]/d[n][l][k_l])
+def getTheta(n, l, k, x, y, h):
+    return math.asin(h[n][l]/d_nlkl(n, l, k, x, y, h))
+
 # probability of LoS : line-of-sight (PLoS) and probability of NLoS : non-line-of-sight (PNLoS)
 # isNot              : get PLoS if False, get PNLoS if True
-# PLoS(theta[l][k_l]) = b1*(180/pi * theta[l][k_l] - S_)^b2 ... (2)
+# PLoS(theta[l][k_l][n]) = b1*(180/pi * theta[l][k_l][n] - S_)^b2 ... (2)
 # NPLoS = 1 - PLoS
-def getPLoS(isNot, theta, l, k, b1, b2, S_):
-    thetaVal = theta[l][k] # theta[l][k_l]
+def getPLoS(isNot, n, l, k, x, y, h, b1, b2, S_):
+    thetaVal = getTheta(n, l, k, x, y, h) # theta[l][k_l][n]
     PLoS = b1 * pow(180 * math.pi * thetaVal - S_, b2)
 
     if isNot == False: return PLoS # return PLoS

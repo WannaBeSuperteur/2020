@@ -205,7 +205,12 @@ def getNextState(s, a, n, l, k, R):
 
     # get angle (radian) between time n-1 and n
     lastAngle = 0 # set default angle as 0
-    for n_ in range(n, 0, -1): lastAngle = getAngle(q, n)
+    for n_ in range(n, 0, -1):
+        lastAngle = getAngle(q, n_)
+        if lastAngle != 'not moved': break # lastAngle is numeric value
+
+    # when all 'not moved' for n, n-1, n-2, ..., 0, then set as default
+    if lastAngle == 'not moved': lastAngle = 0
 
     # get next angle by x
     if x == -1: nextAngle = (lastAngle - math.pi/4) % (math.pi*2)
