@@ -34,10 +34,10 @@ def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
-def getMaxQ(s, a, q, n, l, k, R, actionSpace):
+def getMaxQ(s, a, n, l, k, R, actionSpace):
 
     # get Q values for the action space of next state s'
-    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, q, n, l, k, R))
+    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, n, l, k, R))
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
@@ -123,12 +123,12 @@ def deepLearningQ_test(state):
 # directReward : direct reward for the action
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, a, directReward, alpha, lb, q, n, l, k, R, useDL):
+def updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    nextState = getNextState(s, a, q, n, l, k, R)
-    maxQ = getMaxQ(s, a, q, n, l, k, R, actionSpace)
+    nextState = getNextState(s, a, n, l, k, R)
+    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace)
         
     # update Q value
     sFound = False # find corresponding state?
@@ -153,16 +153,91 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, q, n, l, k, R, useDL):
         # append the state-action-reward [[s], qs] to Q table
         Q.append([[s], qs])
 
+# get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
+# IN RADIAN
+def getAngle(q, n):
+    if n > 0:
+        locBefore = q[n-1][l]
+        locAfter = q[n][l]
+
+        # x and y value at time t-1
+        xBefore = q[n-1][0]
+        yBefore = q[n-1][1]
+
+        # x and y value at time t
+        xAfter = q[n][0]
+        yAfter = q[n][1]
+
+        # compute angle (angle 0 = positive direction of x axis)
+        xDif = xAfter - xBefore
+        yDif = yAfter - yBefore
+
+        if yDif == 0 and xDif == 0: return 'not moved' # not moved
+        if yDif > 0 and xDif == 0: return math.pi/2 # angle = 90 degree
+        elif yDif < 0 and xDif == 0: return 3 * math.pi/2 # angle = 270 degree
+        elif yDif >= 0: return math.atan(yDif / xDif) # 0 degree < angle < 180 degree (not 90 degree)
+        elif yDif < 0: return math.atan(yDif / xDif) + math.pi # 180 degree < angle < 360 degree (not 270 degree)
+
+    return 'n is not greater than 0'
+
 # get next state
 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
-# a       : action ([-1, -1, -1] to [1, 1, 1])
-def getNextState(s, a, q, n, l, k, R):
-    # ( [4] get next state )
+# a       : action ([-1, -1, -1] to [1, 1, 1])        
+def getNextState(s, a, n, l, k, R):
+
+    # ASSUMPTION:
+    # x = -1 : UAV turns to the left (-45 degrees)
+    # x = 1  : UAV turns to the right (45 degrees)
+    # y = -1 : UAV files backward (-5 m)
+    # y = 1  : UAV flies forward (5 m)
+    # z = -1 : UAV descends (-1 m)
+    # z = 1  : UAV rises (1 m)
+    x = a[0]
+    y = a[1]
+    z = a[2]
+
+    #### derive next q[n][l] ####
+    # get current location
+    curX = s[0][0] # q[n][l][0]
+    curY = s[0][1] # q[n][l][1]
+    curH = s[0][2] # q[n][l][2]
+
+    # get angle (radian) between time n-1 and n
+    lastAngle = 0 # set default angle as 0
+    for n_ in range(n, 0, -1): lastAngle = getAngle(q, n)
+
+    # get next angle by x
+    if x == -1: nextAngle = (lastAngle - math.pi/4) % (math.pi*2)
+    elif x == 0: nextAngle = lastAngle
+    elif x == 1: nextAngle = (lastAngle + math.pi/4) % (math.pi*2)
+
+    # get next location by x and y
+    if y == -1: # backward 5m
+        nextX = curX + (-5) * math.cos(nextAngle)
+        nextY = curY + (-5) * math.sin(nextAngle)
+    elif y == 1: # forward 5m
+        nextX = curX + 5 * math.cos(nextAngle)
+        nextY = curY + 5 * math.sin(nextAngle)
+
+    # get next height by z
+    if z == -1: nextH = curH - 1
+    elif z == 0: nextH = curH
+    elif z == 1: nextH = curH + 1
+
+    #### derive next a[n][1] ####
+    # the number of times that each device communicates with UAV l
+
+    #### derive next R[n][k_l] ####
+    # the average throughput of devices in l-th cluster
+
+    #### return ####
+    # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
+    return [[nextX, nextY, nextH], next_a, nextR]
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
-def yt(r, r_, Q, s, a, q, n, l, k, R):
-    maxQ = getMaxQ(s, a, q, n, l, k, R, actionSpace)
+def yt(r, r_, Q, s, a, n, l, k, R):
+    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
