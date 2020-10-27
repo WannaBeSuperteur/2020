@@ -59,104 +59,14 @@ import deepLearning_GPU_helper as helper
 import deepLearning_main as DLmain
 import AIBASE_main as AImain
 
-if __name__ == '__main__':
-
-    # ASSUMPTION: DATA IS PREPROCESSED (IF NEEDED, TO APPROPRIATE NUMERIC VALUES) BEFORE EXECUTING THIS CODE
-    #             DATA CONTAINS ONLY NUMERIC VALUES
-
-    #################################
-    ###                           ###
-    ###    basic configuration    ###
-    ###                           ###
-    #################################
-
-    # global validation == 0 for all methods
-    # global validation > 0 for method 0 and 1
-
-    # define final result (init as None)
-    finalResult = None
-
-    ### meta info (file name) ###
-    
-    trainName = 'data_trainPgn.txt'
-    testName = 'data_testPgn.txt'
-    ftype = 'txt'
-
-    ### column settings ###
-    
-    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5',
-                  'score6', 'score7', 'score8', 'score9', 'score10', 'score11', 'score12', 'score13', 'score14', 'score15',
-                  'score16', 'score17', 'score18', 'score19', 'score20', 'score21', 'score22', 'score23', 'score24', 'score25',
-                  'score26', 'score27', 'score28', 'score29']
-    fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5',
-                  'score6', 'score7', 'score8', 'score9', 'score10', 'score11', 'score12', 'score13', 'score14', 'score15',
-                  'score16', 'score17', 'score18', 'score19', 'score20', 'score21', 'score22', 'score23', 'score24', 'score25',
-                  'score26', 'score27', 'score28', 'score29']
-    targetColName = 'belo'
-    exceptCols = ['id', 'welo'] # list of columns not used
-
-    ### important settings ###
-
-    # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
-    # validation rate (if >0, then split training data into training and validation data, randomly)
-    globalValidationRate = 0.05
-
-    # validation mode is not available for method 5 and method 6
-    # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
-    method = 0
-
-    # use PCA?
-    usePCA = False
-
-    # except for these columns for validation data (normaliy target column)
-    validationExceptCols = ['welo', 'belo']
-
-    # compare finalResult with column of this index of validation data file (according to targetColName)
-    validationCol = 5
-
-    #################################
-    ###                           ###
-    ###    model configuration    ###
-    ###                           ###
-    #################################
-    
-    # make PCA from training data
-    PCAdimen = 4 # dimension of PCA
-    
-    exceptTargetForPCA = True # except target column for PCA
-    useLog = False # using log for numeric data columns
-    logConstant = 10000000 # x -> log2(x + logConstant)
-
-    # for method 0
-    kNN_k = 300 # number k for kNN
-    kNN_useAverage = True # use average voting for kNN
-    kNN_useCaseWeight = False # use case weight (weight by number of cases from training data) for kNN
-    kNN_weight = [1, 1, 1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001,
-                  0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001,
-                  0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001] # weight for kNN (for each test data column)
-
-    # for method 1 (for only when target value is binary, that is 0 or 1)
-    DT_maxDepth = 8 # max depth of decision tree
-    DT_criterion = 'entropy' # 'gini' or 'entropy'
-    DT_splitter = 'random' # 'best' or 'random'
-
-    # convert to mean of each range when target column is numeric
-    DT_numericRange = range(1600, 2500, 30)
-
-    # for method 2
-    exceptColsForMethod2 = ['id', 'welo'] # list of columns not used for method 2
-
-    # for method 3 and 4
-    XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
-    XG_epochs = 100 # xgboost training epochs
-    XG_boostRound = 10000 # num_boost_round for xgb.train
-    XG_earlyStoppingRounds = 10 # early_stopping_rounds for xgb.train
-    XG_foldCount = 5 # XG_foldCount = N -> (N-1)/N of whole dataset is for training, 1/N is for test
-    XG_rateOf1s = 0.15 # rate of 1's (using this, portion of 1 should be XG_rateOf1s)
-    XG_info = [XG_epochs, XG_boostRound, XG_earlyStoppingRounds, XG_foldCount, XG_rateOf1s]
-
-    # for deep learning (method 5 and 6)
-    DL_normalizeTarget = False # normalize training output value? (False because automatically normalized)
+def executeAlgorithm(finalResult, trainName, testName, ftype, fcolsTrain, fcolsTest, targetColName, exceptCols, # basic configuration
+                     globalValidationRate, method, usePCA, validationExceptCols, validationCol, # important configuration
+                     PCAdimen, exceptTargetForPCA, useLog=False, logConstant=10000000, # PCA and log
+                     kNN_k=None, kNN_useAverage=None, kNN_useCaseWeight=None, kNN_weight=None, # for kNN (method 0)
+                     DT_maxDepth=None, DT_criterion=None, DT_splitter=None, DT_numericRange=None, # for Decision Tree (method 1)
+                     exceptColsForMethod2=None, # for method 2
+                     XG_info=None, # xgBoost (for method 3 and 4)
+                     DL_normalizeTarget=False): # for Deep Learning (method 5 and 6)
 
     #################################
     ###                           ###
@@ -500,11 +410,107 @@ if __name__ == '__main__':
     if globalValidationRate > 0:
         _CV.compare(finalResult, testName, validationCol, trainValid_validRows)
 
-# 향후계획:
-# 딥러닝을 제외한 모든 머신러닝 알고리즘에 대해 Training data (train_df) 를 train_df와 valid_df로 구분하여 성능 평가 (FIN)
-#     train_df와 valid_df로 구분, normal mode method=0,1,5,6 및 validation mode method=0,1 에서 작동 확인 (FIN)
-#     성능 평가 라이브러리를 작성하여 result.csv와 실제 데이터를 비교, 성능 출력 (FIN)
-#     Decision Tree 알고리즘에서 학습 전에 데이터를 카테고리화 (예: 100 단위로 반올림) 적용 (FIN)
-#     보다 간단하고 규칙성 있는 dataset을 이용하여 재실험 (normal 0,1,5,6 and valid 0,1) 및 문제 해결 (FIN)
-#     textCols, TFcols 등을 모두 삭제하고 exceptCols만을 이용 (FIN)
-#     모든 작업 완료 후 usePCA, not usePCA, normal, valid 조건에서 method 0, 1, 5, 6 모두 실험 (refer to test options.txt) (FIN)
+if __name__ == '__main__':
+    
+    # ASSUMPTION: DATA IS PREPROCESSED (IF NEEDED, TO APPROPRIATE NUMERIC VALUES) BEFORE EXECUTING THIS CODE
+    #             DATA CONTAINS ONLY NUMERIC VALUES
+
+    #################################
+    ###                           ###
+    ###    basic configuration    ###
+    ###                           ###
+    #################################
+
+    # global validation == 0 for all methods
+    # global validation > 0 for method 0 and 1
+
+    # define final result (init as None)
+    finalResult = None
+
+    ### meta info (file name) ###
+    
+    trainName = 'data_trainPgn.txt'
+    testName = 'data_testPgn.txt'
+    ftype = 'txt'
+
+    ### column settings ###
+    
+    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
+                  'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
+                  'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
+    fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
+                  'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
+                  'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
+    targetColName = 'belo'
+    exceptCols = ['id', 'welo'] # list of columns not used
+
+    ### important settings ###
+
+    # global validation rate is used on method 0, 1, 2, 3 and 4 (that is, except for deep learning)
+    # validation rate (if >0, then split training data into training and validation data, randomly)
+    globalValidationRate = 0.05
+
+    # validation mode is not available for method 5 and method 6
+    # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
+    method = 0
+
+    # use PCA?
+    usePCA = False
+
+    # except for these columns for validation data (normaliy target column)
+    validationExceptCols = ['welo', 'belo']
+
+    # compare finalResult with column of this index of validation data file (according to targetColName)
+    validationCol = 5
+
+    #################################
+    ###                           ###
+    ###    model configuration    ###
+    ###                           ###
+    #################################
+    
+    # make PCA from training data
+    PCAdimen = 4 # dimension of PCA
+    
+    exceptTargetForPCA = True # except target column for PCA
+    useLog = False # using log for numeric data columns
+    logConstant = 10000000 # x -> log2(x + logConstant)
+
+    # for method 0
+    kNN_k = 100 # number k for kNN
+    kNN_useAverage = True # use average voting for kNN
+    kNN_useCaseWeight = False # use case weight (weight by number of cases from training data) for kNN
+    kNN_weight = [1, 1, 1, 1.5, 1.5, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001] # weight for kNN (for each test data column)
+
+    # for method 1 (for only when target value is binary, that is 0 or 1)
+    DT_maxDepth = 8 # max depth of decision tree
+    DT_criterion = 'entropy' # 'gini' or 'entropy'
+    DT_splitter = 'random' # 'best' or 'random'
+
+    # convert to mean of each range when target column is numeric
+    DT_numericRange = range(1600, 2500, 30)
+
+    # for method 2
+    exceptColsForMethod2 = ['id', 'welo'] # list of columns not used for method 2
+
+    # for method 3 and 4
+    XG_xgBoostLevel = 0 # 0: just execute xgBoost, 1: as https://www.kaggle.com/jatinraina/random-acts-of-pizza-xgboost
+    XG_epochs = 100 # xgboost training epochs
+    XG_boostRound = 10000 # num_boost_round for xgb.train
+    XG_earlyStoppingRounds = 10 # early_stopping_rounds for xgb.train
+    XG_foldCount = 5 # XG_foldCount = N -> (N-1)/N of whole dataset is for training, 1/N is for test
+    XG_rateOf1s = 0.15 # rate of 1's (using this, portion of 1 should be XG_rateOf1s)
+    XG_info = [XG_epochs, XG_boostRound, XG_earlyStoppingRounds, XG_foldCount, XG_rateOf1s]
+
+    # for deep learning (method 5 and 6)
+    DL_normalizeTarget = False # normalize training output value? (False because automatically normalized)
+
+    # execute algorithm
+    executeAlgorithm(finalResult, trainName, testName, ftype, fcolsTrain, fcolsTest, targetColName, exceptCols, # basic configuration
+                     globalValidationRate, method, usePCA, validationExceptCols, validationCol, # important configuration
+                     PCAdimen, exceptTargetForPCA, useLog, logConstant, # PCA and log
+                     kNN_k, kNN_useAverage, kNN_useCaseWeight, kNN_weight, # for kNN (method 0)
+                     DT_maxDepth, DT_criterion, DT_splitter, DT_numericRange, # for Decision Tree (method 1)
+                     exceptColsForMethod2, # for method 2
+                     XG_info, # xgBoost (for method 3 and 4)
+                     DL_normalizeTarget) # for Deep Learning (method 5 and 6)
