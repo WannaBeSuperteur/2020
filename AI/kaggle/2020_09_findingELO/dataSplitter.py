@@ -229,6 +229,9 @@ def mergeTestResult(original, IDcol, files):
         # merge result and test array
         IDsAndResult = np.concatenate([np.array(testIDs), np.array(result)], axis=1)
 
+        print('\n <<< IDs-Result for file ' + str(i) + ' >>>')
+        print(np.array(IDsAndResult))
+
         # append this to array 'merged'
         for j in range(len(IDsAndResult)): merged.append([IDsAndResult[j][0], IDsAndResult[j][1]])
 
