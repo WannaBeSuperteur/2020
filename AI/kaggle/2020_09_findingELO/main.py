@@ -435,12 +435,10 @@ if __name__ == '__main__':
 
     ### column settings ###
     
-    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
-                  'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
-                  'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
-    fcolsTest = ['id', 'result0', 'result1', 'result2', 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7', 'score8', 'score9',
-                  'score10', 'score11', 'score12', 'score13', 'score14', 'score15', 'score16', 'score17', 'score18', 'score19',
-                  'score20', 'score21', 'score22', 'score23', 'score24', 'score25', 'score26', 'score27', 'score28', 'score29']
+    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo',
+                  'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7']
+    fcolsTest = ['id', 'result0', 'result1', 'result2',
+                 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7']
     targetColName = 'belo'
     exceptCols = ['id', 'welo'] # list of columns not used
 
@@ -480,7 +478,7 @@ if __name__ == '__main__':
     kNN_k = 100 # number k for kNN
     kNN_useAverage = True # use average voting for kNN
     kNN_useCaseWeight = False # use case weight (weight by number of cases from training data) for kNN
-    kNN_weight = [1, 1, 1, 1.5, 1.5, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001] # weight for kNN (for each test data column)
+    kNN_weight = [1, 1, 1, 1.5, 0.5, 0.1, 0.015, 0.005, 0.001, 0.001, 0.001] # weight for kNN (for each test data column)
 
     # for method 1 (for only when target value is binary, that is 0 or 1)
     DT_maxDepth = 8 # max depth of decision tree

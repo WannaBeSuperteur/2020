@@ -261,7 +261,7 @@ if __name__ == '__main__':
 
     kNN_useAverage = True # use average voting for kNN
     kNN_useCaseWeight = False # use case weight (weight by number of cases from training data) for kNN
-    kNN_weight = [1, 1, 1, 1.5, 1.5, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001] # weight for kNN (for each test data column)
+    kNN_weight = [1, 1, 1, 1.5, 0.5, 0.15, 0.05, 0.015, 0.005, 0.002, 0.001] # weight for kNN (for each test data column)
 
     DT_numericRange = range(1600, 2500, 30)
 
