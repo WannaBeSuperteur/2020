@@ -75,8 +75,8 @@ def saveArray(fn, _2dArray):
     f.write(result)
     f.close()
 
-# load result array
-def loadArray(fn):
+# load result array with splitter
+def loadArray(fn, splitter='\t'):
     
     # read *.pgn file
     f = open(fn, 'r')
@@ -88,7 +88,7 @@ def loadArray(fn):
 
     # append info to the result array
     for i in range(rows):
-        thisRow = fLines[i].split('\n')[0].split('\t')
+        thisRow = fLines[i].split('\n')[0].split(splitter)
         cols = len(thisRow)
 
         # add this row
@@ -156,7 +156,7 @@ if __name__ == '__main__':
 
         # extract data from moveScores
         gameData = []
-        N = 30 # number of points to extract data
+        N = 8 # number of points to extract data
         for j in range(N):
             try:
                 gameData.append(thisLineSplit[int(j)])
