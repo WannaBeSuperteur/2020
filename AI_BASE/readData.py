@@ -64,6 +64,7 @@ def saveArray(fn, _2dArray):
 
     # append to result
     for i in range(rows):
+        if i % 100 == 0: print('row ' + str(i))
         for j in range(cols):
             if j < cols-1: result += str(_2dArray[i][j]) + '\t'
             else: result += str(_2dArray[i][j])
