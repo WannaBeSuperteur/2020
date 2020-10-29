@@ -1,6 +1,127 @@
 import numpy as np
 import math
 
+# extract from array
+def extractColumns(array, columns):
+    
+    toReturn = []
+    for i in range(len(columns)): toReturn.append(array[columns[i]])
+    return toReturn
+
+# extract from array except for columns
+def extractExceptForColumns(array, columns):
+    toReturn = []
+    for i in range(len(array)): toReturn.append(array[i])
+    for i in range(len(columns)-1, -1, -1): toReturn.pop(columns[i])
+    return toReturn
+
+# split array with specified conditions, and return colValues
+# fn      : array file name
+# columns : split with values for these columns
+#           example: [0, 1, 4] if using 0th, 1st, and 4th column of the array
+def splitArray(fn, columns, exceptForFirstColumn):
+
+    # load array
+    originalArray = loadArray(fn)
+    if exceptForFirstColumn == True: originalArray = originalArray[1:]
+
+    # duplicated-removed arrays of column-value info
+    # example: array   = [[10, 15, 2], [10, 15, 3], [10, 8, 4], [16, 8, 5], [10, 8, 6],
+    #                     [10, 8, 7], [10, 15, 8], [10, 15, 9], [16, 8, 10], [10, 15, 11]]
+    #          columns = [0, 1]
+    #       -> aBCV    = [
+    #                     [[10, 15], [[2], [3], [8], [9], [11]]],
+    #                     [[10, 8], [[4], [6], [7]]],
+    #                     [[16, 8], [[5], [10]]]
+    #                    ]
+    #       -> return    [[10, 15], [10, 8], [16, 8]]
+    #
+    # aBCV = arrayByColValues
+    arrayByColValues = []
+
+    # make array like [[10, 15], [10, 8], [16, 8]]
+    colValues = []
+    for i in range(len(originalArray)):
+
+        toAppend = [] # like [10, 15]
+        for j in range(len(columns)):
+            toAppend.append(originalArray[i][columns[j]])
+
+        if toAppend not in colValues: # except for duplicate
+            colValues.append(toAppend)
+
+    # split data and save files using colValues
+    # after, arrayByColValues may be like [[[10, 15], []], [[10, 8], []], [[16, 8], []]]
+    for i in range(len(colValues)):
+        arrayByColValues.append([colValues[i], []])
+
+    # create splitted array (arrayByColValues)
+    for i in range(len(originalArray)):
+        if i % 100 == 0: print(str(i) + ' / ' + str(len(originalArray)))
+
+        # extract values corresponding to 'columns' of original array
+        # for example, columns = [0, 1] and originalArray[i] = [10, 15, 2] -> [10, 15]
+        extract = extractColumns(originalArray[i], columns)
+
+        # find matching values (with extracted values) from colValues
+        for j in range(len(colValues)):
+
+            # [10, 15] for example
+            thisColValues = colValues[j]
+
+            # skip non-matching columns
+            if extract != thisColValues: continue
+
+            # [2] for example
+            valuesExceptExtracted = extractExceptForColumns(originalArray[i], columns)
+
+            # [[10, 15], []] -> [[10, 15], [[2]]] for example
+            arrayByColValues[j][1].append(valuesExceptExtracted)
+
+    # save as files
+    for i in range(len(colValues)):
+        print(i)
+        saveArray(fn[:len(fn)-4] + '_sub_' + str(i) + '.txt', arrayByColValues[i][1])
+
+    # return splitted array
+    return colValues
+
+# merge test result using IDs of original training data file (test only, not for validation)
+# original : original test data file name (without '.txt')
+# IDcol    : ID column, for example 0
+# files    : number of files created by splitArray function
+def mergeTestResult(original, IDcol, files):
+    merged = []
+
+    for i in range(files):
+
+        # load test result array from result file
+        result = loadArray('result_split_' + str(i) + '.csv', ',')
+        result = result[1:] # remove first value with column title
+
+        # read corresponding ID
+        test = loadArray(original + '_sub_' + str(i) + '.txt')
+        testIDs_ = np.array(test)[:, IDcol]
+
+        # testIDs_ = [0, 1, 2, ...] -> testIDs = [[0], [1], [2], ...]
+        testIDs = []
+        for j in range(len(testIDs_)): testIDs.append([testIDs_[j]])
+
+        # merge result and test array
+        IDsAndResult = np.concatenate([np.array(testIDs), np.array(result)], axis=1)
+
+        print('\n <<< IDs-Result for file ' + str(i) + ' >>>')
+        print(np.array(IDsAndResult))
+
+        # append this to array 'merged'
+        for j in range(len(IDsAndResult)): merged.append([IDsAndResult[j][0], IDsAndResult[j][1]])
+
+    # sort the result array 'merged'
+    merged = sorted(merged, key=lambda x:x[0])
+
+    # write to file
+    saveArray('result_split_final.txt', merged)
+
 # lineStart : start with this symbol, for example (data.pgm), it is '[Event'
 # nsTrain   : for example (data.pgm), to obtain 'Event', 'Result', 'WhiteElo' and 'BlackElo',
 #             it is [[0, 8, 2], [6, 9, 2], [7, 11, 2], [8, 11, 2]]
