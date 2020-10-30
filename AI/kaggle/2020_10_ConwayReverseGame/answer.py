@@ -4,6 +4,7 @@ sys.path.insert(0, '../../../../AI_BASE')
 
 import readData as RD
 import deepLearning_main as DL
+import MAE_for_CRGoL as MAE
 
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=30, linewidth=180)
@@ -14,6 +15,10 @@ if __name__ == '__main__':
     # ~_sub_2.txt : with delta 3
     # ~_sub_3.txt : with delta 4
     # ~_sub_4.txt : with delta 5
+
+    # threshold list to find MAE
+    thresholdList = []
+    for i in range(1, 100): thresholdList.append(round(0.01*i, 6))
 
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
     for i in range(5):
@@ -52,3 +57,6 @@ if __name__ == '__main__':
         # deep learning : test array -> training array
         DL.deepLearning(trainIName, trainOName, testIName, testOName, None, testReport,
                         validRate, validReport, modelConfig, deviceName, epoch, verbose, 'model_sub_' + str(i))
+
+        # print MAE
+        MAE.readValidReport('valid_report_sub_' + str(i) + '.txt', thresholdList, 400)
