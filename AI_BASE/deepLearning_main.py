@@ -399,6 +399,10 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         outputCols = len(_ValidO[0])
 
         # for each data
+
+        # set edgeitems and linewidth as infinite
+        np.set_printoptions(edgeitems=10000, linewidth=1000000)
+        
         for i in range(inputSize):
 
             # validation for data whose value of valid array is 1
@@ -419,13 +423,16 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
                 validCount += 1
 
+        # recover edgeitems and linewidth
+        np.set_printoptions(edgeitems=10000, linewidth=1000000)
+
         # get the average of MAE, MSE and accuracy
         MAE /= (validSize * outputCols)
         MSE /= (validSize * outputCols)
         accuracy /= validSize
 
         # print evaluation result
-        resultSummary = ''
+        resultSummary = '----------------\n'
         resultSummary += 'input size : ' + str(inputSize) + '\n'
         resultSummary += 'train size : ' + str(trainSize) + '\n'
         resultSummary += 'valid size : ' + str(validSize) + '\n'
