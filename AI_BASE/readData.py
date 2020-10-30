@@ -55,10 +55,14 @@ def splitArray(fn, columns, predefinedColValues, exceptForFirstRow):
 
     else: colValues = predefinedColValues
 
+    # make colValues numeric value array -> text value array
+    for i in range(len(colValues)):
+        for j in range(len(colValues[0])):
+            colValues[i][j] = str(colValues[i][j])
+
     # split data and save files using colValues
     # after, arrayByColValues may be like [[[10, 15], []], [[10, 8], []], [[16, 8], []]]
-    for i in range(len(colValues)):
-        arrayByColValues.append([colValues[i], []])
+    for i in range(len(colValues)): arrayByColValues.append([colValues[i], []])
 
     # create splitted array (arrayByColValues)
     for i in range(len(originalArray)):
@@ -77,12 +81,12 @@ def splitArray(fn, columns, predefinedColValues, exceptForFirstRow):
             # [2] for example
             valuesExceptExtracted = extractExceptForColumns(originalArray[i], columns)
 
+            # append corresponding row values for split criteria, to arrayByColValues[j]
             # [[10, 15], []] -> [[10, 15], [[2]]] for example
             arrayByColValues[j][1].append(valuesExceptExtracted)
 
     # save as files
     for i in range(len(colValues)):
-        print(i)
         saveArray(fn[:len(fn)-4] + '_sub_' + str(i) + '.txt', arrayByColValues[i][1])
 
     # return splitted array
