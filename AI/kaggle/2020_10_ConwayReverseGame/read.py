@@ -67,24 +67,3 @@ if __name__ == '__main__':
         RD.splitArray('train_output.txt', [0], deltaOrder, True)
         RD.splitArray('test_id.txt', [1], deltaOrder, True)
         RD.splitArray('test_input.txt', [0], deltaOrder, True)
-
-    # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
-    for i in range(5):
-        train_id_list = RD.loadArray('train_id_sub_' + str(i) + '.txt')
-        trainI_array = RD.loadArray('train_input_sub_' + str(i) + '.txt')
-        trainO_array = RD.loadArray('train_output_sub_' + str(i) + '.txt')
-
-        test_id_list = RD.loadArray('test_id_sub_' + str(i) + '.txt')
-        testI_array = RD.loadArray('test_input_sub_' + str(i) + '.txt')
-
-        # print training and test array
-        for j in range(5):
-            print('\ntrainI_array = stop')
-            print(np.array(trainI_array).reshape(20, 20))
-            print('\ntrainO_array = start')
-            print(np.array(trainO_array).reshape(20, 20))
-            print('\ntestI_array = stop')
-            print(np.array(testI_array).reshape(20, 20))
-
-        # deep learning : test array -> training array
-        # DL.deepLearning(trainNames[i], 'output_delta' + str(i), testNames[i], 
