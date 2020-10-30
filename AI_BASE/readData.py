@@ -16,14 +16,16 @@ def extractExceptForColumns(array, columns):
     return toReturn
 
 # split array with specified conditions, and return colValues
-# fn      : array file name
-# columns : split with values for these columns
-#           example: [0, 1, 4] if using 0th, 1st, and 4th column of the array
-def splitArray(fn, columns, exceptForFirstColumn):
+# fn                  : array file name
+# columns             : split with values for these columns
+#                       example: [0, 1, 4] if using 0th, 1st, and 4th column of the array
+# predefinedColValues : if not None, use this as colValues
+# exceptForFirstRow   : except for first row (title row) option
+def splitArray(fn, columns, predefinedColValues, exceptForFirstRow):
 
     # load array
     originalArray = loadArray(fn)
-    if exceptForFirstColumn == True: originalArray = originalArray[1:]
+    if exceptForFirstRow == True: originalArray = originalArray[1:]
 
     # duplicated-removed arrays of column-value info
     # example: array   = [[10, 15, 2], [10, 15, 3], [10, 8, 4], [16, 8, 5], [10, 8, 6],
@@ -40,15 +42,18 @@ def splitArray(fn, columns, exceptForFirstColumn):
     arrayByColValues = []
 
     # make array like [[10, 15], [10, 8], [16, 8]]
-    colValues = []
-    for i in range(len(originalArray)):
+    if predefinedColValues == None:
+        colValues = []
+        for i in range(len(originalArray)):
 
-        toAppend = [] # like [10, 15]
-        for j in range(len(columns)):
-            toAppend.append(originalArray[i][columns[j]])
+            toAppend = [] # like [10, 15]
+            for j in range(len(columns)):
+                toAppend.append(originalArray[i][columns[j]])
 
-        if toAppend not in colValues: # except for duplicate
-            colValues.append(toAppend)
+            if toAppend not in colValues: # except for duplicate
+                colValues.append(toAppend)
+
+    else: colValues = predefinedColValues
 
     # split data and save files using colValues
     # after, arrayByColValues may be like [[[10, 15], []], [[10, 8], []], [[16, 8], []]]
@@ -66,11 +71,8 @@ def splitArray(fn, columns, exceptForFirstColumn):
         # find matching values (with extracted values) from colValues
         for j in range(len(colValues)):
 
-            # [10, 15] for example
-            thisColValues = colValues[j]
-
-            # skip non-matching columns
-            if extract != thisColValues: continue
+            # [10, 15] for example / skip non-matching rows
+            if extract != colValues[j]: continue
 
             # [2] for example
             valuesExceptExtracted = extractExceptForColumns(originalArray[i], columns)
