@@ -5,9 +5,12 @@ import numpy as np
 import readData as RD
 import deepLearning_main as DL
 
-if __name__ == '__main__':
-    np.set_printoptions(edgeitems=30, linewidth=180)
-
+# read whole training and test data and write
+# train_id, train_input, train_output, test_id and test_input
+# train_id_sub_X, train_input_sub_X, train_output_sub_X
+# test_id_sub_X, test_input_sub_X
+def readAllSubs():
+    
     # read train and test data
     train = RD.loadArray('train.csv', ',')
     test = RD.loadArray('test.csv', ',')
@@ -67,3 +70,55 @@ if __name__ == '__main__':
         RD.splitArray('train_output.txt', [0], deltaOrder, True)
         RD.splitArray('test_id.txt', [1], deltaOrder, True)
         RD.splitArray('test_input.txt', [0], deltaOrder, True)
+
+# make input(n*n) and output data(1*1)
+# delta    : delta value
+# n        : size of training data
+# size     : size of original board
+# limitLen : trainLen = min(train input file size, limitLen)
+def makeData(delta, n, size, limitLen):
+
+    # window size
+    ws = int((n-1)/2)
+
+    # read data
+    trainInput = RD.loadArray('train_input_sub_' + str(delta-1) + '.txt')
+    trainOutput = RD.loadArray('train_output_sub_' + str(delta-1) + '.txt')
+    trainLen = min(len(trainInput), limitLen)
+
+    # input data to make
+    inputData = []
+
+    # output data to make
+    outputData = []
+
+    # reshape training data
+    for i in range(trainLen):
+        if i % 25 == 0: print('makeData: ' + str(i))
+
+        # trainInput and trainOutput as numeric type
+        trainInput = np.array(trainInput).astype('float')
+        trainOutput = np.array(trainOutput).astype('float')
+
+        # reshape to derive n*n training data (with ws-sized padding)
+        thisReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+        
+        # save training and test data
+        for j in range(ws, size+ws):
+            for k in range(ws, size+ws):
+                inputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
+                outputData.append([trainOutput[j][k]])
+
+    # save to file
+    RD.saveArray('train_input_n_sub_' + str(delta-1) + '.txt', inputData)
+    RD.saveArray('train_output_n_sub_' + str(delta-1) + '.txt', outputData)
+
+if __name__ == '__main__':
+    np.set_printoptions(edgeitems=30, linewidth=250)
+
+    readAllSubs()
+    makeData(1, 5, 20, 1000)
+    makeData(2, 7, 20, 1000)
+    makeData(3, 9, 20, 1000)
+    makeData(4, 11, 20, 1000)
+    makeData(5, 13, 20, 1000)
