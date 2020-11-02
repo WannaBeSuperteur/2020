@@ -113,7 +113,7 @@ def deepLearningQ_test(state):
 # for new state-action-reward-nextState, get reward using deep learning,
 # or set to 0 when amount of data is not big enoughly
 
-# Q(s, a) <- (1 - alpha)*Q(s, a) + alpha*(Rwd(s, a) + lb*max(a')Q(s', a'))
+# Q(s, a) <- (1 - alphaL)*Q(s, a) + alphaL*(Rwd(s, a) + lb*max(a')Q(s', a'))
 # because using deep learning, just add Q value for this state and action
 
 # when getting reward, for each UAV,
@@ -123,9 +123,11 @@ def deepLearningQ_test(state):
 #    2-1. if there is a state that is the same with the state, update Q values for the state
 
 # directReward : direct reward for the action
+# alphaL       : learning rate
+# lb           : lambda
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL, clusters, B, PU, g, l_, o2):
+def updateQvalue(Q, s, a, directReward, alphaL, lb, n, l, k, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -137,7 +139,7 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL, clusters, 
     for i in range(len(Q)):
         if Q[i][0][0] == s: # Q[i] = [[s0], [q00, q01, ...]], Q[i][0] = [s0], Q[i][0][0] = s0
             actionIndex = getActionIndex(a)
-            Q[i][1][actionIndex] = (1 - alpha)*Q[i][1][actionIndex] + alpha*(directReward + lb*maxQ)
+            Q[i][1][actionIndex] = (1 - alphaL)*Q[i][1][actionIndex] + alphaL*(directReward + lb*maxQ)
 
             sFound = True
             break
@@ -150,7 +152,7 @@ def updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL, clusters, 
         qs = []
         for i in range(27): qs.append(0)
         actionIndex = getActionIndex(a)
-        qs[actionIndex] = (1 - alpha)*qs[actionIndex] + alpha*(directReward + lb*maxQ)
+        qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + lb*maxQ)
 
         # append the state-action-reward [[s], qs] to Q table
         Q.append([[s], qs])
