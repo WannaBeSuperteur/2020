@@ -35,10 +35,10 @@ def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
-def getMaxQ(s, a, n, l, k, R, actionSpace):
+def getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2):
 
     # get Q values for the action space of next state s'
-    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, n, l, k, R))
+    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2))
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
@@ -124,12 +124,12 @@ def deepLearningQ_test(state):
 # directReward : direct reward for the action
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL):
+def updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    nextState = getNextState(s, a, n, l, k, R)
-    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace)
+    nextState = getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2)
+    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2)
         
     # update Q value
     sFound = False # find corresponding state?
@@ -250,8 +250,8 @@ def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
     return [[nextX, nextY, nextH], next_a, nextR]
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
-def yt(r, r_, Q, s, a, n, l, k, R):
-    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace)
+def yt(r, r_, Q, s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2):
+    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
