@@ -305,7 +305,15 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 
                 replayBuffer.append([oldS[i], action_list[i], reward, newS[i]])
             
-            # ( [21] Randomly select a minibatch of H samples from replay buffer )
+            # Randomly select a minibatch of H_ samples from replay buffer
+            H_ = min(30, len(replayBuffer)) # select maximum 30 samples
+            
+            minibatch = [] # minibatch of H_ samples from replay buffer
+            
+            while len(minibatch) < H_:
+                rand = random.randint(0, len(minibatch)-1) # randomly select
+                minibatch.append(replayBuffer[rand]) # append to the buffer
+            
             # ( [22] Train the network and update weight )
 
 if __name__ == '__main__':
