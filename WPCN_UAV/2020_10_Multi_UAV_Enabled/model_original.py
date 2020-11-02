@@ -236,10 +236,6 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # get throughput (before) (time = n)
                 beforeThroughput = f.R_nkl(B, k, l, n, PU, g, I_, o2):
-
-                # execute action - update Q value
-                directReward = dq.getDirectReward(s, a, UAVi, UAVj, t, width, height)
-                dq.updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL, clusters, B, PU, g, l_, o2)
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]

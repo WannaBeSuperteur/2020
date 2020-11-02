@@ -182,11 +182,6 @@ def getAngle(q, n):
 
     return 'n is not greater than 0'
 
-# get direct reward
-def getDirectReward(s, a, UAVi, UAVj, t, width, height):
-    # FILL IN THE BLANK
-    # use getNextLocation function
-
 # get next location when executing action a on state s
 def getNextLocation(s, a, n):
     
