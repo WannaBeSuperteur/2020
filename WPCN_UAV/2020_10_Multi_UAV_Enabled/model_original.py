@@ -234,12 +234,24 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                         s_j = dq.getS(UAV[j], q, n, l, a, k, R)
                         dq.updateQvalue(Q, s_j, a, -1, alpha, lb, q, n, l, k, R, useDL)
 
-                beforeThroughput = 0 # ( [13] get throughput )
+                # get throughput (before) (time = n)
+                beforeThroughput = f.R_nkl(B, k, l, n, PU, g, I_, o2):
 
-                # ( [14] execute action )
-                # ( [15] get next state )
+                # execute action - update Q value
+                directReward = dq.getDirectReward(s, a, UAVi, UAVj, t, width, height)
+                dq.updateQvalue(Q, s, a, directReward, alpha, lb, n, l, k, R, useDL, clusters, B, PU, g, l_, o2)
+                
+                # get and move to next state (update q, a and R)
+                # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+                # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
+                # a       : action ([-1, -1, -1] to [1, 1, 1])
+                nextState = dq.getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
+                q = nextState[0]
+                a = nextState[1]
+                R = nextState[2]
 
-                afterThroughput = 0 # ( [16] get throughput )
+                # get throughput (after) (time = n+1)
+                afterThroughput = f.R_nkl(B, k, l, n+1, PU, g, I_, o2):
 
                 # device t's throughput does not increase
                 if afterThroughput <= beforeThroughput:

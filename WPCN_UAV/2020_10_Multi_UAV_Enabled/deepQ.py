@@ -182,15 +182,18 @@ def getAngle(q, n):
 
     return 'n is not greater than 0'
 
-# get next state
-# s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
-# q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
-# a       : action ([-1, -1, -1] to [1, 1, 1])
+# get direct reward
+def getDirectReward(s, a, UAVi, UAVj, t, width, height):
+    # FILL IN THE BLANK
+    # use getNextLocation function
 
-## clusters: [c0_deviceList, c1_deviceList, ...]
-# cK_deviceList: device list of cluster k,
-#                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
-def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
+# get next location when executing action a on state s
+def getNextLocation(s, a, n):
+    
+    # get current location
+    curX = s[0][0] # q[n][l][0]
+    curY = s[0][1] # q[n][l][1]
+    curH = s[0][2] # q[n][l][2]
 
     # ASSUMPTION:
     # x = -1 : UAV turns to the left (-45 degrees)
@@ -199,15 +202,11 @@ def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
     # y = 1  : UAV flies forward (5 m)
     # z = -1 : UAV descends (-1 m)
     # z = 1  : UAV rises (1 m)
+    
+    # a : action ([-1, -1, -1] to [1, 1, 1])
     x = a[0]
     y = a[1]
     z = a[2]
-
-    #### derive next q[n][l] ####
-    # get current location
-    curX = s[0][0] # q[n][l][0]
-    curY = s[0][1] # q[n][l][1]
-    curH = s[0][2] # q[n][l][2]
 
     # get angle (radian) between time n-1 and n
     lastAngle = 0 # set default angle as 0
@@ -235,6 +234,22 @@ def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
     if z == -1: nextH = curH - 1
     elif z == 0: nextH = curH
     elif z == 1: nextH = curH + 1
+
+    # return next location
+    return [nextX, nextY, nextH]
+
+# get next state
+# s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+# q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
+# a       : action ([-1, -1, -1] to [1, 1, 1])
+
+## clusters: [c0_deviceList, c1_deviceList, ...]
+# cK_deviceList: device list of cluster k,
+#                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
+def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
+
+    # get next location
+    [nextX, nextY, nextH] = getNextLocation(s, a, n)
 
     #### derive next a[n][1] ####
     # the number of times that each device communicates with UAV l
