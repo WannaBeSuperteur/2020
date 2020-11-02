@@ -71,7 +71,7 @@ def readAllSubs():
         RD.splitArray('test_id.txt', [1], deltaOrder, True)
         RD.splitArray('test_input.txt', [0], deltaOrder, True)
 
-# make input(n*n) and output data(1*1)
+# make input(n*n) and output data(1*1), called 'n-sub mode'
 # delta    : delta value
 # n        : size of training data
 # size     : size of original board
