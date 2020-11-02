@@ -4,6 +4,7 @@ import deepLearning_GPU as DL
 import deepLearning_GPU_helper as helper
 import deepLearning_main as DLmain
 import AIBASE_main as main
+import formula as f
 
 # state: q[n][l], {a[n][l][k_l]}, {R[n][k_l]}
 # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
@@ -183,8 +184,12 @@ def getAngle(q, n):
 # get next state
 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
-# a       : action ([-1, -1, -1] to [1, 1, 1])        
-def getNextState(s, a, n, l, k, R):
+# a       : action ([-1, -1, -1] to [1, 1, 1])
+
+## clusters: [c0_deviceList, c1_deviceList, ...]
+# cK_deviceList: device list of cluster k,
+#                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
+def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
 
     # ASSUMPTION:
     # x = -1 : UAV turns to the left (-45 degrees)
@@ -235,6 +240,10 @@ def getNextState(s, a, n, l, k, R):
 
     #### derive next R[n][k_l] ####
     # the average throughput of devices in l-th cluster
+    nextR = 0
+    for k in range(len(clusters[l])): # for each device in cluster l
+        nextR += f.R_nkl(B, k, l, n, PU, g, I_, o2)
+    nextR /= len(clusters[l])
 
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]

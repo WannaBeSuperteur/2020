@@ -129,6 +129,19 @@ def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, B, n, PU, g, I_, o2):
     if minThroughputBefore < minThroughputAfter: return True
     else: return False
 
+# get cluster where device [X0, Y0] is located in
+## clusters: [c0_deviceList, c1_deviceList, ...]
+# cK_deviceList: device list of cluster k,
+#                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
+
+# device   : in the form of [X0, Y0]
+# returnNo : return the No.(index) of the cluster (if False, return the cluster itself)
+def getClusterOfDevice(device, clusters):
+    for i in range(clusters):
+        if device in clusters[i]:
+            if returnNo == True: return i # return the number
+            else: return cluster[i] # return the cluster
+
 # ALGORITHM 1
 # 3D trajectory design and time resource allocation solution based on DQL
 # M                  : number of episodes
