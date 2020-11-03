@@ -72,11 +72,12 @@ def readAllSubs():
         RD.splitArray('test_input.txt', [0], deltaOrder, True)
 
 # make input(n*n) and output data(1*1), called 'n-sub mode'
-# delta    : delta value
-# n        : size of training data
-# size     : size of original board
-# limitLen : trainLen = min(train input file size, limitLen)
-def makeData(delta, n, size, limitLen):
+# delta          : delta value
+# n              : size of training data
+# size           : size of original board
+# limitLen       : trainLen = min(train input file size, limitLen)
+# writeTestInput : write test input?
+def makeData(delta, n, size, limitLen, writeTestInput):
 
     # window size
     ws = int((n-1)/2)
@@ -84,17 +85,23 @@ def makeData(delta, n, size, limitLen):
     # read data
     trainInput = RD.loadArray('train_input_sub_' + str(delta-1) + '.txt')
     trainOutput = RD.loadArray('train_output_sub_' + str(delta-1) + '.txt')
+    testInput = RD.loadArray('test_input_sub_' + str(delta-1) + '.txt')
+    
     trainLen = min(len(trainInput), limitLen)
+    testLen = len(testInput)
 
     # input data to make
-    inputData = []
+    trainInputData = []
 
     # output data to make
-    outputData = []
+    trainOutputData = []
+
+    # test input data to make
+    if writeTestInput == True: testInputData = []
 
     # reshape training data
     for i in range(trainLen):
-        if i % 25 == 0: print('makeData: ' + str(i))
+        if i % 10 == 0: print('makeData (training) : ' + str(i) + ' / ' + str(trainLen))
 
         # trainInput and trainOutput as numeric type
         trainInput = np.array(trainInput).astype('float')
@@ -103,22 +110,39 @@ def makeData(delta, n, size, limitLen):
         # reshape to derive n*n training data (with ws-sized padding)
         thisReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
         
-        # save training and test data
+        # save training data into array trainInputData and trainOutputData
         for j in range(ws, size+ws):
             for k in range(ws, size+ws):
-                inputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
-                outputData.append([trainOutput[j][k]])
+                trainInputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
+                trainOutputData.append([trainOutput[j][k]])
 
-    # save to file
-    RD.saveArray('train_input_n_sub_' + str(delta-1) + '.txt', inputData)
-    RD.saveArray('train_output_n_sub_' + str(delta-1) + '.txt', outputData)
+    # reshape test data
+    if writeTestInput == True:
+        for i in range(testLen):
+            if i % 10 == 0: print('makeData (test) : ' + str(i) + ' / ' + str(testLen))
+
+            # trainInput and trainOutput as numeric type
+            testInput = np.array(testInput).astype('float')
+
+            # reshape to derive n*n training data (with ws-sized padding)
+            thisReshaped = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+            
+            # save test data into array testInputData
+            for j in range(ws, size+ws):
+                for k in range(ws, size+ws):
+                    testInputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
+
+    # save as file
+    RD.saveArray('train_input_n_sub_' + str(delta-1) + '.txt', trainInputData)
+    RD.saveArray('train_output_n_sub_' + str(delta-1) + '.txt', trainOutputData)
+    if writeTestInput == True: RD.saveArray('test_input_n_sub_' + str(delta-1) + '.txt', testInputData)
 
 if __name__ == '__main__':
-    np.set_printoptions(edgeitems=30, linewidth=250)
+    np.set_printoptions(edgeitems=1000, linewidth=10000)
 
     readAllSubs()
-    makeData(1, 5, 20, 1000)
-    makeData(2, 7, 20, 1000)
-    makeData(3, 9, 20, 1000)
-    makeData(4, 11, 20, 1000)
-    makeData(5, 13, 20, 1000)
+    makeData(1, 5, 20, 1000, False)
+    makeData(2, 7, 20, 1000, False)
+    makeData(3, 9, 20, 1000, False)
+    makeData(4, 11, 20, 1000, False)
+    makeData(5, 13, 20, 1000, False)
