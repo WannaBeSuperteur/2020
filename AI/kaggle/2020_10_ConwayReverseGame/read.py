@@ -5,6 +5,7 @@ import numpy as np
 import readData as RD
 import deepLearning_main as DL
 
+# not 'n-sub mode'
 # read whole training and test data and write
 # train_id, train_input, train_output, test_id and test_input
 # train_id_sub_X, train_input_sub_X, train_output_sub_X
@@ -140,7 +141,10 @@ def makeData(delta, n, size, limitLen, writeTestInput):
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=1000, linewidth=10000)
 
+    # for normal (not n-sub) mode
     readAllSubs()
+
+    # for n-sub mode
     makeData(1, 5, 20, 1000, False)
     makeData(2, 7, 20, 1000, False)
     makeData(3, 9, 20, 1000, False)
