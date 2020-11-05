@@ -127,7 +127,7 @@ def writeTestResult(test_report, testOutputFileName, testOutputReal, normalizeNa
 
 # inputFileName      : train input data file name
 # outputFileName     : train output data file name
-# testFileName       : test input data file name
+# testFileName       : test input data file name (or test input array)
 # testOutputFileName : test output (prediction) data file name
 # testOutputReal     : test output (real) data file name (if not None, compare output prediction with real test output data)
 # test_report        : test report file name
@@ -154,9 +154,22 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
     trainI = None
     trainO = None
     testI = None
-    if inputFileName != None: trainI = helper.getDataFromFile(inputFileName) # input train data
-    if outputFileName != None: trainO = helper.getDataFromFile(outputFileName) # output train data (Sigmoid applied)
-    if testFileName != None: testI = helper.getDataFromFile(testFileName) # test input data (set nullValue to 0)
+
+    # input train data
+    if inputFileName != None: trainI = helper.getDataFromFile(inputFileName)
+
+    #  output train data (Sigmoid applied)
+    if outputFileName != None: trainO = helper.getDataFromFile(outputFileName)
+
+    # test input data (set nullValue to 0)
+    # set testI (array) as testFileName, if testFileName is an array
+    try:
+        is_testI_array = testFileName[0] # check if testFileName is an array
+        testI = testFileName
+
+    # set testI (array) as test data from the file named as testFileName
+    except:
+        if testFileName != None: testI = helper.getDataFromFile(testFileName)
 
     # read configuration file (to get normalization info)
     print('[01] reading configuration files...')
