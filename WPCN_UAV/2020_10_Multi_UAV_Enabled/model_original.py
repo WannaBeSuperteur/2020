@@ -207,11 +207,14 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             newS_list = [] # new states (for each UAV)
             
             for i in range(L): # for each UAV = each cluster
-
-                # ( [7] choose action with e-greedy while e increases )
                 
                 # get UAV i's next location
                 s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
+
+                # choose action with e-greedy while e increases
+                e_ = episode / M # example
+                a = getActionWithE(Q, s_i, e_)
+                
                 nextLocation = getNextLocation(s_i, a, n):
 
                 # if UAV i files beyond the border

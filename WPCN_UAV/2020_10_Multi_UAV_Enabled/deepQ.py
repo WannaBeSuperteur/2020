@@ -5,6 +5,7 @@ import deepLearning_GPU_helper as helper
 import deepLearning_main as DLmain
 import AIBASE_main as main
 import formula as f
+import random
 
 # state: q[n][l], {a[n][l][k_l]}, {R[n][k_l]}
 # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
@@ -19,6 +20,45 @@ def getS(UAV, q, n, l, ac, R):
     # R[n][k_l]     (R[n][l])  : the average throughput of devices (for each device k),
     #                            in l-th cluster (1d array, for the devices in l-th cluster)
     return [q[n][l], ac[n][l], R[n][l]]
+
+# get action with e-greedy while e increases
+# with probability e, do the best action
+# with probability (1-e), do the action randomly
+def getActionWithE(Q, s, e):
+
+    # Q Table           = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
+    # convert to input  = converted version of [[s0], [s1], ...]
+    #            output = original  version of [[q00, q01, ...], [q10, q11, ...], ...]
+    rand = random.random()
+    stateIndex = 0 # index of state from the Q Table
+    actionIndex = 0 # index of action from the Q Table, from 0 (-1, -1, -1) to 26 (1, 1, 1)
+
+    # find state
+    for i in range(len(Q)):
+        if s == Q[i][0][0]:
+            stateIndex = i
+            break
+
+    actions = len(Q[stateIndex][1]) # number of actions (len of [q00, q01, ...])
+
+    # find action from [q00, q01, ...]
+    if rand > e: # do the action randomly
+        actionIndex = random.randint(0, actions-1)
+    else: # do (find) the best action
+        actionReward = Q[stateIndex][1][0] # init reward as q00
+
+        # find action from [q00, q01, ...]
+        for i in range(actions):
+            if Q[stateIndex][1][i] > actionReward:
+                actionReward = Q[stateIndex][1][i]
+                actionIndex = i
+
+    # return action with index of actionIndex
+    return getAction(actionIndex)
+
+# get action: from 0 (-1, -1, -1) to 26 (1, 1, 1)
+def getAction(actionNo):
+    return [actionNo / 9 - 1, (actionNo % 9) / 3 - 1, actionNo % 3 - 1]
 
 # get action space: from (-1, -1, -1) to (1, 1, 1)
 def getActionSpace():
