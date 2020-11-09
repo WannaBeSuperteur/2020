@@ -209,7 +209,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             for i in range(L): # for each UAV = each cluster
 
                 # ( [7] choose action with e-greedy while e increases )
-                # ( [8] get UAV i's next location )
+                
+                # get UAV i's next location
+                s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
+                nextLocation = getNextLocation(s_i, a, n):
 
                 # if UAV i files beyond the border
                 if beyondBorder(UAV[i], t, width, height) == True:
@@ -222,7 +225,6 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     elif UAV[i][1][t] > height: UAV[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
-                    s_i = dq.getS(UAV[i], q, n, l, a, k, R)
                     dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
                     directReward_list[i] += (-1)
 
@@ -239,11 +241,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                         UAV[j][1][t] = UAV[j][1][t-1]
 
                         # UAV i and UAV j get a penalty of -1
-                        s_i = dq.getS(UAV[i], q, n, l, a, k, R)
+                        s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
                         dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
                         directReward_list[i] += (-1)
 
-                        s_j = dq.getS(UAV[j], q, n, l, a, k, R)
+                        s_j = dq.getS(UAV[j], q, n, l, ac, k, R)
                         dq.updateQvalue(Q, s_j, a, -1, alpha, lb, q, n, l, k, R, useDL)
                         directReward_list[j] += (-1)
 
@@ -274,7 +276,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 if afterThroughput <= beforeThroughput:
                     
                     # UAV i gets a penalty of -1
-                    s_i = dq.getS(UAV[i], q, n, l, a, k, R)
+                    s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
                     dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
                     directReward_list[i] += (-1)
 
@@ -291,7 +293,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                     # All UAVs get a penalty of -1
                     for UAV in UAVs:
-                        s_UAV = dq.getS(UAV, q, n, l, a, k, R)
+                        s_UAV = dq.getS(UAV, q, n, l, ac, k, R)
                         dq.updateQvalue(Q, s_UAV, a, -1, alpha, lb, q, n, l, k, R, useDL)
                         directReward_list[UAV] += (-1)
 
