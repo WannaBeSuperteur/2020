@@ -12,14 +12,15 @@
 
 import math
 import random
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from keras.models import Model, model_from_json
 
 import sys
-sys.path.insert(0, '../DQN')
-import Qlearning_deep_GPU
-import Qlearning_deep_GPU_helper
+sys.path.insert(0, '../AI_BASE')
+import deepLearning_GPU
+import deepLearning_GPU_helper
 
 import WPCN_helper_REAL_forPaper as WPCN_helper_REAL
 
@@ -176,8 +177,8 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
     print('make input and output data...')
     
     for i in range(numTrain):
-        originalScreen_ = Qlearning_deep_GPU_helper.arrayCopy(originalScreen[i]) # copy array from originalScreen
-        originalScreen_ = Qlearning_deep_GPU_helper.arrayCopyFlatten(originalScreen_, 0, size, 0, size, None) # flatten
+        originalScreen_ = deepLearning_GPU_helper.arrayCopy(originalScreen[i]) # copy array from originalScreen
+        originalScreen_ = deepLearning_GPU_helper.arrayCopyFlatten(originalScreen_, 0, size, 0, size, None) # flatten
         inputs.append(originalScreen_)
 
         # find max value in outputScreen[i]
@@ -192,7 +193,7 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
             
         # 테스트 시 역sigmoid를 적용할 것이므로 먼저 outputScreen의 모든 원소에 sigmoid를 적용 (outputScreen의 값이 1 이상이 될수 있으므로)
         for j in range(size):
-            for k in range(size): outputScreen[i][j][k] = Qlearning_deep_GPU_helper.sigmoid(outputScreen[i][j][k])
+            for k in range(size): outputScreen[i][j][k] = deepLearning_GPU_helper.sigmoid(outputScreen[i][j][k])
         
         outputs.append([outputScreen[i]])
 
@@ -214,7 +215,12 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                 drop = float(dropout[dro])
                 
                 while True:
-                    try:                  
+
+                    # 실험 결과
+                    resultForThisMap = ''
+                    WPCNdeepNN_modelName = 'WPCNdeepNN_' + str(size) + '_' + str(numWD)
+                        
+                    try:
                         # 4. 모델 정의
                         NN = [tf.keras.layers.Reshape((size, size, 1), input_shape=(size*size,)),
                                 keras.layers.Conv2D(32, kernel_size=(3, 3), input_shape=(size, size, 1), activation='relu'),
@@ -231,12 +237,14 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                         if problemNo == 0: op = tf.keras.optimizers.Adam(0.001) # for Sum-
                         else: op = tf.keras.optimizers.Adam(0.0001) # for Common-
                         
-                        print('training...')
-                        Qlearning_deep_GPU.deepQlearning(0, NN, op, lc, inputs, outputs, None, None, 'WPCNdeepNN', [epoc, None], None, None, False, False, True, deviceName)
+                        print('[00] training...')
+                        deepLearning_GPU.deepLearning(NN, op, lc, inputs, outputs, WPCNdeepNN_modelName, epoc, False, True, deviceName)
                         
                         # 6. 테스트 데이터에 대한 출력 결과 확인하고 정답과 비교하기
-                        newModel = Qlearning_deep_GPU.deepLearningModel('WPCNdeepNN_0', False)
-                        
+                        print('[10] loading model...')
+                        newModel = deepLearning_GPU.deepLearningModel(WPCNdeepNN_modelName, True)
+
+                        print('[20] init throughput values...')
                         sumTestThroughput = 0.0 # test throughput의 합계
                         sumCorrectMaxThroughput = 0.0 # 정답의 throughput의 합계 (training data를 생성할 때와 같은 방법으로 최대 throughput 확인)
 
@@ -244,20 +252,23 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                         optiInformation = optiInfo.readlines()
                         optiInfo.close()
 
-                        print('testing...')
+                        print('[30] testing...')
                         
                         for i in range(numTest):
+                            if i == 0: print('[31] initializing...')
                             testScreen = originalScreen[numTrain + i] # 테스트할 스크린
-                            testOutput = Qlearning_deep_GPU.modelOutput(newModel, [testScreen]) # 테스트 결과
+                            testOutput = deepLearning_GPU.modelOutput(newModel, [np.array(testScreen).reshape(size*size)]) # 테스트 결과
                             testOutputLayer = testOutput[len(testOutput)-1] # 테스트 결과의 output layer의 값
 
                             # 6-0. 테스트 결과 확인
                             # 출력값 받아오기
+                            if i == 0: print('[32] getting optiScreen...')
                             optiScreen = [[0] * size for j in range(size)] # 테스트 결과의 출력 스크린(=맵)
                             for j in range(size):
                                 for k in range(size):
-                                    optiScreen[j][k] = Qlearning_deep_GPU_helper.invSigmoid(testOutputLayer[0][0][j][k], size-1)
+                                    optiScreen[j][k] = deepLearning_GPU_helper.invSigmoid(testOutputLayer[0][0][j][k])
 
+                            if i == 0: print('[33] finding optimal X and Y values...')
                             # 출력값에서 최적의 HAP의 x, y좌표 찾기
                             optiY_test = 0 # 출력 map에서의 최적의 HAP의 y좌표
                             optiX_test = 0 # 출력 map에서의 최적의 HAP의 x좌표
@@ -270,6 +281,7 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                                         optiThroughput = optiScreen[j][k]
 
                             # 상하/좌우의 throughput의 값을 이용하여 좌표 보정
+                            if i == 0: print('[34] modifying X and Y values...')
                             optiY = optiY_test
                             optiX = optiX_test
 
@@ -302,6 +314,7 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                                 optiX_test += (left * (-1) + right * 1)/(left + this + right)
 
                             # 출력값 중 HAP의 좌표를 범위 내로 조정
+                            if i == 0: print('[35] setting X and Y values as inside the range...')
                             if optiY_test > size-1: optiY_test = size-1
                             elif optiY_test < 0: optiY_test = 0
                             
@@ -309,10 +322,12 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                             elif optiX_test < 0: optiX_test = 0
 
                             # 테스트 결과 받아오기
+                            if i == 0: print('[36] getting test results...')
                             (throughput, HAPtime) = WPCN_helper_REAL.getThroughput(wdList[numTrain + i], [optiY_test, optiX_test], size, problemNo)
                             sumTestThroughput += throughput
 
                             # 6-1. testScreen과 optiScreen 중 일부 출력
+                            if i == 0: print('[37] printing...')
                             if i < 10: # 처음 10개의 map에 대해서만 출력
                                 # testScreen 출력
                                 print(' --- test input screen for map ' + str(i) + ' ---')
@@ -337,16 +352,19 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                             # 6-2. 정답과 비교
                             # 최적의 HAP의 위치 및 할당 시간 찾기
                             # HAP의 위치 및 할당 시간에 따른 throughput의 최댓값
+                            if i == 0: print('[38] comparing with correct answer...')
                             correctMaxThroughput = float(optiInformation[(numTrain + i) * (size + 1)].split(' ')[5])
                             sumCorrectMaxThroughput += correctMaxThroughput
 
                             # 정답과 비교
-                            print('test throughput for map ' + str(i) + ' [Y=' + str(round(optiY_test, 3)) + ' X=' + str(round(optiX_test, 3)) + ' HT=' + str(HAPtime) + '] : '
+                            resultForThisMap += ('test throughput for map ' + str(i) + ' [Y=' + str(round(optiY_test, 3)) + ' X=' + str(round(optiX_test, 3)) + ' HT=' + str(HAPtime) + '] : '
                                   + str(round(throughput, 6)) + ' / ' + str(round(correctMaxThroughput, 6)) + ' ('
-                                  + str(round(100.0 * throughput / correctMaxThroughput, 6)) + ' %)')
+                                  + str(round(100.0 * throughput / correctMaxThroughput, 6)) + ' %)\n')
                             if i < 10: print('')
+                            else: print(i)
 
                         # 7. 평가
+                        print('[40] evaluating...')
                         percentage = round(100.0 * sumTestThroughput / sumCorrectMaxThroughput, 6)
                         print('size:' + str(size) + ' train:' + str(numTrain) + ' test:' + str(numTest)
                               + ' problem(0=Sum,1=Common):' + str(problemNo) + ' epoch:' + str(epoc) + ' dropout:' + str(round(drop, 3)))
@@ -381,6 +399,10 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                     fSave = open('DL_WPCN_forPaper_' + str(problemNo) + '_' + str(size) + '_' + str(numWD) + '.txt', 'w')
                     fSave.write(saveResult)
                     fSave.close()
+
+                    fSave_ = open('DL_WPCN_forPaper_' + str(problemNo) + '_' + str(size) + '_' + str(numWD) + '_detail.txt', 'w')
+                    fSave_.write(resultForThisMap)
+                    fSave_.close()
 
                     # 학습 및 테스트 종료
                     break

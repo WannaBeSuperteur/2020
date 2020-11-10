@@ -1,0 +1,4 @@
+
+ <<< ESTIMATION RESULT >>>
+No.	size	train	test	problem	epoch	dropout	percentage
+0	8	900	100	1	1000	0.05	94.783
