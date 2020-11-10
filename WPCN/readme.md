@@ -1,3 +1,19 @@
+## NOW for final paper (201110)
+* use AI_BASE
+* SAME AS VERSION 200714, only difference is below:
+
+### result files
+* <strong>result of experiment</strong> (```deepLearning_WPCN_forPaper.py```)
+  * Sum throughput maximization
+    * all files whose name is in the form of ```results/DL_WPCN_forPaper_0_(size)_(WDs).txt```
+    * all files whose name is in the form of ```results/DL_WPCN_forPaper_0_(size)_(WDs)_detail.txt```
+  * Common throughput maximization
+    * <strong>for CT.RATE (%) for our methodology in the paper</strong>
+    * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs).txt```
+    * all files whose name is in the form of ```results/DL_WPCN_forPaper_1_(size)_(WDs)_detail.txt```
+  * size: ```8```, ```12``` or ```16```
+  * WDs: ```6``` or ```10```
+
 ## NOW for final paper (200714)
 
 * THERE WAS A CRITICAL ISSUE FOR THE PAPER. PLEASE REFER TO https://github.com/WannaBeSuperteur/2020/commit/83665628f374752bc467a9d4e7f6edce74462c6a.
