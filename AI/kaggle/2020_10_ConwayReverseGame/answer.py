@@ -29,7 +29,7 @@ if __name__ == '__main__':
 
         validRate = 0.05
         deviceName = 'cpu:0'
-        epoch = 20
+        epoch = 5
 
         # file names and configurations
         if use_n_sub == True: # use n-sub mode
@@ -57,23 +57,25 @@ if __name__ == '__main__':
         trainI_array = RD.loadArray(trainIName)
         trainO_array = RD.loadArray(trainOName)
 
-        test_id_list = RD.loadArray('test_id_sub_' + str(i) + '.txt')
-        testI_array = RD.loadArray(testIName)
+        if validRate == 0.0: # for test mode
+            test_id_list = RD.loadArray('test_id_sub_' + str(i) + '.txt')
+            testI_array = RD.loadArray(testIName)
 
         # print training and test array (consider n-sub mode)
         if verbose == True:
             for j in range(5):
                 trainI_ = np.array(trainI_array)[j]
                 trainO_ = np.array(trainO_array)[j]
-                testI_ = np.array(testI_array)[j]
+                if validRate == 0.0: testI_ = np.array(testI_array)[j] # for test mode
 
                 # use math.sqrt because trainI, trainO and testI are always n*n square
                 print('\ntrainI_array = stop - delta=' + str(i+1) + ', index=' + str(j))
                 print(trainI_.reshape(int(math.sqrt(len(trainI_))), int(math.sqrt(len(trainI_)))))
                 print('\ntrainO_array = start - delta=' + str(i+1) + ', index=' + str(j))
                 print(trainO_.reshape(int(math.sqrt(len(trainO_))), int(math.sqrt(len(trainO_)))))
-                print('\ntestI_array = stop - delta=' + str(i+1) + ', index=' + str(j))
-                print(testI_.reshape(int(math.sqrt(len(testI_))), int(math.sqrt(len(testI_)))))
+                if validRate == 0.0:
+                    print('\ntestI_array = stop - delta=' + str(i+1) + ', index=' + str(j))
+                    print(testI_.reshape(int(math.sqrt(len(testI_))), int(math.sqrt(len(testI_)))))
 
         # deep learning : test array -> training array
 
@@ -81,7 +83,7 @@ if __name__ == '__main__':
         # test input is not used -> just use training data file to make model
         # regardless of existance of test input file
         if validRate > 0:
-            DL.deepLearning(trainIName, trainOName, None, testOName, None, testReport,
+            DL.deepLearning(trainIName, trainOName, None, None, None, testReport,
                             validRate, validReport, modelConfig, deviceName, epoch, verbose, modelName)
 
         #### use_n_sub == False or use_n_sub_for_test == True ####
@@ -116,4 +118,6 @@ if __name__ == '__main__':
                             validRate, validReport, modelConfig, deviceName, epoch, verbose, modelName)
 
         # print MAE
-        if validRate > 0: MAE.readValidReport(validReport, thresholdList, 400)
+        if validRate > 0:
+            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, 1) # use n-sub mode
+            else: MAE.readValidReport(validReport, thresholdList, 400) # do not use n-sub mode ( -> use normal mode)
