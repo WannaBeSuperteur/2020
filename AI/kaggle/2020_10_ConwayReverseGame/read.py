@@ -115,7 +115,7 @@ def makeData(delta, n, size, limitLen, writeTestInput):
         for j in range(ws, size+ws):
             for k in range(ws, size+ws):
                 trainInputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
-                trainOutputData.append([trainOutput[j][k]])
+                trainOutputData.append([trainOutput[i][(j-ws)*20 + k-ws]])
 
     # reshape test data
     if writeTestInput == True:
