@@ -40,8 +40,16 @@ def readValidReport(fn, thresholdList, n):
     for i in range(len(thresholdList)): MAE[i] = MAE[i] / (lines * n)
         
     # print MAE
+    result = ''
     for i in range(len(thresholdList)):
-        print('MAE when threshold = ' + str(round(thresholdList[i], 6)) + '\tis ' + str(round(MAE[i], 6)))
+        result_ = 'MAE when threshold = ' + str(round(thresholdList[i], 6)) + '\tis ' + str(round(MAE[i], 6))
+        print(result_)
+        result += result_ + '\n'
+
+    # write to file
+    f = open(fn[:len(fn)-4] + '_MAE.txt', 'w')
+    f.write(result)
+    f.close()
 
 if __name__ == '__main__':
     thresholdList = []
