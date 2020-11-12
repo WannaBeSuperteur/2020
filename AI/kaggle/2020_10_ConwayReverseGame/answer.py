@@ -27,7 +27,7 @@ if __name__ == '__main__':
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
     for i in range(5):
 
-        validRate = 0.05
+        validRate = 0.0
         deviceName = 'cpu:0'
         epoch = 5
 
@@ -35,7 +35,8 @@ if __name__ == '__main__':
         if use_n_sub == True: # use n-sub mode
             trainIName = 'train_input_n_sub_' + str(i) + '.txt'
             trainOName = 'train_output_n_sub_' + str(i) + '.txt'
-            testIName = 'test_input_n_sub_' + str(i) + '.txt'
+            if use_n_sub_for_test == True: testIName = 'test_input_n_sub_' + str(i) + '.txt'
+            else: testIName = 'test_input_sub_' + str(i) + '.txt'
             testOName = 'test_output_n_sub_' + str(i) + '.txt' # file to make
             testReport = 'test_report_n_sub_' + str(i) + '.txt' # file to make
             validReport = 'valid_report_n_sub_' + str(i) + '.txt' # file to make
@@ -100,7 +101,8 @@ if __name__ == '__main__':
             # read and reshape test data from each file
             testInputData = [] # test input data for testing, whose size = data index (test input #, size, size) * each data (n, n)
             ws = int((n[i] - 1)/2)
-            
+
+            delta = i + 1
             testInput = RD.loadArray('test_input_sub_' + str(delta-1) + '.txt')
             testInput = np.array(testInput).astype('float')
 
@@ -111,7 +113,7 @@ if __name__ == '__main__':
                 # save test data into array testInputData
                 for k in range(ws, size+ws):
                     for l in range(ws, size+ws):
-                        testInputData.append(list(thisReshaped[k-ws:k+ws+1, l-ws:l+ws+1].reshape(n*n)))
+                        testInputData.append(list(thisReshaped[k-ws:k+ws+1, l-ws:l+ws+1].reshape(n[i]*n[i])))
 
             # do deep learning
             DL.deepLearning(trainIName, trainOName, testInputData, testOName, None, testReport,
