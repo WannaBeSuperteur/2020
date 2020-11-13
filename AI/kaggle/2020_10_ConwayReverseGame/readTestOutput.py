@@ -47,8 +47,33 @@ def readTestOutput(idList, dataSize, testResult, threshold, resultFileName):
     final.close()
 
 if __name__ == '__main__':
-    readTestOutput('test_id_sub_0.txt', 400, 'test_output_n_sub_0.txt', 0.41, 'final_0.csv')
-    readTestOutput('test_id_sub_1.txt', 400, 'test_output_n_sub_1.txt', 0.41, 'final_1.csv')
-    readTestOutput('test_id_sub_2.txt', 400, 'test_output_n_sub_2.txt', 0.41, 'final_2.csv')
-    readTestOutput('test_id_sub_3.txt', 400, 'test_output_n_sub_3.txt', 0.41, 'final_3.csv')
-    readTestOutput('test_id_sub_4.txt', 400, 'test_output_n_sub_4.txt', 0.41, 'final_4.csv')
+    
+    try:
+        sub0 = RD.loadArray('final_0.csv', ',')
+        sub1 = RD.loadArray('final_1.csv', ',')
+        sub2 = RD.loadArray('final_2.csv', ',')
+        sub3 = RD.loadArray('final_3.csv', ',')
+        sub4 = RD.loadArray('final_4.csv', ',')
+    except:
+        readTestOutput('test_id_sub_0.txt', 400, 'test_output_n_sub_0.txt', 0.41, 'final_0.csv')
+        readTestOutput('test_id_sub_1.txt', 400, 'test_output_n_sub_1.txt', 0.41, 'final_1.csv')
+        readTestOutput('test_id_sub_2.txt', 400, 'test_output_n_sub_2.txt', 0.41, 'final_2.csv')
+        readTestOutput('test_id_sub_3.txt', 400, 'test_output_n_sub_3.txt', 0.41, 'final_3.csv')
+        readTestOutput('test_id_sub_4.txt', 400, 'test_output_n_sub_4.txt', 0.41, 'final_4.csv')
+
+    finalArray = []
+    
+    print('for sub0')
+    for i in range(len(sub0)): finalArray.append(sub0[i])
+    print('for sub1')
+    for i in range(len(sub1)): finalArray.append(sub1[i])
+    print('for sub2')
+    for i in range(len(sub2)): finalArray.append(sub2[i])
+    print('for sub3')
+    for i in range(len(sub3)): finalArray.append(sub3[i])
+    print('for sub4')
+    for i in range(len(sub4)): finalArray.append(sub4[i])
+    print('finished')
+    
+    finalArray = np.sort(np.array(finalArray), axis=1)
+    RD.saveArray('final.csv', finalArray, ',')
