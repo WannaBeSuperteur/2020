@@ -183,7 +183,7 @@ def readPGN(fn, lineStart, nsTrain, nsTest, trainN):
     return (trainResult, testResult)
 
 # save result array
-def saveArray(fn, _2dArray):
+def saveArray(fn, _2dArray, splitter='\t'):
     
     result = ''
     rows = len(_2dArray) # rows of 2d array
@@ -193,7 +193,7 @@ def saveArray(fn, _2dArray):
     for i in range(rows):
         if i % 100 == 0: print('row ' + str(i))
         for j in range(cols):
-            if j < cols-1: result += str(_2dArray[i][j]) + '\t'
+            if j < cols-1: result += str(_2dArray[i][j]) + splitter
             else: result += str(_2dArray[i][j])
 
         result += '\n'
