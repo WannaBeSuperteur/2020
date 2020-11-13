@@ -1,7 +1,7 @@
 import math
 import numpy as np
 
-def readBoard(range_, fileName, way, splitter):
+def readBoard(range_, fileName, way, splitter, startCol):
 
     if range_ == None or fileName == None or way == None or splitter == None:
         print("""
@@ -9,6 +9,7 @@ def readBoard(range_, fileName, way, splitter):
                        A~E: read from A-th line to end
                        S~B: read from start to B-th line
                        S~E: read all lines
+            startCol : start index of column to print
             fileName : file to read
             way      : how to read files (0 or square)
             splitter : splitter ('Tab' for \t)
@@ -18,6 +19,7 @@ def readBoard(range_, fileName, way, splitter):
         fileName = input()
         way = input()
         splitter = input()
+        startCol = input()
 
     # support Tab splitter
     if splitter == 'Tab': splitter = '\t'
@@ -42,11 +44,16 @@ def readBoard(range_, fileName, way, splitter):
         
     for i in range(start_, end_+1):
         print(str(i) + ' / ' + str(start_) + ',' + str(end_))
-        readResult = np.array(fl[i].split('\n')[0].split(splitter))
+
+        # this row
+        readResult = np.array(fl[i].split('\n')[0].split(splitter))[startCol:]
         
         if way == 'square':
             sqrtVal = int(math.sqrt(len(readResult)))
+
+            # convert to print form
             readResult = str(i) + '\n' + str(readResult.reshape(sqrtVal, sqrtVal)) + '\n'
+            
             result += readResult
 
     f = open(fileName[:len(fileName)-4] + '_read_result.txt', 'w')
@@ -57,7 +64,9 @@ if __name__ == '__main__':
     np.set_printoptions(edgeitems=1000, linewidth=10000)
 
     for i in range(5):
-        readBoard('S~400', 'train_input_n_sub_' + str(i) + '.txt', 'square', 'Tab')
-        readBoard('S~400', 'train_output_n_sub_' + str(i) + '.txt', 'square', 'Tab')
-        readBoard('S~1', 'train_input_sub_' + str(i) + '.txt', 'square', 'Tab')
-        readBoard('S~1', 'train_output_sub_' + str(i) + '.txt', 'square', 'Tab')
+        # readBoard('S~400', 'train_input_n_sub_' + str(i) + '.txt', 'square', 'Tab')
+        # readBoard('S~400', 'train_output_n_sub_' + str(i) + '.txt', 'square', 'Tab')
+        readBoard('S~9', 'train_input_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
+        readBoard('S~9', 'train_output_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
+        readBoard('S~9', 'test_input_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
+        readBoard('S~9', 'final_' + str(i) + '.csv', 'square', ',', 1)
