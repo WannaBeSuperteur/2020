@@ -94,3 +94,10 @@ Size / WDs	6 WDs	10 WDs
 8x8		94.503	98.7208
 12x12		87.4224	90.5868
 16x16		76.1454	90.2418
+
+[2020.11.10]
+(percentage) part of DL_WPCN_forPaper_1_(size)_(WDs).txt
+Size / WDs	6 WDs	10 WDs
+8x8		94.2787	100.4858
+12x12		86.9357	92.131
+16x16		79.442	90.4991
