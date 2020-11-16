@@ -10,6 +10,8 @@
     * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_1_(size)_(WDs)_detail.txt```
     * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_1_(size)_(WDs)_detail_data.txt```
       * made with ```2020_11_additional_test/parse_result.py```
+    * correlation info: ```2020_11_additional_test/corrs.txt``` (can be changed)
+    * overall report: ```2020_11_additional_test/overall_report.xlsx```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
 
