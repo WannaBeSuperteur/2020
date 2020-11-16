@@ -61,13 +61,23 @@ def main(size, WDs, corrCols):
     corrs = []
     for i in range(len(corrCols)):
         corrCol = corrCols[i]
-        corrs.append([size, WDs, corrCol[0], corrCol[1], dfCorr[corrCol[0]][corrCol[1]]])
+        corr = dfCorr[corrCol[0]][corrCol[1]] # correlation
+
+        n = 100 # number of samples = number of test data
+        Z = np.arctanh(corr) # tanh^-1(corr)
+        EL = Z - 1.96 * math.sqrt(1/(n-3)) # E(Z)_L = Z - 1.96 * sqrt(1/(n-3))
+        EU = Z + 1.96 * math.sqrt(1/(n-3)) # E(Z)_U = Z + 1.96 * sqrt(1/(n-3))
+        pL = math.tanh(EL) # p_L = tanh(E(Z)_L)
+        pU = math.tanh(EU) # p_U = tanh(E(Z)_U)
+        
+        corrs.append([size, WDs, corrCol[0], corrCol[1], corr, pL, pU])
 
     return corrs
 
 if __name__ == '__main__':
     corrs = []
-    corrCols = [['X', 'Y'], ['thrput', 'maxThrput']]
+    corrCols = [['HT', 'thrput'], ['HT', 'maxThrput'], ['rate', 'maxThrput'], ['thrput', 'maxThrput'],
+                ['rate', 'Y'], ['rate', 'thrput'], ['rate', 'HT'], ['X', 'Y'], ['rate', 'X']]
     
     for size in [8, 12, 16]:
         for WDs in [6, 10]:
