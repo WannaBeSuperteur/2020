@@ -4,13 +4,12 @@
 
 ### result files
 * <strong>result of experiment</strong> (```deepLearning_WPCN_forPaper.py```)
-  * Sum throughput maximization
-    * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_0_(size)_(WDs).txt```
-    * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_0_(size)_(WDs)_detail.txt```
   * Common throughput maximization
     * <strong>for CT.RATE (%) for our methodology in the paper</strong>
     * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_1_(size)_(WDs).txt```
     * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_1_(size)_(WDs)_detail.txt```
+    * all files whose name is in the form of ```2020_11_additional_test/DL_WPCN_forPaper_1_(size)_(WDs)_detail_data.txt```
+      * made with ```2020_11_additional_test/parse_result.py```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
 
