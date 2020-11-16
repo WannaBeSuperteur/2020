@@ -11,6 +11,7 @@ import readData as RD
 # corrCols: list of 2 columns that you want to know the correlation about
 #           for example, [['X', 'Y'], ['thrput', 'maxThrput']]
 def main(size, WDs, corrCols):
+    print('size=' + str(size) + ' WDs=' + str(WDs))
 
     fn = 'DL_WPCN_forpaper_1_' + str(size) + '_' + str(WDs) + '_detail.txt'
 
