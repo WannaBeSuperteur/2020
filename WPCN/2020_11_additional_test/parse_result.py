@@ -8,8 +8,11 @@ import sys
 sys.path.insert(0, '../../AI_BASE')
 import readData as RD
 
-def main(fn):
-    if fn == None: fn = input() # file name
+# corrCols: list of 2 columns that you want to know the correlation about
+#           for example, [['X', 'Y'], ['thrput', 'maxThrput']]
+def main(size, WDs, corrCols):
+
+    fn = 'DL_WPCN_forpaper_1_' + str(size) + '_' + str(WDs) + '_detail.txt'
 
     # read file
     f = open(fn, 'r')
@@ -53,7 +56,22 @@ def main(fn):
                     vmin=-1, vmax=1)
     plt.show()
 
+    # return correlations
+    corrs = []
+    for i in range(len(corrCols)):
+        corrCol = corrCols[i]
+        corrs.append([size, WDs, corrCol[0], corrCol[1], dfCorr[corrCol[0]][corrCol[1]]])
+
+    return corrs
+
 if __name__ == '__main__':
+    corrs = []
+    corrCols = [['X', 'Y'], ['thrput', 'maxThrput']]
+    
     for size in [8, 12, 16]:
         for WDs in [6, 10]:
-            main('DL_WPCN_forpaper_1_' + str(size) + '_' + str(WDs) + '_detail.txt')
+            corrsTemp = main(size, WDs, corrCols)
+            for i in range(len(corrsTemp)): corrs.append(corrsTemp[i])
+                
+    # save corrs
+    RD.saveArray('corrs.txt', corrs)
