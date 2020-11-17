@@ -80,17 +80,21 @@ import AIBASE_main as AImain
 ### methods (files for deep learning include some utilities)
 <strong>FOR KNN (METHOD 0)</strong>
  * ```kNN.py``` : for using kNN algorithm
+ 
 <strong>FOR DECISION TREE (METHOD 1)</strong>
  * ```DecisionTree.py```
    * ```createDTfromDF``` : create decision tree using dataFrame
    * ```predictDT``` : predict using Decision Tree
+   
 <strong>FOR TEXT VECTORIZATION (METHOD 2)</strong>
  * ```textVec.py```
    * ```penn2morphy```, ```lemmatize_sent``` and ```preprocess_text```
  * ```frequentWord.py```
    * UNUSED
+   
 <strong>FOR XGBOOST (METHOD 3 and 4)</strong>
  * ```xgBoost.py``` : for using xgBoost algorithm 
+ 
 <strong>FOR DEEP LEARNING (METHOD 5 and 6) - include some utilities</strong>
  * ```AIBASE_main.py``` : read ```config.txt``` and execute deep learning using ```deepLearning_main.py```
  * ```deepLearning_GPU.py``` :
