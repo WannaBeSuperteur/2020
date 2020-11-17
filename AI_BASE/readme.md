@@ -36,6 +36,16 @@ valid_report VA_Report.txt
 modelConfig modelConfig.txt
 normalizeName dddd.txt
 ```
+ * ```trainInput``` : train input data file
+ * ```trainOutput``` : train output data file
+ * ```testInput``` : test input data file
+ * ```testOutput``` : test output data file (to create)
+ * ```testOutputReal``` : real(actual) output for test input (compare it with ```testOutput``` to evaluate)
+ * ```test_report``` : report for the test
+ * ```valid_rate``` : ```0``` for training-test, or larger than ```0``` for validation
+ * ```valid_report``` : report for the validation
+ * ```modelConfig``` : refer to below
+ * ```normalizeName``` : contains average and stddev
 
 ### ```modelConfig``` file (for deep learning)
 EXAMPLE - Refer to ```modelConfig.txt``` and ```modelConfig_example.txt```.
@@ -210,3 +220,6 @@ If you want some example, refer to line 413~502 of ```main.py```. (some of files
      * ```XG_rateOf1s``` : rate of 1's (using this, portion of 1 should be XG_rateOf1s)
  * method ```5``` and ```6``` : deep learning
    * ```DL_normalizeTarget``` : normalize training output value? (```False``` because automatically normalized)
+
+### ```AIBASE_main.py``` file
+Write ```config.txt``` as above before execution. 
