@@ -12,6 +12,7 @@
       * made with ```2020_11_additional_test/parse_result.py```
     * correlation info: ```2020_11_additional_test/corrs.txt``` (can be changed)
     * overall report: ```2020_11_additional_test/overall_report.xlsx```
+    * correlation report: ```2020_11_additional_test/corr_report.xlsx```
   * size: ```8```, ```12``` or ```16```
   * WDs: ```6``` or ```10```
 
