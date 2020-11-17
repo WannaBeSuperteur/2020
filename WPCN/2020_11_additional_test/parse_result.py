@@ -76,8 +76,12 @@ def main(size, WDs, corrCols):
 
 if __name__ == '__main__':
     corrs = []
-    corrCols = [['HT', 'thrput'], ['HT', 'maxThrput'], ['rate', 'maxThrput'], ['thrput', 'maxThrput'],
-                ['rate', 'Y'], ['rate', 'thrput'], ['rate', 'HT'], ['X', 'Y'], ['rate', 'X']]
+    cols = ['mapNo', 'Y', 'X', 'HT', 'thrput', 'maxThrput', 'rate']
+
+    corrCols = []
+    for i in range(1, len(cols)):
+        for j in range(i):
+            corrCols.append([cols[i], cols[j]])
     
     for size in [8, 12, 16]:
         for WDs in [6, 10]:
