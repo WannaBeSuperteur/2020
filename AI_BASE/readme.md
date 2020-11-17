@@ -57,7 +57,87 @@ R1 12                  (keras.layers.Reshape((12, 1), input_shape=(12,))
 R2 12 12               (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 ```
 
-## 1. EXECUTION
+## 1. CODE FILE INFO
+From line 44 to 59 of ```main.py```, you can see:
+```
+import decisionTree as _DT
+import frequentWord as _FW
+import kNN as _KNN
+import makeDF as _DF
+import makePCA as _PCA
+import printData as _PD
+import xgBoost as _XB
+import textVec as _TV
+import compareValid as _CV
+
+# deep Learning
+import deepLearning_GPU as DL
+import deepLearning_GPU_helper as helper
+import deepLearning_main as DLmain
+import AIBASE_main as AImain
+```
+
+### methods (files for deep learning include some utilities)
+<strong>FOR KNN (METHOD 0)</strong>
+ * ```kNN.py``` : for using kNN algorithm
+<strong>FOR DECISION TREE (METHOD 1)</strong>
+ * ```DecisionTree.py```
+   * ```createDTfromDF``` : create decision tree using dataFrame
+   * ```predictDT``` : predict using Decision Tree
+<strong>FOR TEXT VECTORIZATION (METHOD 2)</strong>
+ * ```textVec.py```
+   * ```penn2morphy```, ```lemmatize_sent``` and ```preprocess_text```
+ * ```frequentWord.py```
+   * UNUSED
+<strong>FOR XGBOOST (METHOD 3 and 4)</strong>
+ * ```xgBoost.py``` : for using xgBoost algorithm 
+<strong>FOR DEEP LEARNING (METHOD 5 and 6) - include some utilities</strong>
+ * ```AIBASE_main.py``` : read ```config.txt``` and execute deep learning using ```deepLearning_main.py```
+ * ```deepLearning_GPU.py``` :
+   * ```create_model``` : create a neural network for deep learning
+   * ```learning``` : train neural network using inputs and outputs
+   * ```deepLearning``` : train neural network
+   * ```deepLearningModel``` : load the model from file
+   * ```modelOutput``` : return the model output for test input
+ * ```deepLearning_GPU_helper.py``` :
+   * ```flatten``` : flatten 2d array to 1d array
+   * ```sigmoid``` : sigmoid(x)
+   * ```argmax``` : return max index of array
+   * ```invSigmoid``` : inverse of sigmoid(x)
+   * ```exceed``` : check whether the index exceeds feasible array range
+   * ```arrayCopyFlatten``` : copy a part of 2d array and flatten to 1d array
+   * ```arrayCopy``` : copy 2d array
+   * ```roundedArray``` : print rounded array (to n decimals)
+   * ```getDataFromFile``` : extract and return data array from file (delimiter is ```\t```)
+   * ```getNN``` : return neural network according to model info
+   * ```getOptimizer``` : return optimizer according to model info
+ * ```deepLearning_main.py``` :
+   * ```saveArray``` : save 2d array as file
+   * ```denormalize``` : denormalize training/test output of deep learning
+   * ```writeNormalizeInfo``` : write average and std-dev of train output array
+   * ```writeTestResult``` : write test result file
+   * ```deepLearning``` : deep learning process
+   * ```dataFromDF``` : save train input, train output and test input as file, from dataFrame
+
+### utilities
+ * ```compareValid.py``` : compare validation prediction with validation data, and return MAE and MSE
+ * ```makeDF.py```
+   * ```getIndex``` : get index value of the column
+   * ```makeDataFrame``` : create and return dataFrame from data file
+ * ```makePCA.py``` : compute and return PCA from data file
+ * ```printData.py``` : print data as set of data points on the 2d plane or 3d space
+ * ```readData.py```:
+   * ```extractColumns``` : extract columns from array
+   * ```extractExceptForColumns```: extract data from array, except for columns
+   * ```splitArray``` : split an array with multiple arrays, with conditions
+   * ```mergeTestResult``` : merge test result arrays into one array
+   * ```readPGN```: (for only Finding ELO from Kaggle)
+   * ```saveArray```: save array as file, with specified splitter
+   * ```loadArray```: load array from file, with specified splitter
+   * ```getLogVal```: (for only Finding ELO from Kaggle)
+   * ```textColumnToOneHot```: convert text column into one-hot columns
+   
+## 2. EXECUTION
 ### ```main.py``` file
 You can use the function below:
 ```
