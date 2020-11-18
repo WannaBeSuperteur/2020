@@ -6,6 +6,9 @@ import readData as RD
 import deepLearning_main as DL
 import MAE_for_CRGoL as MAE
 
+# input  : separated final result (final_X.csv)
+# output : combined final result (final.csv)
+
 # files read by this code
 # test_id_sub_X.txt       (open in readTestOutput)
 # test_output_n_sub_X.txt (open in readTestOutput)

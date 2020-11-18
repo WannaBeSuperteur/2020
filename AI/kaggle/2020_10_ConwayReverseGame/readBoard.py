@@ -1,11 +1,14 @@
 import math
 import numpy as np
 
+# input  : train/test input/output(..._sub_X.txt) and final result(final_X.csv) for n-sub mode
+# output : read-and-reshape results of train/test input/output for n-sub mode
+
 # files read by this code
 # train_input_sub_X.txt  (open in readBoard)
 # train_output_sub_X.txt (open in readBoard)
 # test_input_sub_X.txt   (open in readBoard)
-# final_X.txt            (open in readBoard)
+# final_X.csv            (open in readBoard)
 
 # files written by this code
 # train_input_sub_X_read_result.txt  (open in readBoard)

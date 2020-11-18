@@ -6,10 +6,16 @@ import readData as RD
 import deepLearning_main as DL
 import MAE_for_CRGoL as MAE
 
+# file input and output
+# input  : below (files read by this code)
+# output : deep learning result (validation rate, n_sub or not, use_n_sub_for_test or not)
+#          if validation_rate > 0, write validation report (valid_report_n_sub_X.txt)
+#                                  validation report with threshold (valid_report_n_sub_X_MAE.txt)
+
 # files read by this code
 #                                            train_id_sub_X.txt       (loadArray)
-# [normal]                                   train_input_sub_X.txt    (loadArray)
-# [normal]                                   train_output_sub_X.txt   (loadArray)
+#          [normal]                          train_input_sub_X.txt    (loadArray)
+#          [normal]                          train_output_sub_X.txt   (loadArray)
 #          [n_sub]                           train_input_n_sub_X.txt  (loadArray)
 #          [n_sub]                           train_output_n_sub_X.txt (loadArray)
 # [test]                                     test_id_sub_X.txt        (loadArray)
@@ -36,7 +42,7 @@ if __name__ == '__main__':
     size = 20
 
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
-    for i in range(4, 5): # temp
+    for i in range(5): # temp
 
         validRate = 0.0
         deviceName = 'cpu:0'

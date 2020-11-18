@@ -1,5 +1,9 @@
 import numpy as np
 
+# file input and output
+# input  : validation report
+# output : validation MAE with changing threshold
+
 # files read by this code
 # valid_report_n_sub_X.txt (open in readValidReport)
 

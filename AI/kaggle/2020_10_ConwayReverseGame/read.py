@@ -5,7 +5,14 @@ import numpy as np
 import readData as RD
 import deepLearning_main as DL
 
+# file input and output
+# input  : train.csv, test.csv
+# output : train_id.txt, train_input.txt, train_output.txt, test_id.txt, test_input.txt,
+#          train_id_sub_X.txt, train_input_sub_X.txt, train_output_sub_X.txt, test_id_sub_X.txt, test_input_sub_X.txt
+
 # files read by this code
+# train.csv              (loadArray in readAllSubs)
+# test.csv               (loadArray in readAllSubs)
 # train_id.txt           (open in readAllSubs)
 # train_input.txt        (open in readAllSubs)
 # train_output.txt       (open in readAllSubs)
