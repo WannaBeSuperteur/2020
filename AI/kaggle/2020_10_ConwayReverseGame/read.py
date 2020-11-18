@@ -5,6 +5,36 @@ import numpy as np
 import readData as RD
 import deepLearning_main as DL
 
+# files read by this code
+# train_id.txt           (open in readAllSubs)
+# train_input.txt        (open in readAllSubs)
+# train_output.txt       (open in readAllSubs)
+# test_id.txt            (open in readAllSubs)
+# test_input.txt         (open in readAllSubs)
+# train_id_sub_X.txt     (open in readAllSubs)
+# train_input_sub_X.txt  (open in readAllSubs)
+# train_output_sub_X.txt (open in readAllSubs)
+# test_id_sub_X.txt      (open in readAllSubs)
+# test_input_sub_X.txt   (open in readAllSubs)
+# train_input_sub_X.txt  (loadArray in makeData)
+# train_output_sub_X.txt (loadArray in makeData)
+# test_input_sub_X.txt   (loadArray in makeData)
+
+# files written by this code
+# [except]            train_id.txt             (saveArray in readAllSubs)
+# [except]            train_input.txt          (saveArray in readAllSubs)
+# [except]            train_output.txt         (saveArray in readAllSubs)
+# [except]            test_id.txt              (saveArray in readAllSubs)
+# [except]            test_input.txt           (saveArray in readAllSubs)
+# [except]            train_id_sub_X.txt       (splitArray in readAllSubs)
+# [except]            train_input_sub_X.txt    (splitArray in readAllSubs)
+# [except]            train_output_sub_X.txt   (splitArray in readAllSubs)
+# [except]            test_id_sub_X.txt        (splitArray in readAllSubs)
+# [except]            test_input_sub_X.txt     (splitArray in readAllSubs)
+#                     train_input_n_sub_X.txt  (saveArray in makeData)
+#                     train_output_n_sub_X.txt (saveArray in makeData)
+#          [optional] test_input_n_sub_X.txt   (saveArray in makeData)
+
 # not 'n-sub mode'
 # read whole training and test data and write
 # train_id, train_input, train_output, test_id and test_input

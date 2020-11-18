@@ -6,6 +6,15 @@ import readData as RD
 import deepLearning_main as DL
 import MAE_for_CRGoL as MAE
 
+# files read by this code
+# test_id_sub_X.txt       (open in readTestOutput)
+# test_output_n_sub_X.txt (open in readTestOutput)
+# final_X.csv             (loadArray in main)
+
+# files written by this code
+# final_X.csv (open in readTestOutput)
+# final.csv   (saveArray in main)
+
 # read test output for n-sub mode
 # idList         : list of test output IDs
 # dataSize       : size of each test data (=400)

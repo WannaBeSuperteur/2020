@@ -1,5 +1,11 @@
 import numpy as np
 
+# files read by this code
+# valid_report_n_sub_X.txt (open in readValidReport)
+
+# files written by this code
+# valid_report_n_sub_X_MAE.txt (open in readValidReport)
+
 # available for BINARY (0 or 1) values only
 # fn            : file name
 # thresholdList : list for thresholds (above->1, below->0)

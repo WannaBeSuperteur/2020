@@ -1,6 +1,18 @@
 import math
 import numpy as np
 
+# files read by this code
+# train_input_sub_X.txt  (open in readBoard)
+# train_output_sub_X.txt (open in readBoard)
+# test_input_sub_X.txt   (open in readBoard)
+# final_X.txt            (open in readBoard)
+
+# files written by this code
+# train_input_sub_X_read_result.txt  (open in readBoard)
+# train_output_sub_X_read_result.txt (open in readBoard)
+# test_input_sub_X_read_result.txt   (open in readBoard)
+# final_X_read_result.txt            (open in readBoard)
+
 def readBoard(range_, fileName, way, splitter, startCol):
 
     if range_ == None or fileName == None or way == None or splitter == None:

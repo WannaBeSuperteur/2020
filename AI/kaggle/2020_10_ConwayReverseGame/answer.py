@@ -6,6 +6,17 @@ import readData as RD
 import deepLearning_main as DL
 import MAE_for_CRGoL as MAE
 
+# files read by this code
+#                                            train_id_sub_X.txt       (loadArray)
+# [normal]                                   train_input_sub_X.txt    (loadArray)
+# [normal]                                   train_output_sub_X.txt   (loadArray)
+#          [n_sub]                           train_input_n_sub_X.txt  (loadArray)
+#          [n_sub]                           train_output_n_sub_X.txt (loadArray)
+# [test]                                     test_id_sub_X.txt        (loadArray)
+# [test]   [n_sub]  [use_n_sub_for_test]     test_input_n_sub_X.txt   (loadArray)
+# [test]   [n_sub]  [not use_n_sub_for_test] test_input_sub_X.txt     (loadArray)
+# [test]   [normal]                          test_input_sub_X.txt     (loadArray)
+
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=30, linewidth=180)
     verbose = False
@@ -25,7 +36,7 @@ if __name__ == '__main__':
     size = 20
 
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
-    for i in range(5):
+    for i in range(4, 5): # temp
 
         validRate = 0.0
         deviceName = 'cpu:0'
