@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 # file input and output
@@ -13,9 +14,14 @@ import numpy as np
 # available for BINARY (0 or 1) values only
 # fn            : file name
 # thresholdList : list for thresholds (above->1, below->0)
+# size          : input board size (width or height = 20)
 # n             : number of values in each array pred = [...] or real = [...]
-def readValidReport(fn, thresholdList, n):
+def readValidReport(fn, thresholdList, size, n):
 
+    # number of rows in each output array (rows * rows board)
+    rows = math.sqrt(n)
+
+    # read validation report
     f = open(fn, 'r')
     fl = f.readlines()
     f.close()
@@ -45,23 +51,28 @@ def readValidReport(fn, thresholdList, n):
 
         # compute MAE for each threshold
         for j in range(len(thresholdList)):
-            for k in range(n):
 
-                # pred is considered as 1 -> MAE=0 if real=1, MAE=1 if real=0
-                if predSplit[k] > thresholdList[j]:
-                    MAE[j] += (1 - int(realSplit[k]))
-                    ones[j] += 1.0
+            # center of output vector
+            center = int((n-1)/2)
+            
+            # pred is considered as 1 -> MAE=0 if real=1, MAE=1 if real=0
+            if predSplit[center] > thresholdList[j]:
+                MAE[j] += (1 - int(realSplit[center]))
+                ones[j] += 1.0
 
-                # pred is considered as 0 -> MAE=0 if real=0, MAE=1 if real=1
-                else:
-                    MAE[j] += int(realSplit[k])
-                    zeros[j] += 1.0
+            # pred is considered as 0 -> MAE=0 if real=0, MAE=1 if real=1
+            else:
+                MAE[j] += int(realSplit[center])
+                zeros[j] += 1.0
 
     # MAE <- MAE / (lines * n)
     # zeros,ones <- zeros,ones / (number of total count)
     for i in range(len(thresholdList)):
-        MAE[i] = MAE[i] / (lines * n)
 
+        # for MAE, divide by the number of rows
+        MAE[i] = MAE[i] / lines
+
+        # for zeros and ones, divide to make the sum 1.0
         zeros_ = zeros[i]
         ones_ = ones[i]
         zeros[i] = zeros[i] / (zeros_ + ones_)
@@ -83,8 +94,8 @@ def readValidReport(fn, thresholdList, n):
 if __name__ == '__main__':
     thresholdList = []
     for i in range(1, 100): thresholdList.append(round(0.01*i, 6))
-    readValidReport('valid_report_n_sub_0.txt', thresholdList, 1)
-    readValidReport('valid_report_n_sub_1.txt', thresholdList, 1)
-    readValidReport('valid_report_n_sub_2.txt', thresholdList, 1)
-    readValidReport('valid_report_n_sub_3.txt', thresholdList, 1)
-    readValidReport('valid_report_n_sub_4.txt', thresholdList, 1)
+    readValidReport('valid_report_n_sub_0.txt', thresholdList, 20, 9)
+    readValidReport('valid_report_n_sub_1.txt', thresholdList, 20, 9)
+    readValidReport('valid_report_n_sub_2.txt', thresholdList, 20, 9)
+    readValidReport('valid_report_n_sub_3.txt', thresholdList, 20, 9)
+    readValidReport('valid_report_n_sub_4.txt', thresholdList, 20, 9)

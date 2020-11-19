@@ -8,7 +8,7 @@ import MAE_for_CRGoL as MAE
 
 # file input and output
 # input  : below (files read by this code)
-# output : deep learning result (validation rate, n_sub or not, use_n_sub_for_test or not)
+# output : deep learning result (according to validation rate, n_sub or not, use_n_sub_for_test or not)
 #          if validation_rate > 0, write validation report (valid_report_n_sub_X.txt)
 #                                  validation report with threshold (valid_report_n_sub_X_MAE.txt)
 
@@ -22,6 +22,9 @@ import MAE_for_CRGoL as MAE
 # [test]   [n_sub]  [use_n_sub_for_test]     test_input_n_sub_X.txt   (loadArray)
 # [test]   [n_sub]  [not use_n_sub_for_test] test_input_sub_X.txt     (loadArray)
 # [test]   [normal]                          test_input_sub_X.txt     (loadArray)
+#                                            config.txt               (deepLearning)
+#          [normal]                          model_sub_X.txt          (deepLearning)
+#          [n_sub]                           model_n_sub_X.txt        (deepLearning)
 
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=30, linewidth=180)
@@ -44,7 +47,7 @@ if __name__ == '__main__':
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
     for i in range(5): # temp
 
-        validRate = 0.0
+        validRate = 0.05 # validation rate for deep learning
         deviceName = 'cpu:0'
         epoch = 5
 
@@ -138,5 +141,5 @@ if __name__ == '__main__':
 
         # print MAE
         if validRate > 0:
-            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, 1) # use n-sub mode
-            else: MAE.readValidReport(validReport, thresholdList, 400) # do not use n-sub mode ( -> use normal mode)
+            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, 20, 9) # use n-sub mode
+            else: MAE.readValidReport(validReport, thresholdList, 20, 400) # do not use n-sub mode ( -> use normal mode)

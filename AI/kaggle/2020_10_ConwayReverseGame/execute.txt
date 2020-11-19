@@ -1,0 +1,5 @@
+read.py
+-> answer.py (validRate=0.05, MAE_for_CRGoL.py is executed inside)
+-> readBoard.py
+-> answer.py (validRate=0.0, MAE_for_CRGoL.py is executed inside)
+-> readTestOutput.py (to get final test output)

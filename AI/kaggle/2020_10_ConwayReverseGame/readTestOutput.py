@@ -20,7 +20,7 @@ import MAE_for_CRGoL as MAE
 
 # read test output for n-sub mode
 # idList         : list of test output IDs
-# dataSize       : size of each test data (=400)
+# dataSize       : size of each test data ( = 20*20 = 400)
 # testResult     : test result file name
 # resultFileName : final result file name
 def readTestOutput(idList, dataSize, testResult, resultFileName):
@@ -39,7 +39,10 @@ def readTestOutput(idList, dataSize, testResult, resultFileName):
     resultFile.close()
 
     resultArray = [] # list of results (array)
-    for i in range(len(resultList)): resultArray.append(float(resultList[i].split('\n')[0]))
+    for i in range(len(resultList)):
+        resultValues = resultList[i].split('\n')[0].split('\t') # result value array (with output size)
+        resultValue = float(resultValues[int(len(resultValues)/2)]) # result value
+        resultArray.append(resultValue)
 
     # make the result
     finalResult = ''

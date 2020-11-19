@@ -111,14 +111,16 @@ def readAllSubs():
 
 # make input(n*n) and output data(1*1), called 'n-sub mode'
 # delta          : delta value
-# n              : size of training data
+# n              : size of training/test input data (width or height)
+# n_             : size of training/test output data (width or height)
 # size           : size of original board
 # limitLen       : trainLen = min(train input file size, limitLen)
 # writeTestInput : write test input?
-def makeData(delta, n, size, limitLen, writeTestInput):
+def makeData(delta, n, n_, size, limitLen, writeTestInput):
 
     # window size
-    ws = int((n-1)/2)
+    ws = int((n-1)/2) # for training/test input
+    ws_ = int((n_-1)/2) # for training/test output
 
     # read data
     trainInput = RD.loadArray('train_input_sub_' + str(delta-1) + '.txt')
@@ -146,13 +148,14 @@ def makeData(delta, n, size, limitLen, writeTestInput):
         trainOutput = np.array(trainOutput).astype('float')
 
         # reshape to derive n*n training data (with ws-sized padding)
-        thisReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+        trainInputReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+        trainOutputReshaped = np.pad(np.array(trainOutput[i]).reshape(size, size), ((ws_, ws_), (ws_, ws_)), 'constant', constant_values=-1)
         
         # save training data into array trainInputData and trainOutputData
-        for j in range(ws, size+ws):
-            for k in range(ws, size+ws):
-                trainInputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
-                trainOutputData.append([trainOutput[i][(j-ws)*20 + k-ws]])
+        for j in range(size):
+            for k in range(size):
+                trainInputData.append(list(trainInputReshaped[j:j+2*ws+1, k:k+2*ws+1].reshape(n*n)))
+                trainOutputData.append(list(trainOutputReshaped[j:j+2*ws_+1, k:k+2*ws_+1].reshape(n_*n_)))
 
     # reshape test data
     if writeTestInput == True:
@@ -163,12 +166,12 @@ def makeData(delta, n, size, limitLen, writeTestInput):
             testInput = np.array(testInput).astype('float')
 
             # reshape to derive n*n training data (with ws-sized padding)
-            thisReshaped = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+            testInputReshaped = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
             
             # save test data into array testInputData
-            for j in range(ws, size+ws):
-                for k in range(ws, size+ws):
-                    testInputData.append(list(thisReshaped[j-ws:j+ws+1, k-ws:k+ws+1].reshape(n*n)))
+            for j in range(size):
+                for k in range(size):
+                    testInputData.append(list(testInputReshaped[j:j+2*ws+1, k:k+2*ws+1].reshape(n*n)))
 
     # save as file
     RD.saveArray('train_input_n_sub_' + str(delta-1) + '.txt', trainInputData)
@@ -182,8 +185,9 @@ if __name__ == '__main__':
     readAllSubs()
 
     # for n-sub mode
-    makeData(1, 5, 20, 1000, False)
-    makeData(2, 7, 20, 1000, False)
-    makeData(3, 9, 20, 1000, False)
-    makeData(4, 11, 20, 1000, False)
-    makeData(5, 13, 20, 1000, False)
+    # it takes 2~3 hours in total
+    #makeData(1, 5, 3, 20, 1000, False) (temp)
+    #makeData(2, 7, 3, 20, 1000, False) (temp)
+    #makeData(3, 9, 3, 20, 1000, False) (temp)
+    makeData(4, 11, 3, 20, 1000, False)
+    makeData(5, 13, 3, 20, 1000, False)
