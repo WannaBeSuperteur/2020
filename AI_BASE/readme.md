@@ -45,7 +45,9 @@ normalizeName dddd.txt
  * ```valid_rate``` : ```0``` for training-test, or larger than ```0``` for validation
  * ```valid_report``` : report for the validation
  * ```modelConfig``` : refer to below
- * ```normalizeName``` : contains average and stddev
+ * ```normalizeName``` : name of the file contains average and stddev
+ * ```validInterval``` : interval for data to be set as validation data
+   * for example, if this value is ```5```, validation rate is ```0.25``` and there are ```100``` training data, ```0~4, 14~19, 20~24, 55~59, 84~89```-th data can be set as validation data
 
 ### ```modelConfig``` file (for deep learning)
 EXAMPLE - Refer to ```modelConfig.txt``` and ```modelConfig_example.txt```.
