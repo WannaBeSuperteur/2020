@@ -291,13 +291,24 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
         # write to file
         print('[24] writing test result to file [ ' + testOutputFileName + ' ]...')
+
+        # open file
+        f = open(testOutputFileName, 'a')
+
         result = ''
         for i in range(len(OL)): # for each output data
+            if i % 1000 == 0: print(str(i) + ' / ' + str(len(OL)))
+            
             for j in range(len(OL[0])): # for each value of output data
                 result += str(OL[i][j]) + '\t'
             result += '\n'
 
-        f = open(testOutputFileName, 'w')
+            # flush every 10,000 steps
+            if i % 10000 == 0:
+                f.write(result)
+                result = ''
+
+        # final append
         f.write(result)
         f.close()
 
@@ -417,6 +428,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         np.set_printoptions(edgeitems=10000, linewidth=1000000)
         
         for i in range(inputSize):
+            if i % 1000 == 0: print(str(i) + ' / ' + str(inputSize))
 
             # validation for data whose value of valid array is 1
             if validArray[i] == 1:
