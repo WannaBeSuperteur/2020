@@ -1,0 +1,10 @@
+FI
+D 40 relu
+Drop 0.25
+D 40 relu
+Drop 0.25
+D 40 relu
+Drop 0.25
+D 40 relu
+DO sigmoid
+OP adam0 0.001
