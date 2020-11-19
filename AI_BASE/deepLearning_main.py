@@ -179,17 +179,23 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
     for i in range(len(fl)): fl[i] = fl[i].split('\n')[0]
 
     normalizeName = None
+    validInterval = 1
 
     # extract configuration
     # trainInput     : train input data file name
     # trainOutput    : train output data file name
     # testInput      : test input data file name
     for i in range(len(fl)):
-        configSplit = fl[i].split(' ') # split
+        configSplit = fl[i].split('\n')[0].split(' ') # split
+
+        # normalize info file name
         if configSplit[0] == 'normalizeName':
             normalizeName = configSplit[1]
             if normalizeName == 'None': normalizeName = None
-            break
+
+        # validation interval
+        elif configSplit[0] == 'validInterval':
+            validInterval = int(configSplit[1])
 
     # read normalization info file
     if normalizeName != None and trainO != None:
@@ -349,7 +355,12 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         validArray = []
         for i in range(inputSize): validArray.append(0)
         while sum(validArray) < validSize:
-            validArray[random.randint(0, inputSize-1)] = 1
+
+            # start index for validation
+            validStartIndex = int(random.randint(0, inputSize-1) / validInterval) * validInterval
+
+            # set data[validStartIndex : validStartIndex + validInterval] as validation data
+            for i in range(validStartIndex, validStartIndex + validInterval): validArray[i] = 1
 
         # make train and validation data
         # _TrainO, _ValidO : sigmoid((originalOutput - meanOriginalOutput)/stdOriginalOutput)
