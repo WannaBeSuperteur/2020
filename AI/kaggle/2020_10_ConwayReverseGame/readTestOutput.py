@@ -45,7 +45,9 @@ def readTestOutput(idList, dataSize, testResult, resultFileName):
         resultArray.append(resultValue)
 
     # make the result
+    final = open(resultFileName, 'a')
     finalResult = ''
+    
     for i in range(int(len(resultList)/dataSize)): # for each output board
         if i % 100 == 0: print('make result : ' + str(i))
         
@@ -55,13 +57,16 @@ def readTestOutput(idList, dataSize, testResult, resultFileName):
             if j < dataSize-1: finalResult += ','
         finalResult += '\n'
 
-    # write to the result file
-    final = open(resultFileName, 'w')
-    final.write(finalResult)
+        # write to the result file
+        final.write(finalResult)
+        finalResult = ''
+
+    # close file
     final.close()
 
 if __name__ == '__main__':
-    
+
+    # read array from final_X.csv
     try:
         sub0 = RD.loadArray('final_0.csv', ',')
         sub1 = RD.loadArray('final_1.csv', ',')
@@ -74,6 +79,12 @@ if __name__ == '__main__':
         readTestOutput('test_id_sub_2.txt', 400, 'test_output_n_sub_2.txt', 'final_2.csv')
         readTestOutput('test_id_sub_3.txt', 400, 'test_output_n_sub_3.txt', 'final_3.csv')
         readTestOutput('test_id_sub_4.txt', 400, 'test_output_n_sub_4.txt', 'final_4.csv')
+        
+        sub0 = RD.loadArray('final_0.csv', ',')
+        sub1 = RD.loadArray('final_1.csv', ',')
+        sub2 = RD.loadArray('final_2.csv', ',')
+        sub3 = RD.loadArray('final_3.csv', ',')
+        sub4 = RD.loadArray('final_4.csv', ',')
 
     # convert into 0 or 1 according to threshold
     threshold = 0.41
