@@ -49,7 +49,7 @@ if __name__ == '__main__':
 
         validRate = 0.0 # validation rate for deep learning
         deviceName = 'cpu:0'
-        epoch = 5
+        epoch = 30
 
         # file names and configurations
         if use_n_sub == True: # use n-sub mode
@@ -141,5 +141,5 @@ if __name__ == '__main__':
 
         # print MAE
         if validRate > 0:
-            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, 20, 9) # use n-sub mode
-            else: MAE.readValidReport(validReport, thresholdList, 20, 400) # do not use n-sub mode ( -> use normal mode)
+            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, 20, 1*1) # use n-sub mode
+            else: MAE.readValidReport(validReport, thresholdList, 20, 20*20) # do not use n-sub mode ( -> use normal mode)

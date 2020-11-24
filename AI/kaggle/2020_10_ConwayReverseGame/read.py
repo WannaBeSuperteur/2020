@@ -183,11 +183,12 @@ if __name__ == '__main__':
 
     # for normal (not n-sub) mode
     readAllSubs()
+    outputSize = 1 # number of rows/columns of output data
 
     # for n-sub mode
     # it takes 2~3 hours in total
-    #makeData(1, 5, 3, 20, 1000, False) (temp)
-    #makeData(2, 7, 3, 20, 1000, False) (temp)
-    #makeData(3, 9, 3, 20, 1000, False) (temp)
-    makeData(4, 11, 3, 20, 1000, False)
-    makeData(5, 13, 3, 20, 1000, False)
+    makeData(1, 5, outputSize, 20, 1000, False)
+    makeData(2, 7, outputSize, 20, 1000, False)
+    makeData(3, 9, outputSize, 20, 1000, False)
+    makeData(4, 11, outputSize, 20, 1000, False)
+    makeData(5, 13, outputSize, 20, 1000, False)

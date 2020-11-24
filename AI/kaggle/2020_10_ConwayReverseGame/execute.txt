@@ -1,5 +1,5 @@
 read.py
--> answer.py (validRate=0.05, MAE_for_CRGoL.py is executed inside for validation)
+-> answer.py (validRate=0.05, MAE_for_CRGoL.py is executed inside for validation) -> to check optimal threshold (usually near to 0.4)
 -> readBoard.py
 -> answer.py (validRate=0.0)
 -> readTestOutput.py (to get final test output)

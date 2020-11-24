@@ -79,6 +79,9 @@ def readTestOutput(idList, dataSize, testResult, resultFileName, weight):
     final.close()
 
 if __name__ == '__main__':
+    
+    size = 20 # number of rows/columns of input matrix
+    inputLength = size * size # length of input vector
 
     # read array from final_X.csv
     try:
@@ -89,11 +92,11 @@ if __name__ == '__main__':
         sub4 = RD.loadArray('final_4.csv', ',')
     except:
         weight = [1, 1, 1, 1, 2, 1, 1, 1, 1]
-        readTestOutput('test_id_sub_0.txt', 400, 'test_output_n_sub_0.txt', 'final_0.csv', weight)
-        readTestOutput('test_id_sub_1.txt', 400, 'test_output_n_sub_1.txt', 'final_1.csv', weight)
-        readTestOutput('test_id_sub_2.txt', 400, 'test_output_n_sub_2.txt', 'final_2.csv', weight)
-        readTestOutput('test_id_sub_3.txt', 400, 'test_output_n_sub_3.txt', 'final_3.csv', weight)
-        readTestOutput('test_id_sub_4.txt', 400, 'test_output_n_sub_4.txt', 'final_4.csv', weight)
+        readTestOutput('test_id_sub_0.txt', inputLength, 'test_output_n_sub_0.txt', 'final_0.csv', weight)
+        readTestOutput('test_id_sub_1.txt', inputLength, 'test_output_n_sub_1.txt', 'final_1.csv', weight)
+        readTestOutput('test_id_sub_2.txt', inputLength, 'test_output_n_sub_2.txt', 'final_2.csv', weight)
+        readTestOutput('test_id_sub_3.txt', inputLength, 'test_output_n_sub_3.txt', 'final_3.csv', weight)
+        readTestOutput('test_id_sub_4.txt', inputLength, 'test_output_n_sub_4.txt', 'final_4.csv', weight)
         
         sub0 = RD.loadArray('final_0.csv', ',')
         sub1 = RD.loadArray('final_1.csv', ',')

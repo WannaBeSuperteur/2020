@@ -170,10 +170,13 @@ def readValidReport(fn, thresholdList, size, n):
     f.close()
 
 if __name__ == '__main__':
-    thresholdList = []
+    thresholdList = [] # list of thresholds to use
+    outputRows = 1 # number of rows of output
+    outputLength = outputRows * outputRows # length of output vector
+    
     for i in range(1, 100): thresholdList.append(round(0.01*i, 6))
-    readValidReport('valid_report_n_sub_0.txt', thresholdList, 20, 3*3)
-    readValidReport('valid_report_n_sub_1.txt', thresholdList, 20, 3*3)
-    readValidReport('valid_report_n_sub_2.txt', thresholdList, 20, 3*3)
-    readValidReport('valid_report_n_sub_3.txt', thresholdList, 20, 3*3)
-    readValidReport('valid_report_n_sub_4.txt', thresholdList, 20, 3*3)
+    readValidReport('valid_report_n_sub_0.txt', thresholdList, 20, outputLength)
+    readValidReport('valid_report_n_sub_1.txt', thresholdList, 20, outputLength)
+    readValidReport('valid_report_n_sub_2.txt', thresholdList, 20, outputLength)
+    readValidReport('valid_report_n_sub_3.txt', thresholdList, 20, outputLength)
+    readValidReport('valid_report_n_sub_4.txt', thresholdList, 20, outputLength)
