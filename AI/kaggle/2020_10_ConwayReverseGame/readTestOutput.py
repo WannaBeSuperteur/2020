@@ -1,4 +1,5 @@
 import sys
+import math
 import numpy as np
 sys.path.insert(0, '../../../../AI_BASE')
 
@@ -23,7 +24,13 @@ import MAE_for_CRGoL as MAE
 # dataSize       : size of each test data ( = 20*20 = 400)
 # testResult     : test result file name
 # resultFileName : final result file name
-def readTestOutput(idList, dataSize, testResult, resultFileName):
+# weight         : weight matrix, same as MAE_for_CRGoL.py (ex: [1, 1, 1, 1, 2, 1, 1, 1, 1])
+# n is derived from the size of array 'weight'
+def readTestOutput(idList, dataSize, testResult, resultFileName, weight):
+
+    size = int(math.sqrt(dataSize)) # number of rows/columns in original board
+    n = len(weight) # number of values in array 'weight'
+    rows = int(math.sqrt(n)) # number of rows in test output
 
     # read ID list
     f_id = open(idList, 'r')
@@ -40,8 +47,15 @@ def readTestOutput(idList, dataSize, testResult, resultFileName):
 
     resultArray = [] # list of results (array)
     for i in range(len(resultList)):
-        resultValues = resultList[i].split('\n')[0].split('\t') # result value array (with output size)
-        resultValue = float(resultValues[int(len(resultValues)/2)]) # result value
+        if i % 10000 == 0: print(str(i) + ' / ' + str(len(resultList)))
+
+        # index of the line (indexed by i) for the board
+        board_i = i % (size * size)
+        board_i_y = int(board_i / size) # y-axis value of index i of the board
+        board_i_x = board_i % size # x-axis value of index i of the board
+
+        # find weighted prediction
+        (resultValue, refList, refVals, refWeights) = MAE.getWeightedPrediction(n, i, size, board_i_y, board_i_x, weight, False, resultList)
         resultArray.append(resultValue)
 
     # make the result
@@ -74,11 +88,12 @@ if __name__ == '__main__':
         sub3 = RD.loadArray('final_3.csv', ',')
         sub4 = RD.loadArray('final_4.csv', ',')
     except:
-        readTestOutput('test_id_sub_0.txt', 400, 'test_output_n_sub_0.txt', 'final_0.csv')
-        readTestOutput('test_id_sub_1.txt', 400, 'test_output_n_sub_1.txt', 'final_1.csv')
-        readTestOutput('test_id_sub_2.txt', 400, 'test_output_n_sub_2.txt', 'final_2.csv')
-        readTestOutput('test_id_sub_3.txt', 400, 'test_output_n_sub_3.txt', 'final_3.csv')
-        readTestOutput('test_id_sub_4.txt', 400, 'test_output_n_sub_4.txt', 'final_4.csv')
+        weight = [1, 1, 1, 1, 2, 1, 1, 1, 1]
+        readTestOutput('test_id_sub_0.txt', 400, 'test_output_n_sub_0.txt', 'final_0.csv', weight)
+        readTestOutput('test_id_sub_1.txt', 400, 'test_output_n_sub_1.txt', 'final_1.csv', weight)
+        readTestOutput('test_id_sub_2.txt', 400, 'test_output_n_sub_2.txt', 'final_2.csv', weight)
+        readTestOutput('test_id_sub_3.txt', 400, 'test_output_n_sub_3.txt', 'final_3.csv', weight)
+        readTestOutput('test_id_sub_4.txt', 400, 'test_output_n_sub_4.txt', 'final_4.csv', weight)
         
         sub0 = RD.loadArray('final_0.csv', ',')
         sub1 = RD.loadArray('final_1.csv', ',')
@@ -87,7 +102,7 @@ if __name__ == '__main__':
         sub4 = RD.loadArray('final_4.csv', ',')
 
     # convert into 0 or 1 according to threshold
-    threshold = 0.41
+    threshold = 0.4
     for i in [sub0, sub1, sub2, sub3, sub4]:
         for j in range(len(i)):
             i[j][0] = int(i[j][0])

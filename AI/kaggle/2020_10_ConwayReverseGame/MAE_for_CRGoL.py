@@ -18,16 +18,67 @@ def xyToIndex(board_i_y, board_i_x, i, size):
     i_start = int(i / (size*size)) * (size*size)
     return i_start + board_i_y * size + board_i_x
 
+# get weighted prediction
+# n               : number of cells in test output array ( = rows * rows = len(weight))
+# i               : index
+# size            : board size (20 for this problem)
+# board_i_y       : y-axis value of index i of the board
+# board_i_x       : x-axis value of index i of the board
+# weight          : weight values
+# readValidReport : reading valid report (True or False)
+# fl              : file.readlines() (valid report : valid_report_n_sub_X.txt, or test output : test_output_n_sub_X.txt)
+def getWeightedPrediction(n, i, size, board_i_y, board_i_x, weight, readValidReport, fl):
+
+    # compute prediction using weighted average (weight: defined in array 'weight')
+    weightedPred = 0.0
+    sumWeight = 0.0
+
+    # number of rows in each output array (n = rows * rows board)
+    rows = int(math.sqrt(n)) # number of rows in test output
+    outputWS = int((rows-1)/2) # output window size
+    
+    y_start = board_i_y - outputWS
+    x_start = board_i_x - outputWS
+
+    refList = []
+    refVals = []
+    refWeights = []
+        
+    for j in range(max(0, board_i_y - outputWS), min(size, board_i_y + outputWS + 1)):
+        for k in range(max(0, board_i_x - outputWS), min(size, board_i_x + outputWS + 1)):
+
+            # read predicted output of this index
+            outputIndex = xyToIndex(j, k, i, size)
+
+            # find output values (= valid/test prediction)
+            if readValidReport == True: # valid prediction output
+                pred_ = fl[outputIndex].split('pred = [')[1].split(']')[0]
+                output = np.array(' '.join(pred_.split()).split(' ')).astype('float')
+            else: # test prediction output
+                
+                # result value array (with output size)
+                output = fl[outputIndex].split('\n')[0].split('\t')
+                output = output[:len(output)-1]
+                output = np.array(output).astype('float')
+
+            # update weighted prediction
+            refPosition = (j - y_start) * rows + (k - x_start) # position of the location width index (j, k) in array 'weight'
+             
+            weightedPred += weight[refPosition] * output[n - 1 - refPosition]
+            sumWeight += weight[refPosition]
+
+            refList.append(outputIndex)
+            refVals.append(round(output[n - 1 - refPosition], 6))
+            refWeights.append(weight[refPosition])
+
+    return (weightedPred / sumWeight, refList, refVals, refWeights)
+
 # available for BINARY (0 or 1) values only
 # fn            : file name
 # thresholdList : list for thresholds (above->1, below->0)
 # size          : input board size (width or height = 20)
 # n             : number of values in each array pred = [...] or real = [...]
 def readValidReport(fn, thresholdList, size, n):
-
-    # number of rows in each output array (rows * rows board)
-    rows = int(math.sqrt(n)) # number of rows
-    outputWS = int((rows-1)/2) # output window size
 
     # read validation report
     f = open(fn, 'r')
@@ -54,12 +105,11 @@ def readValidReport(fn, thresholdList, size, n):
     center = int((n-1)/2)
     
     for i in range(lines):
-        if i % 50 == 0: print(i)
 
-        # index of the line(indexed by i) for the board
+        # index of the line (indexed by i) for the board
         board_i = i % (size * size)
-        board_i_y = int(board_i / size) # y-axis value for the board
-        board_i_x = board_i % size # x-axis value for the board
+        board_i_y = int(board_i / size) # y-axis value of index i of the board
+        board_i_x = board_i % size # x-axis value of index i of the board
         
         # read predicted and real values
         pred = fl[i].split('pred = [')[1].split(']')[0] # pred = [...]
@@ -69,39 +119,10 @@ def readValidReport(fn, thresholdList, size, n):
         predSplit = np.array(' '.join(pred.split()).split(' ')).astype('float')
         realSplit = np.array(' '.join(real.split()).split(' ')).astype('float')
 
-        # computed prediction using weighted average (weight: defined in array 'weight')
-        weightedPred = 0.0
-        sumWeight = 0.0
-
-        # to index weight array
-        y_start = board_i_y - outputWS
-        x_start = board_i_x - outputWS
-
-        refList = []
-        refVals = []
-        refWeights = []
-        
-        for j in range(max(0, board_i_y - outputWS), min(size, board_i_y + outputWS + 1)):
-            for k in range(max(0, board_i_x - outputWS), min(size, board_i_x + outputWS + 1)):
-
-                # read predicted output of this index
-                outputIndex = xyToIndex(j, k, i, size)
-
-                pred_ = fl[outputIndex].split('pred = [')[1].split(']')[0]
-                predSplit_ = np.array(' '.join(pred_.split()).split(' ')).astype('float')
-
-                # update weighted prediction
-                refPosition = (j - y_start) * rows + (k - x_start) # position of the location width index (j, k) in array 'weight'
-                
-                weightedPred += weight[refPosition] * predSplit_[n - 1 - refPosition]
-                sumWeight += weight[refPosition]
-
-                refList.append(outputIndex)
-                refVals.append(round(predSplit_[n - 1 - refPosition], 6))
-                refWeights.append(weight[refPosition])
+        # find weighted prediction
+        (weightedPred, refList, refVals, refWeights) = getWeightedPrediction(n, i, size, board_i_y, board_i_x, weight, True, fl)
 
         # divide by sum of the weights and use it as prediction
-        weightedPred /= sumWeight
         weightedAvgResult += ('[' + str(i) + '] refList=' + str(refList) + ' refVals=' + str(refVals) + ' refWeights=' + str(refWeights)
                               + ' weightedPred=' + str(round(weightedPred, 6)) + '\n')
 
