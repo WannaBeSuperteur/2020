@@ -80,7 +80,7 @@ def readTestOutput(idList, dataSize, testResult, resultFileName, weight):
 
 if __name__ == '__main__':
     
-    size = 20 # number of rows/columns of input matrix
+    size = 20 # the number of rows/columns in each input data
     inputLength = size * size # length of input vector
 
     # read array from final_X.csv
@@ -91,7 +91,7 @@ if __name__ == '__main__':
         sub3 = RD.loadArray('final_3.csv', ',')
         sub4 = RD.loadArray('final_4.csv', ',')
     except:
-        weight = [1, 1, 1, 1, 2, 1, 1, 1, 1]
+        weight = [1]
         readTestOutput('test_id_sub_0.txt', inputLength, 'test_output_n_sub_0.txt', 'final_0.csv', weight)
         readTestOutput('test_id_sub_1.txt', inputLength, 'test_output_n_sub_1.txt', 'final_1.csv', weight)
         readTestOutput('test_id_sub_2.txt', inputLength, 'test_output_n_sub_2.txt', 'final_2.csv', weight)

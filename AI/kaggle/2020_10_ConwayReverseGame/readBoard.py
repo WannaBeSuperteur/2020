@@ -78,10 +78,13 @@ def readBoard(range_, fileName, way, splitter, startCol):
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=1000, linewidth=10000)
 
+    outputSize = 1 # the number of rows/columns in each output data
+    outputLenStr = str(outputSize * outputSize) # the length of each output vector
+
     for i in range(5):
         # readBoard('S~400', 'train_input_n_sub_' + str(i) + '.txt', 'square', 'Tab')
         # readBoard('S~400', 'train_output_n_sub_' + str(i) + '.txt', 'square', 'Tab')
-        readBoard('S~9', 'train_input_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
-        readBoard('S~9', 'train_output_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
-        readBoard('S~9', 'test_input_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
-        readBoard('S~9', 'final_' + str(i) + '.csv', 'square', ',', 1)
+        readBoard('S~' + outputLenStr, 'train_input_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
+        readBoard('S~' + outputLenStr, 'train_output_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
+        readBoard('S~' + outputLenStr, 'test_input_sub_' + str(i) + '.txt', 'square', 'Tab', 0)
+        readBoard('S~' + outputLenStr, 'final_' + str(i) + '.csv', 'square', ',', 1)

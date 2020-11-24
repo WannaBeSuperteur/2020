@@ -98,7 +98,7 @@ def readValidReport(fn, thresholdList, size, n):
     lines = len(fl)-9 # number of lines
 
     # weight for each cell (left-top ~ right-bottom of output board)
-    weight = [1, 1, 1, 1, 2, 1, 1, 1, 1]
+    weight = [1]
     weightedAvgResult = str(weight) + '\n' # to write valid_report_n_sub_X_weightedAvg.txt
 
     # center of output vector
@@ -171,12 +171,13 @@ def readValidReport(fn, thresholdList, size, n):
 
 if __name__ == '__main__':
     thresholdList = [] # list of thresholds to use
-    outputRows = 1 # number of rows of output
-    outputLength = outputRows * outputRows # length of output vector
+    size = 20 # the number of rows/columns in each input data
+    outputSize = 1 # the number of rows/columns in each output data
+    outputLength = outputSize * outputSize # length of output vector
     
     for i in range(1, 100): thresholdList.append(round(0.01*i, 6))
-    readValidReport('valid_report_n_sub_0.txt', thresholdList, 20, outputLength)
-    readValidReport('valid_report_n_sub_1.txt', thresholdList, 20, outputLength)
-    readValidReport('valid_report_n_sub_2.txt', thresholdList, 20, outputLength)
-    readValidReport('valid_report_n_sub_3.txt', thresholdList, 20, outputLength)
-    readValidReport('valid_report_n_sub_4.txt', thresholdList, 20, outputLength)
+    readValidReport('valid_report_n_sub_0.txt', thresholdList, size, outputLength)
+    readValidReport('valid_report_n_sub_1.txt', thresholdList, size, outputLength)
+    readValidReport('valid_report_n_sub_2.txt', thresholdList, size, outputLength)
+    readValidReport('valid_report_n_sub_3.txt', thresholdList, size, outputLength)
+    readValidReport('valid_report_n_sub_4.txt', thresholdList, size, outputLength)

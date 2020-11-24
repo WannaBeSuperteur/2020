@@ -1,2 +1,2 @@
 normalizeName None
-validInterval 400
+validInterval 1

@@ -47,7 +47,7 @@ import deepLearning_main as DL
 # train_id, train_input, train_output, test_id and test_input
 # train_id_sub_X, train_input_sub_X, train_output_sub_X
 # test_id_sub_X, test_input_sub_X
-def readAllSubs():
+def readAllSubs(size):
     
     # read train and test data
     train = RD.loadArray('train.csv', ',')
@@ -68,17 +68,17 @@ def readAllSubs():
         _.close()
         
     except:
-        # train.txt -> id, delta, start1~400, stop1~400 -> train_id.txt     : extract id and delta
-        #                                               -> train_input.txt  : extract delta and stop1~400
-        #                                               -> train_output.txt : extract delta and start1~400
+        # train.txt -> id, delta, start1~400, stop1~400 (if size=20) -> train_id.txt     : extract id and delta
+        #                                                            -> train_input.txt  : extract delta and stop1~400 (if size=20)
+        #                                                            -> train_output.txt : extract delta and start1~400 (if size=20)
         RD.saveArray('train_id.txt', np.array(train)[:, 0:2])
-        RD.saveArray('train_input.txt', np.concatenate([np.array(train)[:, 1:2], np.array(train)[:, 402:802]], axis=1))
-        RD.saveArray('train_output.txt', np.array(train)[:, 1:402])
+        RD.saveArray('train_input.txt', np.concatenate([np.array(train)[:, 1:2], np.array(train)[:, size*size+2:2*size*size+2]], axis=1))
+        RD.saveArray('train_output.txt', np.array(train)[:, 1:size*size+2])
 
-        # test.txt  -> id, delta, stop1~400             -> test_id.txt      : extract id and delta
-        #                                               -> test_input.txt   : extract delta and stop1~400
+        # test.txt  -> id, delta, stop1~400 (if size=20)             -> test_id.txt      : extract id and delta
+        #                                                            -> test_input.txt   : extract delta and stop1~400 (if size=20)
         RD.saveArray('test_id.txt', np.array(test)[:, 0:2])
-        RD.saveArray('test_input.txt', np.array(test)[:, 1:402])
+        RD.saveArray('test_input.txt', np.array(test)[:, 1:size*size+2])
 
     # split train and test data into files
     try:
@@ -181,14 +181,16 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=1000, linewidth=10000)
 
+    size = 20 # the number of rows/columns in each input data
+    outputSize = 1 # the number of rows/columns in each output data
+
     # for normal (not n-sub) mode
-    readAllSubs()
-    outputSize = 1 # number of rows/columns of output data
+    readAllSubs(size)
 
     # for n-sub mode
     # it takes 2~3 hours in total
-    makeData(1, 5, outputSize, 20, 1000, False)
-    makeData(2, 7, outputSize, 20, 1000, False)
-    makeData(3, 9, outputSize, 20, 1000, False)
-    makeData(4, 11, outputSize, 20, 1000, False)
-    makeData(5, 13, outputSize, 20, 1000, False)
+    makeData(1, 5, outputSize, size, 1000, False)
+    makeData(2, 7, outputSize, size, 1000, False)
+    makeData(3, 9, outputSize, size, 1000, False)
+    makeData(4, 11, outputSize, size, 1000, False)
+    makeData(5, 13, outputSize, size, 1000, False)
