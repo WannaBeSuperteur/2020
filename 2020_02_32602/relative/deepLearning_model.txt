@@ -1,0 +1,10 @@
+FI
+R 10 10
+C2D 32 3 3 relu
+MP 2
+F
+D 50 relu
+D 50 relu
+D 50 relu
+DO sigmoid
+OP adam0 0.001

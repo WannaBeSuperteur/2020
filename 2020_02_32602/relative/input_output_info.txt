@@ -1,0 +1,9 @@
+trainInput.txt
+trainOutput_0_Comp.txt
+trainOutput_1_Move.txt
+trainOutput_2_Cost.txt
+testInput.txt
+testOutput_0_Comp.txt
+testOutput_1_Move.txt
+testOutput_2_Cost.txt
+10

@@ -1,0 +1,9 @@
+MAE       for comparison : 0.10098801
+MAE       for move       : 0.09114517
+MAE       for total cost : 0.10559473
+MSE       for comparison : 0.03867448
+MSE       for move       : 0.02081677
+MSE       for total cost : 0.04169834
+accuracy0 for comparison : 0.888
+accuracy1 for move       : 0.604
+accuracy2 for total cost : 0.732
