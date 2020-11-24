@@ -47,6 +47,11 @@ def invSigmoid(x):
         if x < 0.5: return -15
         else: return 15
 
+# exceed
+def exceed(array, i, j):
+    if i < 0 or j < 0 or i >= len(array) or j >= len(array[0]): return True
+    return False
+
 # 2차원 배열의 일부를 복사한 후 Flatten시켜 반환하는 함수
 # 원래 2차원 배열을 array라 할 때, array[i][j]에서 i, j를 각각 index i, index j라 하자.
 # 이때 복사할 범위의 index i는 iStart ~ iEnd-1, index j는 jStart ~ jEnd-1이다.
@@ -318,3 +323,19 @@ def getOptimizer(modelInfo):
                                                                      momentum=float(infoSplit[3]), nesterov=False)
             
             return op
+
+# modelInfo에 따라 loss 반환
+# mean_squared_error, mean_absolute_error, mean_absolute_percentage_error, mean_squared_logarithmic_error, ..., etc.
+# refer to https://keras.io/ko/losses/
+def getLoss(modelInfo):
+    op = None
+    
+    for i in range(len(modelInfo)):
+        info = modelInfo[i].split('\n')[0]
+        infoSplit = info.split(' ')
+
+        # specify optimizer
+        if infoSplit[0] == 'LOSS': return infoSplit[1]
+
+    # return mean_squared_error as default
+    return 'mean_squared_error'

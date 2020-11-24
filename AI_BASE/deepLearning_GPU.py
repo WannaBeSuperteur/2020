@@ -7,6 +7,15 @@ from tensorflow import keras
 from tensorflow.keras.models import Model, model_from_json
 from keras import backend as K
 
+# print model configuration
+def printModelConfig(model, optimi, loss):
+    model.summary()
+    print('optimizer:')
+    print(optimi)
+    print('\nloss function:')
+    print(loss)
+    print('\n')
+
 ### 0. 딥러닝을 위한 Neural Network 생성 함수 ###
 # modelInfo: 모델에 대한 정보를 저장한 배열
 #            각 원소는 keras.layers.XXX(...) 형식임
@@ -16,7 +25,7 @@ from keras import backend as K
 # isPrint  : 모델 정보 출력 여부
 def create_model(modelInfo, optimi, loss, isPrint):
     model = tf.keras.Sequential(modelInfo)
-    if isPrint: model.summary()
+    if isPrint: printModelConfig(model, optimi, loss)
     model.compile(optimizer=optimi, loss=loss, metrics=['accuracy'])
     return model
 
@@ -77,14 +86,16 @@ def deepLearning(NN, op, loss, inputs, outputs, saveName, epoch, dataPrint, mode
     # 모델 정보 출력
     if modelPrint:
         print('\n\n< Neural Network의 구조 >')
-        model.summary()
+        printModelConfig(model, op, loss)
             
     learning(model, inputs, outputs, saveName, epoch, deviceName) # 모델 저장은 이 함수에서 이루어짐
 
 ### 3. 파일로부터 학습된 모델을 불러오는 함수 ###
+# op      : optimizer
+# loss    : loss
 # saveName: Neural Network 모델 정보 파일(.json, .h5)의 이름
 # isPrint : 관련 정보 출력 여부
-def deepLearningModel(saveName, isPrint):
+def deepLearningModel(saveName, op, loss, isPrint):
 
     # 기존에 학습한 결과 불러오기
     jsonFile = open(saveName + '.json', 'r')
@@ -93,10 +104,10 @@ def deepLearningModel(saveName, isPrint):
     newModel = tf.keras.models.model_from_json(loaded_model_json)
     newModel.load_weights(saveName + '.h5')
 
-    if isPrint: newModel.summary()
+    if isPrint: printModelConfig(newModel, op, loss)
 
     # 모델 컴파일하기
-    newModel.compile(optimizer=tf.keras.optimizers.Adam(0.001), loss='mean_squared_error', metrics=['accuracy'])
+    newModel.compile(optimizer=op, loss=loss, metrics=['accuracy'])
     return newModel
 
 ### 4. 학습된 모델에 값을 입력하여 출력을 구하는 함수 ###

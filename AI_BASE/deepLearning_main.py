@@ -261,10 +261,11 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         if trainI != None and trainO != None:
             NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
             op = helper.getOptimizer(modelInfo) # optimizer
+            loss = helper.getLoss(modelInfo) # loss
         
         try: # try reading test.h5 and test.json
             print('[20] reading model [ ' + modelName + ' ]...')
-            newModel = deepLearning_GPU.deepLearningModel(modelName, True)
+            newModel = deepLearning_GPU.deepLearningModel(modelName, op, loss, True)
             testO = deepLearning_GPU.modelOutput(newModel, testI)
             
         except: # do learning if test.h5 and test.json does not exist
@@ -275,7 +276,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
             deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, modelName, epoch, False, True, deviceName)
 
             print('[22] reading learned model [ ' + modelName + ' ]...')
-            newModel = deepLearning_GPU.deepLearningModel(modelName, True)
+            newModel = deepLearning_GPU.deepLearningModel(modelName, op, loss, True)
 
             # get test output if testI is not None
             if testI == None:
@@ -390,14 +391,15 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         # NN and optimizer
         NN = helper.getNN(modelInfo, _TrainI, _TrainO) # Neural Network
         op = helper.getOptimizer(modelInfo) # optimizer
+        loss = helper.getLoss(modelInfo) # loss
 
         # output for validation        
         try: # try reading the validation model
-            validModel = deepLearning_GPU.deepLearningModel(newModelName, True)
+            validModel = deepLearning_GPU.deepLearningModel(newModelName, op, loss, True)
             predValidO = deepLearning_GPU.modelOutput(validModel, _ValidI)
         except: # do learning if the validation model does not exist
-            deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', _TrainI, _TrainO, newModelName, epoch, False, True, deviceName)
-            validModel = deepLearning_GPU.deepLearningModel(newModelName, True)
+            deepLearning_GPU.deepLearning(NN, op, loss, _TrainI, _TrainO, newModelName, epoch, False, True, deviceName)
+            validModel = deepLearning_GPU.deepLearningModel(newModelName, op, loss, True)
             predValidO = deepLearning_GPU.modelOutput(validModel, _ValidI)
 
         ##############################
