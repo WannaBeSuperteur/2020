@@ -51,23 +51,47 @@ normalizeName dddd.txt
 
 ### ```modelConfig``` file (for deep learning)
 EXAMPLE - Refer to ```modelConfig.txt``` and ```modelConfig_example.txt```.
+
+<strong>for model structure</strong>
 ```
-I 60                   (keras.layers.InputLayer(input_shape=(60,)))
-I1 60                  (keras.layers.InputLayer(input_shape=(60, 1)))
-FI                     (keras.layers.Flatten(input_shape=(len(trainI[0]),)))
-F                      (keras.layers.Flatten())
-D 16 relu              (keras.layers.Dense(16, activation='relu'))
-DO sigmoid             (keras.layers.Dense(len(trainO[0]), activation='sigmoid'))
-Drop 0.25              (keras.layers.Dropout(0.25))
-C1DI 32 3 60 relu      (keras.layers.Conv1D(filters=32, kernel_size=3, input_shape=(60, 1), activation='relu'))
-C1D 32 3 relu          (keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu'))
-MP1D 2                 (keras.layers.MaxPooling1D(pool_size=2))
-C2DI 32 3 3 12 12 relu (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
-C2D 32 3 3 relu        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
-MP2D 2                 (keras.layers.MaxPooling2D(pool_size=2))
-R1 12                  (keras.layers.Reshape((12, 1), input_shape=(12,))
-R2 12 12               (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
+I 60                        (keras.layers.InputLayer(input_shape=(60,)))
+I1 60                       (keras.layers.InputLayer(input_shape=(60, 1)))
+FI                          (keras.layers.Flatten(input_shape=(len(trainI[0]),)))
+F                           (keras.layers.Flatten())
+D 16 relu                   (keras.layers.Dense(16, activation='relu'))
+DO sigmoid                  (keras.layers.Dense(len(trainO[0]), activation='sigmoid'))
+Drop 0.25                   (keras.layers.Dropout(0.25))
+C1DI 32 3 60 relu           (keras.layers.Conv1D(filters=32, kernel_size=3, input_shape=(60, 1), activation='relu'))
+C1DI 32 3 60 relu same      (keras.layers.Conv1D(filters=32, kernel_size=3, input_shape=(60, 1), activation='relu', padding='same'))
+C1D 32 3 relu               (keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu'))
+C1D 32 3 relu same          (keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu', padding='same'))
+MP1D 2                      (keras.layers.MaxPooling1D(pool_size=2))
+C2DI 32 3 3 12 12 relu      (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
+C2DI 32 3 3 12 12 relu same (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu', padding='same'))
+C2D 32 3 3 relu             (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+C2D 32 3 3 relu same        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same'))
+MP2D 2                      (keras.layers.MaxPooling2D(pool_size=2))
+R1 12                       (keras.layers.Reshape((12, 1), input_shape=(12,))
+R2 12 12                    (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
+BN                          (keras.layers.BatchNormalization())
 ```
+
+<strong>for optimizer and loss</strong>
+```
+OP adadelta 0.001 0.95 1e-07    (tf.keras.optimizers.Adadelta(learning_rate=0.001, rho=0.95, epsilon=1e-07))
+OP adagrad 0.001 0.1 1e-07      (tf.keras.optimizers.Adagrad(learning_rate=0.001, initial_accumulator_value=0.1, epsilon=1e-07))
+OP adam0 0.001                  (tf.keras.optimizers.Adam(0.001))
+OP adam1 0.001 0.9 0.999 1e-07  (tf.keras.optimizers.Adam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07, amsgrad=False))
+OP adamax 0.001 0.9 0.999 1e-07 (tf.keras.optimizers.Adamax(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07))
+OP nadam 0.001 0.9 0.999 1e-07  (tf.keras.optimizers.Nadam(learning_rate=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-07))
+OP rmsprop 0.001 0.9 0.0 1e-07  (tf.keras.optimizers.RMSprop(learning_rate=0.001, rho=0.9, momentum=0.0, epsilon=1e-07))
+OP sgd 0.01 0.0                 (tf.keras.optimizers.SGD(learning_rate=0.01, momentum=0.0, nesterov=False))
+LOSS mean_absolute_error        (set loss as mean_absolute_error)
+```
+
+Loss can be omitted from the ```modelConfig``` file.
+
+Examples of loss: refer to https://keras.io/api/optimizers/
 
 ## 1. CODE FILE INFO
 From line 44 to 59 of ```main.py```, you can see:
