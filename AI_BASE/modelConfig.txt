@@ -1,6 +1,9 @@
 I 4
 D 10 relu
+BN
 D 10 relu
+BN
 D 10 relu
 DO sigmoid
 OP adam0 0.001
+LOSS mean_absolute_error
