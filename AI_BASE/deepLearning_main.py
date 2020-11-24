@@ -93,8 +93,13 @@ def writeTestResult(test_report, testOutputFileName, testOutputReal, normalizeNa
     denormalize(normalizeName, testSize, testCols, testO_pred, trainOutputAvg, trainOutputStddev)
 
     # assertion for length of data
-    assert(len(testO_pred) == len(testO_real))
-    assert(len(testO_pred[0]) == len(testO_real[0]))
+    try:
+        assert(len(testO_pred) == len(testO_real))
+        assert(len(testO_pred[0]) == len(testO_real[0]))
+    except:
+        print(' **** the number of rows or columns in PREDICTED test output file ( ' + testOutputFileName +
+              ' ) and REAL test output file ( ' + testOutputReal + ' ) are not the same. ****')
+        return
 
     for i in range(testSize):
         for j in range(testCols):
@@ -163,12 +168,11 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
     # test input data (set nullValue to 0)
     # set testI (array) as testFileName, if testFileName is an array
-    try:
-        is_testI_array = testFileName[0] # check if testFileName is an array
+    if isinstance(testFileName, list):
         testI = testFileName
 
     # set testI (array) as test data from the file named as testFileName
-    except:
+    else:
         if testFileName != None: testI = helper.getDataFromFile(testFileName)
 
     # read configuration file (to get normalization info)
@@ -295,6 +299,15 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         for i in range(len(OL)): # for each output data
             for j in range(len(OL[0])): # for each value of output data
                 OL[i][j] = helper.invSigmoid(OL[i][j])
+
+        # check if test output exists, before writing test output file
+        try:
+            test = open(testOutputFileName, 'r')
+            test.close()
+            print(' **** Delete test output file (' + testOutputFileName + ') first. ****')
+            return
+        except:
+            pass
 
         # write to file
         print('[24] writing test result to file [ ' + testOutputFileName + ' ]...')

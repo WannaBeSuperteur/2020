@@ -427,18 +427,16 @@ if __name__ == '__main__':
 
     ### meta info (file name) ###
     
-    trainName = 'data_trainPgn.txt'
-    testName = 'data_testPgn.txt'
+    trainName = 'TR_IO.txt'
+    testName = 'TE_I_deep.txt'
     ftype = 'txt'
 
     ### column settings ###
     
-    fcolsTrain = ['id', 'result0', 'result1', 'result2', 'welo', 'belo',
-                  'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7']
-    fcolsTest = ['id', 'result0', 'result1', 'result2',
-                 'score0', 'score1', 'score2', 'score3', 'score4', 'score5', 'score6', 'score7']
-    targetColName = 'belo'
-    exceptCols = ['id', 'welo'] # list of columns not used
+    fcolsTrain = ['input0', 'input1', 'input2', 'input3', 'output0', 'output1', 'output2']
+    fcolsTest = ['input0', 'input1', 'input2', 'input3']
+    targetColName = 'output0'
+    exceptCols = ['output1', 'output2'] # list of columns not used
 
     ### important settings ###
 
@@ -454,10 +452,10 @@ if __name__ == '__main__':
     usePCA = False
 
     # except for these columns for validation data (normaliy target column)
-    validationExceptCols = ['welo', 'belo']
+    validationExceptCols = ['output1', 'output2']
 
     # compare finalResult with column of this index of validation data file (according to targetColName)
-    validationCol = 5
+    validationCol = 4
 
     #################################
     ###                           ###
