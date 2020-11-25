@@ -1,4 +1,7 @@
 FI
+R2 13 13
+C2D 128 3 3 relu same
+F
 D 40 relu
 Drop 0.25
 D 40 relu
