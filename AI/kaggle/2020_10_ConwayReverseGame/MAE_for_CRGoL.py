@@ -90,6 +90,7 @@ def readValidReport(fn, thresholdList, size, n, use_n_sub):
     MAE = [] # MAE values (for each threshold)
     zeros = [] # count of number 0
     ones = [] # count of number 1
+    weightedAvgResult = '' # to write valid_report_n_sub_X_weightedAvg.txt
     
     for i in range(len(thresholdList)):
         MAE.append(0.0)
@@ -120,7 +121,7 @@ def readValidReport(fn, thresholdList, size, n, use_n_sub):
 
             # weight for each cell (left-top ~ right-bottom of output board)
             weight = [1]
-            weightedAvgResult = str(weight) + '\n' # to write valid_report_n_sub_X_weightedAvg.txt
+            weightedAvgResult += str(weight) + '\n'
 
             # center of output vector
             center = int((n-1)/2)
