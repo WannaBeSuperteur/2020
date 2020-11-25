@@ -186,8 +186,8 @@ def readValidReport(fn, thresholdList, size, n, use_n_sub):
     # print MAE
     result = '' # to write valid_report_n_sub_X_MAE.txt
     for i in range(len(thresholdList)):
-        result_ = ('MAE when threshold = ' + str(round(thresholdList[i], 6)) + '\tis ' + str(round(MAE[i], 6))
-                   + '\t0 in pred = ' + str(round(zeros[i], 6)) + ',\t1 in pred = ' + str(round(ones[i], 6)))
+        result_ = ('MAE when threshold =\t' + str(round(thresholdList[i], 6)) + '\tis\t' + str(round(MAE[i], 6))
+                   + '\t0 in pred =\t' + str(round(zeros[i], 6)) + '\t1 in pred =\t' + str(round(ones[i], 6)))
         print(result_)
         result += result_ + '\n'
 
