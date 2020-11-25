@@ -1,12 +1,14 @@
 FI
 R2 20 20
-C2DI 32 3 3 20 20 relu
-C2D 32 3 3 relu
-C2D 32 3 3 relu
-Drop 0.25
+C2DI 32 5 5 20 20 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 1 5 5 sigmoid same
 F
-Drop 0.25
-D 40 relu
-D 40 relu
-DO sigmoid
 OP adam0 0.001
+LOSS binary_crossentropy

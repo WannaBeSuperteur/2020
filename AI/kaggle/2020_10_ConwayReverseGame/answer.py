@@ -40,11 +40,12 @@ if __name__ == '__main__':
 
     # threshold list to find MAE
     thresholdList = []
-    for i in range(1, 100): thresholdList.append(round(0.01*i, 6))
+    for i in range(-20, 221): thresholdList.append(round(0.005*i, 6))
+    
     n = [5, 7, 9, 11, 13]
-    epochs = [5, 10, 15, 20, 25]
+    epochs = [5, 5, 5, 5, 5]
     size = 20 # the number of rows/columns in each input data
-    outputSize = 1 # the number of rows/columns in each output data
+    outputSize = 1 # the number of rows/columns in each output data (only for n-sub mode)
 
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
     for i in range(5): # temp
@@ -143,5 +144,5 @@ if __name__ == '__main__':
 
         # print MAE
         if validRate > 0:
-            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, size, outputSize*outputSize) # use n-sub mode
-            else: MAE.readValidReport(validReport, thresholdList, size, size*size) # do not use n-sub mode ( -> use normal mode)
+            if use_n_sub == True: MAE.readValidReport(validReport, thresholdList, size, outputSize*outputSize, True) # use n-sub mode
+            else: MAE.readValidReport(validReport, thresholdList, size, size*size, False) # do not use n-sub mode ( -> use normal mode)
