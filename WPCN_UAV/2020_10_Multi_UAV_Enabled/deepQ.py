@@ -20,11 +20,11 @@ def getS(UAV, n, l, ac, R):
 
     # q[n][l]       (q[n][l])  : the location of UAV l (1d array - x, y and h)
     # ac[n][l][k_l] (ac[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
-    # R[n][k_l]     (R[n][l])  : the average throughput of devices (for each device k),
+    # R[n][k_l]     (R[n])     : the average throughput of devices (for each device k),
     #                            in l-th cluster (1d array, for the devices in l-th cluster)
     q = f.getqFromUAV(UAV, n)
     
-    return [q, ac[n][l], R[n][l]]
+    return [q, ac[n][l], R[n]]
 
 # get action with e-greedy while e increases
 # with probability e, do the best action
