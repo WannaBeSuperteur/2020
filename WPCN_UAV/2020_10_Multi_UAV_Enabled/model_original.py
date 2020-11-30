@@ -166,7 +166,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
     # init UAV's location and IoT devices' location
     
-    # **** UAVs: [UAV0, UAV1, ...] ****
+    # **** UAVs: in the form of list : [UAV0, UAV1, ...] ****
     # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
     # each element of x0, y0 and h0 is THE POSITION for x, y and h at time t
     # where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
@@ -175,7 +175,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
     # that is, in the form of UAV[uav_No][x/y/h][time]
 
-    # **** clusters: [c0_deviceList, c1_deviceList, ...] ****
+    # **** clusters: in the form of list : [c0_deviceList, c1_deviceList, ...] ****
     # cK_deviceList: device list of cluster k,
     #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
 
@@ -208,23 +208,23 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             for i in range(L): # for each UAV = each cluster
                 
                 # get UAV i's next location
-                s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
+                s_i = dq.getS(UAVs[i], q, n, l, ac, k, R)
 
                 # choose action with e-greedy while e increases
                 e_ = episode / M # example
                 a = getActionWithE(Q, s_i, e_)
                 
-                nextLocation = getNextLocation(s_i, a, n):
+                nextLocation = getNextLocation(s_i, a, n)
 
                 # if UAV i files beyond the border
-                if beyondBorder(UAV[i], t, width, height) == True:
+                if beyondBorder(UAVs[i], t, width, height) == True:
                     
                     # UAV i stays at the border
-                    if UAV[i][0][t] < 0: UAV[i][0][t] = 0 # x value < 0
-                    elif UAV[i][0][t] > width: UAV[i][0][t] = width # x value > width
+                    if UAVs[i][0][t] < 0: UAVs[i][0][t] = 0 # x value < 0
+                    elif UAVs[i][0][t] > width: UAVs[i][0][t] = width # x value > width
                     
-                    if UAV[i][1][t] < 0: UAV[i][1][t] = 0 # y value < 0
-                    elif UAV[i][1][t] > height: UAV[i][1][t] = height # y value > height
+                    if UAVs[i][1][t] < 0: UAVs[i][1][t] = 0 # y value < 0
+                    elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
                     dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
@@ -234,25 +234,25 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 for j in range(i): # each UAV j
 
                     # UAV i and j's trajectory exists cross
-                    if IsTrajectoryCrossed(UAV[i], UAV[j], t) == True:
+                    if IsTrajectoryCrossed(UAVs[i], UAVs[j], t) == True:
 
                         # UAV i and UAV j stays at the previous position
-                        UAV[i][0][t] = UAV[i][0][t-1]
-                        UAV[i][1][t] = UAV[i][1][t-1]
-                        UAV[j][0][t] = UAV[j][0][t-1]
-                        UAV[j][1][t] = UAV[j][1][t-1]
+                        UAVs[i][0][t] = UAVs[i][0][t-1]
+                        UAVs[i][1][t] = UAVs[i][1][t-1]
+                        UAVs[j][0][t] = UAVs[j][0][t-1]
+                        UAVs[j][1][t] = UAVs[j][1][t-1]
 
                         # UAV i and UAV j get a penalty of -1
-                        s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
+                        s_i = dq.getS(UAVs[i], q, n, l, ac, k, R)
                         dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
                         directReward_list[i] += (-1)
 
-                        s_j = dq.getS(UAV[j], q, n, l, ac, k, R)
+                        s_j = dq.getS(UAVs[j], q, n, l, ac, k, R)
                         dq.updateQvalue(Q, s_j, a, -1, alpha, lb, q, n, l, k, R, useDL)
                         directReward_list[j] += (-1)
 
                 # get throughput (before) (time = n)
-                beforeThroughput = f.R_nkl(B, k, l, n, PU, g, I_, o2):
+                beforeThroughput = f.R_nkl(B, k, l, n, PU, g, I_, o2)
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
@@ -260,7 +260,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # a       : action ([-1, -1, -1] to [1, 1, 1])
                 
                 oldS = copy.deepcopy(s) # save old state
-                nextState = dq.getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
+                nextState = dq.getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2)
                 q = copy.deepcopy(nextState[0])
                 a = copy.deepcopy(nextState[1])
                 R = copy.deepcopy(nextState[2])
@@ -272,13 +272,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 action_list.append(a)
 
                 # get throughput (after) (time = n+1)
-                afterThroughput = f.R_nkl(B, k, l, n+1, PU, g, I_, o2):
+                afterThroughput = f.R_nkl(B, k, l, n+1, PU, g, I_, o2)
 
                 # device t's throughput does not increase
                 if afterThroughput <= beforeThroughput:
                     
                     # UAV i gets a penalty of -1
-                    s_i = dq.getS(UAV[i], q, n, l, ac, k, R)
+                    s_i = dq.getS(UAVs[i], q, n, l, ac, k, R)
                     dq.updateQvalue(Q, s_i, a, -1, alpha, lb, q, n, l, k, R, useDL)
                     directReward_list[i] += (-1)
 
@@ -292,7 +292,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     if isMinThroughputOfAllDevicesInCluster0(clusters[i], t) == True:
 
                         # The UAV get a penalty of -2
-                        directReward_list[UAV] += (-2)
+                        directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc(t) == True:
@@ -323,7 +323,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
             
             # train the network and update weight
-            deepLearningQ_training(QTable, 'cpu:0', 50, False):
+            deepLearningQ_training(QTable, 'cpu:0', 50, False)
 
 if __name__ == '__main__':
     
@@ -349,4 +349,4 @@ if __name__ == '__main__':
     H = 15 # H = 15m
 
     # run
-    algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
+    algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_)
