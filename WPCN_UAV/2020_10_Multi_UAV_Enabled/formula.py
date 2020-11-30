@@ -38,6 +38,21 @@ def getq(x, y, h):
 def getq_nl(x, y, h, n, l):
     return [x[n][l], y[n][l], h[n][l]]
 
+# get q[n][l] from UAVs (l-th UAV, at n-th time slot)
+
+# each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
+# each element of x0, y0 and h0 is THE POSITION for x, y and h at time t
+# where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
+#       y0 = [y00, y01, ..., y0t], ...
+#       h0 = [h00, h01, ..., h0t], ...
+
+# that is, in the form of UAV[uav_No][x/y/h][time]
+def getqFromUAV(UAV, n):
+    x = UAV[0]
+    y = UAV[1]
+    h = UAV[2]
+    return [x[n], y[n], h[n]]
+
 # ||.|| (Euclidean norm)
 def eucNorm(array):
     result = 0

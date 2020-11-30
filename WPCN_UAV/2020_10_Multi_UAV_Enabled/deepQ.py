@@ -7,19 +7,24 @@ import AIBASE_main as main
 import formula as f
 import random
 
+# q : q[l](t) = (x[l](t), y[l](t), h[l](t))
+#     q[n][l] = (x[n][l], y[n][l], h[n][l])
+
 # state: q[n][l], {a[n][l][k_l]}, {R[n][k_l]}
 # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
 # where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
 #       y0 = [y00, y01, ..., y0t], ...
 #       h0 = [h00, h01, ..., h0t], ...
 # that is, in the form of UAV[uav_No][x/y/h][time]
-def getS(UAV, q, n, l, ac, R):
+def getS(UAV, n, l, ac, R):
 
     # q[n][l]       (q[n][l])  : the location of UAV l (1d array - x, y and h)
     # ac[n][l][k_l] (ac[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
     # R[n][k_l]     (R[n][l])  : the average throughput of devices (for each device k),
     #                            in l-th cluster (1d array, for the devices in l-th cluster)
-    return [q[n][l], ac[n][l], R[n][l]]
+    q = f.getqFromUAV(UAV, n)
+    
+    return [q, ac[n][l], R[n][l]]
 
 # get action with e-greedy while e increases
 # with probability e, do the best action
@@ -248,6 +253,7 @@ def getNextLocation(s, a, n):
     # get angle (radian) between time n-1 and n
     lastAngle = 0 # set default angle as 0
     for n_ in range(n, 0, -1):
+        q = f.getq(curX, curY, curH)
         lastAngle = getAngle(q, n_)
         if lastAngle != 'not moved': break # lastAngle is numeric value
 
