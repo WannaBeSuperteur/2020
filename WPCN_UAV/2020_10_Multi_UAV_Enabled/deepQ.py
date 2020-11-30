@@ -308,5 +308,5 @@ def yt(r, r_, Q, s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2):
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
-def Qpi(r_, r, t, k, s, a, pi):
-    # ( [6] get Q(s, a) using policy pi )
+#def Qpi(r_, r, t, k, s, a, pi):
+#    # ( [6] get Q(s, a) using policy pi )

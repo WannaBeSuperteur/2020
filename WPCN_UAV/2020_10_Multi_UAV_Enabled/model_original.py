@@ -15,8 +15,6 @@ import copy
 import numpy as np
 from shapely.geometry import LineString
 
-# in the future, modify all '1...N+1's to '0...N'
-
 # PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
 # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
@@ -123,6 +121,7 @@ def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, B, n, PU, g, I_, o2):
         if l == 0 and k == 0:
             minThroughputBefore = thrputBefore
             minThroughputAfter = thrputAfter
+            
         # else, update them
         else:
             if thrputBefore < minThroughputBefore: minThroughputBefore = thrputBefore
@@ -191,13 +190,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # clusters (number of clusters = L, number of total devices = devices)
     (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False)
 
-    # ( [4] init target network and online network )
+    # no need to init target network and online network now
 
     ### TRAIN ###
     replayBuffer = [] # REPLAY BUFFER
     
-    for episode in range(1, M+1):
-        for t in range(1, T+1): # each time slot
+    for episode in range(M):
+        for t in range(T): # each time slot
 
             directReward_list = [] # direct reward for action (for each UAV)
             for i in range(L): directReward_list.append(0) # initialize as 0
@@ -285,11 +284,15 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
             # if time slot is T
             if t == T:
-                # if minimum throughput of all devices in a cluster == 0
-                if isMinThroughputOfAllDevicesInCluster0(clusters[i], t) == True:
 
-                    # NOT COMPLETED
-                    # ( [18] The UAV get a penalty of -2 )
+                # for each UAV = cluster,
+                for i in range(L):
+                    
+                    # if minimum throughput of all devices in a cluster == 0
+                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], t) == True:
+
+                        # The UAV get a penalty of -2
+                        directReward_list[UAV] += (-2)
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc(t) == True:
@@ -319,7 +322,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 rand = random.randint(0, len(minibatch)-1) # randomly select
                 minibatch.append(replayBuffer[rand]) # append to the buffer
             
-            # ( [22] Train the network and update weight )
+            # train the network and update weight
+            deepLearningQ_training(QTable, 'cpu:0', 50, False):
 
 if __name__ == '__main__':
     
