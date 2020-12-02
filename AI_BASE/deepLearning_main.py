@@ -130,6 +130,41 @@ def writeTestResult(test_report, testOutputFileName, testOutputReal, normalizeNa
     # return final result (-1 means not used)
     return (MAE, MSE, accuracy, -1, -1)
 
+# get test result (also for validation)
+# newModel     : model
+# testI        : test input
+# testSizeOnce : number of rows to test at once
+def getTestResult(newModel, testI, testSizeOnce):
+    
+    # test all the data at once
+    if testSizeOnce == 0:
+        print('test all rows at once')
+        
+        testO = deepLearning_GPU.modelOutput(newModel, testI)
+        testO = testO[len(testO)-1]
+
+    # test (testSizeOnce) rows at once
+    else:
+        testSize = len(testI) # the number of entire rows
+        times = int((testSize - 1) / testSizeOnce + 1)
+
+        testO = [] # final output to return
+
+        # add each output of input testI_ to testO
+        for i in range(times):
+            print(str((i+1)*testSizeOnce) + ' / ' + str(testSize))
+            
+            testI_ = testI[i*testSizeOnce : min(len(testI), (i+1)*testSizeOnce)]
+            testO_ = deepLearning_GPU.modelOutput(newModel, testI_)
+            testO_ = testO_[len(testO_)-1]
+            testO += list(testO_)
+
+        # convert to numpy array
+        testO = np.array(testO)
+
+    # return test result
+    return testO
+
 # inputFileName      : train input data file name
 # outputFileName     : train output data file name
 # testFileName       : test input data file name (or test input array)
@@ -184,6 +219,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
     normalizeName = None
     validInterval = 1
+    testSizeOnce = 0 # max test data size at once (for both testing and validation)
 
     # extract configuration
     # trainInput     : train input data file name
@@ -200,6 +236,10 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         # validation interval
         elif configSplit[0] == 'validInterval':
             validInterval = int(configSplit[1])
+
+        # test input size at once
+        elif configSplit[0] == 'testSize':
+            testSizeOnce = int(configSplit[1])
 
     # read normalization info file
     if normalizeName != None and trainO != None:
@@ -270,7 +310,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         try: # try reading test.h5 and test.json
             print('[20] reading model [ ' + modelName + ' ]...')
             newModel = deepLearning_GPU.deepLearningModel(modelName, op, loss, True)
-            testO = deepLearning_GPU.modelOutput(newModel, testI)
+            testO = getTestResult(newModel, testI, testSizeOnce)
             
         except: # do learning if test.h5 and test.json does not exist
             print('[21] learning...')
@@ -287,18 +327,17 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
                 print('test input file name (testInput) is None.')
                 return
             else:
-                testO = deepLearning_GPU.modelOutput(newModel, testI)
+                testO = getTestResult(newModel, testI, testSizeOnce)
 
         # test
         print('[23] testing...')
 
         # estimate
-        OL = testO[len(testO)-1]
 
         # inverse sigmoid
-        for i in range(len(OL)): # for each output data
-            for j in range(len(OL[0])): # for each value of output data
-                OL[i][j] = helper.invSigmoid(OL[i][j])
+        for i in range(len(testO)): # for each output data
+            for j in range(len(testO[0])): # for each value of output data
+                testO[i][j] = helper.invSigmoid(testO[i][j])
 
         # check if test output exists, before writing test output file
         try:
@@ -316,11 +355,11 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         f = open(testOutputFileName, 'a')
 
         result = ''
-        for i in range(len(OL)): # for each output data
-            if i % 1000 == 0: print(str(i) + ' / ' + str(len(OL)))
+        for i in range(len(testO)): # for each output data
+            if i % 1000 == 0: print(str(i) + ' / ' + str(len(testO)))
             
-            for j in range(len(OL[0])): # for each value of output data
-                result += str(OL[i][j]) + '\t'
+            for j in range(len(testO[0])): # for each value of output data
+                result += str(testO[i][j]) + '\t'
             result += '\n'
 
             # flush every 10,000 steps
@@ -409,11 +448,11 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         # output for validation        
         try: # try reading the validation model
             validModel = deepLearning_GPU.deepLearningModel(newModelName, op, loss, True)
-            predValidO = deepLearning_GPU.modelOutput(validModel, _ValidI)
+            _predValidO = getTestResult(validModel, _ValidI, testSizeOnce)
         except: # do learning if the validation model does not exist
             deepLearning_GPU.deepLearning(NN, op, loss, _TrainI, _TrainO, newModelName, epoch, False, True, deviceName)
             validModel = deepLearning_GPU.deepLearningModel(newModelName, op, loss, True)
-            predValidO = deepLearning_GPU.modelOutput(validModel, _ValidI)
+            _predValidO = getTestResult(validModel, _ValidI, testSizeOnce)
 
         ##############################
         ##                          ##
@@ -425,14 +464,11 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         MAE = 0 # mean absolute error
         MSE = 0 # mean square error
         accuracy = 0 # accuracy
-
-        # predicted validation output
-        _ValidOP = predValidO[len(predValidO)-1]
         
         # inverse sigmoid for PREDICTED validation output
-        for i in range(len(_ValidOP)): # for each output data
-            for j in range(len(_ValidOP[0])): # for each value of output data
-                _ValidOP[i][j] = helper.invSigmoid(_ValidOP[i][j])
+        for i in range(len(_predValidO)): # for each output data
+            for j in range(len(_predValidO[0])): # for each value of output data
+                _predValidO[i][j] = helper.invSigmoid(_predValidO[i][j])
         
         # inverse sigmoid for REAL validation output
         for i in range(len(_ValidO)): # for each output data
@@ -440,7 +476,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
                 _ValidO[i][j] = helper.invSigmoid(_ValidO[i][j])
 
         # denormalize if normalized info is available (denormalize whole trainO)
-        denormalize(normalizeName, len(_ValidOP), len(_ValidOP[0]), _ValidOP, trainOutputAvg, trainOutputStddev)
+        denormalize(normalizeName, len(_predValidO), len(_predValidO[0]), _predValidO, trainOutputAvg, trainOutputStddev)
         denormalize(normalizeName, len(_ValidO), len(_ValidO[0]), _ValidO, trainOutputAvg, trainOutputStddev)
         
         # compute error
@@ -461,15 +497,15 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
                 # compute MAE and MSE
                 for j in range(outputCols):
-                    MAE += abs(_ValidO[validCount][0] - _ValidOP[validCount][0])
-                    MSE += pow(_ValidO[validCount][0] - _ValidOP[validCount][0], 2)
+                    MAE += abs(_ValidO[validCount][0] - _predValidO[validCount][0])
+                    MSE += pow(_ValidO[validCount][0] - _predValidO[validCount][0], 2)
 
                 # compute accuracy
-                if helper.argmax(_ValidO[validCount]) == helper.argmax(_ValidOP[validCount]): accuracy += 1
+                if helper.argmax(_ValidO[validCount]) == helper.argmax(_predValidO[validCount]): accuracy += 1
 
                 # print and write result
                 newResultToWrite = ('[' + str(i) + '] pred = '
-                                    + str(np.round_(_ValidOP[validCount], 6)) + ', real = ' + str(np.round_(_ValidO[validCount], 6)))
+                                    + str(np.round_(_predValidO[validCount], 6)) + ', real = ' + str(np.round_(_ValidO[validCount], 6)))
                 resultToWrite += newResultToWrite + '\n'
 
                 validCount += 1
@@ -490,7 +526,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         resultSummary += 'MAE        : ' + str(round(MAE, 6)) + '\n'
         resultSummary += 'MSE        : ' + str(round(MSE, 6)) + '\n'
         resultSummary += 'accuracy   : ' + str(round(accuracy, 6)) + '\n'
-        resultSummary += 'pred avg   : ' + str(np.average(_ValidOP, axis=0)) + '\n'
+        resultSummary += 'pred avg   : ' + str(np.average(_predValidO, axis=0)) + '\n'
         resultSummary += 'real avg   : ' + str(np.average(_ValidO, axis=0)) + '\n'
         print(resultSummary)
         resultToWrite += resultSummary
@@ -501,7 +537,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
         fvalid.close()
 
         # return final result
-        return (MAE, MSE, accuracy, np.average(_ValidOP, axis=0), np.average(_ValidO, axis=0))
+        return (MAE, MSE, accuracy, np.average(_predValidO, axis=0), np.average(_ValidO, axis=0))
 
 # extract train input, train output, and test input from dataFrame and save them as a file
 # dfTrain         : original dataFrame for training

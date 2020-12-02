@@ -111,9 +111,9 @@ def deepLearningModel(saveName, op, loss, isPrint):
     return newModel
 
 ### 4. 학습된 모델에 값을 입력하여 출력을 구하는 함수 ###
-# model    : 학습된 모델
-# testInput: 입력 배열 [[a0, b0, ...], [a1, b1, ...], ..., [a(n-1), b(n-1), ...]] 꼴 (n개의 입력데이터)
-# simple   : model의 중간에 layer가 갈라지거나 합쳐지는 부분이 없으면 True
+# model        : 학습된 모델
+# testInput    : 입력 배열 [[a0, b0, ...], [a1, b1, ...], ..., [a(n-1), b(n-1), ...]] 꼴 (n개의 입력데이터)
+# simple       : model의 중간에 layer가 갈라지거나 합쳐지는 부분이 없으면 True
 def modelOutput(model, testInput):
 
     # 값을 입력받아 레이어의 출력을 구하도록 함수 설정하기
@@ -122,5 +122,5 @@ def modelOutput(model, testInput):
 
     func = K.function([input_, K.learning_phase()], output_)
     testInput = np.array(testInput)
-    result = func([testInput, 1]) # Neural Network에 넣고 결과 받아오기 
+    result = func([testInput, 1]) # Neural Network에 넣고 결과 받아오기
     return result # 결과 반환
