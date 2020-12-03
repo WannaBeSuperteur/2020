@@ -183,25 +183,52 @@ def readPGN(fn, lineStart, nsTrain, nsTest, trainN):
     return (trainResult, testResult)
 
 # save result array
-def saveArray(fn, _2dArray, splitter='\t'):
+# saveInterval: the number of rows to save at once
+def saveArray(fn, _2dArray, splitter='\t', saveSize=0):
     
     result = ''
     rows = len(_2dArray) # rows of 2d array
     cols = len(_2dArray[0]) # cols of 2d array
 
-    # append to result
-    for i in range(rows):
-        if i % 100 == 0: print('row ' + str(i))
-        for j in range(cols):
-            if j < cols-1: result += str(_2dArray[i][j]) + splitter
-            else: result += str(_2dArray[i][j])
+    # saveSize = 0 -> default
+    if saveSize == 0:
 
-        result += '\n'
+        # append to result
+        for i in range(rows):
+            if i % 100 == 0: print('row ' + str(i))
+            for j in range(cols):
+                if j < cols-1: result += str(_2dArray[i][j]) + splitter
+                else: result += str(_2dArray[i][j])
 
-    # write to file
-    f = open(fn, 'w')
-    f.write(result)
-    f.close()
+            result += '\n'
+
+        # write to file
+        f = open(fn, 'w')
+        f.write(result)
+        f.close()
+
+    # saveSize > 0
+    else:
+        f = open(fn, 'a')
+        
+        # append to result
+        for i in range(rows):
+            if i % 100 == 0: print('row ' + str(i))
+
+            # using interval saveSize, save and initialize the result
+            if i % saveSize == 0:
+                f.write(result)
+                result = ''
+
+            # add to result
+            for j in range(cols):
+                if j < cols-1: result += str(_2dArray[i][j]) + splitter
+                else: result += str(_2dArray[i][j])
+            result += '\n'
+
+        # write to file
+        f.write(result)
+        f.close()
 
 # load result array with splitter
 def loadArray(fn, splitter='\t'):
