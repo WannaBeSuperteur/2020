@@ -79,33 +79,77 @@ def readTestOutput(idList, dataSize, testResult, resultFileName, weight):
     final.close()
 
 if __name__ == '__main__':
-    
+
+    use_n_sub = True # use n_sub mode
     size = 20 # the number of rows/columns in each input data
     inputLength = size * size # length of input vector
 
     # read array from final_X.csv
-    try:
-        sub0 = RD.loadArray('final_0.csv', ',')
-        sub1 = RD.loadArray('final_1.csv', ',')
-        sub2 = RD.loadArray('final_2.csv', ',')
-        sub3 = RD.loadArray('final_3.csv', ',')
-        sub4 = RD.loadArray('final_4.csv', ',')
-    except:
-        weight = [1]
-        readTestOutput('test_id_sub_0.txt', inputLength, 'test_output_n_sub_0.txt', 'final_0.csv', weight)
-        readTestOutput('test_id_sub_1.txt', inputLength, 'test_output_n_sub_1.txt', 'final_1.csv', weight)
-        readTestOutput('test_id_sub_2.txt', inputLength, 'test_output_n_sub_2.txt', 'final_2.csv', weight)
-        readTestOutput('test_id_sub_3.txt', inputLength, 'test_output_n_sub_3.txt', 'final_3.csv', weight)
-        readTestOutput('test_id_sub_4.txt', inputLength, 'test_output_n_sub_4.txt', 'final_4.csv', weight)
+
+    # when using n_sub mode
+    if use_n_sub == True:
         
-        sub0 = RD.loadArray('final_0.csv', ',')
-        sub1 = RD.loadArray('final_1.csv', ',')
-        sub2 = RD.loadArray('final_2.csv', ',')
-        sub3 = RD.loadArray('final_3.csv', ',')
-        sub4 = RD.loadArray('final_4.csv', ',')
+        try:
+            sub0 = RD.loadArray('final_0.csv', ',')
+            sub1 = RD.loadArray('final_1.csv', ',')
+            sub2 = RD.loadArray('final_2.csv', ',')
+            sub3 = RD.loadArray('final_3.csv', ',')
+            sub4 = RD.loadArray('final_4.csv', ',')
+        except:
+            weight = [1]
+            readTestOutput('test_id_sub_0.txt', inputLength, 'test_output_n_sub_0.txt', 'final_0.csv', weight)
+            readTestOutput('test_id_sub_1.txt', inputLength, 'test_output_n_sub_1.txt', 'final_1.csv', weight)
+            readTestOutput('test_id_sub_2.txt', inputLength, 'test_output_n_sub_2.txt', 'final_2.csv', weight)
+            readTestOutput('test_id_sub_3.txt', inputLength, 'test_output_n_sub_3.txt', 'final_3.csv', weight)
+            readTestOutput('test_id_sub_4.txt', inputLength, 'test_output_n_sub_4.txt', 'final_4.csv', weight)
+            
+            sub0 = RD.loadArray('final_0.csv', ',')
+            sub1 = RD.loadArray('final_1.csv', ',')
+            sub2 = RD.loadArray('final_2.csv', ',')
+            sub3 = RD.loadArray('final_3.csv', ',')
+            sub4 = RD.loadArray('final_4.csv', ',')
+
+    # when not using n_sub mode
+    else:
+        id0 = RD.loadArray('test_id_sub_0.txt')
+        id1 = RD.loadArray('test_id_sub_1.txt')
+        id2 = RD.loadArray('test_id_sub_2.txt')
+        id3 = RD.loadArray('test_id_sub_3.txt')
+        id4 = RD.loadArray('test_id_sub_4.txt')
+        sub0 = RD.loadArray('test_output_sub_0.txt')
+        sub1 = RD.loadArray('test_output_sub_1.txt')
+        sub2 = RD.loadArray('test_output_sub_2.txt')
+        sub3 = RD.loadArray('test_output_sub_3.txt')
+        sub4 = RD.loadArray('test_output_sub_4.txt')
+
+        # assertion: length of idX = length of subX
+        assert(len(id0) == len(sub0))
+        assert(len(id1) == len(sub1))
+        assert(len(id2) == len(sub2))
+        assert(len(id3) == len(sub3))
+        assert(len(id4) == len(sub4))
+
+        # merge: [test ouput data] -> [id, test output data]
+        for i in range(len(sub0)): sub0[i] = id0[i] + sub0[i]
+        for i in range(len(sub1)): sub1[i] = id1[i] + sub1[i]
+        for i in range(len(sub2)): sub2[i] = id2[i] + sub2[i]
+        for i in range(len(sub3)): sub3[i] = id3[i] + sub3[i]
+        for i in range(len(sub4)): sub4[i] = id4[i] + sub4[i]
+
+        # remove last null values
+        for i in range(len(sub0)):
+            if sub0[i][len(sub0[i])-1] == '': sub0[i].pop(len(sub0[i])-1)
+        for i in range(len(sub1)):
+            if sub1[i][len(sub1[i])-1] == '': sub1[i].pop(len(sub1[i])-1)
+        for i in range(len(sub2)):
+            if sub2[i][len(sub2[i])-1] == '': sub2[i].pop(len(sub2[i])-1)
+        for i in range(len(sub3)):
+            if sub3[i][len(sub3[i])-1] == '': sub3[i].pop(len(sub3[i])-1)
+        for i in range(len(sub4)):
+            if sub4[i][len(sub4[i])-1] == '': sub4[i].pop(len(sub4[i])-1)
 
     # convert into 0 or 1 according to threshold
-    threshold = 0.4
+    threshold = 0.38
     for i in [sub0, sub1, sub2, sub3, sub4]:
         for j in range(len(i)):
             i[j][0] = int(i[j][0])

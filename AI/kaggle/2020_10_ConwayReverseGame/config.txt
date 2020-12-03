@@ -1,2 +1,3 @@
 normalizeName None
 validInterval 1
+testSize 10000

@@ -29,7 +29,7 @@ import MAE_for_CRGoL as MAE
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=30, linewidth=180)
     verbose = False
-    use_n_sub = False # using 'train_input/output_n_sub_X.txt' as training input/output data
+    use_n_sub = True # using 'train_input/output_n_sub_X.txt' as training input/output data
     use_n_sub_for_test = False # using n_sub for test input data ( -> test_input_n_sub_X.txt exists)
 
     # ~_sub_0.txt : with delta 1
@@ -48,9 +48,9 @@ if __name__ == '__main__':
     outputSize = 1 # the number of rows/columns in each output data (only for n-sub mode)
 
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
-    for i in range(5): # temp
+    for i in range(5):
 
-        validRate = 0.05 # validation rate for deep learning
+        validRate = 0.0 # validation rate for deep learning
         deviceName = 'cpu:0'
         epoch = epochs[i]
 
