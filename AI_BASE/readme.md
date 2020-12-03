@@ -35,6 +35,7 @@ valid_rate 0
 valid_report VA_Report.txt
 modelConfig modelConfig.txt
 normalizeName dddd.txt
+testSize 0
 ```
  * ```trainInput``` : train input data file
  * ```trainOutput``` : train output data file
@@ -48,6 +49,8 @@ normalizeName dddd.txt
  * ```normalizeName``` : name of the file contains average and stddev
  * ```validInterval``` : interval for data to be set as validation data
    * for example, if this value is ```5```, validation rate is ```0.25``` and there are ```100``` training data, ```0~4, 14~19, 20~24, 55~59, 84~89```-th data can be set as validation data
+ * ```testSize``` : (for validation/test) the number of rows to test or valid at once
+   * If ```0```, test or valid all the rows at once
 
 ### ```modelConfig``` file (for deep learning)
 EXAMPLE - Refer to ```modelConfig.txt``` and ```modelConfig_example.txt```.
