@@ -232,7 +232,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 e_ = episode / M # example
                 a = dq.getActionWithE(Q, s_i, e_)
                 
-                nextLocation = getNextLocation(s_i, a, t)
+                nextLocation = dq.getNextLocation(s_i, a, t)
 
                 # if UAV i files beyond the border
                 if beyondBorder(UAVs[i], t, width, height) == True:

@@ -31,6 +31,11 @@ def getS(UAV, n, l, ac, R):
 # with probability (1-e), do the action randomly
 def getActionWithE(Q, s, e):
 
+    # do action randomly if Q table is empty
+    if len(Q) == 0:
+        actionIndex = random.randint(0, 3*3*3-1) # (3*3*3) actions in total
+        return getAction(actionIndex)
+
     # Q Table           = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     # convert to input  = converted version of [[s0], [s1], ...]
     #            output = original  version of [[q00, q01, ...], [q10, q11, ...], ...]
