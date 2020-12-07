@@ -154,8 +154,8 @@ def getClusterOfDevice(device, clusters):
 # width, height      : width and height of the board
 # fc, B, o2, b1, b2, : parameters (as Table 1)
 # alpha, u1, u2,
-# alphaL, r
-def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r):
+# alphaL, r_
+def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_):
 
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -245,7 +245,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
-                    dq.updateQvalue(Q, s_i, a, -1, alpha, lb, t, i, k, R, useDL)
+                    dq.updateQvalue(Q, s_i, a, -1, alpha, r_, t, i, k, R, useDL)
                     directReward_list[i] += (-1)
 
             for i in range(L): # each UAV i
@@ -263,11 +263,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                         # UAV i and UAV j get a penalty of -1
                         s_i = dq.getS(UAVs[i], t, i, ac, k, R)
-                        dq.updateQvalue(Q, s_i, a, -1, alpha, lb, t, i, k, R, useDL)
+                        dq.updateQvalue(Q, s_i, a, -1, alpha, r_, t, i, k, R, useDL)
                         directReward_list[i] += (-1)
 
                         s_j = dq.getS(UAVs[j], t, j, ac, k, R)
-                        dq.updateQvalue(Q, s_j, a, -1, alpha, lb, t, j, k, R, useDL)
+                        dq.updateQvalue(Q, s_j, a, -1, alpha, r_, t, j, k, R, useDL)
                         directReward_list[j] += (-1)
 
                 # get throughput (before) (time = n)
@@ -298,7 +298,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, ac, k, R)
-                    dq.updateQvalue(Q, s_i, a, -1, alpha, lb, t, i, k, R, useDL)
+                    dq.updateQvalue(Q, s_i, a, -1, alpha, r_, t, i, k, R, useDL)
                     directReward_list[i] += (-1)
 
             # if time slot is T
@@ -321,17 +321,17 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     
                     for UAV in UAVs:
                         s_UAV = dq.getS(UAV, t, index, ac, k, R)
-                        dq.updateQvalue(Q, s_UAV, a, -1, alpha, lb, t, index, k, R, useDL)
+                        dq.updateQvalue(Q, s_UAV, a, -1, alpha, r_, t, index, k, R, useDL)
                         directReward_list[UAV] += (-1)
                         index += 1
 
             # store (s,a,r,s') into replay buffer
             for i in range(L): # each UAV i
 
-                # reward = alphaL*(Rwd(s, a) + lb*max(a')Q(s', a'))
+                # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
                 # where maxQ = max(a')Q(s', a')
                 maxQ = dq.maxQ(oldS[i], action_list[i], t, i, k, R, actionSpace, clusters, B, PU, g, l_, o2)
-                reward = alphaL * (directReward_list[i] + lb * maxQ)
+                reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 
                 replayBuffer.append([oldS[i], action_list[i], reward, newS[i]])
             
