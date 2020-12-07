@@ -87,10 +87,10 @@ def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
-def getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2):
+def getMaxQ(s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
 
     # get Q values for the action space of next state s'
-    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2))
+    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2))
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
@@ -178,12 +178,12 @@ def deepLearningQ_test(state):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, a, directReward, alphaL, r_, n, l, k, R, useDL, clusters, B, PU, g, l_, o2):
+def updateQvalue(Q, s, a, directReward, alphaL, r_, n, l, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    nextState = getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2)
-    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2)
+    nextState = getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2)
+    maxQ = getMaxQ(s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
         
     # update Q value
     sFound = False # find corresponding state?
@@ -302,7 +302,7 @@ def getNextLocation(s, a, n):
 ## clusters: [c0_deviceList, c1_deviceList, ...]
 # cK_deviceList: device list of cluster k,
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
-def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
+def getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2):
 
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, a, n)
@@ -322,8 +322,8 @@ def getNextState(s, a, n, l, k, R, clusters, B, PU, g, l_, o2):
     return [[nextX, nextY, nextH], next_a, nextR]
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
-def yt(r, r_, Q, s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2):
-    maxQ = getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2)
+def yt(r, r_, Q, s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
+    maxQ = getMaxQ(s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
