@@ -180,6 +180,16 @@ def y(UAVs):
 def h(UAVs):
     return xyh(UAVs, 2)
 
+# update direct reward list
+def updateDRlist(n, UAVs, value, i, k, b1, b2, S_, u1, u2, fc, t, a,
+                 Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2):
+    PLoS_i = f.getPLoS(False, n, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+    PNLoS_i = f.getPLoS(True, n, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                    
+    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
+    dq.updateQvalue(Q, s_i, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, l_, o2)
+    directReward_list[i] += value
+
 # ALGORITHM 1
 # 3D trajectory design and time resource allocation solution based on DQL
 # M                  : number of episodes
@@ -292,9 +302,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
-                    g_i = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
-                    dq.updateQvalue(Q, s_i, a, -1, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, l_, o2)
-                    directReward_list[i] += (-1)
+                    updateDRlist(n, UAVs, -1, i, k, b1, b2, S_, u1, u2, fc, t, a,
+                                 Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
             for i in range(L): # each UAV i
                 for j in range(i): # each UAV j
@@ -310,14 +319,12 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                         # UAV i and UAV j get a penalty of -1
                         s_i = dq.getS(UAVs[i], t, i, ac, R)
-                        g_i = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
-                        dq.updateQvalue(Q, s_i, a, -1, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, l_, o2)
-                        directReward_list[i] += (-1)
+                        updateDRlist(n, UAVs, -1, i, k, b1, b2, S_, u1, u2, fc, t, a,
+                                 Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
                         s_j = dq.getS(UAVs[j], t, j, ac, R)
-                        g_j = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, t, UAVs[j], k, x(UAVs), y(UAVs), h(UAVs), a)
-                        dq.updateQvalue(Q, s_j, a, -1, alpha, r_, t, j, R, useDL, clusters, B, PU, g_j, l_, o2)
-                        directReward_list[j] += (-1)
+                        updateDRlist(n, UAVs, -1, j, k, b1, b2, S_, u1, u2, fc, t, a,
+                                 Q, s_j, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
                 # get throughput (before) (time = n)
                 beforeThroughput = f.R_nkl(B, k, i, t, PU, g, I_, o2)
@@ -347,9 +354,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, ac, R)
-                    g_i = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
-                    dq.updateQvalue(Q, s_i, a, -1, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, l_, o2)
-                    directReward_list[i] += (-1)
+                    updateDRlist(n, UAVs, -1, i, k, b1, b2, S_, u1, u2, fc, t, a,
+                                 Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
             # if time slot is T
             if t == T:
@@ -371,9 +377,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     
                     for UAV in UAVs:
                         s_UAV = dq.getS(UAV, t, index, ac, R)
-                        g_UAV = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, t, UAVs[index], k, x(UAVs), y(UAVs), h(UAVs), a)
-                        dq.updateQvalue(Q, s_UAV, a, -1, alpha, r_, t, index, R, useDL, clusters, B, PU, g_UAV, l_, o2)
-                        directReward_list[UAV] += (-1)
+                        updateDRlist(n, UAVs, -1, index, k, b1, b2, S_, u1, u2, fc, t, a,
+                                 Q, s_UAV, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
                         index += 1
 
             # store (s,a,r,s') into replay buffer
@@ -381,7 +386,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
                 # where maxQ = max(a')Q(s', a')
-                g_i = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
+                PLoS_i = f.getPLoS(False, n, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                PNLoS_i = f.getPLoS(True, n, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                
+                g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
                 maxQ = dq.maxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, l_, o2)
                 reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 
