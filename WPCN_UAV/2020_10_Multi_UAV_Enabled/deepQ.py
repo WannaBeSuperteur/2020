@@ -1,4 +1,5 @@
 import sys
+import math
 sys.path.insert(0, '../../AI_BASE')
 import deepLearning_GPU as DL
 import deepLearning_GPU_helper as helper
@@ -68,7 +69,7 @@ def getActionWithE(Q, s, e):
 
 # get action: from 0 (-1, -1, -1) to 26 (1, 1, 1)
 def getAction(actionNo):
-    return [actionNo / 9 - 1, (actionNo % 9) / 3 - 1, actionNo % 3 - 1]
+    return [int(actionNo / 9) - 1, int((actionNo % 9) / 3) - 1, actionNo % 3 - 1]
 
 # get action space: from (-1, -1, -1) to (1, 1, 1)
 def getActionSpace():
@@ -103,7 +104,7 @@ def getMaxQ(s, a, n, l, k, R, actionSpace, clusters, B, PU, g, l_, o2):
         # update max(a')Q(s', a')
         if QofNextStateAction > maxQ: maxQ = QofNextStateAction
 
-# convert [state] = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
+# convert state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
 def stateTo1dArray(state):
     q = state[0]
@@ -235,6 +236,9 @@ def getAngle(q, n):
     return 'n is not greater than 0'
 
 # get next location when executing action a on state s
+# s : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+# a : [x, y, z]
+# n : time slot index
 def getNextLocation(s, a, n):
     
     # get current location
@@ -271,6 +275,10 @@ def getNextLocation(s, a, n):
     elif x == 1: nextAngle = (lastAngle + math.pi/4) % (math.pi*2)
 
     # get next location by x and y
+    # initialize as current location
+    nextY = curX
+    nextY = curY
+        
     if y == -1: # backward 5m
         nextX = curX + (-5) * math.cos(nextAngle)
         nextY = curY + (-5) * math.sin(nextAngle)
