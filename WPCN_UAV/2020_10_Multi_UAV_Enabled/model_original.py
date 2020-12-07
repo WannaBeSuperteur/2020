@@ -206,6 +206,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
         ac.append(temp_ac)
         R.append(0)
 
+    # init Q Table
+    # Q Table = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
+    Q = []
+
     ### TRAIN ###
     replayBuffer = [] # REPLAY BUFFER
     
@@ -226,7 +230,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # choose action with e-greedy while e increases
                 e_ = episode / M # example
-                a = getActionWithE(Q, s_i, e_)
+                a = dq.getActionWithE(Q, s_i, e_)
                 
                 nextLocation = getNextLocation(s_i, a, t)
 
@@ -363,7 +367,7 @@ if __name__ == '__main__':
     M = 1000 # M = 1000 episodes
     L = 3 # L = 3 clusters = 3 UAVs
     devices = 50 # 50 devices
-    T = 1 # T = 1s
+    T = 10 # T = 10s
     H = 15 # H = 15m
 
     # run
