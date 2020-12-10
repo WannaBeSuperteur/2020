@@ -1,3 +1,5 @@
+# differences (with October 2020, size=20) are marked as [ADDED]
+
 import sys
 sys.path.insert(0, '../../../../AI_BASE')
 
@@ -68,15 +70,15 @@ def readAllSubs(size):
         _.close()
         
     except:
-        # train.txt -> id, delta, start1~400, stop1~400 (if size=20) -> train_id.txt     : extract id and delta
-        #                                                            -> train_input.txt  : extract delta and stop1~400 (if size=20)
-        #                                                            -> train_output.txt : extract delta and start1~400 (if size=20)
+        # train.txt -> id, delta, start1~625, stop1~625 (if size=25) -> train_id.txt     : extract id and delta
+        #                                                            -> train_input.txt  : extract delta and stop1~625 (if size=25)
+        #                                                            -> train_output.txt : extract delta and start1~625 (if size=25)
         RD.saveArray('train_id.txt', np.array(train)[:, 0:2])
         RD.saveArray('train_input.txt', np.concatenate([np.array(train)[:, 1:2], np.array(train)[:, size*size+2:2*size*size+2]], axis=1))
         RD.saveArray('train_output.txt', np.array(train)[:, 1:size*size+2])
 
-        # test.txt  -> id, delta, stop1~400 (if size=20)             -> test_id.txt      : extract id and delta
-        #                                                            -> test_input.txt   : extract delta and stop1~400 (if size=20)
+        # test.txt  -> id, delta, stop1~625 (if size=25)             -> test_id.txt      : extract id and delta
+        #                                                            -> test_input.txt   : extract delta and stop1~625 (if size=25)
         RD.saveArray('test_id.txt', np.array(test)[:, 0:2])
         RD.saveArray('test_input.txt', np.array(test)[:, 1:size*size+2])
 
@@ -148,8 +150,8 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
         trainOutput = np.array(trainOutput).astype('float')
 
         # reshape to derive n*n training data (with ws-sized padding)
-        trainInputReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
-        trainOutputReshaped = np.pad(np.array(trainOutput[i]).reshape(size, size), ((ws_, ws_), (ws_, ws_)), 'constant', constant_values=-1)
+        trainInputReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
+        trainOutputReshaped = np.pad(np.array(trainOutput[i]).reshape(size, size), ((ws_, ws_), (ws_, ws_)), 'wrap')
         
         # save training data into array trainInputData and trainOutputData
         for j in range(size):
@@ -166,7 +168,7 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
             testInput = np.array(testInput).astype('float')
 
             # reshape to derive n*n training data (with ws-sized padding)
-            testInputReshaped = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+            testInputReshaped = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
             
             # save test data into array testInputData
             for j in range(size):
@@ -174,21 +176,21 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
                     testInputData.append(list(testInputReshaped[j:j+2*ws+1, k:k+2*ws+1].reshape(n*n)))
 
     # save as file
-    RD.saveArray('train_input_n_sub_' + str(delta-1) + '.txt', trainInputData)
-    RD.saveArray('train_output_n_sub_' + str(delta-1) + '.txt', trainOutputData)
+    # [ADDED] saveSize=10000
+    RD.saveArray('train_input_n_sub_' + str(delta-1) + '.txt', trainInputData, saveSize=10000)
+    RD.saveArray('train_output_n_sub_' + str(delta-1) + '.txt', trainOutputData, saveSize=10000)
     if writeTestInput == True: RD.saveArray('test_input_n_sub_' + str(delta-1) + '.txt', testInputData)
 
 if __name__ == '__main__':
     np.set_printoptions(edgeitems=1000, linewidth=10000)
 
-    size = 20 # the number of rows/columns in each input data
+    size = 25 # the number of rows/columns in each input data
     outputSize = 1 # the number of rows/columns in each output data
 
     # for normal (not n-sub) mode
     readAllSubs(size)
 
     # for n-sub mode
-    # it takes 2~3 hours in total
     makeData(1, 5, outputSize, size, 1000, False)
     makeData(2, 7, outputSize, size, 1000, False)
     makeData(3, 9, outputSize, size, 1000, False)

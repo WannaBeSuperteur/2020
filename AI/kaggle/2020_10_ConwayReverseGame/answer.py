@@ -44,13 +44,13 @@ if __name__ == '__main__':
     
     n = [5, 7, 9, 11, 13]
     epochs = [5, 5, 5, 5, 5]
-    size = 20 # the number of rows/columns in each input data
+    size = 25 # the number of rows/columns in each input data
     outputSize = 1 # the number of rows/columns in each output data (only for n-sub mode)
 
     # save real training and test data to use deep learning, for each case delta=1,2,3,4 and 5
     for i in range(5):
 
-        validRate = 0.0 # validation rate for deep learning
+        validRate = 0.05 # validation rate for deep learning
         deviceName = 'cpu:0'
         epoch = epochs[i]
 
@@ -131,7 +131,7 @@ if __name__ == '__main__':
 
             # for each test input
             for j in range(len(testInput)):
-                thisReshaped = np.pad(np.array(testInput[j]).reshape(size, size), ((ws, ws), (ws, ws)), 'constant', constant_values=-1)
+                thisReshaped = np.pad(np.array(testInput[j]).reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
 
                 # save test data into array testInputData
                 for k in range(ws, size+ws):
