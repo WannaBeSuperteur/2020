@@ -1,0 +1,14 @@
+FI
+R2 25 25
+C2DI 32 5 5 25 25 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 1 5 5 sigmoid same
+F
+OP adam0 0.001
+LOSS binary_crossentropy
