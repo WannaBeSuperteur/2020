@@ -61,22 +61,22 @@ def convertToNumeric():
     
     # TRAINING DATA
     # read and print col=1, ... and row=1, ... of the CSV file
-    train_input = readCSV('mnist_train.csv', [1, None], [1, trainRows])
-    train_output = readCSV('mnist_train.csv', [0, 1], [1, trainRows])
+    train_input = readCSV('mnist_train.csv', [1, None], [1, trainRows+1])
+    train_output = readCSV('mnist_train.csv', [0, 1], [1, trainRows+1])
 
     # TEST DATA
-    test_input = readCSV('mnist_test.csv', [1, None], [1, testRows])
-    test_output = readCSV('mnist_test.csv', [0, 1], [1, testRows])
+    test_input = readCSV('mnist_test.csv', [1, None], [1, testRows+1])
+    test_output = readCSV('mnist_test.csv', [0, 1], [1, testRows+1])
 
     # make training data numeric
-    for i in range(trainRows-1):
+    for i in range(trainRows):
         if i % 1000 == 0: print(i)
         
         for j in range(len(train_input[0])):
             train_input[i][j] = int(train_input[i][j]) / 255
 
     # make test data numeric
-    for i in range(testRows-1):
+    for i in range(testRows):
         if i % 1000 == 0: print(i)
         
         for j in range(len(test_input[0])):
@@ -105,7 +105,33 @@ def readMNISTData():
     print(test_input)
     print(test_output)
 
+    return (train_input, train_output, test_input, test_output)
+
 # main
 if __name__ == '__main__':
+
+    # meta info
+    TRI = 'mnist_train_input.txt'
+    TRO = 'mnist_train_output.txt'
+    TEI = 'mnist_test_input.txt'
+    TEO = 'mnist_test_predict.txt'
+
+    TE_real = 'mnist_test_output.txt'
+    TE_report = 'mnist_test_report.txt'
+    VAL_rate = 0.0
+    VAL_report = 'mnist_val_report.txt'
+    modelConfig = 'mnist_model_config.txt'
+
+    # preprocess data
     convertToNumeric()
-    readMNISTData()
+
+    # user data
+    deviceName = input('device name (for example, cpu:0 or gpu:0)')
+    epoch = int(input('epoch'))
+    printed = int(input('printed? (0 -> do not print)'))
+
+    # training and test
+    # 'config.txt' is used for configuration
+    DL.deepLearning(TRI, TRO, TEI, TEO,
+                    TE_real, TE_report, VAL_rate, VAL_report, modelConfig,
+                    deviceName, epoch, printed, 'model')

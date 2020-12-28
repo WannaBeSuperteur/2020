@@ -1,0 +1,15 @@
+FI
+R2 28 28
+C2D 128 5 5 relu same
+BN
+C2D 32 5 5 relu same
+BN
+C2D 8 3 3 relu same
+F
+D 16 relu
+Drop 0.25
+D 40 relu
+Drop 0.25
+D 40 relu
+DO sigmoid
+OP adam0 0.001
