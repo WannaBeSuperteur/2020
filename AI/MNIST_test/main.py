@@ -38,6 +38,16 @@ def readCSV(fn, colRange, rowRange):
         # rowRange: [a, b]
         else: return np.array(csv)[rs:re, cs:ce]
 
+# one-hot
+def one_hot(array):
+    result = []
+    
+    for i in range(len(array)):
+        result.append([0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+        result[i][int(array[i][0])] = 1
+
+    return result
+
 # convert to numeric value (/255) and save
 def convertToNumeric():
 
@@ -81,6 +91,13 @@ def convertToNumeric():
         
         for j in range(len(test_input[0])):
             test_input[i][j] = int(test_input[i][j]) / 255
+
+    # make output one-hot
+    train_output = list(train_output)
+    test_output = list(test_output)
+
+    train_output = one_hot(train_output)
+    test_output = one_hot(test_output)
 
     # save
     RD.saveArray('mnist_train_input.txt', train_input)
