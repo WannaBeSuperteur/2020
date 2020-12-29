@@ -2,13 +2,8 @@ import main as m
 import numpy as np
 from PIL import Image
 
-# visualize images
-# need: mnist_train_input.txt / mnist_train_output.txt / mnist_test_input.txt / mnist_test_output.txt
-# train    : from training data (True or False)
-#            from test data when False
-# start    : starting index
-# end      : ending index
-def visualizeImages(train, start, end):
+# read images
+def readImages(train, start, end):
 
     # decide file name
     if train == True:
@@ -17,8 +12,20 @@ def visualizeImages(train, start, end):
         fn = 'mnist_test_input.txt'
 
     # read image as numpy array
-    imgArray = m.readCSV(fn, [0, 28*28], [start, end], '\t')
+    return m.readCSV(fn, [0, 28*28], [start, end], '\t')
 
+# visualize images
+# need: mnist_train_input.txt / mnist_train_output.txt / mnist_test_input.txt / mnist_test_output.txt
+# train    : from training data (True or False)
+#            from test data when False
+# start    : starting index
+# end      : ending index
+def visualizeImages(train, start, end):
+
+    # read image as numpy array
+    imgArray = readImages(train, start, end)
+
+    # visualize images
     # for each image
     for i in range(len(imgArray)):
         print('showing image with index ' + str(start + i) + '...')
