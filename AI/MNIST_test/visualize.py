@@ -14,21 +14,13 @@ def readImages(train, start, end):
     # read image as numpy array
     return m.readCSV(fn, [0, 28*28], [start, end], '\t')
 
-# visualize images
-# need: mnist_train_input.txt / mnist_train_output.txt / mnist_test_input.txt / mnist_test_output.txt
-# train    : from training data (True or False)
-#            from test data when False
-# start    : starting index
-# end      : ending index
-def visualizeImages(train, start, end):
+# visualize images from imgArray
+# imgArray : contains image array with value 0.0 (black) ~ 1.0 (white)
+def visualizeFromImgArray(imgArray):
 
-    # read image as numpy array
-    imgArray = readImages(train, start, end)
-
-    # visualize images
     # for each image
     for i in range(len(imgArray)):
-        print('showing image with index ' + str(start + i) + '...')
+        print('showing image ' + str(i) + '...')
 
         img = imgArray[i]
 
@@ -48,6 +40,20 @@ def visualizeImages(train, start, end):
         # visualize image
         convertedImg = Image.fromarray(np.array(converted).astype('uint8'), 'RGB')
         convertedImg.show()
+
+# visualize images
+# need: mnist_train_input.txt / mnist_train_output.txt / mnist_test_input.txt / mnist_test_output.txt
+# train    : from training data (True or False)
+#            from test data when False
+# start    : starting index
+# end      : ending index
+def visualizeImages(train, start, end):
+
+    # read image as numpy array
+    imgArray = readImages(train, start, end)
+
+    # visualize images
+    visualizeFromImgArray(imgArray)
     
 if __name__ == '__main__':
 
