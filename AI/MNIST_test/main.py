@@ -11,8 +11,8 @@ import deepLearning_main as DL
 #           [a, b]    - retrieve columns with indices a, ..., b-1
 # rowRange: [a, None] - retrieve rows    with indices a, ..., (last row)
 #           [a, b]    - retrieve rows    with indices a, ..., b-1
-def readCSV(fn, colRange, rowRange):
-    csv = RD.loadArray(fn, ',')
+def readCSV(fn, colRange, rowRange, delimiter=','):
+    csv = RD.loadArray(fn, delimiter)
 
     # colRange start and end, rowRange start and end
     cs = colRange[0]
