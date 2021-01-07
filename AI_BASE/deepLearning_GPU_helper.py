@@ -116,6 +116,9 @@ def getDataFromFile(fn):
     return result
 
 # return Neural Network
+# if you want to apply activation function (for Conv layers) as None, input the value of activation field as 'None'.
+# ex: C2D 32 3 3 None same -> keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=None, padding='same')
+
 ## layers
 # I 60                        (keras.layers.InputLayer(input_shape=(60,)))
 # I1 60                       (keras.layers.InputLayer(input_shape=(60, 1)))
@@ -137,6 +140,7 @@ def getDataFromFile(fn):
 # R1 12                       (keras.layers.Reshape((12, 1), input_shape=(12,))
 # R2 12 12                    (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 # BN                          (keras.layers.BatchNormalization())
+# AC relu                     (keras.layers.Activation('relu'))
 def getNN(modelInfo, trainI, trainO):
     NN = []
     code = ''
@@ -185,28 +189,42 @@ def getNN(modelInfo, trainI, trainO):
         # 1D convolution with input shape (n, 1)
         elif infoSplit[0] == 'C1DI':
 
-            if len(infoSplit) == 5: # without padding configuration
+            # set activation as None
+            if infoSplit[4] == 'None': activation_ = None
+            else: activation_ = infoSplit[4]
+
+            # without padding configuration
+            if len(infoSplit) == 5:
                 NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), input_shape=(int(infoSplit[3]), 1),
-                                              activation=infoSplit[4]))
+                                              activation=activation_))
+
                 code += ('NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + '), input_shape=(' + infoSplit[3] + ', 1), '
                          + 'activation="' + infoSplit[4] + '"))\n')
 
-            elif len(infoSplit) == 6: # with padding configuration
+            # with padding configuration
+            elif len(infoSplit) == 6:
                 NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), input_shape=(int(infoSplit[3]), 1),
-                                              activation=infoSplit[4], padding=infoSplit[5]))
+                                              activation=activation_, padding=infoSplit[5]))
+
                 code += ('NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + '), input_shape=(' + infoSplit[3] + ', 1), '
                          + 'activation="' + infoSplit[4] + '", padding="' + infoSplit[5] + '"))\n')
 
         # 1D convolution
         elif infoSplit[0] == 'C1D':
 
+            # set activation as None
+            if infoSplit[3] == 'None': activation_ = None
+            else: activation_ = infoSplit[3]
+
             if len(infoSplit) == 4: # without padding configuration
-                NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), activation=infoSplit[3]))
+                NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), activation=activation_))
+
                 code += ('NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + '), '
                          + 'activation="' + infoSplit[3] + '"))\n')
 
             elif len(infoSplit) == 5: # with padding configuration
-                NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), activation=infoSplit[3], padding=infoSplit[4]))
+                NN.append(keras.layers.Conv1D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2])), activation=activation_, padding=infoSplit[4]))
+
                 code += ('NN.append(keras.layers.Conv1D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + '), '
                          + 'activation="' + infoSplit[3] + '", padding="' + infoSplit[4] + '"))\n')
 
@@ -217,30 +235,46 @@ def getNN(modelInfo, trainI, trainO):
         # 2D convolution with input shape (m, n, 1)
         elif infoSplit[0] == 'C2DI':
 
-            if len(infoSplit) == 7: # without padding configuration
+            # set activation as None
+            if infoSplit[6] == 'None': activation_ = None
+            else: activation_ = infoSplit[6]
+
+            # without padding configuration
+            if len(infoSplit) == 7:
                 NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
-                                              input_shape=(int(infoSplit[4]), int(infoSplit[5]), 1), activation=infoSplit[6]))
+                                              input_shape=(int(infoSplit[4]), int(infoSplit[5]), 1), activation=activation_))
+
                 code += ('NN.append(keras.layers.Conv2D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + ', ' + infoSplit[3] + '), input_shape=('
                          + infoSplit[4] + ', ' + infoSplit[5] + ', 1), activation="' + infoSplit[6] + '"))\n')
 
-            elif len(infoSplit) == 8: # with padding configuration
+            # with padding configuration
+            elif len(infoSplit) == 8:
                 NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
-                                              input_shape=(int(infoSplit[4]), int(infoSplit[5]), 1), activation=infoSplit[6], padding=infoSplit[7]))
+                                              input_shape=(int(infoSplit[4]), int(infoSplit[5]), 1), activation=activation_, padding=infoSplit[7]))
+
                 code += ('NN.append(keras.layers.Conv2D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + ', ' + infoSplit[3] + '), input_shape=('
                          + infoSplit[4] + ', ' + infoSplit[5] + ', 1), activation="' + infoSplit[6] + '", padding="' + infoSplit[7] + '"))\n')
 
         # 2D convolution
         elif infoSplit[0] == 'C2D':
 
-            if len(infoSplit) == 5: # without padding configuration
+            # set activation as None
+            if infoSplit[4] == 'None': activation_ = None
+            else: activation_ = infoSplit[4]
+
+            # without padding configuration
+            if len(infoSplit) == 5:
                 NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
-                                              activation=infoSplit[4]))
+                                              activation=activation_))
+
                 code += ('NN.append(keras.layers.Conv2D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + ', ' + infoSplit[3] + '), '
                          + 'activation="' + infoSplit[4] + '"))\n')
 
-            elif len(infoSplit) == 6: # with padding configuration
+            # with padding configuration
+            elif len(infoSplit) == 6:
                 NN.append(keras.layers.Conv2D(filters=int(infoSplit[1]), kernel_size=(int(infoSplit[2]), int(infoSplit[3])),
-                                              activation=infoSplit[4], padding=infoSplit[5]))
+                                              activation=activation_, padding=infoSplit[5]))
+
                 code += ('NN.append(keras.layers.Conv2D(filters=' + infoSplit[1] + ', kernel_size=(' + infoSplit[2] + ', ' + infoSplit[3] + '), '
                          + 'activation="' + infoSplit[4] + '", padding="' + infoSplit[5] + '"))\n')
 
@@ -263,6 +297,11 @@ def getNN(modelInfo, trainI, trainO):
         elif infoSplit[0] == 'BN':
             NN.append(tf.keras.layers.BatchNormalization())
             code += 'NN.append(tf.keras.layers.BatchNormalization())\n'
+
+        # activation
+        elif infoSplit[0] == 'AC':
+            NN.append(tf.keras.layers.Activation(infoSplit[1]))
+            code += 'NN.append(tf.keras.layers.Activation(' + infoSplit[1] + '))\n'
 
     # print code result
     print('\n <<< model code >>>')
