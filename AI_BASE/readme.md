@@ -70,13 +70,18 @@ C1D 32 3 relu               (keras.layers.Conv1D(filters=32, kernel_size=3, acti
 C1D 32 3 relu same          (keras.layers.Conv1D(filters=32, kernel_size=3, activation='relu', padding='same'))
 MP1D 2                      (keras.layers.MaxPooling1D(pool_size=2))
 C2DI 32 3 3 12 12 relu      (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu'))
+C2DI 32 3 3 12 12 None      (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation=None))
 C2DI 32 3 3 12 12 relu same (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation='relu', padding='same'))
+C2DI 32 3 3 12 12 None same (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(12, 12, 1), activation=None, padding='same'))
 C2D 32 3 3 relu             (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu'))
+C2D 32 3 3 None             (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=None))
 C2D 32 3 3 relu same        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='relu', padding='same'))
+C2D 32 3 3 None same        (keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=None, padding='same'))
 MP2D 2                      (keras.layers.MaxPooling2D(pool_size=2))
 R1 12                       (keras.layers.Reshape((12, 1), input_shape=(12,))
 R2 12 12                    (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 BN                          (keras.layers.BatchNormalization())
+AC relu                     (keras.layers.Activation('relu'))
 ```
 
 <strong>for optimizer and loss</strong>
