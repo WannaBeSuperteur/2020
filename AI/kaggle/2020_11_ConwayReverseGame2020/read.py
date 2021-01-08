@@ -55,6 +55,17 @@ def readAllSubs(size):
     train = RD.loadArray('train.csv', ',')
     test = RD.loadArray('test.csv', ',')
 
+    # replace all 0s to 1
+    train = np.array(train)
+    test = np.array(test)
+
+    try:
+        train[train == 0] = -1
+        test[test == 0] = -1
+    except:
+        train[train == '0'] = '-1'
+        test[test == '0'] = '-1'
+
     # write id-delta, input and output of training data
     # write id-delta and input         of test     data
     try:
@@ -73,14 +84,14 @@ def readAllSubs(size):
         # train.txt -> id, delta, start1~625, stop1~625 (if size=25) -> train_id.txt     : extract id and delta
         #                                                            -> train_input.txt  : extract delta and stop1~625 (if size=25)
         #                                                            -> train_output.txt : extract delta and start1~625 (if size=25)
-        RD.saveArray('train_id.txt', np.array(train)[:, 0:2])
-        RD.saveArray('train_input.txt', np.concatenate([np.array(train)[:, 1:2], np.array(train)[:, size*size+2:2*size*size+2]], axis=1))
-        RD.saveArray('train_output.txt', np.array(train)[:, 1:size*size+2])
+        RD.saveArray('train_id.txt', train[:, 0:2])
+        RD.saveArray('train_input.txt', np.concatenate([train[:, 1:2], train[:, size*size+2:2*size*size+2]], axis=1))
+        RD.saveArray('train_output.txt', train[:, 1:size*size+2])
 
         # test.txt  -> id, delta, stop1~625 (if size=25)             -> test_id.txt      : extract id and delta
         #                                                            -> test_input.txt   : extract delta and stop1~625 (if size=25)
-        RD.saveArray('test_id.txt', np.array(test)[:, 0:2])
-        RD.saveArray('test_input.txt', np.array(test)[:, 1:size*size+2])
+        RD.saveArray('test_id.txt', test[:, 0:2])
+        RD.saveArray('test_input.txt', test[:, 1:size*size+2])
 
     # split train and test data into files
     try:
@@ -128,7 +139,22 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
     trainInput = RD.loadArray('train_input_sub_' + str(delta-1) + '.txt')
     trainOutput = RD.loadArray('train_output_sub_' + str(delta-1) + '.txt')
     testInput = RD.loadArray('test_input_sub_' + str(delta-1) + '.txt')
-    
+
+    # replace all 0s to 1
+    trainInput = np.array(trainInput)
+    trainOutput = np.array(trainOutput)
+    testInput = np.array(testInput)
+
+    try:
+        trainInput[trainInput == 0] = -1
+        trainOutput[trainOutput == 0] = -1
+        testInput[testInput == 0] = -1
+    except:
+        trainInput[trainInput == '0'] = '-1'
+        trainOutput[trainOutput == '0'] = '-1'
+        testInput[testInput == '0'] = '-1'
+
+    # length of training/test dataset
     trainLen = min(len(trainInput), limitLen)
     testLen = len(testInput)
 
@@ -146,12 +172,12 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
         if i % 10 == 0: print('makeData (training) : ' + str(i) + ' / ' + str(trainLen))
 
         # trainInput and trainOutput as numeric type
-        trainInput = np.array(trainInput).astype('float')
-        trainOutput = np.array(trainOutput).astype('float')
+        trainInput = trainInput.astype('float')
+        trainOutput = trainOutput.astype('float')
 
         # reshape to derive n*n training data (with ws-sized padding)
-        trainInputReshaped = np.pad(np.array(trainInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
-        trainOutputReshaped = np.pad(np.array(trainOutput[i]).reshape(size, size), ((ws_, ws_), (ws_, ws_)), 'wrap')
+        trainInputReshaped = np.pad(trainInput[i].reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
+        trainOutputReshaped = np.pad(trainOutput[i].reshape(size, size), ((ws_, ws_), (ws_, ws_)), 'wrap')
         
         # save training data into array trainInputData and trainOutputData
         for j in range(size):
@@ -165,10 +191,10 @@ def makeData(delta, n, n_, size, limitLen, writeTestInput):
             if i % 10 == 0: print('makeData (test) : ' + str(i) + ' / ' + str(testLen))
 
             # trainInput and trainOutput as numeric type
-            testInput = np.array(testInput).astype('float')
+            testInput = testInput.astype('float')
 
             # reshape to derive n*n training data (with ws-sized padding)
-            testInputReshaped = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
+            testInputReshaped = np.pad(testInput[i].reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
             
             # save test data into array testInputData
             for j in range(size):
