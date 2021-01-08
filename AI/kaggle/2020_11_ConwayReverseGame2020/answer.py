@@ -40,7 +40,7 @@ if __name__ == '__main__':
 
     # threshold list to find MAE
     thresholdList = []
-    for i in range(-20, 221): thresholdList.append(round(0.005*i, 6))
+    for i in range(-20, 221): thresholdList.append(round(0.01*i - 1, 6))
     
     n = [5, 7, 9, 11, 13]
     epochs = [5, 5, 5, 5, 5]

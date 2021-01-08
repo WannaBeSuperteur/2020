@@ -140,14 +140,14 @@ def readValidReport(fn, thresholdList, size, n, use_n_sub):
             # compute MAE for each threshold
             for j in range(len(thresholdList)):
                 
-                # pred is considered as 1 -> MAE=0 if real=1, MAE=1 if real=0
+                # pred is considered as 1 -> MAE=0 if real=1, MAE=1 if real=-1
                 if weightedPred > thresholdList[j]:
-                    MAE[j] += (1 - int(realSplit[center]))
+                    MAE[j] += (0.5 - int(realSplit[center])*0.5)
                     ones[j] += 1.0
 
-                # pred is considered as 0 -> MAE=0 if real=0, MAE=1 if real=1
+                # pred is considered as 0 -> MAE=0 if real=-1, MAE=1 if real=1
                 else:
-                    MAE[j] += int(realSplit[center])
+                    MAE[j] += (int(realSplit[center])*0.5 + 0.5)
                     zeros[j] += 1.0
 
         # <<< use normal mode >>>
@@ -157,14 +157,14 @@ def readValidReport(fn, thresholdList, size, n, use_n_sub):
             for j in range(len(thresholdList)):
                 for k in range(len(predSplit)):
                 
-                    # pred is considered as 1 -> MAE=0 if real=1, MAE=1 if real=0
+                    # pred is considered as 1 -> MAE=0 if real=1, MAE=1 if real=-1
                     if predSplit[k] > thresholdList[j]:
-                        MAE[j] += (1 - int(realSplit[k]))
+                        MAE[j] += (0.5 - int(realSplit[center])*0.5)
                         ones[j] += 1.0
 
-                    # pred is considered as 0 -> MAE=0 if real=0, MAE=1 if real=1
+                    # pred is considered as 0 -> MAE=0 if real=-1, MAE=1 if real=1
                     else:
-                        MAE[j] += int(realSplit[k])
+                        MAE[j] += (int(realSplit[center])*0.5 + 0.5)
                         zeros[j] += 1.0
 
     # MAE <- MAE / (lines * n)
@@ -208,9 +208,11 @@ if __name__ == '__main__':
     outputSize = 1 # the number of rows/columns in each output data
     outputLength = outputSize * outputSize # length of output vector
     
-    for i in range(-20, 221): thresholdList.append(round(0.005*i, 6))
-    readValidReport('valid_report_n_sub_0.txt', thresholdList, size, outputLength)
-    readValidReport('valid_report_n_sub_1.txt', thresholdList, size, outputLength)
-    readValidReport('valid_report_n_sub_2.txt', thresholdList, size, outputLength)
-    readValidReport('valid_report_n_sub_3.txt', thresholdList, size, outputLength)
-    readValidReport('valid_report_n_sub_4.txt', thresholdList, size, outputLength)
+    for i in range(-20, 221): thresholdList.append(round(0.01*i - 1, 6))
+    print(thresholdList)
+    
+    readValidReport('valid_report_n_sub_0.txt', thresholdList, size, outputLength, True)
+    readValidReport('valid_report_n_sub_1.txt', thresholdList, size, outputLength, True)
+    readValidReport('valid_report_n_sub_2.txt', thresholdList, size, outputLength, True)
+    readValidReport('valid_report_n_sub_3.txt', thresholdList, size, outputLength, True)
+    readValidReport('valid_report_n_sub_4.txt', thresholdList, size, outputLength, True)
