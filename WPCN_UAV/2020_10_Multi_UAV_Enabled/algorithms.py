@@ -2,6 +2,7 @@ import math
 import random
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import numpy as np
 
 # k Means Clustering algorithm
 # return 'UAVs' and 'clusters'
@@ -135,10 +136,19 @@ def kMeansClustering(L, deviceList, width, height, H, T, display):
         count += 1
 
     # return UAVs and clusters (not moving, stay at the initial position)
+    # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
+
     UAVs = []
     for i in range(len(UAVloc)):
         thisUAV = []
-        for t in range(T): thisUAV.append(UAVloc[i])
+
+        # append x, y and h to the UAV
+        for j in range(3): # for each (x, y or h)
+            temp = []
+            for t in range(T): temp.append(UAVloc[i][j])
+            thisUAV.append(temp)
+            
+        # append to list of UAVs
         UAVs.append(thisUAV)
 
     # return
