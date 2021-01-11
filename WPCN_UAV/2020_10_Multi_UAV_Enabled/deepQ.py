@@ -276,7 +276,7 @@ def getNextLocation(s, a, n):
 
     # get next location by x and y
     # initialize as current location
-    nextY = curX
+    nextX = curX
     nextY = curY
         
     if y == -1: # backward 5m
