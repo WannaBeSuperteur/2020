@@ -158,10 +158,10 @@ def xyh(UAVs, xyh_):
     # for example, # UAVs[l] = [x0, y0, h0], UAVs[l][0] = x0 = [x00, x01, ..., x0t]
     result = []
 
-    for l in range(len(UAVs)): # for each UAV (l)
+    for t in range(len(UAVs[0][0])): # for each time slot (t)
         temp = []
 
-        for t in range(len(UAVs[l][0])): # for each time slot (t)
+        for l in range(len(UAVs)): # for each UAV (l)
             temp.append(UAVs[l][xyh_][t])
             
         result.append(temp)

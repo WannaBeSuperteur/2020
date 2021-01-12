@@ -69,6 +69,7 @@ def d_nlkl(n, l, k, x, y, h):
 # get theta value for getPLoS function
 # theta[l][k_l][n] = sin^-1(h[n][l]/d[n][l][k_l])
 def getTheta(n, l, k, x, y, h):
+    print(h)
     return math.asin(h[n][l]/d_nlkl(n, l, k, x, y, h))
 
 # probability of LoS : line-of-sight (PLoS) and probability of NLoS : non-line-of-sight (PNLoS)
