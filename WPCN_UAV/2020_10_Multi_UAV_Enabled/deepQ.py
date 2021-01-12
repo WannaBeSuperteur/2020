@@ -314,7 +314,7 @@ def getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2):
     # the average throughput of devices in l-th cluster
     nextR = 0
     for k in range(len(clusters[l])): # for each device in cluster l
-        nextR += f.R_nkl(B, k, l, n, PU, g, I_, o2)
+        nextR += f.R_nkl(B, k, l, n, PU, g, l_, o2)
     nextR /= len(clusters[l])
 
     #### return ####

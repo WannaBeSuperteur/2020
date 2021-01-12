@@ -182,6 +182,8 @@ def h(UAVs):
 
 # update direct reward list for UAV i
 # cluters : in the form of [list([[x of device 0, y of device 0], ...]), ...]
+# a       : action
+# alpha   : value of alpha
 def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2):
 
@@ -193,8 +195,8 @@ def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
         PNLoS_i = f.getPLoS(True, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
         
         # update Q value                
-        g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
-        dq.updateQvalue(Q, s_i, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, l_, o2)
+        g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+        dq.updateQvalue(Q, s_i, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, I_, o2)
         directReward_list[i] += value
 
 # ALGORITHM 1
@@ -250,8 +252,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # g[n][l][k_l]  (g[n][l])  : the channel's power gain between UAV l and device k_l
     # R[n][k_l]     (R[n])     : the average throughput of devices (for each device k),
     #                            in l-th cluster (1d array, for the devices in l-th cluster)
-    # PU[n][k_l]    (PU[n])    : peak power for IoT devices' uplink transmit (at most -20dBm)
-    # I_[n][k_l]    (I_[n])    : inference received by UAV l
+    # PU[n][k_l]    (PU[n])    : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
+    # I_[n][k_l]    (I_[n])    : inference received by UAV l (assumption: 0 as default)
     ac = []
     PU = []
     R = []
@@ -401,7 +403,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # for each device k
                 for k in range(len(devices)):
-                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), a)
+                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), a)
                     maxQ = dq.maxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, l_, o2)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 

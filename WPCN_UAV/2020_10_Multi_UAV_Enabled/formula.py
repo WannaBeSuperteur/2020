@@ -94,12 +94,12 @@ def getPLoS(isNot, n, l, k, clusters, x, y, h, b1, b2, S_):
 # the channel's power gain between UAV l and device k_l
 # g[n][l][k_l] = [P_LoS*u1 + P_NLoS*u2]^-1 * (K0*d[n][l][k_l])^(-a) ... (4)
 # where K0 = 4pi*fc/c
-def g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, x, y, h, a):
+def g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, clusters, x, y, h, alpha):
     
     c = 300000000 # speed of light
     K0 = 4 * math.pi * fc / c
     result0 = 1 / (PLoS * u1 + PNLoS * u2)
-    result1 = pow(K0 * d_nlkl(n, l, k, x, y, h), -a)
+    result1 = pow(K0 * d_nlkl(n, l, k, clusters, x, y, h), -alpha)
 
     return result0 * result1
 
@@ -134,9 +134,13 @@ def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
 # instantaneous throughput R_[n][k_l] of IoT device k_l
 # R_[n][k_l] = B[k_l]*log2(1 + r[n][k_l]) ... (10)
 #               where r[n][k_l] = P^U[n][k_l]*g[n][l][k_l] / (I_[n][k_l] + o^2)
+# PU[n] : P^U[n][k_l]
+# g     : g[n][l][k_l]
+# I_[n] : I_[n][k_l]
+# B     : B[k_l]
 def R_nkl(B, k, l, n, PU, g, I_, o2):
-    r = PU[n][l][k] * g[n][l][k] / (I_[n][l][k] + o2)
-    return B[l][k] * math.log(1+r, 2)
+    r = PU[n] * g / (I_[n] + o2)
+    return B * math.log(1+r, 2)
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T
 # R[k_l] = (1/T) * Sum(n=1,N)(a[n][l][k_l] * R_[n][k_l]) ... (11)
