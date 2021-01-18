@@ -87,7 +87,8 @@ def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
-def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
+# useDL : whether to use deep learning
+def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
 
     # get Q values for the action space of next state s'
     if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2))
@@ -103,6 +104,9 @@ def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
 
         # update max(a')Q(s', a')
         if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+
+    # return
+    return maxQ
 
 # convert state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
@@ -184,7 +188,7 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, l, R, useDL, clus
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     nextState = getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2)
-    maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
+    maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
 
     # update {a[n][l][k_l]} (array of communication times)
     a[n][l] = nextState[1]
@@ -207,6 +211,7 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, l, R, useDL, clus
         qs = []
         for i in range(27): qs.append(0)
         actionIndex = getActionIndex(action)
+        
         qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
 
         # append the state-action-reward [[s], qs] to Q table
@@ -342,8 +347,9 @@ def getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2):
     return [[nextX, nextY, nextH], next_a, nextR]
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
-def yt(r, r_, Q, s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
-    maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
+# useDL : whether to use deep learning
+def yt(r, r_, Q, s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
+    maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
