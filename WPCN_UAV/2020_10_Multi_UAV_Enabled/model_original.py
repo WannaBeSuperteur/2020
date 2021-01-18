@@ -346,13 +346,15 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
                 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
                 # action  : action ([-1, -1, -1] to [1, 1, 1])
+
+                # "Don't be confused between s = [q, a, R] and [state, action, newState]"
                 
                 oldS = copy.deepcopy(s) # save old state
                 nextState = dq.getNextState(s, action, t, i, R, clusters, B, PU, g, l_, o2)
                 q = copy.deepcopy(nextState[0])
-                action = copy.deepcopy(nextState[1])
+                a = copy.deepcopy(nextState[1])
                 R = copy.deepcopy(nextState[2])
-                s = [q, action, R] # update current state
+                s = [q, a, R] # update current state
 
                 # append to oldS_list and newS_list
                 oldS_list.append(oldS)
