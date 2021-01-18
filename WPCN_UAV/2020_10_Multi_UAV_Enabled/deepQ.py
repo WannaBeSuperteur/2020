@@ -17,15 +17,15 @@ import random
 #       y0 = [y00, y01, ..., y0t], ...
 #       h0 = [h00, h01, ..., h0t], ...
 # that is, in the form of UAV[uav_No][x/y/h][time]
-def getS(UAV, n, l, ac, R):
+def getS(UAV, n, l, a, R):
 
-    # q[n][l]       (q[n][l])  : the location of UAV l (1d array - x, y and h)
-    # ac[n][l][k_l] (ac[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
-    # R[n][k_l]     (R[n])     : the average throughput of devices (for each device k),
-    #                            in l-th cluster (1d array, for the devices in l-th cluster)
+    # q[n][l]      (q[n][l]) : the location of UAV l (1d array - x, y and h)
+    # a[n][l][k_l] (a[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
+    # R[n][k_l]    (R[n])    : the average throughput of devices (for each device k),
+    #                          in l-th cluster (1d array, for the devices in l-th cluster)
     q = f.getqFromUAV(UAV, n)
     
-    return [q, ac[n][l], R[n]]
+    return [q, a[n][l], R[n]]
 
 # get action with e-greedy while e increases
 # with probability e, do the best action
@@ -87,10 +87,10 @@ def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
-def getMaxQ(s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
+def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
 
     # get Q values for the action space of next state s'
-    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2))
+    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2))
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
@@ -178,18 +178,18 @@ def deepLearningQ_test(state):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, a, directReward, alphaL, r_, n, l, R, useDL, clusters, B, PU, g, l_, o2):
+def updateQvalue(Q, s, action, directReward, alphaL, r_, n, l, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    nextState = getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2)
-    maxQ = getMaxQ(s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
+    nextState = getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2)
+    maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
         
     # update Q value
     sFound = False # find corresponding state?
     for i in range(len(Q)):
         if Q[i][0][0] == s: # Q[i] = [[s0], [q00, q01, ...]], Q[i][0] = [s0], Q[i][0][0] = s0
-            actionIndex = getActionIndex(a)
+            actionIndex = getActionIndex(action)
             Q[i][1][actionIndex] = (1 - alphaL)*Q[i][1][actionIndex] + alphaL*(directReward + r_*maxQ)
 
             sFound = True
@@ -202,7 +202,7 @@ def updateQvalue(Q, s, a, directReward, alphaL, r_, n, l, R, useDL, clusters, B,
         # and modify the value with corresponding index to the q value for action a
         qs = []
         for i in range(27): qs.append(0)
-        actionIndex = getActionIndex(a)
+        actionIndex = getActionIndex(action)
         qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
 
         # append the state-action-reward [[s], qs] to Q table
@@ -237,9 +237,9 @@ def getAngle(q, n):
 
 # get next location when executing action a on state s
 # s : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
-# a : [x, y, z]
+# a : action [x, y, z]
 # n : time slot index
-def getNextLocation(s, a, n):
+def getNextLocation(s, action, n):
     
     # get current location
     curX = s[n][0] # q[n][l][0]
@@ -254,10 +254,10 @@ def getNextLocation(s, a, n):
     # z = -1 : UAV descends (-1 m)
     # z = 1  : UAV rises (1 m)
     
-    # a : action ([-1, -1, -1] to [1, 1, 1])
-    x = a[0]
-    y = a[1]
-    z = a[2]
+    # action ([-1, -1, -1] to [1, 1, 1])
+    x = action[0]
+    y = action[1]
+    z = action[2]
 
     # get angle (radian) between time n-1 and n
     lastAngle = 0 # set default angle as 0
@@ -302,13 +302,19 @@ def getNextLocation(s, a, n):
 ## clusters: [c0_deviceList, c1_deviceList, ...]
 # cK_deviceList: device list of cluster k,
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
-def getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2):
+def getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2):
 
     # get next location
-    [nextX, nextY, nextH] = getNextLocation(s, a, n)
+    [nextX, nextY, nextH] = getNextLocation(s, action, n)
 
-    #### derive next a[n][1] ####
+    #### derive next a[n][l] ####
     # the number of times that each device communicates with UAV l
+    # assumption: FILL IN THE BLANK
+
+    # get current a[n][l] from s
+    current_a = s[1]
+
+    # FILL IN THE BLANK
 
     #### derive next R[n][k_l] ####
     # the average throughput of devices in l-th cluster
@@ -322,8 +328,8 @@ def getNextState(s, a, n, l, R, clusters, B, PU, g, l_, o2):
     return [[nextX, nextY, nextH], next_a, nextR]
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
-def yt(r, r_, Q, s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
-    maxQ = getMaxQ(s, a, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
+def yt(r, r_, Q, s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2):
+    maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
