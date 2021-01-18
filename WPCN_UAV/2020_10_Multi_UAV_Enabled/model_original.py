@@ -182,9 +182,10 @@ def h(UAVs):
 
 # update direct reward list for UAV i
 # cluters : in the form of [list([[x of device 0, y of device 0], ...]), ...]
-# a       : action
+# action  : action [x, y, z]
+# a       : array {a[n][l][k_l]}
 # alpha   : value of alpha
-def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
+def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2):
 
     # for each device k
@@ -196,7 +197,7 @@ def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
         
         # update Q value                
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-        dq.updateQvalue(Q, s_i, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, I_, o2)
+        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, I_, o2)
         directReward_list[i] += value
 
 # ALGORITHM 1
@@ -248,23 +249,23 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # no need to init target network and online network now
 
     # init ac and R where
-    # ac[n][l][k_l] (ac[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
-    # g[n][l][k_l]  (g[n][l])  : the channel's power gain between UAV l and device k_l
-    # R[n][k_l]     (R[n])     : the average throughput of devices (for each device k),
-    #                            in l-th cluster (1d array, for the devices in l-th cluster)
-    # PU[n][k_l]    (PU[n])    : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
-    # I_[n][k_l]    (I_[n])    : inference received by UAV l (assumption: 0 as default)
-    ac = []
+    # a[n][l][k_l] (a[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
+    # g[n][l][k_l] (g[n][l]) : the channel's power gain between UAV l and device k_l
+    # R[n][k_l]    (R[n])    : the average throughput of devices (for each device k),
+    #                          in l-th cluster (1d array, for the devices in l-th cluster)
+    # PU[n][k_l]   (PU[n])   : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
+    # I_[n][k_l]   (I_[n])   : inference received by UAV l (assumption: 0 as default)
+    a = []
     PU = []
     R = []
     I_ = []
     
     for n in range(T): # n = 0,1,...,T-1 (# of time slots)
         
-        temp_ac = []
+        temp_a = []
         for l in range(L): # l = 0,1,...,L-1 (# of clusters = # of UAVs)
-            temp_ac.append(0)
-        ac.append(temp_ac)
+            temp_a.append(0)
+        a.append(temp_a)
         
         PU.append(-20)
         R.append(0)
@@ -295,13 +296,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             for i in range(L): # for each UAV = each cluster
                 
                 # get UAV i's next location
-                s_i = dq.getS(UAVs[i], t, i, ac, R)
+                s_i = dq.getS(UAVs[i], t, i, a, R)
 
                 # choose action with e-greedy while e increases
                 e_ = episode / M # example
-                a = dq.getActionWithE(Q, s_i, e_)
+                action = dq.getActionWithE(Q, s_i, e_)
                 
-                nextLocation = dq.getNextLocation(s_i, a, t)
+                nextLocation = dq.getNextLocation(s_i, action, t)
 
                 # if UAV i files beyond the border
                 if beyondBorder(UAVs[i], t, width, height) == True:
@@ -314,7 +315,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
-                    updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
+                    updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
             for i in range(L): # each UAV i
@@ -330,12 +331,12 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                         UAVs[j][1][t] = UAVs[j][1][t-1]
 
                         # UAV i and UAV j get a penalty of -1
-                        s_i = dq.getS(UAVs[i], t, i, ac, R)
-                        updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
+                        s_i = dq.getS(UAVs[i], t, i, a, R)
+                        updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
-                        s_j = dq.getS(UAVs[j], t, j, ac, R)
-                        updateDRlist(n, UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, a,
+                        s_j = dq.getS(UAVs[j], t, j, a, R)
+                        updateDRlist(n, UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_j, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
                 # get throughput (before) (time = n)
@@ -344,19 +345,19 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
                 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
-                # a       : action ([-1, -1, -1] to [1, 1, 1])
+                # action  : action ([-1, -1, -1] to [1, 1, 1])
                 
                 oldS = copy.deepcopy(s) # save old state
-                nextState = dq.getNextState(s, a, t, i, R, clusters, B, PU, g, l_, o2)
+                nextState = dq.getNextState(s, action, t, i, R, clusters, B, PU, g, l_, o2)
                 q = copy.deepcopy(nextState[0])
-                a = copy.deepcopy(nextState[1])
+                action = copy.deepcopy(nextState[1])
                 R = copy.deepcopy(nextState[2])
-                s = [q, a, R] # update current state
+                s = [q, action, R] # update current state
 
                 # append to oldS_list and newS_list
                 oldS_list.append(oldS)
                 newS_list.append(s)
-                action_list.append(a)
+                action_list.append(action)
 
                 # get throughput (after) (time = t+1)
                 afterThroughput = f.R_nkl(B, k, i, t+1, PU, g, I_, o2)
@@ -365,8 +366,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 if afterThroughput <= beforeThroughput:
                     
                     # UAV i gets a penalty of -1
-                    s_i = dq.getS(UAVs[i], t, i, ac, R)
-                    updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, a,
+                    s_i = dq.getS(UAVs[i], t, i, a, R)
+                    updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
 
             # if time slot is T
@@ -388,8 +389,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     index = 0
                     
                     for UAV in UAVs:
-                        s_UAV = dq.getS(UAV, t, index, ac, R)
-                        updateDRlist(n, UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, a,
+                        s_UAV = dq.getS(UAV, t, index, a, R)
+                        updateDRlist(n, UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_UAV, alpha, r_, R, useDL, clusters, B, PU, I_, o2)
                         index += 1
 
@@ -403,7 +404,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # for each device k
                 for k in range(len(devices)):
-                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), a)
+                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
                     maxQ = dq.maxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, l_, o2)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 

@@ -173,17 +173,21 @@ def deepLearningQ_test(state):
 #    (for all other actions, save 0 as direct reward)
 #    2-1. if there is a state that is the same with the state, update Q values for the state
 
+# a            : array {a[n][l][k_l]}
 # directReward : direct reward for the action
 # alphaL       : learning rate
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, action, directReward, alphaL, r_, n, l, R, useDL, clusters, B, PU, g, l_, o2):
+def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, l, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     nextState = getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2)
     maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2)
+
+    # update {a[n][l][k_l]} (array of communication times)
+    a[n][l] = nextState[1]
         
     # update Q value
     sFound = False # find corresponding state?
@@ -307,16 +311,26 @@ def getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2):
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n)
 
-    #### derive next a[n][l] ####
-    # the number of times that each device communicates with UAV l
-    # assumption: FILL IN THE BLANK
+    # derive next a[n][l]
+    # the number of times that each device communicates with UAV l (at time slot n)
 
-    # get current a[n][l] from s
-    current_a = s[1]
+    # from the paper: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
+    # After flying to the next location,
+    # UAV broadcasts energy flow or selects the device that owns the best channel condition
+    # in its cluster for uplink communication.
 
-    # FILL IN THE BLANK
+    # find the device with best channel condition
+    # NO NEED TO WRITE CODE FOR IT because RANDOMLY SELECT the device
 
-    #### derive next R[n][k_l] ####
+    # init next a[n][l] as current a[n][l] from s (a number, not an array)
+    next_a = s[1]
+
+    # assumption: randomly select the device to communicate with
+    # so, the probability for increasing next_a is 1/len(clusters[l])
+    deviceToCommunicate = random.randint(0, len(clusters[l])-1)
+    if deviceToCommunicate == 0: next_a += 1
+
+    # derive next R[n][k_l]
     # the average throughput of devices in l-th cluster
     nextR = 0
     for k in range(len(clusters[l])): # for each device in cluster l
