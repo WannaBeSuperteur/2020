@@ -16,11 +16,13 @@ def readImages(train, start, end):
 
 # visualize images from imgArray
 # imgArray : contains image array with value 0.0 (black) ~ 1.0 (white)
-def visualizeFromImgArray(imgArray):
+# saveName : name of the image file
+# show     : whether to show the image
+def visualizeFromImgArray(imgArray, saveName, show):
 
     # for each image
     for i in range(len(imgArray)):
-        print('showing image ' + str(i) + '...')
+        if show == True: print('showing image ' + str(i) + '...')
 
         img = imgArray[i]
 
@@ -39,7 +41,11 @@ def visualizeFromImgArray(imgArray):
 
         # visualize image
         convertedImg = Image.fromarray(np.array(converted).astype('uint8'), 'RGB')
-        convertedImg.show()
+        if show == True: convertedImg.show()
+
+        # save image
+        if saveName != None:
+            convertedImg.save(saveName)
 
 # visualize images
 # need: mnist_train_input.txt / mnist_train_output.txt / mnist_test_input.txt / mnist_test_output.txt
@@ -53,7 +59,7 @@ def visualizeImages(train, start, end):
     imgArray = readImages(train, start, end)
 
     # visualize images
-    visualizeFromImgArray(imgArray)
+    visualizeFromImgArray(imgArray, None, True)
     
 if __name__ == '__main__':
 
