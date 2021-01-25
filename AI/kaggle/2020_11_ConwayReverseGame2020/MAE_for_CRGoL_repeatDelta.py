@@ -1,5 +1,6 @@
 import math
 import numpy as np
+import readData as RD
 
 # file input and output
 # input  : validation report
@@ -83,33 +84,74 @@ def getWeightedPrediction(n, i, size, board_i_y, board_i_x, weight, readValidRep
 # use_n_sub     : n_sub mode (True or False)
 def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
 
-    # read ID to validate, from the validation report
-    IDtoValidate = []
-    # FILL IN THE BLANK
+    ### read ID to validate, from the validation report
+    id0ToValidate = []
+    
+    report = open(fn, 'r')
+    rows = report.readlines()
+    leng = len(rows)
+    report.close()
 
-    # add randomly select rows to validate, from delta = 2 to 5, using validRate
-    # FILL IN THE BLANK
+    # using parsing
+    for i in range(leng-9):
+        id_ = rows[i].split(']')[0][1:]
+        id0ToValidate.append(int(id_))
+
+    print(np.array(id0ToValidate))
+
+    ### add randomly select rows to validate, from delta = 2 to 5, using validRate
+    # ID: delta 1 = 000000 ~ 624999
+    #     delta 2 = 625000 ~ 1.249M
+    #     delta 3 = 1.250M ~ 1.874M
+    #     delta 4 = 1.875M ~ 2.499M
+    #     delta 5 = 2.500M ~ 3.124M (total 3,125,000 rows)
+    # for delta = 2 to delta = 5, use (line No.) + 625000 * (delta - 1)
     
     # T: training, V: validation, then, for example
-    # delta = 1 -> TTTTTTTTVV
-    # delta = 2 -> ...V..V...
-    # delta = 3 -> .V.V......
-    # delta = 4 -> ..V.....V.
-    # delta = 5 -> ......VV..
+    # training data, delta = 1 -> TTTTTTTTVV
+    # training data, delta = 2 -> ...V..V...
+    # training data, delta = 3 -> .V.V......
+    # training data, delta = 4 -> ..V.....V.
+    # training data, delta = 5 -> ......VV..
 
+    # load id and training input file
+    id0 = RD.loadArray('train_id_sub_0.txt')
+    id1 = RD.loadArray('train_id_sub_1.txt')
+    id2 = RD.loadArray('train_id_sub_2.txt')
+    id3 = RD.loadArray('train_id_sub_3.txt')
+    id4 = RD.loadArray('train_id_sub_4.txt')
+    
+    if use_n_sub == True:
+        train0 = RD.loadArray('train_input_n_sub_0.txt')
+        train1 = RD.loadArray('train_input_n_sub_1.txt')
+        train2 = RD.loadArray('train_input_n_sub_2.txt')
+        train3 = RD.loadArray('train_input_n_sub_3.txt')
+        train4 = RD.loadArray('train_input_n_sub_4.txt')
+    else:
+        train0 = RD.loadArray('train_input_sub_0.txt')
+        train1 = RD.loadArray('train_input_sub_1.txt')
+        train2 = RD.loadArray('train_input_sub_2.txt')
+        train3 = RD.loadArray('train_input_sub_3.txt')
+        train4 = RD.loadArray('train_input_sub_4.txt')
+
+    # list of training data and validating IDs
+    trainData = [train0, train1, train2, train3, train4]
+    validID = [id0, id1, id2, id3, id4]
+
+    # extract data to validate from train0, using ID list id0ToValidate
     # FILL IN THE BLANK
 
-    # read model
+    # randomly select rows for delta = 2 to 5
     # FILL IN THE BLANK
 
-    # validate (get output for validation input)
+    ### validate (get output for validation input) using model of modelName
     # for delta = 1 to 5
     # FILL IN THE BLANK
 
-    # compute loss (binary)
+    ### compute loss (binary)
     # FILL IN THE BLANK
 
-    # write validation report (name: fn = report.txt -> file name = report_repeatDelta.txt)
+    ### write validation report (name: fn = report.txt -> file name = report_repeatDelta.txt)
     # FILL IN THE BLANK
 
 if __name__ == '__main__':
