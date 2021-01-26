@@ -1,3 +1,5 @@
+import os
+
 def mergeTextFiles(idList):
 
     result = ''
@@ -25,7 +27,18 @@ def mergeTextFiles(idList):
 
 if __name__ == '__main__':
 
+    # extract the list of ID
+    files = os.listdir()
+    idList = []
+
+    for i in range(len(files)):
+        nameSplit = files[i].split('_')
+
+        try:
+            if nameSplit[1] == 'info.txt':
+                idList.append(int(nameSplit[0]))
+        except:
+            pass
+
     # for each 'X-(X+1)_info.txt' -> append X to idList
-    idList = [330, 603, 948, 1000, 1231]
-    
     mergeTextFiles(idList)
