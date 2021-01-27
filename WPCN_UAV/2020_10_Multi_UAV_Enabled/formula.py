@@ -115,17 +115,17 @@ def getI(L, PU, n, k, l, gArray):
 # the collected energy of each IoT device k_l at period T
 # E[k_l] = Sum(i=1,L)(ng * alpha * T * a[0][i] * g[0][i][k_l] * P^D), ... (6)
 #           where all l in deviceList, kl in K
-def E_kl(deviceList, L, ng, alpha, T, a, g, k, l, PD):
+def E_kl(deviceList, L, ng, alpha, T, a, g, k, PD):
     result = 0
     for i in range(1, L+1):
-        result += ng * alpha * T * a[0][i] * g[0][i][l][k] * PD
+        result += ng * alpha * T * a[0][i] * g[0][i][k] * PD
 
     return result
 
 # available energy E_[n][k_l] of device k_l in n-th time slot
 # E_[n][k_l] = E[k_l] - Sum(j=1,n-1)(a[j][l][k_l] * SN * PU[j][k_l]) ... (7)
 def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
-    result = E_kl(L, ng, alpha, T, a, g, k, l, PD)
+    result = E_kl(L, ng, alpha, T, a, g, k, PD)
     for j in range(1, n):
         result -= a[j][l][k] * SN * PU[j][l][k]
 
