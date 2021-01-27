@@ -134,12 +134,12 @@ def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
 # instantaneous throughput R_[n][k_l] of IoT device k_l
 # R_[n][k_l] = B[k_l]*log2(1 + r[n][k_l]) ... (10)
 #               where r[n][k_l] = P^U[n][k_l]*g[n][l][k_l] / (I_[n][k_l] + o^2)
-# PU[n] : P^U[n][k_l]
-# g     : g[n][l][k_l]
-# I_[n] : I_[n][k_l]
-# B     : B[k_l]
+# PU[n][l][k] : P^U[n][k_l]
+# g           : g[n][l][k_l]
+# I_[n][l][k] : I_[n][k_l]
+# B           : B[k_l]
 def R_nkl(B, k, l, n, PU, g, I_, o2):
-    r = PU[n] * g / (I_[n] + o2)
+    r = PU[n][l][k] * g / (I_[n][l][k] + o2)
     return B * math.log(1+r, 2)
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T

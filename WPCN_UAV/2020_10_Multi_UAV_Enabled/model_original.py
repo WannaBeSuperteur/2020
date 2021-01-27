@@ -250,27 +250,52 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # no need to init target network and online network now
 
     # init ac and R where
-    # a[n][l][k_l] (a[n][l]) : the number of times that each device communicates with UAV l (1d array, for all devices)
-    # g[n][l][k_l] (g[n][l]) : the channel's power gain between UAV l and device k_l
-    # R[n][k_l]    (R[n])    : the average throughput of devices (for each device k),
-    #                          in l-th cluster (1d array, for the devices in l-th cluster)
-    # PU[n][k_l]   (PU[n])   : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
-    # I_[n][k_l]   (I_[n])   : inference received by UAV l (assumption: 0 as default)
+    # a[n][l][k_l] (a[n][l][k])  : the number of times that each device communicates with UAV l (1d array, for all devices)
+    # g[n][l][k_l] (g[n][l][k])  : the channel's power gain between UAV l and device k_l
+    # R[n][k_l]    (R[n][l][k])  : the average throughput of devices (for each device k),
+    #                              in l-th cluster (1d array, for the devices in l-th cluster)
+    # PU[n][k_l]   (PU[n][l][k]) : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
+    # I_[n][k_l]   (I_[n][l][k]) : inference received by UAV l (assumption: 0 as default)
     a = []
+    g = []
     PU = []
     R = []
     I_ = []
     
     for t in range(T): # n = 0,1,...,T-1 (# of time slots)
-        
         temp_a = []
-        for l in range(L): # l = 0,1,...,L-1 (# of clusters = # of UAVs)
-            temp_a.append(0)
-        a.append(temp_a)
+        temp_g = []
+        temp_PU = []
+        temp_R = []
+        temp_I = []
         
-        PU.append(-20)
-        R.append(0)
-        I_.append(0)
+        for l in range(L): # l = 0,1,...,L-1 (# of clusters = # of UAVs)
+            temp_a_ = []
+            temp_g_ = []
+            temp_PU_ = []
+            temp_R_ = []
+            temp_I_ = []
+
+            K = len(clusters[l]) # number of devices for UAV l
+
+            for k in range(K): # k = 0,...,K-1 (# of devices for each UAV l)
+                temp_a_.append(0)
+                temp_g_.append(0)
+                temp_PU_.append(-20)
+                temp_R_.append(0)
+                temp_I_.append(0)
+
+            temp_a.append(temp_a_)
+            temp_g.append(temp_g_)
+            temp_PU.append(temp_PU_)
+            temp_R.append(temp_R_)
+            temp_I.append(temp_I_)
+                
+        a.append(temp_a)
+        g.append(temp_g)
+        PU.append(temp_PU)
+        R.append(temp_R)
+        I_.append(temp_I)
 
     # init Q Table
     # Q Table = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
