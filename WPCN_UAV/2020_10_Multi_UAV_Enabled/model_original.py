@@ -250,7 +250,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # no need to init target network and online network now
 
     # init ac and R where
-    # a[n][l][k_l] (a[n][l][k])  : the number of times that each device communicates with UAV l (1d array, for all devices)
+    # a[n][l][k_l] (a[n][l][k])  : the number of times that each device communicates with UAV l
     # g[n][l][k_l] (g[n][l][k])  : the channel's power gain between UAV l and device k_l
     # R[n][k_l]    (R[n][l][k])  : the average throughput of devices (for each device k),
     #                              in l-th cluster (1d array, for the devices in l-th cluster)

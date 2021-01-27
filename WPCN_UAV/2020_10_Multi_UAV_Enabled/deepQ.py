@@ -91,7 +91,9 @@ def getActionIndex(action):
 def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
 
     # get Q values for the action space of next state s'
-    if useDL == True: rewardsOfActionsOfNextState = deepLearningQ_test(getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2))
+    if useDL == True:
+        (nextState, _) = getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2)
+        rewardsOfActionsOfNextState = deepLearningQ_test(nextState)
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
@@ -187,10 +189,11 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, l, R, useDL, clus
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    nextState = getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2)
+    (nextState, deviceToCommunicate) = getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2)
     maxQ = getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
 
     # update {a[n][l][k_l]} (array of communication times)
+    # where k is the index for the device to communicate
     a[n][l] = nextState[1]
         
     # update Q value
@@ -329,11 +332,11 @@ def getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2):
 
     # init next a[n][l] as current a[n][l] from s (a number, not an array)
     next_a = s[1]
-
+    
     # assumption: randomly select the device to communicate with
     # so, the probability for increasing next_a is 1/len(clusters[l])
     deviceToCommunicate = random.randint(0, len(clusters[l])-1)
-    if deviceToCommunicate == 0: next_a += 1
+    next_a[deviceToCommunicate] += 1
 
     # derive next R[n][k_l]
     # the average throughput of devices in l-th cluster
@@ -344,7 +347,7 @@ def getNextState(s, action, n, l, R, clusters, B, PU, g, l_, o2):
 
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
-    return [[nextX, nextY, nextH], next_a, nextR]
+    return ([[nextX, nextY, nextH], next_a, nextR], deviceToCommunicate)
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
 # useDL : whether to use deep learning
