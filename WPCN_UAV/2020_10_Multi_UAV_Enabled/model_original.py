@@ -198,6 +198,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
             
         # update Q value                
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+
         dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, n, i, R, useDL, clusters, B, PU, g_i, I_, o2)
         directReward_list[i] += value
 
@@ -366,7 +367,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                                  Q, s_j, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
 
                 # get throughput (before) (time = n)
-                beforeThroughput = f.R_nkl(B, t, i, t, PU, g, I_, o2)
+                beforeThroughput = f.R_nkl(B, t, i, t, PU, g[t][i][t], I_, o2)
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
