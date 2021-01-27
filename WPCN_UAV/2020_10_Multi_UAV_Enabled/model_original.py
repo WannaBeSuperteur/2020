@@ -190,12 +190,12 @@ def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, actio
                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list):
 
     # for each device k
-    for k in range(len(deviceList)):
+    for k in range(len(clusters[i])):
 
         # get PLoS and PNLoS
         PLoS_i = f.getPLoS(False, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
         PNLoS_i = f.getPLoS(True, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
-        
+            
         # update Q value                
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
         dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, I_, o2)
