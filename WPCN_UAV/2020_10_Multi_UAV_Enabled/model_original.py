@@ -186,7 +186,7 @@ def h(UAVs):
 # a                 : array {a[n][l][k_l]}
 # alpha             : value of alpha
 # directReward_list : direct reward list to update
-def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list):
 
     # for each device k
@@ -197,8 +197,8 @@ def updateDRlist(n, UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, t, actio
         PNLoS_i = f.getPLoS(True, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
             
         # update Q value                
-        g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, t, i, R, useDL, clusters, B, PU, g_i, I_, o2)
+        g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, n, i, R, useDL, clusters, B, PU, g_i, I_, o2)
         directReward_list[i] += value
 
 # ALGORITHM 1
@@ -261,7 +261,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     R = []
     I_ = []
     
-    for n in range(T): # n = 0,1,...,T-1 (# of time slots)
+    for t in range(T): # n = 0,1,...,T-1 (# of time slots)
         
         temp_a = []
         for l in range(L): # l = 0,1,...,L-1 (# of clusters = # of UAVs)
@@ -316,7 +316,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
                     
                     # UAV i gets a penalty of -1
-                    updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                    updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
 
             for i in range(L): # each UAV i
@@ -333,11 +333,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                         # UAV i and UAV j get a penalty of -1
                         s_i = dq.getS(UAVs[i], t, i, a, R)
-                        updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                        updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
 
                         s_j = dq.getS(UAVs[j], t, j, a, R)
-                        updateDRlist(n, UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                        updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_j, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
 
                 # get throughput (before) (time = n)
@@ -372,7 +372,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, R)
-                    updateDRlist(n, UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                    updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_i, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
 
             # if time slot is T
@@ -395,7 +395,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     
                     for UAV in UAVs:
                         s_UAV = dq.getS(UAV, t, index, a, R)
-                        updateDRlist(n, UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                        updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_UAV, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
                         index += 1
 
