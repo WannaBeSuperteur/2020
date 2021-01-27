@@ -341,7 +341,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                                  Q, s_j, alpha, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list)
 
                 # get throughput (before) (time = n)
-                beforeThroughput = f.R_nkl(B, k, i, t, PU, g, I_, o2)
+                beforeThroughput = f.R_nkl(B, t, i, t, PU, g, I_, o2)
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
@@ -363,9 +363,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 action_list.append(action)
 
                 # get throughput (after) (time = t+1)
-                afterThroughput = f.R_nkl(B, k, i, t+1, PU, g, I_, o2)
+                afterThroughput = f.R_nkl(B, t, i, t+1, PU, g, I_, o2)
 
                 # device t's throughput does not increase
+                # assumption: device t is the device communicated with when the time slot is t
+                # [temporary] assume that the index of the device is t
                 if afterThroughput <= beforeThroughput:
                     
                     # UAV i gets a penalty of -1
