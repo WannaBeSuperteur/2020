@@ -8,7 +8,11 @@ import MAE_for_CRGoL_repeatDelta as MAE
 import deepLearning_GPU_helper as helper
 
 # process for test input data using the model
-def process(use_n_sub):
+# size : the number of rows/columns in each input data (=25)
+# ws   : window size
+def process(use_n_sub, size, ws):
+
+    n = 2 * ws + 1
 
     # best threshold and model name (temp)
     best_threshold = 0.495
@@ -28,36 +32,110 @@ def process(use_n_sub):
     id2 = RD.loadArray('test_id_sub_2.txt')
     id3 = RD.loadArray('test_id_sub_3.txt')
     id4 = RD.loadArray('test_id_sub_4.txt')
+
+    # shape of each element idX: (rows, 1)
     testIds = [id0, id1, id2, id3, id4]
+
+    # shape of each element testOutput: (rows, size*size)
+    testOutputs = []
 
     # for delta = 1 to 5
     for delta in range(1, 6):
 
-        ### derive output ###
-        testOutputs = []
+        ### initialize output ###
 
         # n_sub mode
         if use_n_sub == True:
 
-            # FILL IN THE BLANK
+            # extract test input data
+            testInput = testInputs[delta-1]
+            testInput = np.array(testInput).astype('float')
+            
+            testInputData = [] # number of data: (rows) * (size * size)
+
+            # for each test input (each row of test input file)
+            for i in range(len(testInput)):
+
+                # reshape each test input data
+                reshapedTestInput = np.pad(np.array(testInput[i]).reshape(size, size), ((ws, ws), (ws, ws)), 'wrap')
+
+                # save test data into array testInputData
+                for k in range(ws, size+ws):
+                    for l in range(ws, size+ws):
+                        testInputData.append(list(reshapedTestInput[k-ws:k+ws+1, l-ws:l+ws+1].reshape(n*n)))
+
+            # set initial test output as the test input data
+            testOutput = testInputData
 
         # not n_sub mode
         else:
             testOutput = testInputs[delta-1]
 
-            # for delta = 1, 2, 3, 4 and 5
-            for _ in range(delta):
-                testOutput = DL.getTestResult(modelName, testOutput, 0)
+        ### derive output ###
+            
+        # for delta = 1, 2, 3, 4 and 5
+        for _ in range(delta):
+            testOutput = copy.deepCopy(DL.getTestResult(modelName, testOutput, 0))
 
-                # inverse sigmoid
-                for i in range(len(testOutput)): # for each output data
-                    for j in range(len(testOutput[0])): # for each value of output data
-                        testOutput[i][j] = helper.invSigmoid(testOutput[i][j])
+            # inverse sigmoid
+            for i in range(len(testOutput)): # for each output data
+                for j in range(len(testOutput[0])): # for each value of output data
+                    testOutput[i][j] = helper.invSigmoid(testOutput[i][j])
 
+        ### append to the list of test output (delta=1,2,3,4,5) ###
+                    
+        # use_n_sub -> divide test output for each row
+        if use_n_sub == True:
+
+            # testOutput [[a], [b], [c], ...] -> [[a, b, ..., c], [d, e, ..., f], ...]
+            # where the length of each [a, b, ..., c], ... is size*size
+            testOutput_ = []
+            
+            for i in range(len(testOutput)):
+
+                # append and initialize row for interval (size*size)
+                if i % (size * size) == 0:
+                    testOutput_.append(testOutputRow)
+                    testOutputRow = []
+
+                testOutputRow.append(testOutput[i][0])
+
+            # append to the list of testOutput
+            testOutputs.append(testOutput_)
+
+        # not use_n_sub -> just append
+        else:
             testOutputs.append(testOutput)
 
     # merge output with id
-    # FILL IN THE BLANK
+    # so that [test ouput data] -> [id, test output data]
+    for i in range(5):
+        for j in range(len(testOutputs[i])):
+            testOutputs[i][j] = testIds[i][j] + testOutputs[i][j]
+
+            # remove last null values
+            leng = len(testOutputs[i][j])
+            if testOutputs[i][j][leng-1] == '': testOutputs[i][j].pop(leng-1)
+
+    # convert into 0 or 1 according to threshold
+    for i in testOutputs:
+        for j in range(len(i)):
+            i[j][0] = int(i[j][0])
+            
+            for k in range(1, len(i[j])):
+                value = i[j][k]
+                if float(i[j][k]) >= best_threshold: i[j][k] = 1 # above threshold -> live
+                else: i[j][k] = 0 # below threshold -> dead
+
+    # write the final array
+    finalArray = []
+    for i in range(5):
+        for j in range(len(testOutputs[i])):
+            finalArray.append(testOutputs[i][j])
+
+    # write the array as file
+    finalArray = sorted(finalArray, key=lambda x:x[0])
+    RD.saveArray('final.csv', finalArray, ',')
 
 # file input and output
 # input  : below (files read by this code)
@@ -180,7 +258,7 @@ if __name__ == '__main__':
 
             # process test input using this model
             # for delta = 1 to 5
-            process(False)
+            process(False, size, None)
 
         #### "use_n_sub == True" ####
         # training input, training ouput and model exist, but test input does not exist
@@ -210,4 +288,4 @@ if __name__ == '__main__':
 
             # # process test input using this model
             # for delta = 1 to 5
-            process(True)
+            process(True, size, ws)

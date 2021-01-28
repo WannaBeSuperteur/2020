@@ -84,6 +84,9 @@ def getWeightedPrediction(n, i, size, board_i_y, board_i_x, weight, readValidRep
 # use_n_sub     : n_sub mode (True or False)
 def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
 
+    # window size
+    ws = int((n-1)/2)
+
     ### read ID to validate, from the validation report
     id0ToValidate = []
     
@@ -122,37 +125,148 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
     id4 = RD.loadArray('train_id_sub_4.txt')
     
     if use_n_sub == True:
-        train0 = RD.loadArray('train_input_n_sub_0.txt')
-        train1 = RD.loadArray('train_input_n_sub_1.txt')
-        train2 = RD.loadArray('train_input_n_sub_2.txt')
-        train3 = RD.loadArray('train_input_n_sub_3.txt')
-        train4 = RD.loadArray('train_input_n_sub_4.txt')
+        trainInput0 = RD.loadArray('train_input_n_sub_0.txt')
+        trainInput1 = RD.loadArray('train_input_n_sub_1.txt')
+        trainInput2 = RD.loadArray('train_input_n_sub_2.txt')
+        trainInput3 = RD.loadArray('train_input_n_sub_3.txt')
+        trainInput4 = RD.loadArray('train_input_n_sub_4.txt')
+
+        trainOutput0 = RD.loadArray('train_output_n_sub_0.txt')
+        trainOutput1 = RD.loadArray('train_output_n_sub_1.txt')
+        trainOutput2 = RD.loadArray('train_output_n_sub_2.txt')
+        trainOutput3 = RD.loadArray('train_output_n_sub_3.txt')
+        trainOutput4 = RD.loadArray('train_output_n_sub_4.txt')
+        
     else:
-        train0 = RD.loadArray('train_input_sub_0.txt')
-        train1 = RD.loadArray('train_input_sub_1.txt')
-        train2 = RD.loadArray('train_input_sub_2.txt')
-        train3 = RD.loadArray('train_input_sub_3.txt')
-        train4 = RD.loadArray('train_input_sub_4.txt')
+        trainInput0 = RD.loadArray('train_input_sub_0.txt')
+        trainInput1 = RD.loadArray('train_input_sub_1.txt')
+        trainInput2 = RD.loadArray('train_input_sub_2.txt')
+        trainInput3 = RD.loadArray('train_input_sub_3.txt')
+        trainInput4 = RD.loadArray('train_input_sub_4.txt')
 
-    # list of training data and validating IDs
-    trainData = [train0, train1, train2, train3, train4]
-    validID = [id0, id1, id2, id3, id4]
+        trainOutput0 = RD.loadArray('train_output_sub_0.txt')
+        trainOutput1 = RD.loadArray('train_output_sub_1.txt')
+        trainOutput2 = RD.loadArray('train_output_sub_2.txt')
+        trainOutput3 = RD.loadArray('train_output_sub_3.txt')
+        trainOutput4 = RD.loadArray('train_output_sub_4.txt')
 
-    # extract data to validate from train0, using ID list id0ToValidate
-    # FILL IN THE BLANK
+    # list of training input/output data and validating IDs
+    trainInputData = [trainInput0, trainInput1, trainInput2, trainInput3, trainInput4]
+    trainOutputData = [trainOutput0, trainOutput1, trainOutput2, trainOutput3, trainOutput4]
 
-    # randomly select rows for delta = 2 to 5
-    # FILL IN THE BLANK
+    # extract data to validate from trainInput0, using ID list id0ToValidate
+    inputDataToValidate = []
+
+    for i in range(leng-9):
+        inputDataToValidate.append(trainInput0[idToValidate[i]])
+
+    # randomly select (validate count of when delta=1) rows for delta = 2 to 5
+    totalCount = 25 * 25 * 1000
+    
+    for i in range(1, 5):
+        count = 0
+
+        # to check an ID is to be validated
+        idToValidate_ = []
+        for j in range(totalCount): idToValidate.append(False)
+
+        # randomly select IDs until the number of IDs for the delta reaches (validate count of when delta=1)
+        while count < leng-9:
+            rand = random.randint(i * totalCount, (i+1) * totalCount - 1)
+
+            if idToValidate_[rand % totalCount] == False:
+                idToValidate_[rand % totalCount] = True
+
+                # append to the list of id to validate and input data to validate
+                idToValidate.append(i * totalCount + rand)
+                inputDataToValidate.append(trainInputData[i][rand])
+                count += 1
 
     ### validate (get output for validation input) using model of modelName
     # for delta = 1 to 5
-    # FILL IN THE BLANK
+    inputDataToValidate = np.array(inputDataToValidate).astype('float')
+    rows = len(inputDataToValidate)
+
+    # set of validation outputs
+    validOutputs = []
+
+    # validate each validation input row
+    for i in range(rows):
+
+        delta = int(idToValidate[i] / totalCount)
+        
+        # initialize valid output as the input data
+        validOutput = copy.deepCopy(inputDataToValidate[i])
+
+        # derive output
+        # for delta = 1, 2, 3, 4 and 5
+        for _ in range(delta):
+            validOutput = DL.getTestResult(modelName, validOutput, 0)
+
+            # inverse sigmoid
+            for i in range(len(validOutput)): # for each output data
+                for j in range(len(validOutput[0])): # for each value of output data
+                    validOutput[i][j] = helper.invSigmoid(validOutput[i][j])
+
+        validOutputs.append(validOutput)
+
+    #   (length of idToValidate)
+    # = (length of inputDataToValidate)
+    # = (length of validOutputs)
 
     ### compute loss (binary)
-    # FILL IN THE BLANK
+    # compare with training output data
+    avgLoss = []
+    elementsInEachRow = len(validOutputs[0])
+
+    for thr in thresholdList:
+
+        # sum of the loss for this threshold
+        sumLossForThr = 0
+
+        # compute loss for each element
+        for i in range(rows):
+
+            delta = int(idToValidate[i] / totalCount) + 1
+            ID = idToValidate[i] % totalCount
+            TO = trainOutputData[delta-1][ID] 
+            
+            for j in range(elementsInEachRow):
+                if validOutputs[i][j] >= thr and TO[j] == 0:
+                    sumLossForThr += 1
+                elif validOutputs[i][j] < thr and TO[j] == 1:
+                    sumLossForThr += 1
+
+        # find average loss
+        avgLoss.append(sumLossForThr / (rows * elementsInEachRow))
 
     ### write validation report (name: fn = report.txt -> file name = report_repeatDelta.txt)
-    # FILL IN THE BLANK
+    report_fn = fn.split('.')[0] + '_repeatDelta.txt'
+
+    rf = open(report_fn, 'w')
+    rfContent = ''
+
+    for i in range(thresholdList):
+        rfContent += '[thr = ' + str(thresholdList[i]) + '] loss=' + str(avgLoss[i]) + '\n'
+
+    rf.write(rfContent)
+    rf.close()
+
+    ### write (validation output) + (actual training output)
+    compare_fn = fn.split('.')[0] + '_repeatDelta_compare.txt'
+
+    cf = open(compare_fn, 'w')
+    cfContent = ''
+
+    for i in range(rows):
+        delta = int(idToValidate[i] / totalCount) + 1
+        ID = idToValidate[i] % totalCount
+        
+        cfContent += (str(delta) + '\t' + str(ID) + '\t' +
+                      str(np.array(validOutputs[i])) + '|\t' + str(np.array(trainOutputData[delta-1][ID])))
+
+    cf.write(cfContent)
+    cf.close()
 
 if __name__ == '__main__':
     thresholdList = [] # list of thresholds to use
