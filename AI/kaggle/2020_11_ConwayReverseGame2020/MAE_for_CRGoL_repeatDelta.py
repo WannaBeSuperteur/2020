@@ -100,8 +100,6 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
         id_ = rows[i].split(']')[0][1:]
         id0ToValidate.append(int(id_))
 
-    print(np.array(id0ToValidate))
-
     ### add randomly select rows to validate, from delta = 2 to 5, using validRate
     # ID: delta 1 = 000000 ~ 624999
     #     delta 2 = 625000 ~ 1.249M
@@ -117,50 +115,80 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
     # training data, delta = 4 -> ..V.....V.
     # training data, delta = 5 -> ......VV..
 
-    # load id and training input file
+    # load ID and training input/output file
+    print('<00> loading ID files...')
+    print('use_n_sub:', use_n_sub)
     id0 = RD.loadArray('train_id_sub_0.txt')
+    print('id 0 finished')
     id1 = RD.loadArray('train_id_sub_1.txt')
+    print('id 1 finished')
     id2 = RD.loadArray('train_id_sub_2.txt')
+    print('id 2 finished')
     id3 = RD.loadArray('train_id_sub_3.txt')
+    print('id 3 finished')
     id4 = RD.loadArray('train_id_sub_4.txt')
-    
+    print('id 4 finished')
+
+    print('<01> loading training input/output files...')
     if use_n_sub == True:
         trainInput0 = RD.loadArray('train_input_n_sub_0.txt')
+        print('n_sub 0 input finished')
         trainInput1 = RD.loadArray('train_input_n_sub_1.txt')
+        print('n_sub 1 input finished')
         trainInput2 = RD.loadArray('train_input_n_sub_2.txt')
+        print('n_sub 2 input finished')
         trainInput3 = RD.loadArray('train_input_n_sub_3.txt')
+        print('n_sub 3 input finished')
         trainInput4 = RD.loadArray('train_input_n_sub_4.txt')
+        print('n_sub 4 input finished')
 
         trainOutput0 = RD.loadArray('train_output_n_sub_0.txt')
+        print('n_sub 0 output finished')
         trainOutput1 = RD.loadArray('train_output_n_sub_1.txt')
+        print('n_sub 1 output finished')
         trainOutput2 = RD.loadArray('train_output_n_sub_2.txt')
+        print('n_sub 2 output finished')
         trainOutput3 = RD.loadArray('train_output_n_sub_3.txt')
+        print('n_sub 3 output finished')
         trainOutput4 = RD.loadArray('train_output_n_sub_4.txt')
+        print('n_sub 4 output finished')
         
     else:
         trainInput0 = RD.loadArray('train_input_sub_0.txt')
+        print('sub 0 input finished')
         trainInput1 = RD.loadArray('train_input_sub_1.txt')
+        print('sub 1 input finished')
         trainInput2 = RD.loadArray('train_input_sub_2.txt')
+        print('sub 2 input finished')
         trainInput3 = RD.loadArray('train_input_sub_3.txt')
+        print('sub 3 input finished')
         trainInput4 = RD.loadArray('train_input_sub_4.txt')
+        print('sub 4 input finished')
 
         trainOutput0 = RD.loadArray('train_output_sub_0.txt')
+        print('sub 0 output finished')
         trainOutput1 = RD.loadArray('train_output_sub_1.txt')
+        print('sub 1 output finished')
         trainOutput2 = RD.loadArray('train_output_sub_2.txt')
+        print('sub 2 output finished')
         trainOutput3 = RD.loadArray('train_output_sub_3.txt')
+        print('sub 3 output finished')
         trainOutput4 = RD.loadArray('train_output_sub_4.txt')
+        print('sub 4 output finished')
 
     # list of training input/output data and validating IDs
     trainInputData = [trainInput0, trainInput1, trainInput2, trainInput3, trainInput4]
     trainOutputData = [trainOutput0, trainOutput1, trainOutput2, trainOutput3, trainOutput4]
 
     # extract data to validate from trainInput0, using ID list id0ToValidate
+    print('<02> extracting data to validate, from training input when delta=1...')
     inputDataToValidate = []
 
     for i in range(leng-9):
         inputDataToValidate.append(trainInput0[idToValidate[i]])
 
     # randomly select (validate count of when delta=1) rows for delta = 2 to 5
+    print('<03> randomly select data to validate, from training input when delta=2~5...')
     totalCount = 25 * 25 * 1000
     
     for i in range(1, 5):
@@ -172,6 +200,8 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
 
         # randomly select IDs until the number of IDs for the delta reaches (validate count of when delta=1)
         while count < leng-9:
+            if count % 100 == 0: print(count, '/', leng-9)
+            
             rand = random.randint(i * totalCount, (i+1) * totalCount - 1)
 
             if idToValidate_[rand % totalCount] == False:
@@ -184,6 +214,7 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
 
     ### validate (get output for validation input) using model of modelName
     # for delta = 1 to 5
+    print('<04> validate when delta=1~5...')
     inputDataToValidate = np.array(inputDataToValidate).astype('float')
     rows = len(inputDataToValidate)
 
@@ -192,6 +223,7 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
 
     # validate each validation input row
     for i in range(rows):
+        if i % 1000 == 0: print(i, '/', rows)
 
         delta = int(idToValidate[i] / totalCount)
         
@@ -216,10 +248,12 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
 
     ### compute loss (binary)
     # compare with training output data
+    print('<05> comparing the result with corresponding training output data...')
     avgLoss = []
     elementsInEachRow = len(validOutputs[0])
 
     for thr in thresholdList:
+        print('threshold =', thr)
 
         # sum of the loss for this threshold
         sumLossForThr = 0
@@ -241,6 +275,7 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
         avgLoss.append(sumLossForThr / (rows * elementsInEachRow))
 
     ### write validation report (name: fn = report.txt -> file name = report_repeatDelta.txt)
+    print('<06> writing validation report...')
     report_fn = fn.split('.')[0] + '_repeatDelta.txt'
 
     rf = open(report_fn, 'w')
@@ -253,6 +288,7 @@ def valid(fn, thresholdList, size, n, modelName, validRate, use_n_sub):
     rf.close()
 
     ### write (validation output) + (actual training output)
+    print('<07> writing validation and actual training output...')
     compare_fn = fn.split('.')[0] + '_repeatDelta_compare.txt'
 
     cf = open(compare_fn, 'w')
