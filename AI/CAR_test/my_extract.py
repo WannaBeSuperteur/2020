@@ -88,9 +88,9 @@ def makeCsv():
         label = OFEC_list[file.split(')')[0]]
         thisRow = [label]
         
-        for i in range(imgWidth):
-            for j in range(imgHeight):
-                thisRow.append(int(sum(pixel[i, j])/3))
+        for i in range(imgHeight):
+            for j in range(imgWidth):
+                thisRow.append(int(sum(pixel[j, i])/3))
 
         csvArray.append(thisRow)
 
@@ -138,10 +138,10 @@ def extractTrainAndTest():
 if __name__ == '__main__':
 
     # extract images from 'myData' directory
-    #extractImages()
+    extractImages()
 
-    # make CSV file from the extracted images
-    #makeCsv()
+    # make CSV file (train_test.csv) from the extracted images
+    makeCsv()
 
-    # extract training data and test data
+    # extract training data and test data (train.csv and test.csv)
     extractTrainAndTest()

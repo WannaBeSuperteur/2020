@@ -84,19 +84,19 @@ def convertToNumeric():
     print('reading test output...')
     test_output = readCSV('test.csv', [0, 1], [1, testRows+1])
 
-    # make training data numeric (inverting the color)
+    # make training data numeric (apply /=255)
     for i in range(trainRows):
         if i % 25 == 0: print(i)
         
         for j in range(len(train_input[0])):
-            train_input[i][j] = 1.0 - int(train_input[i][j]) / 255.0
+            train_input[i][j] = float(train_input[i][j]) / 255.0
 
-    # make test data numeric (inverting the color)
+    # make test data numeric (apply /=255)
     for i in range(testRows):
         if i % 25 == 0: print(i)
         
         for j in range(len(test_input[0])):
-            test_input[i][j] = 1.0 - int(test_input[i][j]) / 255.0
+            test_input[i][j] = float(test_input[i][j]) / 255.0
 
     # make output one-hot
     train_output = list(train_output)

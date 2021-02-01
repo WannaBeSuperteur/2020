@@ -1,23 +1,23 @@
 FI
 R2 128 192
-#### 124 188
-C2D 64 5 5 relu same
-#### 62 94
+#### 126 190
+C2D 64 3 3 relu valid
+#### 63 95
 MP2D 2
-#### 58 90
-C2D 64 5 5 relu same
-#### 29 45
+#### 61 93
+C2D 64 3 3 relu valid
+#### 30 46
 MP2D 2
-#### 25 41
-C2D 64 5 5 relu same
+#### 28 44
+C2D 64 3 3 relu valid
+#### 14 22
+MP2D 2
 #### 12 20
-MP2D 2
-#### 8 16
-C2D 64 5 5 relu same
-#### 4 8
+C2D 64 3 3 relu valid
+#### 6 10
 MP2D 2
 #### 4 8
-C2D 32 1 1 relu same
+C2D 32 3 3 relu valid
 F
 D 40 relu
 Drop 0.25
