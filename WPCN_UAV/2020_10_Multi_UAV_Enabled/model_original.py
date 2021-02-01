@@ -248,6 +248,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # clusters (number of clusters = L, number of total devices = devices)
     (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False)
 
+    # temp
+    print(len(clusters[0]))
+    print(len(clusters[1]))
+    print(len(clusters[2]))
+
     # no need to init target network and online network now
 
     # init ac and R where
@@ -375,10 +380,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # action  : action ([-1, -1, -1] to [1, 1, 1])
 
                 # "Don't be confused between s = [q, a, R] and [state, action, newState]"
-
-                s = dq.getS(UAVs[i], t, l, a, R) # current state
                 
+                s = dq.getS(UAVs[i], t, i, a, R) # current state                
                 oldS = copy.deepcopy(s) # save old state
+
                 (nextState, _) = dq.getNextState(s, action, t, i, R, clusters, B, PU, g, I_, o2)
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
@@ -432,8 +437,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
                 # where maxQ = max(a')Q(s', a')
-                PLoS_i = f.getPLoS(False, n, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
-                PNLoS_i = f.getPLoS(True, n, UAVs[i], k, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                PLoS_i = f.getPLoS(False, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                PNLoS_i = f.getPLoS(True, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
 
                 # for each device k
                 for k in range(len(devices)):
