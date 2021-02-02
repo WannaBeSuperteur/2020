@@ -248,11 +248,6 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # clusters (number of clusters = L, number of total devices = devices)
     (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False)
 
-    # temp
-    print(len(clusters[0]))
-    print(len(clusters[1]))
-    print(len(clusters[2]))
-
     # no need to init target network and online network now
 
     # init ac and R where
@@ -437,13 +432,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
                 # where maxQ = max(a')Q(s', a')
-                PLoS_i = f.getPLoS(False, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
-                PNLoS_i = f.getPLoS(True, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                PLoS_i = f.getPLoS(False, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+                PNLoS_i = f.getPLoS(True, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
 
                 # for each device k
-                for k in range(len(devices)):
-                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, UAVs[i], k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-                    maxQ = dq.maxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, l_, o2)
+                for k in range(len(clusters[i])):
+                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+                    maxQ = dq.getMaxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, l_, o2)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 
                 replayBuffer.append([oldS[i], action_list[i], reward, newS[i]])

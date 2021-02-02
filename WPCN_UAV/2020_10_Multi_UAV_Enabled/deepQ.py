@@ -87,7 +87,8 @@ def getActionIndex(action):
     return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
-# useDL : whether to use deep learning
+# useDL       : whether to use deep learning
+# actionSpace : set of actions (in the form of [x, y, z])
 def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
 
     # get Q values for the action space of next state s'
@@ -97,7 +98,7 @@ def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     maxQ = -999999 # max(a')Q(s', a')
-    for a_ in range(len(actionSpace)):
+    for action_ in range(len(actionSpace)):
 
         # when using deep learning, Q value is the maximum value among rewards for actions on the next state
         # otherwise,                Q value is 0
