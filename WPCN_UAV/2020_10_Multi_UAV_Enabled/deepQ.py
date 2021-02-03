@@ -7,6 +7,7 @@ import deepLearning_main as DLmain
 import AIBASE_main as main
 import formula as f
 import random
+import readData as RD
 
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
@@ -137,8 +138,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     for i in range(len(Q)): outputData.append(Q[i][1])
 
     # save input and output array as file
-    helper.saveArray('Q_input.txt', inputData)
-    helper.saveArray('Q_output.txt', outputData)
+    RD.saveArray('Q_input.txt', inputData)
+    RD.saveArray('Q_output.txt', outputData)
 
     # train using deep learning and save the model (testInputFile and testOutputFile is None)
     # need: modelConfig.txt

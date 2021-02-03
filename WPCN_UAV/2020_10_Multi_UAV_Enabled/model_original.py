@@ -455,13 +455,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             H_ = min(30, len(replayBuffer)) # select maximum 30 samples
             
             minibatch = [] # minibatch of H_ samples from replay buffer
-            
+
             while len(minibatch) < H_:
-                rand = random.randint(0, len(minibatch)-1) # randomly select
+                rand = random.randint(0, len(replayBuffer)-1) # randomly select from the replay buffer
                 minibatch.append(replayBuffer[rand]) # append to the buffer
             
             # train the network and update weight
-            deepLearningQ_training(QTable, 'cpu:0', 50, False)
+            dq.deepLearningQ_training(QTable, 'cpu:0', 50, False)
 
 if __name__ == '__main__':
     
