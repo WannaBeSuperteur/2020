@@ -67,10 +67,8 @@ def eucNorm(array):
 # clusters    : in the form of [list([[x of device 0, y of device 0], ...]), ...]
 def d_nlkl(n, l, k, clusters, x, y, h):
 
-    #print('l,k  =', l, k)
-    #print('clt  =', len(clusters))
-    #print('c[0] =', len(clusters[l]))
     thisDevice = clusters[l][k] # each device : [x of device 0, y of device 0]
+
     xd = thisDevice[0]
     yd = thisDevice[1]
     
