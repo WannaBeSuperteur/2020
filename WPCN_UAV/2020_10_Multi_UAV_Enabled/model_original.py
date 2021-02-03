@@ -250,6 +250,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
     # no need to init target network and online network now
 
+    # create action space
+    actionSpace = []
+    for i in range(-1, 2):
+        for j in range(-1, 2):
+            for k in range(-1, 2):
+                actionSpace.append([i, j, k])
+
     # init ac and R where
     # a[n][l][k_l] (a[n][l][k])  : the number of times that each device communicates with UAV l
     # g[n][l][k_l] (g[n][l][k])  : the channel's power gain between UAV l and device k_l
@@ -438,7 +445,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # for each device k
                 for k in range(len(clusters[i])):
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-                    maxQ = dq.getMaxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, l_, o2)
+                    maxQ = dq.getMaxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, I_, o2)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 
                 replayBuffer.append([oldS[i], action_list[i], reward, newS[i]])

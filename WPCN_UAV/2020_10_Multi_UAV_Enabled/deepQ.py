@@ -97,6 +97,7 @@ def getMaxQ(s, action, n, l, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
         rewardsOfActionsOfNextState = deepLearningQ_test(nextState)
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
+    # action space = [[-1, -1, -1], [-1, -1, 0], [-1, -1, 1], [-1, 0, -1], ..., [1, 1, 1]]
     maxQ = -999999 # max(a')Q(s', a')
     for action_ in range(len(actionSpace)):
 
