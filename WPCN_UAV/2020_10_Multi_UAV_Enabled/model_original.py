@@ -445,10 +445,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 # for each device k
                 for k in range(len(clusters[i])):
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-                    maxQ = dq.getMaxQ(oldS[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, I_, o2)
+                    maxQ = dq.getMaxQ(oldS_list[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, I_, o2, useDL)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 
-                replayBuffer.append([oldS[i], action_list[i], reward, newS[i]])
+                replayBuffer.append([oldS_list[i], action_list[i], reward, newS_list[i]])
             
             # Randomly select a minibatch of H_ samples from replay buffer
             H_ = min(30, len(replayBuffer)) # select maximum 30 samples
