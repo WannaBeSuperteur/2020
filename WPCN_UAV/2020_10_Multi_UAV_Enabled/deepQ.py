@@ -8,6 +8,7 @@ import AIBASE_main as main
 import formula as f
 import random
 import readData as RD
+import numpy as np
 
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
@@ -138,14 +139,19 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     for i in range(len(Q)): outputData.append(Q[i][1])
 
     # save input and output array as file
-    RD.saveArray('Q_input.txt', inputData)
-    RD.saveArray('Q_output.txt', outputData)
+    if len(inputData) > 0:
+        RD.saveArray('Q_input.txt', inputData)
+    if len(outputData) > 0:
+        RD.saveArray('Q_output.txt', outputData)
 
     # train using deep learning and save the model (testInputFile and testOutputFile is None)
     # need: modelConfig.txt
-    # DON'T NEED TO APPLY SIGMOID to training output data, because DL.deeplearning applies it
-    DL.deepLearning('Q_input.txt', 'Q_output.txt', None, None, None,
-                    None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
+    # DON'T NEED TO APPLY SIGMOID to training output data, because DLmain.deeplearning applies it
+    try:
+        DLmain.deepLearning('Q_input.txt', 'Q_output.txt', None, None, None,
+                            None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
+    except:
+        print('Q_input.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state):
