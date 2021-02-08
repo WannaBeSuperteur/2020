@@ -230,19 +230,21 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, l, R, useDL, clus
         Q.append([[s], qs])
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
+# q_this   : q[n][l]   (in the [x, y, h] form)
+# q_before : q[n-1][l] (in the [x, y, h] form)
 # IN RADIAN
-def getAngle(q, n):
+def getAngle(q_this, q_before, n):
     if n > 0:
-        locBefore = q[n-1][l]
-        locAfter = q[n][l]
+        locBefore = q_before
+        locAfter = q_this
 
         # x and y value at time t-1
-        xBefore = q[n-1][0]
-        yBefore = q[n-1][1]
+        xBefore = locBefore[0]
+        yBefore = locBefore[1]
 
         # x and y value at time t
-        xAfter = q[n][0]
-        yAfter = q[n][1]
+        xAfter = locAfter[0]
+        yAfter = locAfter[1]
 
         # compute angle (angle 0 = positive direction of x axis)
         xDif = xAfter - xBefore
@@ -280,11 +282,17 @@ def getNextLocation(s, action, n):
     y = action[1]
     z = action[2]
 
+    # initialize q_before
+
     # get angle (radian) between time n-1 and n
+    # LOOK AT THE PAPER ONCE MORE TOMORROW
     lastAngle = 0 # set default angle as 0
     for n_ in range(n, 0, -1):
-        q = f.getq(curX, curY, curH)
-        lastAngle = getAngle(q, n_)
+        
+        q = f.getq(s[n_][0], s[n_][1], s[n_][2])
+        q_before = f.getq(s[n_-1][0], s[n_-1][1], s[n_-1][2])
+        lastAngle = getAngle(q, q_before, n_)
+        
         if lastAngle != 'not moved': break # lastAngle is numeric value
 
     # when all 'not moved' for n, n-1, n-2, ..., 0, then set as default
