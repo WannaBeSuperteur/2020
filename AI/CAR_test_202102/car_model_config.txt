@@ -1,0 +1,24 @@
+FI
+R2 64 64
+#### 62 62
+C2D 64 3 3 relu valid
+#### 31 31
+MP2D 2
+#### 29 29
+C2D 64 3 3 relu valid
+#### 14 14
+MP2D 2
+#### 12 12
+C2D 64 3 3 relu valid
+#### 6 6
+MP2D 2
+#### 4 4
+C2D 32 3 3 relu valid
+F
+D 40 relu
+Drop 0.25
+D 40 relu
+Drop 0.25
+D 40 relu
+DO sigmoid
+OP adam0 0.001
