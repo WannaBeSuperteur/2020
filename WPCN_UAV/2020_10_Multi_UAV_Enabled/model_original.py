@@ -199,7 +199,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         # update Q value                
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
 
-        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, n, i, R, useDL, clusters, B, PU, g, I_, o2)
+        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, n, UAVs, i, R, useDL, clusters, B, PU, g, I_, o2)
         directReward_list[i] += value
 
 # ALGORITHM 1
@@ -336,7 +336,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 e_ = episode / M # example
                 action = dq.getActionWithE(Q, s_i, e_)
                 
-                nextLocation = dq.getNextLocation(s_i, action, t)
+                nextLocation = dq.getNextLocation(s_i, action, t, UAVs, l, a, R)
 
                 # if UAV i files beyond the border
                 if beyondBorder(UAVs[i], t, width, height) == True:
@@ -386,7 +386,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 s = dq.getS(UAVs[i], t, i, a, R) # current state                
                 oldS = copy.deepcopy(s) # save old state
 
-                (nextState, _) = dq.getNextState(s, action, t, i, R, clusters, B, PU, g, I_, o2)
+                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, I_, o2)
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
                 R_next = copy.deepcopy(nextState[2])
@@ -446,7 +446,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     PNLoS_i = f.getPLoS(True, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
                     
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-                    maxQ = dq.getMaxQ(oldS_list[i], action_list[i], t, i, R, actionSpace, clusters, B, PU, g_i, I_, o2, useDL)
+                    maxQ = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, R, actionSpace, clusters, B, PU, g_i, I_, o2, useDL)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
                 
                 replayBuffer.append([oldS_list[i], action_list[i], reward, newS_list[i]])
