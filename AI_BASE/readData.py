@@ -231,10 +231,14 @@ def saveArray(fn, _2dArray, splitter='\t', saveSize=0):
         f.close()
 
 # load result array with splitter
-def loadArray(fn, splitter='\t'):
+def loadArray(fn, splitter='\t', UTF8=False):
     
     # read *.pgn file
-    f = open(fn, 'r')
+    if UTF8 == True:
+        f = open(fn, 'r', encoding='UTF8')
+    else:
+        f = open(fn, 'r')
+    
     fLines = f.readlines()
     rows = len(fLines)
     f.close()
