@@ -48,9 +48,11 @@ def getq_nl(x, y, h, n, l):
 
 # that is, in the form of UAV[uav_No][x/y/h][time]
 def getqFromUAV(UAV, n):
-    x = UAV[n][0]
-    y = UAV[n][1]
-    h = UAV[n][2]
+    
+    x = UAV[0][n]
+    y = UAV[1][n]
+    h = UAV[2][n]
+
     return [x, y, h]
 
 # ||.|| (Euclidean norm)
