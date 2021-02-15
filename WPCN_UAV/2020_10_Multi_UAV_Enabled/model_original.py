@@ -270,7 +270,9 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     R = []
     I_ = []
     
-    for t in range(T): # n = 0,1,...,T-1 (# of time slots)
+    for t in range(T + 1): # n = 0,1,...,T (# of time slots)
+
+        # not n = 0,1,...,T-1 to prevent bug
         temp_a = []
         temp_g = []
         temp_PU = []
