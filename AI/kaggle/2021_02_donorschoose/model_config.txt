@@ -1,0 +1,10 @@
+I 646
+D 120 relu
+BN
+D 120 relu
+BN
+D 120 relu
+BN
+D 120 relu
+DO sigmoid
+OP adam0 0.001
