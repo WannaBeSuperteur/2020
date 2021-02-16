@@ -42,7 +42,7 @@ def invSigmoid(x):
         preResult = x / (1 - x)
         result = math.log(preResult)
         return result
-    except RuntimeWarning: # catch runtime warnings
+    except: # catch runtime warnings or math domain errors
         print('value of x is ' + str(x))
         if x < 0.5: return -15
         else: return 15
