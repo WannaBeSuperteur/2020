@@ -461,11 +461,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
                     # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
                     # and   Q = reward
-                    # from oldS_list, action_list and reward
+                    # from oldS_list, action_listddd and reward
                     action_rewards = copy.deepcopy(zero_27)
                     action_rewards[dq.getActionIndex(action_list[i])] = rewards[k]
                     
-                    QTable.append([[oldS_list[i]], action_rewards])
+                    QTable.append([oldS_list[i], action_rewards, i, k])
 
                     # append to replay buffer
                     replayBuffer.append([oldS_list[i], action_list[i], rewards[k], newS_list[i]])
@@ -480,7 +480,6 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
             
             # train the network and update weight
-            print(np.array(QTable))
             dq.deepLearningQ_training(QTable, 'cpu:0', 50, False)
 
 if __name__ == '__main__':

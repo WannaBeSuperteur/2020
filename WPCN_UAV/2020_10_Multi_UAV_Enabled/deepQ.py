@@ -120,17 +120,16 @@ def getMaxQ(s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2
 
 # convert state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
-def stateTo1dArray(state):
-    q = state[0]
-    a = state[1]
-    R = state[2]
-
-    print('test')
-    print(q)
-    print(a)
-    print(R)
+def stateTo1dArray(state, k):
     
-    return q + a + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
+    q = state[0]
+    a = state[1][k]
+
+    R = []
+    for i in range(len(state[2])):
+        R += state[2][i]
+    
+    return q + [a] + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
 
 # deep Learning using Q table (training function)
 # printed : print the detail?
@@ -144,7 +143,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # input array (need to convert original array [s0])
     inputData = []
-    for i in range(len(Q)): inputData.append(stateTo1dArray(Q[i][0]))
+    for i in range(len(Q)): inputData.append(stateTo1dArray(Q[i][0], Q[i][3]))
 
     # output array (as original)
     outputData = []
