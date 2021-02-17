@@ -124,15 +124,23 @@ def stateTo1dArray(state):
     q = state[0]
     a = state[1]
     R = state[2]
+
+    print('test')
+    print(q)
+    print(a)
+    print(R)
+    
     return q + a + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
 
 # deep Learning using Q table (training function)
 # printed : print the detail?
 def deepLearningQ_training(Q, deviceName, epoch, printed):
     
-    # Q Table           = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
+    # Q Table           = [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
     # convert to input  = converted version of [[s0], [s1], ...]
-    #            output = original  version of [[q00, q01, ...], [q10, q11, ...], ...]
+    #            output = original  version of [[Q00, Q01, ...], [Q10, Q11, ...], ...]
+    # where           s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+    #        and      Q = reward
 
     # input array (need to convert original array [s0])
     inputData = []

@@ -257,6 +257,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             for k in range(-1, 2):
                 actionSpace.append([i, j, k])
 
+    # zero_27 array (initial action array)
+    zero_27 = []
+    for i in range(27): zero_27.append(0)
+
     # init ac and R where
     # a[n][l][k_l] (a[n][l][k])  : the number of times that each device communicates with UAV l
     # g[n][l][k_l] (g[n][l][k])  : the channel's power gain between UAV l and device k_l
@@ -439,8 +443,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             # store (s,a,r,s') into replay buffer
             for i in range(L): # each UAV i
 
+                # for each device k,
                 # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
                 # where maxQ = max(a')Q(s', a')
+                maxQs = []
+                rewards = []
 
                 # for each device k
                 for k in range(len(clusters[i])):
@@ -448,10 +455,20 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     PNLoS_i = f.getPLoS(True, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
                     
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
-                    maxQ = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, R, actionSpace, clusters, B, PU, g_i, I_, o2, useDL)
-                    reward = alphaL * (directReward_list[i] + r_ * maxQ)
-                
-                replayBuffer.append([oldS_list[i], action_list[i], reward, newS_list[i]])
+                    maxQs.append(dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, R, actionSpace, clusters, B, PU, g_i, I_, o2, useDL))
+                    rewards.append(alphaL * (directReward_list[i] + r_ * maxQs[k]))
+
+                    # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
+                    # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+                    # and   Q = reward
+                    # from oldS_list, action_list and reward
+                    action_rewards = copy.deepcopy(zero_27)
+                    action_rewards[dq.getActionIndex(action_list[i])] = rewards[k]
+                    
+                    QTable.append([[oldS_list[i]], action_rewards])
+
+                    # append to replay buffer
+                    replayBuffer.append([oldS_list[i], action_list[i], rewards[k], newS_list[i]])
             
             # Randomly select a minibatch of H_ samples from replay buffer
             H_ = min(30, len(replayBuffer)) # select maximum 30 samples
@@ -463,6 +480,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
             
             # train the network and update weight
+            print(np.array(QTable))
             dq.deepLearningQ_training(QTable, 'cpu:0', 50, False)
 
 if __name__ == '__main__':
