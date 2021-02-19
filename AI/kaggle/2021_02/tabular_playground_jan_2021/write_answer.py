@@ -5,9 +5,6 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    threshold = 0.798
-    option = 1
-
     # read file
     testResult = RD.loadArray('test_output.txt')
 
@@ -15,7 +12,7 @@ if __name__ == '__main__':
     finalResult = []
     
     for i in range(len(testResult)):
-        finalResult.append([float(testResult) + 8])
+        finalResult.append([float(testResult[i][0]) + 8.0])
 
     # write file
     RD.saveArray('to_submit.txt', finalResult)
