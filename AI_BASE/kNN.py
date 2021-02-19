@@ -68,12 +68,19 @@ def kNN(dfTrain, dfTest, dfTestWeight, caseWeight, targetCol, targetIndex, k, us
 
         # for each training data
         for j in range(len(dfTrain)):
+            
             thisTrainData = dfTrain[j]
 
             # calculate distance (using the weight) from the test data
             thisDistSquare = 0
+            
             for l in range(len(dfTest[0])): # because test data contain all input columns
+
                 if l == targetIndex: continue
+
+                thisTestData[l] = float(thisTestData[l])
+                thisTrainData[l] = float(thisTrainData[l])
+                
                 thisDistSquare = thisDistSquare + dfTestWeight[l] * pow(thisTestData[l] - thisTrainData[l], 2)
 
             # add to distAndMark (now, train output is at the right end of each training data row)
@@ -97,8 +104,8 @@ def kNN(dfTrain, dfTest, dfTestWeight, caseWeight, targetCol, targetIndex, k, us
             sumOfKeyVal = 0.0 # sum of (key value)*(vote weight)
             
             for key in vote.keys():
-                sumOfVote += vote[key]
-                sumOfKeyVal += key * vote[key]
+                sumOfVote += float(vote[key])
+                sumOfKeyVal += float(key) * float(vote[key])
 
             avgVoteVal = sumOfKeyVal / sumOfVote
 
