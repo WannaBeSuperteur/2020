@@ -101,23 +101,24 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array,
     test_ds = lgb.Dataset(tv_input, label=tv_output)
 
     # set parameters
+    # as https://www.kaggle.com/gunesevitan/tabular-playground-series-jan-2021-models
     params = {'learning_rate': 0.01,
-              'max_depth': 16,
+              'max_depth': -1,
               'boosting': 'gbdt',
               'objective': 'regression',
-              'metric': 'mse',
+              'metric': 'rmse',
               'is_training_metric': True,
-              'num_leaves': 144,
-              'feature_fraction': 0.9,
-              'bagging_fraction': 0.7,
-              'bagging_freq': 5,
-              'seed': 2021}
+              'num_leaves': 256,
+              'feature_fraction': 0.5,
+              'bagging_fraction': 0.6,
+              'bagging_freq': 3,
+              'seed': None}
 
     # create model
     if VAL_rate > 0:
-        model = lgb.train(params, train_ds, 5000, test_ds, verbose_eval=40, early_stopping_rounds=100)
+        model = lgb.train(params, train_ds, 2200, test_ds, verbose_eval=30, early_stopping_rounds=200)
     else:
-        model = lgb.train(params, train_ds, 300, train_ds, verbose_eval=20, early_stopping_rounds=100)
+        model = lgb.train(params, train_ds, 2200, train_ds, verbose_eval=30, early_stopping_rounds=200)
 
     # predict
     predict_train = model.predict(train_input)
@@ -131,7 +132,7 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array,
     if VAL_rate > 0:
         RD.saveArray('m00_lightGBM_val_result.txt', result, '\t', 500)
     else:
-        RD.saveArray('m00_lightGBM_tes_result.txt', result, '\t', 500)
+        RD.saveArray('m00_lightGBM_test_result.txt', result, '\t', 500)
 
     # validation mode -> compute RMSE error
     if VAL_rate > 0:
@@ -196,3 +197,17 @@ if __name__ == '__main__':
     # write final result (RMSE)
     if VAL_rate > 0.0:
         RD.saveArray('final_RMSE.txt', final_rmses, '\t', 500)
+
+    # write FINAL ANSWER
+    
+    # read file
+    testResult = RD.loadArray('m00_lightGBM_test_result.txt')
+
+    # write final result
+    finalResult = []
+    
+    for i in range(len(testResult)):
+        finalResult.append([float(testResult[i][0]) + 8.0])
+
+    # write file
+    RD.saveArray('to_submit.txt', finalResult)
