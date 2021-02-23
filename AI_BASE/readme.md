@@ -82,6 +82,7 @@ R1 12                       (keras.layers.Reshape((12, 1), input_shape=(12,))
 R2 12 12                    (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 BN                          (keras.layers.BatchNormalization())
 AC relu                     (keras.layers.Activation('relu'))
+EMB 50000 64                (keras.layers.Embedding(50000, 64))
 ```
 
 <strong>for optimizer and loss</strong>
@@ -99,7 +100,7 @@ LOSS mean_absolute_error        (set loss as mean_absolute_error)
 
 Loss can be omitted from the ```modelConfig``` file.
 
-Examples of loss: refer to https://keras.io/api/optimizers/
+Examples of loss: refer to https://keras.io/api/optimizers/ and https://www.tensorflow.org/api_docs/python/tf/keras/losses/Loss
 
 ## 1. CODE FILE INFO
 From line 44 to 59 of ```main.py```, you can see:
