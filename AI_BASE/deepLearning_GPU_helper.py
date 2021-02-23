@@ -141,6 +141,7 @@ def getDataFromFile(fn):
 # R2 12 12                    (keras.layers.Reshape((12, 12, 1), input_shape=(12*12,))
 # BN                          (keras.layers.BatchNormalization())
 # AC relu                     (keras.layers.Activation('relu'))
+# EMB 50000 128               (keras.layers.Embedding(50000, 128))
 def getNN(modelInfo, trainI, trainO):
     NN = []
     code = ''
@@ -302,6 +303,11 @@ def getNN(modelInfo, trainI, trainO):
         elif infoSplit[0] == 'AC':
             NN.append(tf.keras.layers.Activation(infoSplit[1]))
             code += 'NN.append(tf.keras.layers.Activation(' + infoSplit[1] + '))\n'
+
+        # embedding
+        elif infoSplit[0] == 'EMB':
+            NN.append(tf.keras.layers.Embedding(int(infoSplit[1]), int(infoSplit[2])))
+            code += 'NN.append(tf.keras.layers.Embedding(' + infoSplit[1] + ', ' + infoSplit[2] + '))\n'
 
     # print code result
     print('\n <<< model code >>>')
