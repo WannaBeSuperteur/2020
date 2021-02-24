@@ -20,7 +20,7 @@ if __name__ == '__main__':
     N = 364
     N_start = 1101
 
-    # extract raw_result : [Wteam, Lteam, 1, Wloc], [Lteam, Wteam, 0, Wloc]
+    # extract raw_result : [Wteam, Lteam, 1, Wloc, season], [Lteam, Wteam, 0, Wloc, season]
     try:
         _ = open('raw_result.txt', 'r')
         _.close()
@@ -34,13 +34,13 @@ if __name__ == '__main__':
         
         raw_result = []
 
-        # for [Wteam, Lteam, 1, Wloc]
+        # for [Wteam, Lteam, 1, Wloc, season]
         for i in range(len(all_array)):
-            raw_result.append([all_array[i][2], all_array[i][4], 1, all_array[i][6]])
+            raw_result.append([all_array[i][2], all_array[i][4], 1, all_array[i][6], all_array[i][0]])
 
-        # for [Lteam, Wteam, 0, Wloc]
+        # for [Lteam, Wteam, 0, Wloc, season]
         for i in range(len(all_array)):
-            raw_result.append([all_array[i][4], all_array[i][2], 0, all_array[i][6]])
+            raw_result.append([all_array[i][4], all_array[i][2], 0, all_array[i][6], all_array[i][0]])
 
         RD.saveArray('raw_result.txt', raw_result, '\t', 500)
 
@@ -61,7 +61,8 @@ if __name__ == '__main__':
         RD.saveArray('raw_result_test.txt', raw_result_test, '\t', 500)
 
     # team_info : array for [teamID, total, win, lose, win_rate,
-    #                        A_win, H_win, N_win, A_lose, H_lose, N_lose, A_win_rate, H_win_rate, N_win_rate]
+    #                        A_win, H_win, N_win, A_lose, H_lose, N_lose, A_win_rate, H_win_rate, N_win_rate,
+    #                        total_seeds]
     try:
         _ = open('team_info.txt', 'r')
         _.close()
@@ -69,7 +70,7 @@ if __name__ == '__main__':
     except:
         team_info = []
         for i in range(N):
-            team_info.append([N_start + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            team_info.append([N_start + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
             
         for i in range(len(raw_result)):
 
@@ -109,6 +110,12 @@ if __name__ == '__main__':
                     team_info[team0 - N_start][10] += 1
                     team_info[team1 - N_start][7] += 1
 
+        # total seeds (from TourneySeeds.csv)
+        total_seeds = np.array(pd.read_csv('TourneySeeds.csv'))
+        
+        for i in range(len(total_seeds)):
+            team_info[int(total_seeds[i][2] - N_start)][14] += 1
+
         # update win_rate, A_win_rate, H_win_rate and N_win_rate
         for i in range(N):
             team_info[i][4] = team_info[i][2] / (team_info[i][2] + team_info[i][3])
@@ -131,11 +138,12 @@ if __name__ == '__main__':
         RD.saveArray('team_info.txt', team_info, '\t', 500)
 
     # final : using raw_result and team_info
-    # save as [team0_total, team0_win, team0_lose, team0_winrate,
+    # save as [season,
+    #          team0_total, team0_win, team0_lose, team0_winrate,
     #          team0_A_win, team0_H_win, team0_N_win,
     #          team0_A_lose, team0_H_lose, team0_N_lose,
-    #          team0_A_winRate, team0_H_winRate, team0_N_winRate,
-    #          team1_total, ..., team1_N_winRate, result]
+    #          team0_A_winRate, team0_H_winRate, team0_N_winRate, team0_total_seeds,
+    #          team1_total, ..., team1_total_seeds, result]
     try:
         _ = open('final_input.txt', 'r')
         _.close()
@@ -157,19 +165,22 @@ if __name__ == '__main__':
             
             team0 = raw_result[i][0]
             team1 = raw_result[i][1]
+            season = raw_result[i][4]
+            
             team0_ = team0 - N_start
             team1_ = team1 - N_start
             
-            final_input.append([team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
+            final_input.append([season,
+                                team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
                                 team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
                                 team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
                                 team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
-                                team_info[team0_][13],
+                                team_info[team0_][13], team_info[team0_][14],
                                 team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
                                 team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
                                 team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
                                 team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
-                                team_info[team1_][13]])
+                                team_info[team1_][13], team_info[team1_][14]])
             final_output.append([raw_result[i][2]])
 
         # TEST INPUT : using final_input_test
@@ -183,23 +194,24 @@ if __name__ == '__main__':
             team0_ = team0 - N_start
             team1_ = team1 - N_start
             
-            final_input_test.append([team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
+            final_input_test.append([2016,
+                                    team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
                                     team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
                                     team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
                                     team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
-                                    team_info[team0_][13],
+                                    team_info[team0_][13], team_info[team0_][14],
                                     team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
                                     team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
                                     team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
                                     team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
-                                    team_info[team1_][13]])            
+                                    team_info[team1_][13], team_info[team1_][14]])            
 
         # normalize each column of final_input
 
         # using average and stddevs of "final_input" ONLY
         avgs = []
         stddevs = []
-        cols = 26
+        cols = 29
 
         for i in range(cols):
             thisCol = np.array(final_input)[:, i]
@@ -227,7 +239,7 @@ if __name__ == '__main__':
 
     TE_real = None
     TE_report = None
-    VAL_rate = 0.0
+    VAL_rate = 0.05
     VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
 
