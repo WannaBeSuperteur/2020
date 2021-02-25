@@ -10,6 +10,9 @@ import random
 
 if __name__ == '__main__':
 
+    # execute: main.py (usePCA = False) -> team_info_PCA.py
+    #          -> remove raw_result.txt and raw_result_test.txt -> main.py (usePCA = True)
+
     # read data
     regular_array = np.array(pd.read_csv('RegularSeasonCompactResults.csv'))
     tourney_array = np.array(pd.read_csv('TourneyCompactResults.csv'))
@@ -19,6 +22,10 @@ if __name__ == '__main__':
     # number of teams
     N = 364
     N_start = 1101
+
+    # use PCA option
+    usePCA = True
+    numOfPCA = 8
 
     # extract raw_result : [Wteam, Lteam, 1, Wloc, season], [Lteam, Wteam, 0, Wloc, season]
     try:
@@ -64,10 +71,19 @@ if __name__ == '__main__':
     #                        A_win, H_win, N_win, A_lose, H_lose, N_lose, A_win_rate, H_win_rate, N_win_rate,
     #                        total_seeds]
     try:
-        _ = open('team_info.txt', 'r')
-        _.close()
+        if usePCA == True:
+            _ = open('team_info_pca.txt', 'r')
+            _.close()
+
+        else:
+            _ = open('team_info.txt', 'r')
+            _.close()
 
     except:
+        if usePCA == True:
+            print('ERROR: team_info_pca.txt does not exist.')
+            exit(0)
+        
         team_info = []
         for i in range(N):
             team_info.append([N_start + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
@@ -145,16 +161,31 @@ if __name__ == '__main__':
     #          team0_A_winRate, team0_H_winRate, team0_N_winRate, team0_total_seeds,
     #          team1_total, ..., team1_total_seeds, result]
     try:
-        _ = open('final_input.txt', 'r')
-        _.close()
+        if usePCA == True:
+            _ = open('final_input_pca.txt', 'r')
+            _.close()
 
-        _ = open('final_output.txt', 'r')
-        _.close()
+            _ = open('final_output_pca.txt', 'r')
+            _.close()
 
-        _ = open('final_input_test.txt', 'r')
-        _.close()
+            _ = open('final_input_test_pca.txt', 'r')
+            _.close()
+
+        else:
+            _ = open('final_input.txt', 'r')
+            _.close()
+
+            _ = open('final_output.txt', 'r')
+            _.close()
+
+            _ = open('final_input_test.txt', 'r')
+            _.close()
 
     except:
+
+        # using PCA
+        if usePCA == True:
+            team_info_pca = RD.loadArray('team_info_pca.txt', '\t')
 
         # TRAINING INPUT : using raw_result
         
@@ -169,19 +200,34 @@ if __name__ == '__main__':
             
             team0_ = team0 - N_start
             team1_ = team1 - N_start
-            
-            final_input.append([season,
-                                team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
-                                team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
-                                team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
-                                team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
-                                team_info[team0_][13], team_info[team0_][14],
-                                team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
-                                team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
-                                team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
-                                team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
-                                team_info[team1_][13], team_info[team1_][14]])
-            final_output.append([raw_result[i][2]])
+
+            # using PCA
+            if usePCA == True:
+                append_to_final_input = [season]
+                
+                for j in range(numOfPCA):
+                    append_to_final_input.append(team_info_pca[team0_][j])
+
+                for j in range(numOfPCA):
+                    append_to_final_input.append(team_info_pca[team1_][j])
+                
+                final_input.append(append_to_final_input)
+                final_output.append([raw_result[i][2]])
+
+            # NOT using PCA
+            else:
+                final_input.append([season,
+                                    team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
+                                    team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
+                                    team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
+                                    team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
+                                    team_info[team0_][13], team_info[team0_][14],
+                                    team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
+                                    team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
+                                    team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
+                                    team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
+                                    team_info[team1_][13], team_info[team1_][14]])
+                final_output.append([raw_result[i][2]])
 
         # TEST INPUT : using final_input_test
 
@@ -193,25 +239,47 @@ if __name__ == '__main__':
             team1 = raw_result_test[i][1]
             team0_ = team0 - N_start
             team1_ = team1 - N_start
-            
-            final_input_test.append([2016,
-                                    team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
-                                    team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
-                                    team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
-                                    team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
-                                    team_info[team0_][13], team_info[team0_][14],
-                                    team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
-                                    team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
-                                    team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
-                                    team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
-                                    team_info[team1_][13], team_info[team1_][14]])            
+
+            # using PCA
+            if usePCA == True:
+                append_to_final_input_test = [season]
+                
+                for j in range(numOfPCA):
+                    append_to_final_input_test.append(team_info_pca[team0_][j])
+
+                for j in range(numOfPCA):
+                    append_to_final_input_test.append(team_info_pca[team1_][j])
+                
+                final_input_test.append(append_to_final_input_test)
+
+            # NOT using PCA
+            else:
+                final_input_test.append([2016,
+                                        team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
+                                        team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
+                                        team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
+                                        team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
+                                        team_info[team0_][13], team_info[team0_][14],
+                                        team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
+                                        team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
+                                        team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
+                                        team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
+                                        team_info[team1_][13], team_info[team1_][14]])            
 
         # normalize each column of final_input
 
         # using average and stddevs of "final_input" ONLY
         avgs = []
         stddevs = []
-        cols = 29
+
+        if usePCA == True:
+            cols = numOfPCA * 2 + 1
+        else:
+            cols = 29
+
+        # convert to float
+        final_input = np.array(final_input).astype(float)
+        final_input_test = np.array(final_input_test).astype(float)
 
         for i in range(cols):
             thisCol = np.array(final_input)[:, i]
@@ -227,21 +295,39 @@ if __name__ == '__main__':
             for j in range(cols):
                 final_input_test[i][j] = (final_input_test[i][j] - avgs[j]) / stddevs[j]
 
-        RD.saveArray('final_input.txt', final_input, '\t', 500)
-        RD.saveArray('final_output.txt', final_output, '\t', 500)
-        RD.saveArray('final_input_test.txt', final_input_test, '\t', 500)
+        # save
+        if usePCA == True:
+            RD.saveArray('final_input_pca.txt', final_input, '\t', 500)
+            RD.saveArray('final_output_pca.txt', final_output, '\t', 500)
+            RD.saveArray('final_input_test_pca.txt', final_input_test, '\t', 500)
+
+        else:
+            RD.saveArray('final_input.txt', final_input, '\t', 500)
+            RD.saveArray('final_output.txt', final_output, '\t', 500)
+            RD.saveArray('final_input_test.txt', final_input_test, '\t', 500)
 
     # execute deep learning
-    TRI = 'final_input.txt'
-    TRO = 'final_output.txt'
-    TEI = 'final_input_test.txt'
-    TEO = 'final_output_test.txt'
+    if usePCA == True:
+        TRI = 'final_input_pca.txt'
+        TRO = 'final_output_pca.txt'
+        TEI = 'final_input_test_pca.txt'
+        TEO = 'final_output_test_pca.txt'
+
+        VAL_report = 'report_val_pca.txt'
+        modelConfig = 'model_config_pca.txt'
+
+    else:
+        TRI = 'final_input.txt'
+        TRO = 'final_output.txt'
+        TEI = 'final_input_test.txt'
+        TEO = 'final_output_test.txt'
+
+        VAL_report = 'report_val.txt'
+        modelConfig = 'model_config.txt'
 
     TE_real = None
     TE_report = None
-    VAL_rate = 0.05
-    VAL_report = 'report_val.txt'
-    modelConfig = 'model_config.txt'
+    VAL_rate = 0.0
 
     # user data
     deviceName = input('device name (for example, cpu:0 or gpu:0)')

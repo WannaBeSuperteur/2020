@@ -12,7 +12,7 @@ def logloss(true_label, predicted, eps=1e-15):
 if __name__ == '__main__':
 
     # read file
-    fn = 'report_val.txt'
+    fn = 'report_val_pca.txt'
     f = open(fn, 'r')
     fl = f.readlines()
     f.close()

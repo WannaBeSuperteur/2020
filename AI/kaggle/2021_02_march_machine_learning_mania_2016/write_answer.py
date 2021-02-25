@@ -5,11 +5,10 @@ import numpy as np
 
 if __name__ == '__main__':
 
-    threshold = 0.798
     option = 1
 
     # read file
-    testResult = RD.loadArray('final_output_test.txt')
+    testResult = RD.loadArray('final_output_test_pca.txt')
 
     # write final result
     finalResult = []
