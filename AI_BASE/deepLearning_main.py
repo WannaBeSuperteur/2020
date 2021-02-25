@@ -317,7 +317,7 @@ def deepLearning(inputFileName, outputFileName, testFileName, testOutputFileName
 
             # False, True는 각각 dataPrint(학습데이터 출력 여부), modelPrint(model의 summary 출력 여부)
             print(trainO[0])
-            deepLearning_GPU.deepLearning(NN, op, 'mean_squared_error', trainI, trainO, modelName, epoch, False, True, deviceName)
+            deepLearning_GPU.deepLearning(NN, op, loss, trainI, trainO, modelName, epoch, False, True, deviceName)
 
             print('[22] reading learned model [ ' + modelName + ' ]...')
             newModel = deepLearning_GPU.deepLearningModel(modelName, op, loss, True)
