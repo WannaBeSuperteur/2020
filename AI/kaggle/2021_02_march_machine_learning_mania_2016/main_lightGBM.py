@@ -104,13 +104,13 @@ if __name__ == '__main__':
         
         raw_result = []
 
-        # for [Wteam, Lteam, 1, Wloc]
+        # for [Wteam, Lteam, 1, Wloc, season]
         for i in range(len(all_array)):
-            raw_result.append([all_array[i][2], all_array[i][4], 1, all_array[i][6]])
+            raw_result.append([all_array[i][2], all_array[i][4], 1, all_array[i][6], all_array[i][0]])
 
-        # for [Lteam, Wteam, 0, Wloc]
+        # for [Lteam, Wteam, 0, Wloc, season]
         for i in range(len(all_array)):
-            raw_result.append([all_array[i][4], all_array[i][2], 0, all_array[i][6]])
+            raw_result.append([all_array[i][4], all_array[i][2], 0, all_array[i][6], all_array[i][0]])
 
         RD.saveArray('raw_result.txt', raw_result, '\t', 500)
 
@@ -139,7 +139,7 @@ if __name__ == '__main__':
     except:
         team_info = []
         for i in range(N):
-            team_info.append([N_start + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
+            team_info.append([N_start + i, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
             
         for i in range(len(raw_result)):
 
@@ -178,6 +178,12 @@ if __name__ == '__main__':
                 elif winLoc == 'N':
                     team_info[team0 - N_start][10] += 1
                     team_info[team1 - N_start][7] += 1
+
+        # total seeds (from TourneySeeds.csv)
+        total_seeds = np.array(pd.read_csv('TourneySeeds.csv'))
+        
+        for i in range(len(total_seeds)):
+            team_info[int(total_seeds[i][2] - N_start)][14] += 1
 
         # update win_rate, A_win_rate, H_win_rate and N_win_rate
         for i in range(N):
@@ -227,19 +233,22 @@ if __name__ == '__main__':
             
             team0 = raw_result[i][0]
             team1 = raw_result[i][1]
+            season = raw_result[i][4]
+            
             team0_ = team0 - N_start
             team1_ = team1 - N_start
             
-            final_input.append([team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
+            final_input.append([season,
+                                team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
                                 team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
                                 team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
                                 team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
-                                team_info[team0_][13],
+                                team_info[team0_][13], team_info[team0_][14],
                                 team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
                                 team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
                                 team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
                                 team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
-                                team_info[team1_][13]])
+                                team_info[team1_][13], team_info[team1_][14]])
             final_output.append([raw_result[i][2]])
 
         # TEST INPUT : using final_input_test
@@ -253,23 +262,24 @@ if __name__ == '__main__':
             team0_ = team0 - N_start
             team1_ = team1 - N_start
             
-            final_input_test.append([team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
+            final_input_test.append([2016,
+                                    team_info[team0_][1], team_info[team0_][2], team_info[team0_][3],
                                     team_info[team0_][4], team_info[team0_][5], team_info[team0_][6],
                                     team_info[team0_][7], team_info[team0_][8], team_info[team0_][9],
                                     team_info[team0_][10], team_info[team0_][11], team_info[team0_][12],
-                                    team_info[team0_][13],
+                                    team_info[team0_][13], team_info[team0_][14],
                                     team_info[team1_][1], team_info[team1_][2], team_info[team1_][3],
                                     team_info[team1_][4], team_info[team1_][5], team_info[team1_][6],
                                     team_info[team1_][7], team_info[team1_][8], team_info[team1_][9],
                                     team_info[team1_][10], team_info[team1_][11], team_info[team1_][12],
-                                    team_info[team1_][13]])            
+                                    team_info[team1_][13], team_info[team1_][14]])            
 
         # normalize each column of final_input
 
         # using average and stddevs of "final_input" ONLY
         avgs = []
         stddevs = []
-        cols = 26
+        cols = 29
 
         for i in range(cols):
             thisCol = np.array(final_input)[:, i]
@@ -317,7 +327,6 @@ if __name__ == '__main__':
     test_ds = lgb.Dataset(tv_input, label=tv_output)
 
     # set parameters
-    # as https://www.kaggle.com/gunesevitan/tabular-playground-series-jan-2021-models
     params = {'learning_rate': 0.01,
               'max_depth': -1,
               'boosting': 'gbdt',
