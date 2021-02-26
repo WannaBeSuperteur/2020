@@ -8,6 +8,9 @@ import deepLearning_main as DL
 import readData as RD
 import random
 
+def sigmoid(x):
+    return 1/(1 + math.exp(-x))
+
 if __name__ == '__main__':
 
     # execute: main.py (usePCA = False) -> team_info_PCA.py
@@ -24,8 +27,14 @@ if __name__ == '__main__':
     N_start = 1101
 
     # use PCA option
-    usePCA = True
+    usePCA = False
     numOfPCA = 8
+
+    # use goal rate (like sigmoid) option
+    # goalRate = goal / (goal + opposite goal) where goal is each team's raw score (not meaning the number of goals)
+    # score    = sigmoid((goalRate - 0.5) / goalRateStd)
+    useGoalRate = True
+    goalRateStd = 0.01
 
     # extract raw_result : [Wteam, Lteam, 1, Wloc, season], [Lteam, Wteam, 0, Wloc, season]
     try:
@@ -41,13 +50,32 @@ if __name__ == '__main__':
         
         raw_result = []
 
-        # for [Wteam, Lteam, 1, Wloc, season]
-        for i in range(len(all_array)):
-            raw_result.append([all_array[i][2], all_array[i][4], 1, all_array[i][6], all_array[i][0]])
+        # using goal rate
+        if useGoalRate == True:
 
-        # for [Lteam, Wteam, 0, Wloc, season]
-        for i in range(len(all_array)):
-            raw_result.append([all_array[i][4], all_array[i][2], 0, all_array[i][6], all_array[i][0]])
+            # for [Wteam, Lteam, score, Wloc, season]
+            for i in range(len(all_array)):
+                goalRate = int(all_array[i][3]) / (int(all_array[i][3]) + int(all_array[i][5]))
+                score = sigmoid((goalRate - 0.5) / goalRateStd)
+                
+                raw_result.append([all_array[i][2], all_array[i][4], score, all_array[i][6], all_array[i][0]])
+
+            # for [Lteam, Wteam, score, Wloc, season]
+            for i in range(len(all_array)):
+                goalRate = int(all_array[i][5]) / (int(all_array[i][3]) + int(all_array[i][5]))
+                score = sigmoid((goalRate - 0.5) / goalRateStd)
+                
+                raw_result.append([all_array[i][4], all_array[i][2], score, all_array[i][6], all_array[i][0]])
+
+        # not using goal rate
+        else:
+            # for [Wteam, Lteam, 1, Wloc, season]
+            for i in range(len(all_array)):
+                raw_result.append([all_array[i][2], all_array[i][4], 1, all_array[i][6], all_array[i][0]])
+
+            # for [Lteam, Wteam, 0, Wloc, season]
+            for i in range(len(all_array)):
+                raw_result.append([all_array[i][4], all_array[i][2], 0, all_array[i][6], all_array[i][0]])
 
         RD.saveArray('raw_result.txt', raw_result, '\t', 500)
 
@@ -95,7 +123,7 @@ if __name__ == '__main__':
             winLoc = raw_result[i][3]
 
             # team0 (win) vs. team1
-            if raw_result[i][2] == 1:
+            if raw_result[i][2] >= 0.5:
                 team_info[team0 - N_start][1] += 1 # update total
                 team_info[team0 - N_start][2] += 1 # update win
 

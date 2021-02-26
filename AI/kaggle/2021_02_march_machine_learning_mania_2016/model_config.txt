@@ -1,0 +1,13 @@
+I 29
+D 128 relu
+Drop 0.25
+D 128 relu
+Drop 0.25
+D 128 relu
+Drop 0.25
+D 128 relu
+Drop 0.25
+D 128 relu
+DO sigmoid
+OP adam0 0.00025
+LOSS binary_crossentropy
