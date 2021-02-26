@@ -333,7 +333,7 @@ if __name__ == '__main__':
               'objective': 'regression',
               'metric': 'binary_logloss',
               'is_training_metric': True,
-              'num_leaves': 256,
+              'num_leaves': 1024,
               'feature_fraction': 0.5,
               'bagging_fraction': 0.6,
               'bagging_freq': 3,
@@ -343,7 +343,7 @@ if __name__ == '__main__':
     if VAL_rate > 0:
         model = lgb.train(params, train_ds, 2200, test_ds, verbose_eval=30, early_stopping_rounds=200)
     else:
-        model = lgb.train(params, train_ds, 2200, train_ds, verbose_eval=30, early_stopping_rounds=200)
+        model = lgb.train(params, train_ds, 2200, train_ds, verbose_eval=40, early_stopping_rounds=200)
 
     # predict
     predict_train = model.predict(train_input)
