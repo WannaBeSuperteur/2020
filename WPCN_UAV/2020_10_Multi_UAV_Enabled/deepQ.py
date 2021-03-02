@@ -243,7 +243,6 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
         # append the state-action-reward [[s], qs] to Q table
         # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
         Q.append([[s], qs, l, k])
-        print(len(Q))
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)
