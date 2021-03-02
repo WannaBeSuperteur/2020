@@ -134,6 +134,8 @@ def stateTo1dArray(state, k):
 # deep Learning using Q table (training function)
 # printed : print the detail?
 def deepLearningQ_training(Q, deviceName, epoch, printed):
+
+    # Q : [state, action_reward, i (UAV/cluster index), k (device index)]
     
     # Q Table           = [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
     # convert to input  = converted version of [[s0], [s1], ...]
@@ -143,7 +145,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # input array (need to convert original array [s0])
     inputData = []
-    for i in range(len(Q)): inputData.append(stateTo1dArray(Q[i][0], Q[i][3]))
+    for i in range(len(Q)):
+        inputData.append(stateTo1dArray(Q[i][0], Q[i][3]))
 
     # output array (as original)
     outputData = []
@@ -205,7 +208,7 @@ def deepLearningQ_test(state):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, R, useDL, clusters, B, PU, g, l_, o2):
+def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -238,7 +241,9 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, R, useDL
         qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
 
         # append the state-action-reward [[s], qs] to Q table
-        Q.append([[s], qs])
+        # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
+        Q.append([[s], qs, l, k])
+        print(len(Q))
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)

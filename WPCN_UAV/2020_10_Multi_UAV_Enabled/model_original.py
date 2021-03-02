@@ -199,7 +199,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         # update Q value                
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
 
-        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, n, UAVs, i, R, useDL, clusters, B, PU, g, I_, o2)
+        dq.updateQvalue(Q, s_i, action, a, value, alpha, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, I_, o2)
         directReward_list[i] += value
 
 # ALGORITHM 1
