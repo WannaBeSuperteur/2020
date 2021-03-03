@@ -1,0 +1,7 @@
+I 54
+D 64 relu
+D 64 relu
+D 64 relu
+D 64 relu
+DO sigmoid
+OP adam0 0.001

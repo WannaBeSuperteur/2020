@@ -315,11 +315,14 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # Q Table = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     Q = []
 
-    ### TRAIN ###
+    ### DATA COLLECT ###
     replayBuffer = [] # REPLAY BUFFER
     
     for episode in range(M):
+        print('episode ' + str(episode) + ' / ' + str(M))
+        
         for t in range(T): # each time slot t
+            print('time slot ' + str(t) + ' / ' + str(T))
 
             # use deep learning if length of Q table >= 100
             if len(Q) >= 100: useDL = True
@@ -478,9 +481,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             while len(minibatch) < H_:
                 rand = random.randint(0, len(replayBuffer)-1) # randomly select from the replay buffer
                 minibatch.append(replayBuffer[rand]) # append to the buffer
-            
-            # train the network and update weight
-            dq.deepLearningQ_training(QTable, 'cpu:0', 50, False)
+
+    ### TRAIN and VALIDATION ###
+    dq.deepLearningQ_training(QTable, 'cpu:0', 50, False)
+    dq.deepLearningQ_valid('cpu:0', 50, False, 0.05)
+
+    ### TEST ###
+    # later
 
 if __name__ == '__main__':
     
@@ -500,7 +507,7 @@ if __name__ == '__main__':
     width = 50 # width (m)
     height = 50 # height (m)
 
-    M = 1000 # M = 1000 episodes
+    M = 50 # M = 50 episodes (originally 1000)
     L = 3 # L = 3 clusters = 3 UAVs
     devices = 50 # 50 devices
     T = 10 # T = 10s

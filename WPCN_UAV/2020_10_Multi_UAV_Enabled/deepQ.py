@@ -167,6 +167,15 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     except:
         print('Q_input.txt or Q_output.txt does not exist.')
 
+# deep Learning using Q table (validation)
+def deepLearningQ_valid(deviceName, epoch, printed, validRate):
+    
+    try:
+        DLmain.deepLearning('Q_input.txt', 'Q_output.txt', None, None, None,
+                            None, validRate, 'Q_valid_report.txt', 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
+    except:
+        print('Q_input.txt or Q_output.txt does not exist.')
+
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state):
 
