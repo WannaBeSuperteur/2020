@@ -89,9 +89,17 @@ def create_dataframe(TRI_array, TRO_array, TEI_array,
 #A function to calculate Root Mean Squared Logarithmic Error (RMSLE)
 # ref: https://www.kaggle.com/marknagelberg/rmsle-function
 def rmsle(y, y_pred):
-	assert len(y) == len(y_pred)
-	terms_to_sum = [(math.log(float(y_pred[i]) + 1) - math.log(float(y[i]) + 1)) ** 2.0 for i,pred in enumerate(y_pred)]
-	return (sum(terms_to_sum) * (1.0/len(y))) ** 0.5
+    
+    print('\ny: (30)')
+    print(y[:30])
+    print('\ny_pred: (30)')
+    print(y_pred[:30])
+    print('')
+        
+    assert(len(y) == len(y_pred))
+	
+    terms_to_sum = [(math.log(float(y_pred[i]) + 1) - math.log(float(y[i]) + 1)) ** 2.0 for i,pred in enumerate(y_pred)]
+    return (sum(terms_to_sum) * (1.0/len(y))) ** 0.5
     
 def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num):
 
@@ -164,6 +172,7 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
                 predict_tv_.append(float(predict_tv[i]) * 1.006635 + 2.077205)
 
         # compute RMSLE and return
+        print('\n\n ====[ lightGBM / valid=True ]====')
         return rmsle(tv_output_, predict_tv_)
 
     return 0
