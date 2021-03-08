@@ -85,6 +85,14 @@ def create_dataframe(TRI_array, TRO_array, TEI_array,
 ##    model 00 : lightGBM     ##
 ##                            ##
 ################################
+    
+#A function to calculate Root Mean Squared Logarithmic Error (RMSLE)
+# ref: https://www.kaggle.com/marknagelberg/rmsle-function
+def rmsle(y, y_pred):
+	assert len(y) == len(y_pred)
+	terms_to_sum = [(math.log(float(y_pred[i]) + 1) - math.log(float(y[i]) + 1)) ** 2.0 for i,pred in enumerate(y_pred)]
+	return (sum(terms_to_sum) * (1.0/len(y))) ** 0.5
+    
 def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num):
 
     # create Pandas DataFrame
@@ -129,10 +137,34 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
     else:
         RD.saveArray('m00_lightGBM_test_result_' + str(num) + '.txt', result, '\t', 500)
 
-    # validation mode -> compute RMSE error
+    # validation mode -> compute RMSLE error
+    # saved results are still NORMALIZED values
     if VAL_rate > 0:
-        rmse = math.sqrt(mean_squared_error(tv_output, predict_tv))
-        return rmse
+
+        # convert prediction
+        tv_output_ = []
+        predict_tv_ = []
+
+        # for tv_output
+        for i in range(len(tv_output[0])):
+
+            if num == 0: # formation_energy_ev_natom
+                tv_output_.append(float(tv_output[0][i]) * 0.104078 + 0.187614)
+
+            else: # bandgap_energy_ev
+                tv_output_.append(float(tv_output[0][i]) * 1.006635 + 2.077205)
+
+        # for predict_tv
+        for i in range(len(predict_tv)):
+
+            if num == 0: # formation_energy_ev_natom
+                predict_tv_.append(float(predict_tv[i]) * 0.104078 + 0.187614)
+
+            else: # bandgap_energy_ev
+                predict_tv_.append(float(predict_tv[i]) * 1.006635 + 2.077205)
+
+        # compute RMSLE and return
+        return rmsle(tv_output_, predict_tv_)
 
     return 0
 
@@ -149,14 +181,17 @@ if __name__ == '__main__':
     # meta info
     TRI = 'train_input.txt'
     TEI = 'test_input.txt'
+    final_rmsles = [['LGBM']]
 
     for num in [0, 1]:
+        rmsles = []
+            
         TRO = 'train_output_' + str(num) + '.txt'
         TEO = ['test_output_' + str(num) + '.txt']
 
         TE_real = None
         TE_report = 'report_test_' + str(num) + '.txt'
-        VAL_rate = 0.0
+        VAL_rate = 0.05
         VAL_report = 'report_val_' + str(num) + '.txt'
 
         # load array
@@ -164,46 +199,51 @@ if __name__ == '__main__':
         TRO_array = RD.loadArray(TRO, '\t')
         TEI_array = RD.loadArray(TEI, '\t')
 
-        # user data
-        deviceName = input('device name (for example, cpu:0 or gpu:0)')
-        epoch = int(input('epoch'))
-        printed = int(input('printed? (0 -> do not print)'))
-
         # print mode
         if VAL_rate > 0.0:
             print('VALIDATION mode')
         else:
             print('TEST mode')
 
-        final_rmses = []
-
         # training and test
 
         # model 00 : lightGBM
         rmse_00 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num)
-
-        final_rmses.append([rmse_00])
-
-        # write final result (RMSE)
-        if VAL_rate > 0.0:
-            RD.saveArray('final_RMSE_' + str(num) + '.txt', final_rmses, '\t', 500)
+        rmsles.append(rmse_00)
 
         # write FINAL ANSWER
         # in VALIDATION MODE, there will be an error
-        
+            
         # read file
-        testResult = RD.loadArray('m00_lightGBM_test_result_' + str(num) + '.txt')
+        if VAL_rate > 0.0:
+            testValResult = RD.loadArray('m00_lightGBM_val_result_' + str(num) + '.txt')
+        else:
+            testValResult = RD.loadArray('m00_lightGBM_test_result_' + str(num) + '.txt')
 
         # write final result
         finalResult = []
-        
-        for i in range(len(testResult)):
             
+        for i in range(len(testValResult)):
+                
             if num == 0: # formation_energy_ev_natom
-                finalResult.append([float(testResult[i][0]) * 0.104078 + 0.187614])
+                finalResult.append([float(testValResult[i][0]) * 0.104078 + 0.187614])
 
             else: # bandgap_energy_ev
-                finalResult.append([float(testResult[i][0]) * 1.006635 + 2.077205])
+                finalResult.append([float(testValResult[i][0]) * 1.006635 + 2.077205])
 
         # write file
         RD.saveArray('to_submit_' + str(num) + '.txt', finalResult)
+
+        final_rmsles.append(rmsles)
+
+    # append final rmsles
+    methods = len(final_rmsles[0])
+    avg_rmsles = []
+    
+    for i in range(methods):
+        avg_rmsles.append((float(final_rmsles[1][i]) + float(final_rmsles[2][i])) / 2)
+    
+    final_rmsles.append(avg_rmsles)
+
+    # save final rmsles
+    RD.saveArray('final_rmsles.txt', np.array(final_rmsles).T)
