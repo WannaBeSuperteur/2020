@@ -246,7 +246,86 @@ def model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
 
 ################################
 ##                            ##
-##           MAIN             ##
+##      model 02 : MIXED      ##
+##                            ##
+################################
+
+def model_02_Mixed(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, lgb_rate):
+
+    # create Pandas DataFrame
+    # tv_input  : test / validation input
+    # tv_output : test / validation output
+    (train_input, train_output, tv_input, tv_output) = create_dataframe(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report)
+
+    # create prediction array
+    tv_len = len(tv_input)
+    predict_tv = []
+    for _ in range(tv_len): predict_tv.append(0.0)
+
+    # predict using LightGBM and CatBoost
+    for is_lgb in [True, False]:
+
+        # using LightGBM
+        if is_lgb == True:
+
+            # convert to lightgbm dataset
+            train_ds = lgb.Dataset(train_input, label=train_output)
+            test_ds = lgb.Dataset(tv_input, label=tv_output)
+            
+            # set parameters
+            # refer to https://www.kaggle.com/janpreets/using-the-atomic-coordinates-for-prediction (Private: 0.6988, Public: 0.5046)
+            params = {'num_leaves': 8,
+                      'objective': 'regression',
+                      'min_data_in_leaf': 18,
+                      'learning_rate': 0.01,
+                      'feature_fraction': 0.93,
+                      'bagging_fraction': 0.93,
+                      'bagging_freq': 1,
+                      'metric': 'l2',
+                      'num_threads': 1,
+                      'seed': int(lgb_rate * 10000)}
+
+            # create model
+            if VAL_rate > 0:
+                model = lgb.train(params, train_ds, 5000, test_ds, verbose_eval=50, early_stopping_rounds=200)
+            else:
+                model = lgb.train(params, train_ds, 5000, train_ds, verbose_eval=50, early_stopping_rounds=200)
+
+        # using CatBoost
+        else:
+
+            # define model
+            model = CatBoostRegressor(iterations=4000,
+                                      learning_rate=0.01,
+                                      depth=4,
+                                      loss_function='RMSE',
+                                      eval_metric='RMSE',
+                                      random_seed=int(lgb_rate * 10000),
+                                      od_type='Iter',
+                                      od_wait=50)
+
+            # create model
+            if VAL_rate > 0:
+                model.fit(train_input, train_output, eval_set=(tv_input, tv_output), use_best_model=True, verbose=False)
+            else:
+                model.fit(train_input, train_output, eval_set=None, use_best_model=True, verbose=False)
+
+        # predict
+        prediction = model.predict(tv_input)
+
+        # apply to final prediction
+        for j in range(tv_len):
+            if is_lgb == True:
+                predict_tv[j] += prediction[j] * lgb_rate
+            else:
+                predict_tv[j] += prediction[j] * (1.0 - lgb_rate)
+
+    # write result and return RMSLE error
+    return writeResult(predict_tv, tv_output, VAL_rate, num, 'm02_Mixed_' + str(int(lgb_rate * 100)))
+
+################################
+##                            ##
+##            MAIN            ##
 ##                            ##
 ################################
 
@@ -264,7 +343,9 @@ if __name__ == '__main__':
     TRI = 'train_input.txt'
     TEI = 'test_input.txt'
     final_rmsles = [['LGBM1', 'LGBM3', 'LGBM5', 'LGBM10', 'LGBM15', 'LGBM20',
-                     'CATB1', 'CATB3', 'CATB5', 'CATB10', 'CATB15', 'CATB20']]
+                     'CATB1', 'CATB3', 'CATB5', 'CATB10', 'CATB15', 'CATB20',
+                     'MIX5', 'MIX10', 'MIX15', 'MIX20', 'MIX25', 'MIX30', 'MIX35', 'MIX40', 'MIX45', 'MIX50',
+                     'MIX55', 'MIX60', 'MIX65', 'MIX70', 'MIX75', 'MIX80', 'MIX85', 'MIX90', 'MIX95']]
 
     for num in [0, 1]:
         rmsles = []
@@ -289,44 +370,19 @@ if __name__ == '__main__':
             print('TEST mode')
 
         # training and test
+        iters_list = [1, 3, 5, 10, 15, 20]
+        lgb_rates = range(5, 100, 5)
+        len_iters = len(iters_list)
 
-        # model 00 : lightGBM (1, 3, 5, 10, 15, 20 iteration)
-        rmse_00_0 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 1)
-        rmsles.append(rmse_00_0)
+        # model 00 : lightGBM (1, 3, 5, 10, 15, 20 iterations)
+        # model 01 : CatBoost (1, 3, 5, 10, 15, 20 iterations)
+        for iters in iters_list:
+            rmsles.append(model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, iters))
+            rmsles.append(model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, iters))
 
-        rmse_00_1 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 3)
-        rmsles.append(rmse_00_1)
-
-        rmse_00_2 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 5)
-        rmsles.append(rmse_00_2)
-
-        rmse_00_3 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 10)
-        rmsles.append(rmse_00_3)
-
-        rmse_00_4 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 15)
-        rmsles.append(rmse_00_4)
-
-        rmse_00_5 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 20)
-        rmsles.append(rmse_00_5)
-
-        # model 01 : CatBoost (1, 3, 5, 10, 15, 20 iteration)
-        rmse_01_0 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 1)
-        rmsles.append(rmse_01_0)
-
-        rmse_01_1 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 3)
-        rmsles.append(rmse_01_1)
-
-        rmse_01_2 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 5)
-        rmsles.append(rmse_01_2)
-
-        rmse_01_3 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 10)
-        rmsles.append(rmse_01_3)
-
-        rmse_01_4 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 15)
-        rmsles.append(rmse_01_4)
-
-        rmse_01_5 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, 20)
-        rmsles.append(rmse_01_5)
+        # model 02 : mixed (lgb rate = 0.05, 0.1, 0.15, ..., 0.95)
+        for lgbrate in lgb_rates:
+            rmsles.append(model_02_Mixed(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, lgbrate / 100))
 
         # write FINAL ANSWER
         # in VALIDATION MODE, there will be an error
@@ -336,37 +392,24 @@ if __name__ == '__main__':
             tvtext = 'val'
         else:
             tvtext = 'test'
+
+        testValResults_00 = []
+        testValResults_01 = []
+        testValResults_02 = []
         
-        testValResult_00_0 = RD.loadArray('m00_LGBM_1_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_00_1 = RD.loadArray('m00_LGBM_3_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_00_2 = RD.loadArray('m00_LGBM_5_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_00_3 = RD.loadArray('m00_LGBM_10_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_00_4 = RD.loadArray('m00_LGBM_15_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_00_5 = RD.loadArray('m00_LGBM_20_' + tvtext + '_result_' + str(num) + '.txt')
-        
-        testValResult_01_0 = RD.loadArray('m01_CatB_1_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_01_1 = RD.loadArray('m01_CatB_3_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_01_2 = RD.loadArray('m01_CatB_5_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_01_3 = RD.loadArray('m01_CatB_10_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_01_4 = RD.loadArray('m01_CatB_15_' + tvtext + '_result_' + str(num) + '.txt')
-        testValResult_01_5 = RD.loadArray('m01_CatB_20_' + tvtext + '_result_' + str(num) + '.txt')
+        for iters in iters_list:
+            testValResults_00.append(RD.loadArray('m00_LGBM_' + str(iters) + '_' + tvtext + '_result_' + str(num) + '.txt'))
+            testValResults_01.append(RD.loadArray('m01_CatB_' + str(iters) + '_' + tvtext + '_result_' + str(num) + '.txt'))
+        for lgbrate in lgb_rates:
+            testValResults_02.append(RD.loadArray('m02_Mixed_' + str(lgbrate) + '_' + tvtext + '_result_' + str(num) + '.txt'))
 
         # write final result
-        finalResult_00_0 = []
-        finalResult_00_1 = []
-        finalResult_00_2 = []
-        finalResult_00_3 = []
-        finalResult_00_4 = []
-        finalResult_00_5 = []
-        
-        finalResult_01_0 = []
-        finalResult_01_1 = []
-        finalResult_01_2 = []
-        finalResult_01_3 = []
-        finalResult_01_4 = []
-        finalResult_01_5 = []
+        finalResults_00 = [[], [], [], [], [], []]
+        finalResults_01 = [[], [], [], [], [], []]
+        finalResults_02 = [[], [], [], [], [], [], [], [], [], [],
+                           [], [], [], [], [], [], [], [], []]
             
-        for i in range(len(testValResult_00_0)):
+        for i in range(len(testValResults_00[0])):
 
             # formation_energy_ev_natom
             if num == 0:
@@ -377,35 +420,19 @@ if __name__ == '__main__':
             else:
                 avg = 2.077205
                 std = 1.006635
-                
-            finalResult_00_0.append([float(testValResult_00_0[i][0]) * std + avg])
-            finalResult_00_1.append([float(testValResult_00_1[i][0]) * std + avg])
-            finalResult_00_2.append([float(testValResult_00_2[i][0]) * std + avg])
-            finalResult_00_3.append([float(testValResult_00_3[i][0]) * std + avg])
-            finalResult_00_4.append([float(testValResult_00_4[i][0]) * std + avg])
-            finalResult_00_5.append([float(testValResult_00_5[i][0]) * std + avg])
 
-            finalResult_01_0.append([float(testValResult_01_0[i][0]) * std + avg])
-            finalResult_01_1.append([float(testValResult_01_1[i][0]) * std + avg])
-            finalResult_01_2.append([float(testValResult_01_2[i][0]) * std + avg])
-            finalResult_01_3.append([float(testValResult_01_3[i][0]) * std + avg])
-            finalResult_01_4.append([float(testValResult_01_4[i][0]) * std + avg])
-            finalResult_01_5.append([float(testValResult_01_5[i][0]) * std + avg])
+            for j in range(len_iters):
+                finalResults_00[j].append([float(testValResults_00[j][i][0]) * std + avg])
+                finalResults_01[j].append([float(testValResults_01[j][i][0]) * std + avg])
+            for lgbrate in lgb_rates:
+                finalResults_02[j].append([float(testValResults_02[j][i][0]) * std + avg])
 
         # write file
-        RD.saveArray('to_submit_' + str(num) + '_m00_0.txt', finalResult_00_0)
-        RD.saveArray('to_submit_' + str(num) + '_m00_1.txt', finalResult_00_1)
-        RD.saveArray('to_submit_' + str(num) + '_m00_2.txt', finalResult_00_2)
-        RD.saveArray('to_submit_' + str(num) + '_m00_3.txt', finalResult_00_3)
-        RD.saveArray('to_submit_' + str(num) + '_m00_4.txt', finalResult_00_4)
-        RD.saveArray('to_submit_' + str(num) + '_m00_5.txt', finalResult_00_5)
-        
-        RD.saveArray('to_submit_' + str(num) + '_m01_0.txt', finalResult_01_0)
-        RD.saveArray('to_submit_' + str(num) + '_m01_1.txt', finalResult_01_1)
-        RD.saveArray('to_submit_' + str(num) + '_m01_2.txt', finalResult_01_2)
-        RD.saveArray('to_submit_' + str(num) + '_m01_3.txt', finalResult_01_3)
-        RD.saveArray('to_submit_' + str(num) + '_m01_4.txt', finalResult_01_4)
-        RD.saveArray('to_submit_' + str(num) + '_m01_5.txt', finalResult_01_5)
+        for i in range(len_iters):
+            RD.saveArray('to_submit_' + str(num) + '_m00_' + str(i) + '.txt', finalResults_00[i])
+            RD.saveArray('to_submit_' + str(num) + '_m01_' + str(i) + '.txt', finalResults_01[i])
+        for lgbrate in lgb_rates:
+            RD.saveArray('to_submit_' + str(num) + '_m02_' + str(lgbrate) + '.txt', finalResults_02[i])
 
         final_rmsles.append(rmsles)
 
