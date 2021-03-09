@@ -11,6 +11,7 @@ import deepLearning_main as DL
 
 import lightgbm as lgb
 from sklearn.metrics import mean_squared_error, r2_score
+from catboost import CatBoostRegressor
 
 # designate data to validate
 def designate_val(TRI_array, TRO_array, train_rows, VAL_rate):
@@ -117,7 +118,7 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
     params = {'num_leaves': 8,
               'objective': 'regression',
               'min_data_in_leaf': 18,
-              'learning_rate': 0.05,
+              'learning_rate': 0.01,
               'feature_fraction': 0.93,
               'bagging_fraction': 0.93,
               'bagging_freq': 1,
@@ -127,9 +128,9 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
 
     # create model
     if VAL_rate > 0:
-        model = lgb.train(params, train_ds, 1500, test_ds, verbose_eval=25, early_stopping_rounds=200)
+        model = lgb.train(params, train_ds, 5000, test_ds, verbose_eval=50, early_stopping_rounds=200)
     else:
-        model = lgb.train(params, train_ds, 1500, train_ds, verbose_eval=25, early_stopping_rounds=200)
+        model = lgb.train(params, train_ds, 5000, train_ds, verbose_eval=50, early_stopping_rounds=200)
 
     # predict
     predict_train = model.predict(train_input)
@@ -177,6 +178,60 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
 
     return 0
 
+################################
+##                            ##
+##    model 01 : CatBoost     ##
+##                            ##
+################################
+
+# ref: https://www.kaggle.com/tunguz/simple-catboost
+
+def model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num):
+
+    # create Pandas DataFrame
+    # tv_input  : test / validation input
+    # tv_output : test / validation output
+    (train_input, train_output, tv_input, tv_output) = create_dataframe(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report)
+
+    model = CatBoostRegressor(iterations=4000,
+                              learning_rate=0.01,
+                              depth=4,
+                              loss_function='RMSE',
+                              eval_metric='RMSE',
+                              random_seed=2021,
+                              od_type='Iter',
+                              od_wait=50)
+
+    # create model
+    if VAL_rate > 0:
+        model.fit(train_input, train_output, eval_set=(test_input, test_output), use_best_model=True, verbose=False)
+    else:
+        model.fit(train_input, train_output, eval_set=None, use_best_model=True, verbose=False)
+
+    # predict
+    predict_train = model.predict(train_input)
+    predict_tv = model.predict(tv_input)
+
+    # write result
+
+    #### ING ####
+
+    # validation mode -> compute RMSLE error
+    # saved results are still NORMALIZED values
+    if VAL_rate > 0:
+
+        #### ING ####
+        
+        pass
+
+    return 0
+
+################################
+##                            ##
+##           MAIN             ##
+##                            ##
+################################
+
 if __name__ == '__main__':
 
     import warnings
@@ -190,7 +245,7 @@ if __name__ == '__main__':
     # meta info
     TRI = 'train_input.txt'
     TEI = 'test_input.txt'
-    final_rmsles = [['LGBM']]
+    final_rmsles = [['LGBM', 'CATBOOST']]
 
     for num in [0, 1]:
         rmsles = []
@@ -200,7 +255,7 @@ if __name__ == '__main__':
 
         TE_real = None
         TE_report = 'report_test_' + str(num) + '.txt'
-        VAL_rate = 0.05
+        VAL_rate = 0.0
         VAL_report = 'report_val_' + str(num) + '.txt'
 
         # load array
@@ -220,14 +275,20 @@ if __name__ == '__main__':
         rmse_00 = model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num)
         rmsles.append(rmse_00)
 
+        # model 01 : CatBoost
+        rmse_01 = model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num)
+        rmsles.append(rmse_01)
+
         # write FINAL ANSWER
         # in VALIDATION MODE, there will be an error
             
         # read file
         if VAL_rate > 0.0:
-            testValResult = RD.loadArray('m00_lightGBM_val_result_' + str(num) + '.txt')
+            testValResult_00 = RD.loadArray('m00_lightGBM_val_result_' + str(num) + '.txt')
+            testValResult_01 = RD.loadArray('m01_CatBoost_val_result_' + str(num) + '.txt')
         else:
-            testValResult = RD.loadArray('m00_lightGBM_test_result_' + str(num) + '.txt')
+            testValResult_00 = RD.loadArray('m00_lightGBM_test_result_' + str(num) + '.txt')
+            testValResult_01 = RD.loadArray('m01_CatBoost_test_result_' + str(num) + '.txt')
 
         # write final result
         finalResult = []
@@ -235,13 +296,16 @@ if __name__ == '__main__':
         for i in range(len(testValResult)):
                 
             if num == 0: # formation_energy_ev_natom
-                finalResult.append([float(testValResult[i][0]) * 0.104078 + 0.187614])
+                finalResult_00.append([float(testValResult_00[i][0]) * 0.104078 + 0.187614])
+                finalResult_01.append([float(testValResult_01[i][0]) * 0.104078 + 0.187614])
 
             else: # bandgap_energy_ev
-                finalResult.append([float(testValResult[i][0]) * 1.006635 + 2.077205])
+                finalResult_00.append([float(testValResult_00[i][0]) * 1.006635 + 2.077205])
+                finalResult_01.append([float(testValResult_01[i][0]) * 1.006635 + 2.077205])
 
         # write file
-        RD.saveArray('to_submit_' + str(num) + '.txt', finalResult)
+        RD.saveArray('to_submit_' + str(num) + '_m00.txt', finalResult_00)
+        RD.saveArray('to_submit_' + str(num) + '_m01.txt', finalResult_01)
 
         final_rmsles.append(rmsles)
 
