@@ -312,6 +312,7 @@ def model_02_Mixed(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VA
 
         # predict
         prediction = model.predict(tv_input)
+        print(prediction[:15])
 
         # apply to final prediction
         for j in range(tv_len):
@@ -342,8 +343,8 @@ if __name__ == '__main__':
     # meta info
     TRI = 'train_input.txt'
     TEI = 'test_input.txt'
-    final_rmsles = [['LGBM1', 'LGBM3', 'LGBM5', 'LGBM10', 'LGBM15', 'LGBM20',
-                     'CATB1', 'CATB3', 'CATB5', 'CATB10', 'CATB15', 'CATB20',
+    final_rmsles = [['LGBM1', 'LGBM3', 'LGBM5', 'LGBM10',
+                     'CATB1', 'CATB3', 'CATB5', 'CATB10',
                      'MIX5', 'MIX10', 'MIX15', 'MIX20', 'MIX25', 'MIX30', 'MIX35', 'MIX40', 'MIX45', 'MIX50',
                      'MIX55', 'MIX60', 'MIX65', 'MIX70', 'MIX75', 'MIX80', 'MIX85', 'MIX90', 'MIX95']]
 
@@ -355,7 +356,7 @@ if __name__ == '__main__':
 
         TE_real = None
         TE_report = 'report_test_' + str(num) + '.txt'
-        VAL_rate = 0.05
+        VAL_rate = 0.0
         VAL_report = 'report_val_' + str(num) + '.txt'
 
         # load array
@@ -370,12 +371,12 @@ if __name__ == '__main__':
             print('TEST mode')
 
         # training and test
-        iters_list = [1, 3, 5, 10, 15, 20]
+        iters_list = [1, 3, 5, 10]
         lgb_rates = range(5, 100, 5)
         len_iters = len(iters_list)
 
-        # model 00 : lightGBM (1, 3, 5, 10, 15, 20 iterations)
-        # model 01 : CatBoost (1, 3, 5, 10, 15, 20 iterations)
+        # model 00 : lightGBM (1, 3, 5, 10, iterations)
+        # model 01 : CatBoost (1, 3, 5, 10, iterations)
         for iters in iters_list:
             rmsles.append(model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, iters))
             rmsles.append(model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report, num, iters))
@@ -404,12 +405,12 @@ if __name__ == '__main__':
             testValResults_02.append(RD.loadArray('m02_Mixed_' + str(lgbrate) + '_' + tvtext + '_result_' + str(num) + '.txt'))
 
         # write final result
-        finalResults_00 = [[], [], [], [], [], []]
-        finalResults_01 = [[], [], [], [], [], []]
+        finalResults_00 = [[], [], [], []]
+        finalResults_01 = [[], [], [], []]
         finalResults_02 = [[], [], [], [], [], [], [], [], [], [],
                            [], [], [], [], [], [], [], [], []]
             
-        for i in range(len(testValResults_00[0])):
+        for i in range(len(testValResults_02[0])):
 
             # formation_energy_ev_natom
             if num == 0:
@@ -425,6 +426,7 @@ if __name__ == '__main__':
                 finalResults_00[j].append([float(testValResults_00[j][i][0]) * std + avg])
                 finalResults_01[j].append([float(testValResults_01[j][i][0]) * std + avg])
             for lgbrate in lgb_rates:
+                j = int(lgbrate / 5 - 1)
                 finalResults_02[j].append([float(testValResults_02[j][i][0]) * std + avg])
 
         # write file
@@ -432,7 +434,7 @@ if __name__ == '__main__':
             RD.saveArray('to_submit_' + str(num) + '_m00_' + str(i) + '.txt', finalResults_00[i])
             RD.saveArray('to_submit_' + str(num) + '_m01_' + str(i) + '.txt', finalResults_01[i])
         for lgbrate in lgb_rates:
-            RD.saveArray('to_submit_' + str(num) + '_m02_' + str(lgbrate) + '.txt', finalResults_02[i])
+            RD.saveArray('to_submit_' + str(num) + '_m02_' + str(lgbrate) + '.txt', finalResults_02[int(lgbrate / 5 - 1)])
 
         final_rmsles.append(rmsles)
 
