@@ -142,8 +142,15 @@ def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
 # I_[n][l][k] : I_[n][k_l]
 # B           : B[k_l]
 def R_nkl(B, k, l, n, PU, g, I_, o2):
+
+    # try:
     
     r = PU[n][l][k] * g[n][l][k] / (I_[n][l][k] + o2)
+    
+    # except:
+    #    print('ERROR / ', n, l, k)
+    #    for i in range(len(PU)):
+    #        print(PU[i])
     
     return B * math.log(1+r, 2)
 

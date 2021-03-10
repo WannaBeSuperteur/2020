@@ -382,7 +382,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                         updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, s_j, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
 
-                # get throughput (before) (time = n)
+                # get throughput (before) (time = n) (n = t, l = i, k = t)
+                # error if (time slot value) > (devices)
                 beforeThroughput = f.R_nkl(B, t, i, t, PU, g, I_, o2)
                 
                 # get and move to next state (update q, a and R)
@@ -406,7 +407,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 newS_list.append(s)
                 action_list.append(action)
 
-                # get throughput (after) (time = t+1)
+                # get throughput (after) (time = t+1) (n = t+1, l = i, k = t)
+                # error if (time slot value) > (devices)
                 afterThroughput = f.R_nkl(B, t, i, t+1, PU, g, I_, o2)
 
                 # device t's throughput does not increase
