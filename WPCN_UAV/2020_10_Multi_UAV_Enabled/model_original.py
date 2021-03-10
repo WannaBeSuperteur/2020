@@ -483,8 +483,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
 
     ### TRAIN and VALIDATION ###
-    dq.deepLearningQ_training(QTable, 'cpu:0', 50, False)
-    dq.deepLearningQ_valid('cpu:0', 50, False, 0.05)
+    dq.deepLearningQ_training(QTable, 'cpu:0', 10, False)
+    dq.deepLearningQ_valid('cpu:0', 10, False, 0.05)
 
     ### TEST ###
     # later
@@ -507,8 +507,8 @@ if __name__ == '__main__':
     width = 50 # width (m)
     height = 50 # height (m)
 
-    M = 50 # M = 50 episodes (originally 1000)
-    L = 3 # L = 3 clusters = 3 UAVs
+    M = 100 # M = 100 episodes (originally 1000)
+    L = 7 # L = 7 clusters = 7 UAVs
     devices = 50 # 50 devices
     T = 10 # T = 10s
     H = 15 # H = 15m

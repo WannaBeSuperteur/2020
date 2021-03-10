@@ -232,6 +232,9 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     sFound = False # find corresponding state?
     for i in range(len(Q)):
         if Q[i][0][0] == s: # Q[i] = [[s0], [q00, q01, ...]], Q[i][0] = [s0], Q[i][0][0] = s0
+
+            print(str(Q[i][1]) + ' True ' + str(len(Q)))
+            
             actionIndex = getActionIndex(action)
             Q[i][1][actionIndex] = (1 - alphaL)*Q[i][1][actionIndex] + alphaL*(directReward + r_*maxQ)
 
@@ -248,6 +251,7 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
         actionIndex = getActionIndex(action)
         
         qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
+        print(str(qs) + ' False ' + str(len(Q)))
 
         # append the state-action-reward [[s], qs] to Q table
         # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
