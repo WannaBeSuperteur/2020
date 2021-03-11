@@ -8,15 +8,15 @@ if __name__ == '__main__':
     train_rows = 2400
     test_rows = 600
     input_cols_cat = 1
-    input_cols_cont = 10
+    input_cols_cont = 13
 
     result = ''
 
     # TRAIN
-    train_data = RD.loadArray('train.csv', ',')
-    train_input = np.array(train_data)[1:, 1:12]
-    train_output0 = np.array(train_data)[1:, 12:13] # formation_energy_ev_natom
-    train_output1 = np.array(train_data)[1:, 13:14] # bandgap_energy_ev
+    train_data = RD.loadArray('train_converted.csv', ',')
+    train_input = np.array(train_data)[1:, 1:15]
+    train_output0 = np.array(train_data)[1:, 15:16] # formation_energy_ev_natom
+    train_output1 = np.array(train_data)[1:, 16:17] # bandgap_energy_ev
 
     # AVG and STD for each column of CONTINUOUS training input
     cont_avgs = []
@@ -93,7 +93,7 @@ if __name__ == '__main__':
     RD.saveArray('train_output_1.txt', final_train_output1, '\t', 500)
 
     # TEST
-    test_data = RD.loadArray('test.csv', ',')
+    test_data = RD.loadArray('test_converted.csv', ',')
     test_input = np.array(test_data)[1:, 1:]
     
     result += 'test input:\n'
