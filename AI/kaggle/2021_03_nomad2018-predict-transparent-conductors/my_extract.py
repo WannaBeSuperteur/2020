@@ -3,20 +3,24 @@ sys.path.insert(0, '../../AI_BASE')
 import readData as RD
 import numpy as np
 
+# train_converted.csv -> train_input.txt, train_output_0.txt, and train_output_1.txt
+# test_converted.csv  -> test_input.txt
+#                     -> my_extract_result.txt
+
 if __name__ == '__main__':
 
     train_rows = 2400
     test_rows = 600
     input_cols_cat = 1
-    input_cols_cont = 13
+    input_cols_cont = 29
 
     result = ''
 
     # TRAIN
     train_data = RD.loadArray('train_converted.csv', ',')
-    train_input = np.array(train_data)[1:, 1:15]
-    train_output0 = np.array(train_data)[1:, 15:16] # formation_energy_ev_natom
-    train_output1 = np.array(train_data)[1:, 16:17] # bandgap_energy_ev
+    train_input = np.array(train_data)[1:, 1:31]
+    train_output0 = np.array(train_data)[1:, 31:32] # formation_energy_ev_natom
+    train_output1 = np.array(train_data)[1:, 32:33] # bandgap_energy_ev
 
     # AVG and STD for each column of CONTINUOUS training input
     cont_avgs = []

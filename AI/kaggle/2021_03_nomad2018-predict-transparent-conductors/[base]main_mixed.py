@@ -375,7 +375,7 @@ if __name__ == '__main__':
 
     # using PCA
     # ref: https://www.kaggle.com/asatoonishi/using-sine-matrix
-    usePCA = True
+    usePCA = False
     components = 16
 
     if usePCA == True:
@@ -442,7 +442,7 @@ if __name__ == '__main__':
 
         TE_real = None
         TE_report = 'report_test_' + str(num) + '.txt'
-        VAL_rate = 0.15
+        VAL_rate = 0.0
         VAL_report = 'report_val_' + str(num) + '.txt'
 
         # load array
