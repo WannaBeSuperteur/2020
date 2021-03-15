@@ -13,6 +13,11 @@ import lightgbm as lgb
 from sklearn.metrics import mean_squared_error, r2_score
 from catboost import CatBoostRegressor
 
+import matplotlib.pyplot as plt
+import seaborn as seab
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+
 # designate data to validate
 def designate_val(TRI_array, TRO_array, train_rows, VAL_rate):
 
@@ -126,6 +131,16 @@ def writeResult(predict_tv, tv_output, VAL_rate, num, modelName):
 
     return 0
 
+# get and show correlation
+# input: pandas.DataFrame
+def getCorr(dataFrame):
+    df = dataFrame.corr()
+    seab.clustermap(df,
+                    annot=True,
+                    cmap='RdYlBu_r',
+                    vmin=-1, vmax=1)
+    plt.show()
+
 ################################
 ##                            ##
 ##    model 00 : lightGBM     ##
@@ -171,7 +186,7 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
         params = {'num_leaves': 8,
                   'objective': 'regression',
                   'min_data_in_leaf': 18,
-                  'learning_rate': 0.01,
+                  'learning_rate': 0.005,
                   'feature_fraction': 0.93,
                   'bagging_fraction': 0.93,
                   'bagging_freq': 1,
@@ -181,9 +196,9 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
 
         # create model
         if VAL_rate > 0:
-            model = lgb.train(params, train_ds, 5000, test_ds, verbose_eval=50, early_stopping_rounds=200)
+            model = lgb.train(params, train_ds, 10000, test_ds, verbose_eval=50, early_stopping_rounds=200)
         else:
-            model = lgb.train(params, train_ds, 5000, train_ds, verbose_eval=50, early_stopping_rounds=200)
+            model = lgb.train(params, train_ds, 10000, train_ds, verbose_eval=50, early_stopping_rounds=200)
 
         # predict
         prediction = model.predict(tv_input)
@@ -219,14 +234,14 @@ def model_01_CatBoost(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate,
     for i in range(iters):
         
         # define model
-        model = CatBoostRegressor(iterations=4000,
-                                  learning_rate=0.01,
+        model = CatBoostRegressor(iterations=8000,
+                                  learning_rate=0.005,
                                   depth=4,
                                   loss_function='RMSE',
                                   eval_metric='RMSE',
                                   random_seed=2021+i,
                                   od_type='Iter',
-                                  od_wait=50)
+                                  od_wait=80)
 
         # create model
         if VAL_rate > 0:
@@ -324,6 +339,16 @@ def model_02_Mixed(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VA
     # write result and return RMSLE error
     return writeResult(predict_tv, tv_output, VAL_rate, num, 'm02_Mixed_' + str(int(lgb_rate * 100)))
 
+# normalize input using avgs and stds
+def normalize(array, avgs, stds):
+
+    rows = len(array)
+    cols = len(array[0])
+    
+    for i in range(rows):
+        for j in range(cols):
+            array[i][j] = (array[i][j] - avgs[j]) / stds[j]
+
 ################################
 ##                            ##
 ##            MAIN            ##
@@ -348,6 +373,67 @@ if __name__ == '__main__':
                      'MIX5', 'MIX10', 'MIX15', 'MIX20', 'MIX25', 'MIX30', 'MIX35', 'MIX40', 'MIX45', 'MIX50',
                      'MIX55', 'MIX60', 'MIX65', 'MIX70', 'MIX75', 'MIX80', 'MIX85', 'MIX90', 'MIX95']]
 
+    # using PCA
+    # ref: https://www.kaggle.com/asatoonishi/using-sine-matrix
+    usePCA = True
+    components = 16
+
+    if usePCA == True:
+        train_input = np.array(RD.loadArray(TRI, '\t')).astype(float)
+        test_input = np.array(RD.loadArray(TEI, '\t')).astype(float)
+
+        train_input_df = pd.DataFrame(train_input)
+        test_input_df = pd.DataFrame(test_input)
+
+        # get and show correlation
+        getCorr(train_input_df)
+        getCorr(test_input_df)
+
+        # PCA
+        scaled = StandardScaler().fit_transform(np.concatenate((train_input, test_input), axis=0))
+        pca = PCA(n_components=components)
+        pca.fit(scaled)
+        
+        train_test_input_pca = pca.transform(scaled)
+        train_input_pca = train_test_input_pca[:2400]
+        test_input_pca = train_test_input_pca[2400:]
+
+        # print pca info
+        print('pca array of train-test input:')
+        print(np.shape(train_test_input_pca))
+
+        print('pca array of train input:')
+        print(np.shape(train_input_pca))
+
+        print('pca array of test input:')
+        print(np.shape(test_input_pca))
+
+        # compute input-pca avg and stddev
+        avgs_pca = []
+        stds_pca = []
+
+        for i in range(components):
+            thisCol = train_input_pca[:, i].astype(float)
+
+            # compute avg and stddev
+            avgs_pca.append(np.mean(thisCol))
+            stds_pca.append(np.std(thisCol))
+
+        print('avgs of pca (input):')
+        print(avgs_pca)
+
+        print('stds of pca (input):')
+        print(stds_pca)
+
+        # normalize each train/test input-pca column
+        normalize(train_input_pca, avgs_pca, stds_pca)
+        normalize(test_input_pca, avgs_pca, stds_pca)
+
+        # save pca-ed input as file
+        RD.saveArray('train_input_pca.txt', np.array(train_input_pca), '\t', 500)
+        RD.saveArray('test_input_pca.txt', np.array(test_input_pca), '\t', 500)     
+
+    # training and validation/test
     for num in [0, 1]:
         rmsles = []
             
@@ -356,13 +442,18 @@ if __name__ == '__main__':
 
         TE_real = None
         TE_report = 'report_test_' + str(num) + '.txt'
-        VAL_rate = 0.0
+        VAL_rate = 0.15
         VAL_report = 'report_val_' + str(num) + '.txt'
 
         # load array
-        TRI_array = RD.loadArray(TRI, '\t')
-        TRO_array = RD.loadArray(TRO, '\t')
-        TEI_array = RD.loadArray(TEI, '\t')
+        if usePCA == True:
+            TRI_array = RD.loadArray('train_input_pca.txt', '\t')
+            TRO_array = RD.loadArray(TRO, '\t')
+            TEI_array = RD.loadArray('test_input_pca.txt', '\t')
+        else:
+            TRI_array = RD.loadArray(TRI, '\t')
+            TRO_array = RD.loadArray(TRO, '\t')
+            TEI_array = RD.loadArray(TEI, '\t')
 
         # print mode
         if VAL_rate > 0.0:
@@ -410,7 +501,7 @@ if __name__ == '__main__':
         finalResults_02 = [[], [], [], [], [], [], [], [], [], [],
                            [], [], [], [], [], [], [], [], []]
             
-        for i in range(len(testValResults_02[0])):
+        for i in range(len(testValResults_01[0])):
 
             # formation_energy_ev_natom
             if num == 0:
