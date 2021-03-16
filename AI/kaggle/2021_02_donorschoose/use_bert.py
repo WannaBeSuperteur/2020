@@ -176,26 +176,38 @@ if __name__ == '__main__':
     test_result = [[0 for j in range(6)] for i in range(rows_to_test)]
 
     # train / test max length
-    max_lengths_train = []
-    max_lengths_test = []
-    max_lengths = []
 
-    for i in range(6):
-        print('checking max length : ' + str(i))
+    # for donorschoose-application-screening,
+    # max_length_train = 132, 2183, 818, 387, 224, 234
+    # max_length_test  = 159, 2583, 993, 245, 163, 107
+    # max_length       = 159, 2583, 993, 387, 224, 234
+    
+    try:
+        max_lengths_train = RD.loadArray('bert_max_lengths_train.txt')[0]
+        max_lengths_test = RD.loadArray('bert_max_lengths_test.txt')[0]
+        max_lengths = RD.loadArray('bert_max_lengths.txt')[0]
         
-        max_lengths_train.append(convertForBert(data_to_train[i], None, print_interval, tokenizer, None))
-        max_lengths_test.append(convertForBert(data_to_test[i], None, print_interval, tokenizer, None))
-        max_lengths.append(max(max_lengths_train[i], max_lengths_test[i]))
+    except:
+        max_lengths_train = []
+        max_lengths_test = []
+        max_lengths = []
 
-    print('max length')
-    print(max_lengths_train)
-    print(max_lengths_test)
-    print(max_lengths)
+        for i in range(6):
+            print('checking max length : ' + str(i))
+            
+            max_lengths_train.append(convertForBert(data_to_train[i], None, print_interval, tokenizer, None))
+            max_lengths_test.append(convertForBert(data_to_test[i], None, print_interval, tokenizer, None))
+            max_lengths.append(max(max_lengths_train[i], max_lengths_test[i]))
 
-    # save max lengths
-    RD.saveArray('bert_max_lengths_train.txt', max_lengths_train)
-    RD.saveArray('bert_max_lengths_test.txt', max_lengths_test)
-    RD.saveArray('bert_max_lengths.txt', max_lengths)
+        print('max length')
+        print(max_lengths_train)
+        print(max_lengths_test)
+        print(max_lengths)
+
+        # save max lengths
+        RD.saveArray('bert_max_lengths_train.txt', [max_lengths_train], '\t', 500)
+        RD.saveArray('bert_max_lengths_test.txt', [max_lengths_test], '\t', 500)
+        RD.saveArray('bert_max_lengths.txt', [max_lengths], '\t', 500)
 
     # model 0: train_title   -> train_approved
     # model 1: train_essay1  -> train_approved
