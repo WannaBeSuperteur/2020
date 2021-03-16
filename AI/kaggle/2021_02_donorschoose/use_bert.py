@@ -192,6 +192,11 @@ if __name__ == '__main__':
     print(max_lengths_test)
     print(max_lengths)
 
+    # save max lengths
+    RD.saveArray('bert_max_lengths_train.txt', max_lengths_train)
+    RD.saveArray('bert_max_lengths_test.txt', max_lengths_test)
+    RD.saveArray('bert_max_lengths.txt', max_lengths)
+
     # model 0: train_title   -> train_approved
     # model 1: train_essay1  -> train_approved
     # model 2: train_essay2  -> train_approved
