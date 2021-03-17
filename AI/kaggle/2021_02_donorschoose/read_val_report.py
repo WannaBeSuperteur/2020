@@ -1,4 +1,5 @@
 import numpy as np
+from sklearn.metrics import roc_auc_score
 
 if __name__ == '__main__':
 
@@ -15,6 +16,12 @@ if __name__ == '__main__':
         pred = float(fl[i].split('[')[2].split(']')[0])
         real = float(fl[i].split('[')[3].split(']')[0])
         vals.append([pred, real])
+
+    pred_np = np.array(vals)[:, 0]
+    real_np = np.array(vals)[:, 1]
+
+    print('correl=' + str(round(np.corrcoef(pred_np, real_np)[0][1], 4)) +
+          ' roc-auc=' + str(round(roc_auc_score(real_np, pred_np), 4)))
 
     for i in range(100):
         threshold = 0.5 + 0.004 * i
@@ -47,4 +54,5 @@ if __name__ == '__main__':
 
         print(str(round(threshold, 4)) + '\t-> ' + str(TP) + ' / ' + str(TN) + ' / ' + str(FP) + ' / ' + str(FN) +
               ' accuracy=' + str(round(float((TP+TN)/(TP+TN+FP+FN)), 4)) +
-              ' correl=' + str(round(np.corrcoef(pred_array, real_array)[0][1], 4)))
+              ' correl=' + str(round(np.corrcoef(pred_array, real_array)[0][1], 4)) +
+              ' roc-auc=' + str(round(roc_auc_score(real_array, pred_array), 4)))
