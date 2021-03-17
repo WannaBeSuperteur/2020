@@ -184,7 +184,7 @@ def readPGN(fn, lineStart, nsTrain, nsTest, trainN):
 
 # save result array
 # saveInterval: the number of rows to save at once
-def saveArray(fn, _2dArray, splitter='\t', saveSize=0):
+def saveArray(fn, _2dArray, splitter='\t', saveSize=0, encoding='utf-8'):
     
     result = ''
     rows = len(_2dArray) # rows of 2d array
@@ -203,13 +203,13 @@ def saveArray(fn, _2dArray, splitter='\t', saveSize=0):
             result += '\n'
 
         # write to file
-        f = open(fn, 'w')
+        f = open(fn, 'w', encoding=encoding)
         f.write(result)
         f.close()
 
     # saveSize > 0
     else:
-        f = open(fn, 'a')
+        f = open(fn, 'a', encoding=encoding)
         
         # append to result
         for i in range(rows):
