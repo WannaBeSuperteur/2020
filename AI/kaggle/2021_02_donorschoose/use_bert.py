@@ -222,7 +222,7 @@ if __name__ == '__main__':
         rows = len(input_data)
 
         # process dataset : convert into BERT-usable dataset
-        processed_dataset = convertForBert(input_data, output_data, print_interval, tokenizer, max_lengths[i])
+        processed_dataset = convertForBert(input_data, output_data, print_interval, tokenizer, int(max_lengths[i]))
 
         print('train')
         print(next(iter(processed_dataset)))
@@ -248,7 +248,7 @@ if __name__ == '__main__':
         rows = len(input_data)
 
         # process dataset : convert into BERT-usable dataset
-        test_data = convertForBert(input_data, None, print_interval, tokenizer, max_lengths[i])
+        test_data = convertForBert(input_data, None, print_interval, tokenizer, int(max_lengths[i]))
 
         print('test')
         print(np.array(test_data))
