@@ -125,8 +125,8 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 16000 # 9999999 (no limit)
-    valid_max_rows = 4000 # 9999999 (no limit)
+    train_max_rows = 9999999
+    valid_max_rows = 9999999
     print_interval = 400
     batch_size = 32
 
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     # model 3: train_essay3  -> train_approved
     # model 4: train_essay4  -> train_approved
     # model 5: train_summary -> train_approved
-    for i in range(6):
+    for i in range(2, 3): # 6
         
         input_data = data_to_train[i]
         output_data = train_approved
@@ -229,8 +229,11 @@ if __name__ == '__main__':
         for j in range(rows_to_train):
             train_result[j][i] = output_data[j]
 
+        # save the model
+        text_models[i].save('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+
     # validate using each model
-    for i in range(6):
+    for i in range(2, 3): # 6
 
         input_data = data_to_valid[i]
         rows = len(input_data)
@@ -241,8 +244,11 @@ if __name__ == '__main__':
         print('valid')
         print(next(iter(processed_dataset)))
 
+        # load the model
+        loaded_model = tf.keras.models.load_model('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+
         # VALIDATION
-        prediction = text_models[i].predict(valid_data)
+        prediction = loaded_model.predict(valid_data)
 
         print('prediction')
         print(np.shape(prediction))
