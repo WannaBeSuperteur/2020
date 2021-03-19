@@ -6,6 +6,8 @@
 
 import sys
 sys.path.insert(0, '../../../AI_BASE')
+sys.path.insert(1, '../')
+import my_extract as ME
 
 import math
 import numpy as np
@@ -26,8 +28,9 @@ def tokenize_text(text, tokenizer):
 
 class TEXT_MODEL(tf.keras.Model):
     
-    def __init__(self, vocabulary_size, embedding_dimensions=128, cnn_filters=50,
-                 dnn_units=512, dropout_rate=0.1, training=False, name='text_model'):
+    def __init__(self, vocabulary_size, precols,
+                 embedding_dimensions=128, cnn_filters=50, dnn_units=512,
+                 dropout_rate=0.1, training=False, name='text_model'):
         
         super(TEXT_MODEL, self).__init__(name=name)
         
@@ -41,22 +44,37 @@ class TEXT_MODEL(tf.keras.Model):
         self.last_dense = tf.keras.layers.Dense(units=1, activation='sigmoid') # output layer
 
     def call(self, inputs, training):
-        l = self.embedding(inputs)
+
+        #print('============')
+        #print(inputs)
+        #print('============')
+
+        # 864 is temp
+        inputs_pr, inputs_text = tf.split(inputs, [precols, 864 - precols], 1)
+        inputs_text = tf.cast(inputs_text, tf.int32)
+
+        #print('============')
+        #print(inputs_pr)
+        #print('============')
+        #print(inputs_text)
+        #print('============')
+        
+        l = self.embedding(inputs_text)
         l_1 = self.cnn_layer1(l) 
         l_1 = self.pool(l_1) 
         l_2 = self.cnn_layer2(l) 
         l_2 = self.pool(l_2)
         l_3 = self.cnn_layer3(l)
-        l_3 = self.pool(l_3) 
+        l_3 = self.pool(l_3)
         
-        concatenated = tf.concat([l_1, l_2, l_3], axis=-1) # (batch_size, 3 * cnn_filters)
+        concatenated = tf.concat([inputs_pr, l_1, l_2, l_3], axis=-1) # (batch_size, 3 * cnn_filters)
         concatenated = self.dense_1(concatenated)
         concatenated = self.dropout(concatenated, training)
         model_output = self.last_dense(concatenated)
         
         return model_output
 
-def convertForBert(input_data, output_data, print_interval, tokenizer, max_length):
+def convertForBert(input_data, output_data, print_interval, tokenizer, max_length, precols):
 
     rows = len(input_data)
     
@@ -67,7 +85,12 @@ def convertForBert(input_data, output_data, print_interval, tokenizer, max_lengt
         
     for i in range(rows):
         if i % print_interval == 0: print(i)
-        tokenized_txt = tokenize_text(input_data[i], tokenizer)
+
+        if i == 0:
+            print('\n[c00] text to tokenize:')
+            print(input_data[i][precols])
+        
+        tokenized_txt = tokenize_text(input_data[i][precols], tokenizer)
 
         # add each element of tokenized text
         this_tokenized_txt = []
@@ -94,17 +117,43 @@ def convertForBert(input_data, output_data, print_interval, tokenizer, max_lengt
 
     # for training
     try:
+        print('\n[c01] shape of tokenized input:')
+        print(np.shape(tokenized_input))
+
+        print('\n[c02] shape of input data:')
+        print(np.shape(input_data))
 
         # bind input and output data
-        in_out = [[input_, output_data[i]] for i, input_ in enumerate(tokenized_input)]
+        # in_out: set of [[info + text_input], output]
+        #         info       = input_data[i][:precols]
+        #         text_input = tokenized_input[i]
+        in_out = []
+        for i in range(rows):
+            in_out.append([np.concatenate([input_data[i][:precols], tokenized_input[i]]),
+                           output_data[i]])
+
+        print('\n[c03] shape of in_out:')
+        print('set of [[info + text_input], output] :\n' + str(np.shape(in_out)))
+        print('each   [[info + text_input], output] :\n' + str(np.shape(in_out[0])))
+        print('each   [info + text_input]           :\n' + str(np.shape(in_out[0][0])))
+        
         in_out_labels = [(row[0], row[1]) for row in in_out]
         
-        processed_dataset = tf.data.Dataset.from_generator(lambda: in_out_labels, output_types=(tf.int32, tf.int32))
+        processed_dataset = tf.data.Dataset.from_generator(lambda: in_out_labels, output_types=(tf.float32, tf.float32))
         return processed_dataset
 
     # for valid
     except:
-        return tokenized_input
+        print('\n[c04] shape of tokenized input:')
+        print(np.shape(tokenized_input))
+        
+        print('\n[c05] shape of input data:')
+        print(np.shape(input_data))
+
+        print('\n[c06] concatenation:')
+        print(np.shape(np.concatenate((input_data[:, :precols], tokenized_input), axis=1)))
+        
+        return np.concatenate((input_data[:, :precols], tokenized_input), axis=1)
 
 def createBatchedDataset(processed_dataset, rows, batch_size):
     batched_dataset = processed_dataset.padded_batch(batch_size, padded_shapes=((None, ), ()))
@@ -125,8 +174,8 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 9999999
-    valid_max_rows = 9999999
+    train_max_rows = 1000 # 9999999 (no limit)
+    valid_max_rows = 1000 # 9999999 (no limit)
     print_interval = 400
     batch_size = 32
 
@@ -167,8 +216,41 @@ if __name__ == '__main__':
 
     valid_approved = valid[:rows_to_valid, 15:]
 
-    print('rows to train : ' + str(rows_to_train))
-    print('rows to valid : ' + str(rows_to_valid))
+    # print the number of rows to train/valid
+    print('\n[00] rows to train : ' + str(rows_to_train))
+    print('\n[01] rows to valid : ' + str(rows_to_valid))
+
+    # extract data from training dataset
+    train_info = []
+    valid_info = []
+
+    option = [-1, -1, 2, -1, -1, 2, 3, 3, -1, -1, -1, -1, -1, -1, 1, -1]
+    title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
+             'project_submitted_datetime', 'project_grade_category',
+             'project_subject_categories', 'project_subject_subcategories',
+             'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
+             'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
+
+    (train_extracted, _) = ME.extract('train_train.csv', option, title, -1)
+    (valid_extracted, _) = ME.extract('train_valid.csv', option, title, -1)
+    precols = len(train_extracted[0])
+
+    print('\n[02] precols:')
+    print(precols)
+
+    for i in range(rows_to_train):
+        train_info.append(train_extracted[i])
+
+    for i in range(rows_to_train):
+        valid_info.append(valid_extracted[i])
+
+    print('\n[03] train info:')
+    print(np.shape(train_info))
+    print(np.array(train_info))
+
+    print('\n[04] valid info:')
+    print(np.shape(valid_info))
+    print(np.array(valid_info))
 
     # save validation output data
     RD.saveArray('bert_valid_rightAnswer.txt', valid_approved[:rows_to_valid], '\t', 500)
@@ -179,12 +261,45 @@ if __name__ == '__main__':
     text_models = []
 
     for i in range(6):
-        text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), embedding_dimensions=embedding_dim,
-                            cnn_filters=cnn_filters, dnn_units=dnn_units, dropout_rate=dropout_rate)
+        text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols,
+                                embedding_dimensions=embedding_dim,
+                                cnn_filters=cnn_filters,
+                                dnn_units=dnn_units, dropout_rate=dropout_rate)
+        
         text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
         
         text_models.append(text_model)
 
+    # concatenate train_info with data_to_train
+    # concatenate valid_info with data_to_valid
+    for i in range(6):
+
+        print('\n[05/' + str(i) + '] data to train:')
+        print(np.shape(data_to_train[i]))
+        
+        print('\n[06/' + str(i) + '] data to valid:')
+        print(np.shape(data_to_valid[i]))
+        
+        #    data_to_train/valid[i] = ['a', 'b', 'c', ...]
+        # -> data_to_train/valid_   = [['a'], ['b'], ['c'], ...] 
+        data_to_train_ = []
+        data_to_valid_ = []
+        
+        for j in range(rows_to_train):
+            data_to_train_.append([data_to_train[i][j]])
+
+        for j in range(rows_to_valid):
+            data_to_valid_.append([data_to_valid[i][j]])
+
+        data_to_train[i] = np.concatenate((train_info, data_to_train_), axis=1)
+        data_to_valid[i] = np.concatenate((valid_info, data_to_valid_), axis=1)
+
+        print('\n[07/' + str(i) + '] data to train (concatenated):')
+        print(np.shape(data_to_train[i]))
+        
+        print('\n[08/' + str(i) + '] data to valid (concatenated):')
+        print(np.shape(data_to_valid[i]))
+        
     # train / valid result array
     train_result = [[0 for j in range(6)] for i in range(rows_to_train)]
     valid_result = [[0 for j in range(6)] for i in range(rows_to_valid)]
@@ -196,7 +311,7 @@ if __name__ == '__main__':
     
     max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
 
-    print('max lengths:')
+    print('\n[09] max lengths:')
     print(max_lengths)
 
     # model 0: train_title   -> train_approved
@@ -212,9 +327,10 @@ if __name__ == '__main__':
         rows = len(input_data)
 
         # process dataset : convert into BERT-usable dataset
-        processed_dataset = convertForBert(input_data, output_data, print_interval, tokenizer, int(max_lengths[i]))
+        processed_dataset = convertForBert(input_data, output_data,
+                                           print_interval, tokenizer, int(max_lengths[i]), precols)
 
-        print('train')
+        print('\n[10] train')
         print(next(iter(processed_dataset)))
 
         # preparation for training
@@ -223,6 +339,7 @@ if __name__ == '__main__':
         # TRAIN
         total_batches = math.ceil(rows / batch_size)
         train_data = batched_dataset.take(total_batches)
+        
         text_models[i].fit(train_data, epochs=epochs)
 
         # update train result array
@@ -239,10 +356,13 @@ if __name__ == '__main__':
         rows = len(input_data)
 
         # process dataset : convert into BERT-usable dataset
-        valid_data = convertForBert(input_data, None, print_interval, tokenizer, int(max_lengths[i]))
+        valid_data = convertForBert(input_data, None,
+                                    print_interval, tokenizer, int(max_lengths[i]), precols)
+        valid_data = np.array(valid_data).astype(float)
 
-        print('valid')
-        print(next(iter(processed_dataset)))
+        print('\n[11] valid')
+        print(np.shape(valid_data))
+        print(np.array(valid_data))
 
         # load the model
         loaded_model = tf.keras.models.load_model('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
@@ -250,7 +370,7 @@ if __name__ == '__main__':
         # VALIDATION
         prediction = loaded_model.predict(valid_data)
 
-        print('prediction')
+        print('\n[12] prediction')
         print(np.shape(prediction))
         print(np.array(prediction))
 
