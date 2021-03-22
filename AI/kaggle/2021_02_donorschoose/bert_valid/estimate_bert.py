@@ -15,12 +15,12 @@ import readData as RD
 import deepLearning_main as DL
 import pandas as pd
 import random
+import gc
 
 import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
-
 import bert
 
 def tokenize_text(text, tokenizer):
@@ -272,7 +272,7 @@ if __name__ == '__main__':
 
     # concatenate train_info with data_to_train
     # concatenate valid_info with data_to_valid
-    for i in range(6):
+    for i in range(2, 3): # 6
 
         print('\n[05/' + str(i) + '] data to train:')
         print(np.shape(data_to_train[i]))
@@ -280,25 +280,21 @@ if __name__ == '__main__':
         print('\n[06/' + str(i) + '] data to valid:')
         print(np.shape(data_to_valid[i]))
         
-        #    data_to_train/valid[i] = ['a', 'b', 'c', ...]
-        # -> data_to_train/valid_   = [['a'], ['b'], ['c'], ...] 
-        data_to_train_ = []
-        data_to_valid_ = []
-        
-        for j in range(rows_to_train):
-            data_to_train_.append([data_to_train[i][j]])
-
-        for j in range(rows_to_valid):
-            data_to_valid_.append([data_to_valid[i][j]])
-
-        data_to_train[i] = np.concatenate((train_info, data_to_train_), axis=1)
-        data_to_valid[i] = np.concatenate((valid_info, data_to_valid_), axis=1)
+        #     data_to_train/valid[i]    =  ['a', 'b', 'c', ...]
+        #    [data_to_train/valid[i]]   = [['a', 'b', 'c', ...]]
+        # -> [data_to_train/valid[i]].T = [['a'], ['b'], ['c'], ...] 
+        data_to_train[i] = np.concatenate((train_info, np.array([data_to_train[i]]).T), axis=1)
+        data_to_valid[i] = np.concatenate((valid_info, np.array([data_to_valid[i]]).T), axis=1)
 
         print('\n[07/' + str(i) + '] data to train (concatenated):')
         print(np.shape(data_to_train[i]))
+        print('------')
+        print(np.array(data_to_train[i][0]))
         
         print('\n[08/' + str(i) + '] data to valid (concatenated):')
         print(np.shape(data_to_valid[i]))
+        print('------')
+        print(np.array(data_to_valid[i][0]))
         
     # train / valid result array
     train_result = [[0 for j in range(6)] for i in range(rows_to_train)]
@@ -314,6 +310,13 @@ if __name__ == '__main__':
     print('\n[09] max lengths:')
     print(max_lengths)
 
+    # free the memory allocated to below
+    del train_extracted
+    del valid_extracted
+    del train_info
+    del valid_info
+    gc.collect()
+
     # model 0: train_title   -> train_approved
     # model 1: train_essay1  -> train_approved
     # model 2: train_essay2  -> train_approved
@@ -322,12 +325,10 @@ if __name__ == '__main__':
     # model 5: train_summary -> train_approved
     for i in range(2, 3): # 6
         
-        input_data = data_to_train[i]
-        output_data = train_approved
-        rows = len(input_data)
+        rows = len(data_to_train[i])
 
         # process dataset : convert into BERT-usable dataset
-        processed_dataset = convertForBert(input_data, output_data,
+        processed_dataset = convertForBert(data_to_train[i], train_approved,
                                            print_interval, tokenizer, int(max_lengths[i]), precols)
 
         print('\n[10] train')
@@ -352,11 +353,10 @@ if __name__ == '__main__':
     # validate using each model
     for i in range(2, 3): # 6
 
-        input_data = data_to_valid[i]
-        rows = len(input_data)
+        rows = len(data_to_valid[i])
 
         # process dataset : convert into BERT-usable dataset
-        valid_data = convertForBert(input_data, None,
+        valid_data = convertForBert(data_to_valid[i], None,
                                     print_interval, tokenizer, int(max_lengths[i]), precols)
         valid_data = np.array(valid_data).astype(float)
 
