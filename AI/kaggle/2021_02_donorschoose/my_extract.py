@@ -122,14 +122,20 @@ def extract(fn, option, title, wordCount):
     # None  for columns not marked as 2 or 3
     # array for columns     marked as 2 or 3
     # for example: [None, None, ['A', 'B', 'C', 'F'], ['math', 'science', 'computer'], None]
+    print('\n ==== one-hot elements ====\n')
+    
     onehot = []
     for i in range(cols):
         if option[i] == 2 or option[i] == 3:
             thisCol = list(array[:, i])
             thisCol_set = list(set(thisCol))
             onehot.append(thisCol_set)
+
+            print(title[i] + ' : ' + str(len(thisCol_set)))
         else:
             onehot.append(None)
+
+    print('\n ==========================\n')
 
     # for each row
     newTitle = []
