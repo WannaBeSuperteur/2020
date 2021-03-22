@@ -143,8 +143,8 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 1000 # 9999999 (no limit)
-    valid_max_rows = 1000 # 9999999 (no limit)
+    train_max_rows = 12000 # 9999999 (no limit)
+    valid_max_rows = 6000 # 9999999 (no limit)
     print_interval = 400
     batch_size = 32
 
@@ -200,8 +200,19 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
 
-    (train_extracted, _) = ME.extract('train_train.csv', option, title, -1)
-    (valid_extracted, _) = ME.extract('train_valid.csv', option, title, -1)
+    wordCount = ME.getWordCount(option, 'train_train.csv')
+
+    try:
+        train_extracted = RD.loadArray('train_extracted.txt', '\t')
+        valid_extracted = RD.loadArray('valid_extracted.txt', '\t')
+        
+    except:
+        (train_extracted, _) = ME.extract('train_train.csv', option, title, wordCount)
+        (valid_extracted, _) = ME.extract('train_valid.csv', option, title, wordCount)
+
+        RD.saveArray('train_extracted.txt', train_extracted, '\t', 500)
+        RD.saveArray('valid_extracted.txt', valid_extracted, '\t', 500)
+
     precols = len(train_extracted[0])
 
     print('\n[02] precols:')
@@ -265,7 +276,9 @@ if __name__ == '__main__':
 
         # process dataset : convert into BERT-usable dataset
         tokenized_input = convertForBert(text_to_train[i], print_interval, tokenizer, int(max_lengths[i]), precols)
+        
         train_text = np.array(tokenized_input).astype(float)
+        train_info = np.array(train_info).astype(float)
 
         print('\n[06] train text')
         print(np.shape(train_text))
@@ -277,7 +290,7 @@ if __name__ == '__main__':
         print('------')
         print(np.array(train_info))
 
-        train_data = np.concatenate((train_info, train_text), axis=1)
+        train_data = np.concatenate((train_info, train_text), axis=1).astype(float)
 
         print('\n[08] train info+text (final input)')
         print(np.shape(train_data))
@@ -290,6 +303,7 @@ if __name__ == '__main__':
         print(np.array(train_approved[:100]))
 
         text_models[i].fit(train_data, train_approved, epochs=epochs)
+        text_models[i].summary()
 
         # update train result array
         for j in range(rows_to_train):
@@ -305,7 +319,9 @@ if __name__ == '__main__':
 
         # process dataset : convert into BERT-usable dataset
         valid_text = convertForBert(text_to_valid[i], print_interval, tokenizer, int(max_lengths[i]), precols)
+        
         valid_text = np.array(valid_text).astype(float)
+        valid_info = np.array(valid_info).astype(float)
 
         print('\n[10] valid text')
         print(np.shape(valid_text))
@@ -317,7 +333,7 @@ if __name__ == '__main__':
         print('------')
         print(np.array(valid_info))
 
-        valid_data = np.concatenate((valid_info, valid_text), axis=1)
+        valid_data = np.concatenate((valid_info, valid_text), axis=1).astype(float)
 
         print('\n[12] valid info+text')
         print(np.shape(valid_data))
