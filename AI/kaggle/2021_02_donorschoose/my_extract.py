@@ -8,11 +8,11 @@ import pandas as pd
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
 # word count for top 100 words for word count (marked as 6)
-def getWordCount(option):
+def getWordCount(option, trainFile):
     wordCount = []
 
     # use training data only
-    train_array = np.array(pd.read_csv('train.csv'))
+    train_array = np.array(pd.read_csv(trainFile))
     rows = len(train_array)
     cols = len(train_array[0])
     
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     train_option = [-1, -1, 2, -1, -1, 2, 3, 3, 6, 6, 6, 6, 6, 6, 1, 0]
     test_option = [-1, -1, 2, -1, -1, 2, 3, 3, 6, 6, 6, 6, 6, 6, 1]
     
-    wordCount = getWordCount(train_option)
+    wordCount = getWordCount(train_option, 'train.csv')
 
     # TRAINING
     
