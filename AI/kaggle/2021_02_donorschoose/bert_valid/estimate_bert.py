@@ -174,8 +174,8 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 1000 # 9999999 (no limit)
-    valid_max_rows = 1000 # 9999999 (no limit)
+    train_max_rows = 12000 # 9999999 (no limit)
+    valid_max_rows = 6000 # 9999999 (no limit)
     print_interval = 400
     batch_size = 32
 
@@ -241,7 +241,7 @@ if __name__ == '__main__':
     for i in range(rows_to_train):
         train_info.append(train_extracted[i])
 
-    for i in range(rows_to_train):
+    for i in range(rows_to_valid):
         valid_info.append(valid_extracted[i])
 
     print('\n[03] train info:')
