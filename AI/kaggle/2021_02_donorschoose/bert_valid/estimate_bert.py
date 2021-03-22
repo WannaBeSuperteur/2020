@@ -33,33 +33,89 @@ class TEXT_MODEL(tf.keras.Model):
                  dropout_rate=0.1, training=False, name='text_model'):
         
         super(TEXT_MODEL, self).__init__(name=name)
+
+        # to do: split date into year, month and DOW
+
+        # i0_tp   : teacher_prefix                (   6 unique items)
+        # i1_ss   : school_state                  (  51 unique items)
+        # i2_pgc  : project_grade_category        (   4 unique items)
+        # i3_psc  : project_subject_categories    (  51 unique items)
+        # i4_pss  : project_subject_subcategories ( 407 unique items)
+        # i5_cont :                                  1
+        #
+        # total   : i0_tp, i1_ss, ..., i5_cont    ( 520 unique columns)
+        # text    : tokenized by BERT             ( 818        columns)
+        #
+        #                                         (1338        columns)
+
+        # constants
+        self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 4, 51, 407
+        self.e00, self.e01, self.e02, self.e03, self.e04 = 4, 12, 4, 12, 20
+        self.d00, self.d01, self.d02, self.d03, self.d04 = 1, 1, 1, 1, 1
+        self.d05, self.dL = 1, 1
+
+        # flatten layer
+        self.flat = tf.keras.layers.Flatten()
+
+        # for info 0, 1, 2, 3 and 4
+        self.emb00 = tf.keras.layers.Embedding(self.u00, self.e00, trainable=True)
+        self.emb01 = tf.keras.layers.Embedding(self.u01, self.e01, trainable=True)
+        self.emb02 = tf.keras.layers.Embedding(self.u02, self.e02, trainable=True)
+        self.emb03 = tf.keras.layers.Embedding(self.u03, self.e03, trainable=True)
+        self.emb04 = tf.keras.layers.Embedding(self.u04, self.e04, trainable=True)
         
-        self.embedding = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions)
+        self.den00 = tf.keras.layers.Dense(units=self.d00, activation='relu')
+        self.den01 = tf.keras.layers.Dense(units=self.d01, activation='relu')
+        self.den02 = tf.keras.layers.Dense(units=self.d02, activation='relu')
+        self.den03 = tf.keras.layers.Dense(units=self.d03, activation='relu')
+        self.den04 = tf.keras.layers.Dense(units=self.d04, activation='relu')
+        self.den05 = tf.keras.layers.Dense(units=self.d05, activation='relu')
+
+        # for BERT-tokenized text
+        self.embedding = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True)
         self.cnn_layer1 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu')
         self.cnn_layer2 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu')
         self.cnn_layer3 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu')
         self.pool = tf.keras.layers.GlobalMaxPool1D()
-        self.dense_1 = tf.keras.layers.Dense(units=dnn_units, activation='relu')
+        self.denL = tf.keras.layers.Dense(units=self.dL, activation='relu')
+
+        # for concatenated layer and output
+        self.dense = tf.keras.layers.Dense(units=dnn_units, activation='relu')
         self.dropout = tf.keras.layers.Dropout(rate=dropout_rate)
         self.last_dense = tf.keras.layers.Dense(units=1, activation='sigmoid') # output layer
 
     def call(self, inputs, training):
 
-        #print('============')
-        #print(inputs)
-        #print('============')
-
-        # 864 is temp
-        inputs_pr, inputs_text = tf.split(inputs, [precols, 864 - precols], 1)
+        # split input
+        i0_tp, i1_ss, i2_pgc, i3_psc, i4_pss, i5_cont, inputs_text = tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, 1, 818], 1)
         inputs_text = tf.cast(inputs_text, tf.int32)
 
-        #print('============')
-        #print(inputs_pr)
-        #print('============')
-        #print(inputs_text)
-        #print('============')
+        # info 0, 1, 2, 3 and 4
+        i0_emb = self.emb00(i0_tp)
+        i0_emb = self.flat(i0_emb)
+        i0_den = self.den00(i0_emb)
         
+        i1_emb = self.emb01(i1_ss)
+        i1_emb = self.flat(i1_emb)
+        i1_den = self.den01(i1_emb)
+        
+        i2_emb = self.emb02(i2_pgc)
+        i2_emb = self.flat(i2_emb)
+        i2_den = self.den02(i2_emb)
+        
+        i3_emb = self.emb03(i3_psc)
+        i3_emb = self.flat(i3_emb)
+        i3_den = self.den03(i3_emb)
+        
+        i4_emb = self.emb04(i4_pss)
+        i4_emb = self.flat(i4_emb)
+        i4_den = self.den04(i4_emb)
+        
+        i5_den = self.den05(i5_cont)
+
+        # BERT-tokenized text
         l = self.embedding(inputs_text)
+        
         l_1 = self.cnn_layer1(l) 
         l_1 = self.pool(l_1) 
         l_2 = self.cnn_layer2(l) 
@@ -67,8 +123,12 @@ class TEXT_MODEL(tf.keras.Model):
         l_3 = self.cnn_layer3(l)
         l_3 = self.pool(l_3)
         
-        concatenated = tf.concat([inputs_pr, l_1, l_2, l_3], axis=-1) # (batch_size, 3 * cnn_filters)
-        concatenated = self.dense_1(concatenated)
+        l_concat = tf.concat([l_1, l_2, l_3], axis=-1)
+        l_den = self.denL(l_concat)
+
+        # concatenate embedded info and concatenated BERT-tokenized text
+        concatenated = tf.concat([i0_den, i1_den, i2_den, i3_den, i4_den, i5_den, l_den], axis=-1)
+        concatenated = self.dense(concatenated)
         concatenated = self.dropout(concatenated, training)
         model_output = self.last_dense(concatenated)
         
@@ -193,7 +253,7 @@ if __name__ == '__main__':
     train_info = []
     valid_info = []
 
-    option = [-1, -1, 2, -1, -1, 2, 3, 3, -1, -1, -1, -1, -1, -1, 1, -1]
+    option = [-1, -1, 2, 2, -1, 2, 2, 2, -1, -1, -1, -1, -1, -1, 1, -1]
     title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
              'project_submitted_datetime', 'project_grade_category',
              'project_subject_categories', 'project_subject_subcategories',
@@ -207,8 +267,8 @@ if __name__ == '__main__':
         valid_extracted = RD.loadArray('valid_extracted.txt', '\t')
         
     except:
-        (train_extracted, _) = ME.extract('train_train.csv', option, title, wordCount)
-        (valid_extracted, _) = ME.extract('train_valid.csv', option, title, wordCount)
+        (train_extracted, _, onehot) = ME.extract('train_train.csv', option, title, wordCount, None)
+        (valid_extracted, _, _) = ME.extract('train_valid.csv', option, title, wordCount, onehot)
 
         RD.saveArray('train_extracted.txt', train_extracted, '\t', 500)
         RD.saveArray('valid_extracted.txt', valid_extracted, '\t', 500)
