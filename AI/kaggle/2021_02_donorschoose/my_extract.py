@@ -60,7 +60,7 @@ def getWordCount(option, trainFile):
 #  4 : yyyy-mm-dd hh:mm:ss to numeric with normalization
 #  5 : length with normalization
 #  6 : word count (top 100 words)
-def extract(fn, option, title, wordCount):
+def extract(fn, option, title, wordCount, onehot):
 
     array = np.array(pd.read_csv(fn))
     print(array)
@@ -122,20 +122,26 @@ def extract(fn, option, title, wordCount):
     # None  for columns not marked as 2 or 3
     # array for columns     marked as 2 or 3
     # for example: [None, None, ['A', 'B', 'C', 'F'], ['math', 'science', 'computer'], None]
-    print('\n ==== one-hot elements ====\n')
-    
-    onehot = []
-    for i in range(cols):
-        if option[i] == 2 or option[i] == 3:
-            thisCol = list(array[:, i])
-            thisCol_set = list(set(thisCol))
-            onehot.append(thisCol_set)
+    if onehot == None:
+        print('\n ==== one-hot elements ====\n')
+        
+        onehot = []
+        for i in range(cols):
+            if option[i] == 2 or option[i] == 3:
+                thisCol = list(array[:, i])
+                thisCol_set = list(set(thisCol))
+                onehot.append(thisCol_set)
 
-            print(title[i] + ' : ' + str(len(thisCol_set)))
-        else:
-            onehot.append(None)
+                print(title[i] + ' : ' + str(len(thisCol_set)))
+            else:
+                onehot.append(None)
 
-    print('\n ==========================\n')
+        print('\n ==========================\n')
+
+    else:
+        print('\n=================================')
+        print('  One-hot array already exists.')
+        print('=================================\n')
 
     # for each row
     newTitle = []
@@ -202,7 +208,7 @@ def extract(fn, option, title, wordCount):
 
         resultArray.append(thisRow)
 
-    return (resultArray, newTitle)
+    return (resultArray, newTitle, onehot)
 
 if __name__ == '__main__':
 
@@ -251,7 +257,7 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects']
 
-    (test_extracted, test_newTitle) = extract('test.csv', test_option, test_title, wordCount)
+    (test_extracted, test_newTitle, _) = extract('test.csv', test_option, test_title, wordCount)
 
     test_toWrite = [] # [test_newTitle]
     
