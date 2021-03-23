@@ -121,6 +121,8 @@ def getMaxQ(s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2
 # convert state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
 def stateTo1dArray(state, k):
+
+    print(state)
     
     q = state[0]
     a = state[1][k]
@@ -180,6 +182,7 @@ def deepLearningQ_valid(deviceName, epoch, printed, validRate):
 def deepLearningQ_test(state):
 
     # convert state into 1d array
+    print(state)
     stateArray = stateTo1dArray(state)
 
     # get reward values of the state

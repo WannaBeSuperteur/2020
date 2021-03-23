@@ -325,7 +325,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             print('time slot ' + str(t) + ' / ' + str(T))
 
             # use deep learning if length of Q table >= 100
-            if len(Q) > 0: useDL = True
+            if len(Q) > 100: useDL = True
             else: useDL = False
 
             print('useDL == ' + str(useDL))
@@ -386,7 +386,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
                 # error if (time slot value) > (devices)
-                beforeThroughput = f.R_nkl(B, t, i, t, PU, g, I_, o2)
+                beforeThroughput = f.R_nkl(B, min(t, len(PU[t][i])-1), i, t, PU, g, I_, o2)
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
