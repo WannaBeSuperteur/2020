@@ -230,7 +230,9 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
         
     # update Q value
     sFound = False # find corresponding state?
+    
     for i in range(len(Q)):
+
         if Q[i][0][0] == s: # Q[i] = [[s0], [q00, q01, ...]], Q[i][0] = [s0], Q[i][0][0] = s0
 
             # print(str(Q[i][1]) + ' True ' + str(len(Q)))

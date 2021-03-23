@@ -325,8 +325,10 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             print('time slot ' + str(t) + ' / ' + str(T))
 
             # use deep learning if length of Q table >= 100
-            if len(Q) >= 100: useDL = True
+            if len(Q) > 0: useDL = True
             else: useDL = False
+
+            print('useDL == ' + str(useDL))
 
             # initialize direct reward
             directReward_list = [] # direct reward for action (for each UAV)
@@ -409,7 +411,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # get throughput (after) (time = t+1) (n = t+1, l = i, k = t)
                 # error if (time slot value) > (devices)
-                afterThroughput = f.R_nkl(B, t, i, t+1, PU, g, I_, o2)
+                afterThroughput = f.R_nkl(B, min(t, len(PU[t+1][i])-1), i, t+1, PU, g, I_, o2)
 
                 # device t's throughput does not increase
                 # assumption: device t is the device communicated with when the time slot is t
