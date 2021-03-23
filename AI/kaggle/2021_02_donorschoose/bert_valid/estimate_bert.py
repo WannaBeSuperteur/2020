@@ -39,7 +39,7 @@ class TEXT_MODEL(tf.keras.Model):
         # to do: [V] split date into year, month, DOW and hour
         #        find the loss function for ROC-AUC (other than mean-squared-error)
         #        to find more valuable variables from codes
-        #        callbacks : val_loss (for early stopping) and lr_reduced
+        #        [V] callbacks : val_loss (for early stopping) and lr_reduced
 
         # i0_tp   : teacher_prefix                (   6 unique items)
         # i1_ss   : school_state                  (  51 unique items)
@@ -244,7 +244,7 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 500 # 9999999 (no limit)
+    train_max_rows = 50000 # 9999999 (no limit)
     valid_max_rows = 10000 # 9999999 (no limit)
     print_interval = 400
     batch_size = 32
@@ -257,7 +257,7 @@ if __name__ == '__main__':
     loss = 'mse'
     opti = optimizers.Adam(0.0005, decay=1e-6)
 
-    epochs = 5
+    epochs = 15
     batch_size = 32
 
     # load training data
@@ -403,7 +403,12 @@ if __name__ == '__main__':
         print('------')
         print(np.array(train_approved[:100]))
 
-        text_models[i].fit(train_data, train_approved, epochs=epochs)
+        # callback list for training
+        early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=2)
+        lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=2, verbose=1, epsilon=0.0001, mode='min')
+
+        ### TRAIN THE MODEL ###
+        text_models[i].fit(train_data, train_approved, validation_split=0.4, callbacks=[early, lr_reduced], epochs=epochs)
         text_models[i].summary()
 
         # update train result array
