@@ -3,6 +3,7 @@
 
 # ref: https://insightcampus.co.kr/insightcommunity/?mod=document&uid=12854
 #      https://stackabuse.com/text-classification-with-bert-tokenizer-and-tf-2-0-in-python/
+#      https://www.kaggle.com/linwenxing/glove-vector-lstm
 
 import sys
 sys.path.insert(0, '../../../AI_BASE')
@@ -21,6 +22,7 @@ import tensorflow as tf
 import tensorflow_hub as hub
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
+from tensorflow.keras import optimizers
 import bert
 
 def tokenize_text(text, tokenizer):
@@ -35,13 +37,16 @@ class TEXT_MODEL(tf.keras.Model):
         super(TEXT_MODEL, self).__init__(name=name)
 
         # to do: split date into year, month and DOW
+        #        find the loss function for ROC-AUC
+        #        to find more valuable variables from codes
+        #        callbacks : val_loss (for early stopping) and lr_reduced
 
         # i0_tp   : teacher_prefix                (   6 unique items)
         # i1_ss   : school_state                  (  51 unique items)
         # i2_pgc  : project_grade_category        (   4 unique items)
         # i3_psc  : project_subject_categories    (  51 unique items)
         # i4_pss  : project_subject_subcategories ( 407 unique items)
-        # i5_cont :                                  1
+        # i5_cont :                                   1
         #
         # total   : i0_tp, i1_ss, ..., i5_cont    ( 520 unique columns)
         # text    : tokenized by BERT             ( 818        columns)
@@ -51,8 +56,8 @@ class TEXT_MODEL(tf.keras.Model):
         # constants
         self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 4, 51, 407
         self.e00, self.e01, self.e02, self.e03, self.e04 = 4, 12, 4, 12, 20
-        self.d00, self.d01, self.d02, self.d03, self.d04 = 1, 1, 1, 1, 1
-        self.d05, self.dL = 1, 1
+        self.d00, self.d01, self.d02, self.d03, self.d04 = 4, 4, 4, 4, 4
+        self.d05, self.dL = 4, 4
 
         # flatten layer
         self.flat = tf.keras.layers.Flatten()
@@ -203,8 +208,8 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 12000 # 9999999 (no limit)
-    valid_max_rows = 6000 # 9999999 (no limit)
+    train_max_rows = 30000 # 9999999 (no limit)
+    valid_max_rows = 10000 # 9999999 (no limit)
     print_interval = 400
     batch_size = 32
 
@@ -213,8 +218,8 @@ if __name__ == '__main__':
     dnn_units = 256
     dropout_rate = 0.2
 
-    loss = 'mse'
-    opti = 'adam'
+    loss = 'binary_crossentropy'
+    opti = optimizers.Adam(0.0005, decay=1e-6)
 
     epochs = 5
     batch_size = 32
