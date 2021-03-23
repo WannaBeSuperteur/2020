@@ -4,6 +4,7 @@ import readData as RD
 import random
 import numpy as np
 import pandas as pd
+import datetime
 
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
@@ -60,7 +61,11 @@ def getWordCount(option, trainFile):
 #  4 : yyyy-mm-dd hh:mm:ss to numeric with normalization
 #  5 : length with normalization
 #  6 : word count (top 100 words)
-def extract(fn, option, title, wordCount, onehot):
+#  7 : one-hot vector for yyyy-mm-dd hh:mm:ss -> year, month, DOW and hh
+
+# onehot: saved one-hot vectors
+# years : set of years (for example, [2007, 2008, 2009, 2010])
+def extract(fn, option, title, wordCount, onehot, years):
 
     array = np.array(pd.read_csv(fn))
     print(array)
@@ -206,6 +211,60 @@ def extract(fn, option, title, wordCount, onehot):
 
                     if i == 0: newTitle.append(str(j) + '_word_' + str(k))
 
+            #  7. yyyy-mm-dd hh:mm:ss -> yyyy, mm, DOW and hh
+            elif option[j] == 7:
+
+                # split dateTime
+                dateTime = array[i][j]
+
+                date = dateTime.split(' ')[0]
+                time = dateTime.split(' ')[1]
+
+                year = date.split('-')[0]
+                month = date.split('-')[1]
+                day = date.split('-')[2]
+
+                hour = time.split(':')[0]
+                
+                # vectors of year, month, DOW and hour
+                # year : 2016 or 2017
+                for k in range(len(years)):
+                    newTitle.append(str(j) + '_year_' + str(years[k]))
+                    
+                    if int(year) == years[k]:
+                        thisRow.append(1)
+                    else:
+                        thisRow.append(0)
+
+                # month : 01 ~ 12
+                for k in range(12):
+                    newTitle.append(str(j) + '_month_' + str(k+1))
+                    
+                    if int(month) == k+1:
+                        thisRow.append(1)
+                    else:
+                        thisRow.append(0)
+
+                # DOW : 0 ~ 6 (Monday=0, Tuesday=1, ..., Sunday=6 with weekday() of datetime)
+                DOW = datetime.datetime(int(year), int(month), int(day)).weekday()
+                
+                for k in range(7):
+                    newTitle.append(str(j) + '_dow_' + str(k))
+                    
+                    if DOW == k:
+                        thisRow.append(1)
+                    else:
+                        thisRow.append(0)
+
+                # hour : 00 ~ 23
+                for k in range(24):
+                    newTitle.append(str(j) + '_hour_' + str(k))
+                    
+                    if int(hour) == k:
+                        thisRow.append(1)
+                    else:
+                        thisRow.append(0)
+
         resultArray.append(thisRow)
 
     return (resultArray, newTitle, onehot)
@@ -228,7 +287,7 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
 
-    (train_extracted, train_newTitle) = extract('train.csv', train_option, train_title, wordCount)
+    (train_extracted, train_newTitle) = extract('train.csv', train_option, train_title, wordCount, None, [2016, 2017])
 
     train_newTitle_input = train_newTitle[:len(train_newTitle)-1]
     train_newTitle_output = [train_newTitle[len(train_newTitle)-1]]
