@@ -95,12 +95,13 @@ def getActionIndex(action):
 # l           : UAV index
 # a           : list of a[n][l][k_l] (a part of s)
 # R           : list of R[n][k_l]    (a part of s)
-def getMaxQ(s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
+def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
 
     # get Q values for the action space of next state s'
     if useDL == True:
         (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
-        rewardsOfActionsOfNextState = deepLearningQ_test(nextState)
+        print('nextState = ' + str(nextState))
+        rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k)
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     # action space = [[-1, -1, -1], [-1, -1, 0], [-1, -1, 1], [-1, 0, -1], ..., [1, 1, 1]]
@@ -120,6 +121,13 @@ def getMaxQ(s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2
 
 # convert state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
+
+# example of state :
+# [[30.710634485123297, 45.731144554946184, 15],              ... q[n][l]
+#  [1, 1, 1, 1, 1, 0, 2],                                     ... a[n][l][k_l]
+#  [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0],     ... {R[n][k_l]}
+#   [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+#   [0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]]
 def stateTo1dArray(state, k):
 
     print('state:', state)
@@ -136,6 +144,7 @@ def stateTo1dArray(state, k):
 # deep Learning using Q table (training function)
 # printed : print the detail?
 def deepLearningQ_training(Q, deviceName, epoch, printed):
+    print('dL_training len(Q)=' + str(len(Q)))
 
     # Q : [state, action_reward, i (UAV/cluster index), k (device index)]
     
@@ -179,11 +188,11 @@ def deepLearningQ_valid(deviceName, epoch, printed, validRate):
         print('Q_input.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
-def deepLearningQ_test(state):
+def deepLearningQ_test(state, k):
 
     # convert state into 1d array
-    print(state)
-    stateArray = stateTo1dArray(state)
+    print('deepLearning_test -> ' + str(state))
+    stateArray = stateTo1dArray(state, k)
 
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
@@ -225,7 +234,7 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
-    maxQ = getMaxQ(s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
+    maxQ = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
 
     # update {a[n][l][k_l]} (array of communication times)
     # where k is the index for the device to communicate
@@ -400,10 +409,14 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
 
     # derive next R[n][k_l]
     # the average throughput of devices in l-th cluster
-    nextR = 0
-    for k in range(len(clusters[l])): # for each device in cluster l
-        nextR += f.R_nkl(B, k, l, n, PU, g, l_, o2)
-    nextR /= len(clusters[l])
+    
+    nextR = []
+    for UAV in range(len(clusters)):
+        
+        nextR_UAV = []
+        for k in range(len(clusters[UAV])): # for each device in cluster l
+            nextR_UAV.append(f.R_nkl(B, k, UAV, n, PU, g, l_, o2))
+        nextR.append(nextR_UAV)
 
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
@@ -411,8 +424,8 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
 # useDL : whether to use deep learning
-def yt(r, r_, Q, s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
-    maxQ = getMaxQ(s, action, n, UAVs, l, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
+def yt(r, r_, Q, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
+    maxQ = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
