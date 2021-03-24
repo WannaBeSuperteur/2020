@@ -320,15 +320,21 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     
     for episode in range(M):
         print('episode ' + str(episode) + ' / ' + str(M))
+
+        # initialize a
+        for i in range(len(a)):
+            for j in range(len(a[i])):
+                for k in range(len(a[i][j])):
+                    a[i][j][k] = 0
         
         for t in range(T): # each time slot t
             print('time slot ' + str(t) + ' / ' + str(T))
 
             # use deep learning if length of Q table >= 100
-            if len(Q) > 100: useDL = True
+            if len(Q) > 0: useDL = True
             else: useDL = False
 
-            print('useDL == ' + str(useDL))
+            print('useDL == ' + str(useDL) + ' / ' + str(len(Q)))
 
             # initialize direct reward
             directReward_list = [] # direct reward for action (for each UAV)
