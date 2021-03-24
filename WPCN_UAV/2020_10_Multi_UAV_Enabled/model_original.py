@@ -331,10 +331,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             print('time slot ' + str(t) + ' / ' + str(T))
 
             # use deep learning if length of Q table >= 100
-            if len(Q) > 0: useDL = True
+            if len(Q) > 0 and M > 0: useDL = True
             else: useDL = False
-
-            print('useDL == ' + str(useDL) + ' / ' + str(len(Q)))
 
             # initialize direct reward
             directReward_list = [] # direct reward for action (for each UAV)
@@ -491,6 +489,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             while len(minibatch) < H_:
                 rand = random.randint(0, len(replayBuffer)-1) # randomly select from the replay buffer
                 minibatch.append(replayBuffer[rand]) # append to the buffer
+
+        ### TRAIN and VALIDATION for M = 0,1,2,3,4 ###
+        if M < 5:
+            dq.deepLearningQ_training(QTable, 'cpu:0', 10, False)
+            dq.deepLearningQ_valid('cpu:0', 10, False, 0.05)
 
     ### TRAIN and VALIDATION ###
     dq.deepLearningQ_training(QTable, 'cpu:0', 10, False)

@@ -100,8 +100,12 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
     # get Q values for the action space of next state s'
     if useDL == True:
         (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
-        print('nextState = ' + str(nextState))
-        rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k)
+        
+        # try testing
+        try:
+            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k)
+        except:
+            useDL = False
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     # action space = [[-1, -1, -1], [-1, -1, 0], [-1, -1, 1], [-1, 0, -1], ..., [1, 1, 1]]
@@ -130,8 +134,6 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
 #   [0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]]
 def stateTo1dArray(state, k):
 
-    print('state:', state)
-    
     q = state[0]
     a = state[1][k]
 
@@ -144,8 +146,7 @@ def stateTo1dArray(state, k):
 # deep Learning using Q table (training function)
 # printed : print the detail?
 def deepLearningQ_training(Q, deviceName, epoch, printed):
-    print('dL_training len(Q)=' + str(len(Q)))
-
+    
     # Q : [state, action_reward, i (UAV/cluster index), k (device index)]
     
     # Q Table           = [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
@@ -191,13 +192,12 @@ def deepLearningQ_valid(deviceName, epoch, printed, validRate):
 def deepLearningQ_test(state, k):
 
     # convert state into 1d array
-    print('deepLearning_test -> ' + str(state))
     stateArray = stateTo1dArray(state, k)
 
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
-    trainedModel = deepLearning_GPU.deepLearningModel('deepQ_model', True)
-    testO = deepLearning_GPU.modelOutput(trainedModel, stateArray)
+    trainedModel = DL.deepLearningModel('deepQ_model', True, 'mse', False)
+    testO = DL.modelOutput(trainedModel, stateArray)
     outputLayer = testO[len(testO)-1]
 
     # apply inverse sigmoid to output values
@@ -206,6 +206,7 @@ def deepLearningQ_test(state, k):
             outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
 
     # return output layer
+    print('test finished')
     return outputLayer
 
 # update Q value
