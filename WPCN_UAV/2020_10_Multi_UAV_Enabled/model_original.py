@@ -491,7 +491,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
 
         ### TRAIN and VALIDATION for M = 0,1,2,3,4 ###
-        if M < 5:
+        print(episode)
+        if episode < 5:
             dq.deepLearningQ_training(QTable, 'cpu:0', 10, False)
             dq.deepLearningQ_valid('cpu:0', 10, False, 0.05)
 

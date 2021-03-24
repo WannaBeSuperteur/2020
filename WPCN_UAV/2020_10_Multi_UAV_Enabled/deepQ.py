@@ -10,6 +10,10 @@ import random
 import readData as RD
 import numpy as np
 
+import tensorflow as tf
+from tensorflow import keras
+from keras.models import Model, model_from_json
+
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
 
@@ -104,8 +108,10 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
         # try testing
         try:
             rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k)
-        except:
+        except Exception as e:
             useDL = False
+            print(' === error message ===')
+            print(e)
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     # action space = [[-1, -1, -1], [-1, -1, 0], [-1, -1, 1], [-1, 0, -1], ..., [1, 1, 1]]
@@ -118,7 +124,12 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
         else: QofNextStateAction = 0
 
         # update max(a')Q(s', a')
-        if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+        # NEED TO BE MODIFIED
+        try:
+            if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+        except:
+            print(QofNextStateAction)
+            print(maxQ)
 
     # return
     return maxQ
@@ -196,8 +207,10 @@ def deepLearningQ_test(state, k):
 
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
-    trainedModel = DL.deepLearningModel('deepQ_model', True, 'mse', False)
-    testO = DL.modelOutput(trainedModel, stateArray)
+    optimizer = tf.keras.optimizers.Adam(0.001)
+    trainedModel = DL.deepLearningModel('deepQ_model', optimizer, 'mse', True)
+
+    testO = DL.modelOutput(trainedModel, [stateArray])
     outputLayer = testO[len(testO)-1]
 
     # apply inverse sigmoid to output values
