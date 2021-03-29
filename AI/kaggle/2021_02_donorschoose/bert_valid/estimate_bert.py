@@ -40,9 +40,8 @@ class TEXT_MODEL(tf.keras.Model):
         #        find the loss function for ROC-AUC (other than mean-squared-error)
         #        to find more valuable variables from codes
         #        [V] callbacks : val_loss (for early stopping) and lr_reduced
-        #        make l_den deeper, into l_den0, l_den1, ...
         #        [V] use the length of each text (title, essays, ...)
-        #        split project_subject_categories and project_subject_subcategories
+        #        [V] split project_subject_categories and project_subject_subcategories
 
         # i0_tp   : teacher_prefix                (   6 unique items)
         # i1_ss   : school_state                  (  51 unique items)
@@ -51,19 +50,19 @@ class TEXT_MODEL(tf.keras.Model):
         # i4_d_d  : submit_date -> DOW            (   7 unique items)
         # i5_d_h  : submit_date -> hour           (  24 unique items)
         # i6_pgc  : project_grade_category        (   4 unique items)
-        # i7_psc  : project_subject_categories    (  51 unique items)
-        # i8_pss  : project_subject_subcategories ( 407 unique items)
+        # i7_psc  : project_subject_categories    (   9 unique items)
+        # i8_pss  : project_subject_subcategories (  30 unique items)
         # i9_len  :                                   6
         # i10_ts  :                                   1
         #
-        # total   : i0_tp, i1_ss, ..., i10_ts     ( 571 unique columns)
+        # total   : i0_tp, i1_ss, ..., i10_ts     ( 152 unique columns)
         # text    : tokenized by BERT             ( 818        columns)
         #
-        #                                         (1389        columns)
+        #                                         ( 970        columns)
 
         # constants
         self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 2, 12, 7
-        self.u05, self.u06, self.u07, self.u08           = 24, 4, 51, 407
+        self.u05, self.u06, self.u07, self.u08           = 24, 4, 9, 30
         
         self.e00, self.e01, self.e02, self.e03, self.e04 = 4, 12, 1, 4, 3,
         self.e05, self.e06, self.e07, self.e08           = 4, 4, 12, 20
@@ -324,7 +323,7 @@ if __name__ == '__main__':
     train_info = []
     valid_info = []
 
-    option = [-1, -1, 2, 2, 7, 2, 2, 2, 5, 5, 5, 5, 5, 5, 1, -1]
+    option = [-1, -1, 2, 2, 7, 2, 8, 8, 5, 5, 5, 5, 5, 5, 1, -1]
     title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
              'project_submitted_datetime', 'project_grade_category',
              'project_subject_categories', 'project_subject_subcategories',
