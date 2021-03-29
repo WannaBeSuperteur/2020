@@ -123,20 +123,35 @@ def extract(fn, option, title, wordCount, onehot, years):
     print(avgs)
     print(stddevs)
 
-    # one-hot for each column marked as 2 or 3
-    # None  for columns not marked as 2 or 3
-    # array for columns     marked as 2 or 3
+    # one-hot for each column marked as 2, 3 or 8
+    # None  for columns not marked as 2, 3 or 8
+    # array for columns     marked as 2, 3 or 8
     # for example: [None, None, ['A', 'B', 'C', 'F'], ['math', 'science', 'computer'], None]
     if onehot == None:
         print('\n ==== one-hot elements ====\n')
         
         onehot = []
         for i in range(cols):
-            if option[i] == 2 or option[i] == 3:
-                thisCol = list(array[:, i])
-                thisCol_set = list(set(thisCol))
-                onehot.append(thisCol_set)
+            if option[i] == 2 or option[i] == 3 or option[i] == 8:
 
+                thisCol = list(array[:, i])
+
+                # 2 or 3 -> original
+                if option[i] == 2 or option[i] == 3:
+                    thisCol_set = list(set(thisCol))   
+
+                # 8 -> split with delimiter ',' (eg: ['a,b', 'c', 'a'] -> ['a', 'b', 'c'])
+                else:
+                    thisCol_ = []
+
+                    for j in range(len(thisCol)):
+                        elements = thisCol[j].replace(' ', '').split(',')
+                        for k in range(len(elements)):
+                            thisCol_.append(elements[k])
+
+                    thisCol_set = list(set(thisCol_))
+
+                onehot.append(thisCol_set)
                 print(title[i] + ' : ' + str(len(thisCol_set)))
             else:
                 onehot.append(None)
@@ -178,12 +193,24 @@ def extract(fn, option, title, wordCount, onehot, years):
 
             #  2. one-hot vector
             #  3. one-hot vector with first 3 letters
-            elif option[j] == 2 or option[j] == 3:
+            #  8. one-hot vector with delimeter ','
+            elif option[j] == 2 or option[j] == 3 or option[j] == 8:
+                
                 for k in range(len(onehot[j])):
-                    if array[i][j] == onehot[j][k]:
-                        thisRow.append(1)
+
+                    # 2 or 3 -> original
+                    if option[j] == 2 or option[j] == 3:
+                        if array[i][j] == onehot[j][k]:
+                            thisRow.append(1)
+                        else:
+                            thisRow.append(0)
+
+                    # 8 -> split with delimiter ','
                     else:
-                        thisRow.append(0)
+                        if onehot[j][k].replace(' ', '') in array[i][j].replace(' ', ''):
+                            thisRow.append(1)
+                        else:
+                            thisRow.append(0)
 
                     if i == 0: newTitle.append(str(j) + '_hot_' + str(k))
 
