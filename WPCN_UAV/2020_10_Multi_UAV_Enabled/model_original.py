@@ -390,7 +390,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
                 # error if (time slot value) > (devices)
-                beforeThroughput = f.R_nkl(B, min(t, len(PU[t][i])-1), i, t, PU, g, I_, o2)
+                try:
+                    beforeThroughput = f.R_nkl(B, min(t, len(PU[t][i])-1), i, t, PU, g, I_, o2)
+                except:
+                    print('cannot find throughput (before) because there are no device in cluster ' + str(i))
+                    continue
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
@@ -415,7 +419,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
                 # get throughput (after) (time = t+1) (n = t+1, l = i, k = t)
                 # error if (time slot value) > (devices)
-                afterThroughput = f.R_nkl(B, min(t, len(PU[t+1][i])-1), i, t+1, PU, g, I_, o2)
+                try:
+                    afterThroughput = f.R_nkl(B, min(t, len(PU[t+1][i])-1), i, t+1, PU, g, I_, o2)
+                except:
+                    print('cannot find throughput (after) because there are no device in cluster ' + str(i))
+                    continue
 
                 # device t's throughput does not increase
                 # assumption: device t is the device communicated with when the time slot is t

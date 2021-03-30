@@ -148,11 +148,7 @@ def R_nkl(B, k, l, n, PU, g, I_, o2):
     try:   
         r = PU[n][l][k] * g[n][l][k] / (I_[n][l][k] + o2)
     except:
-        try:    
-            r = PU[n][l][k] * g / (I_[n][l][k] + o2)
-        except:
-            print(n, l, k)
-            print(len(PU[n][l]), len(I_[n][l]))
+        r = PU[n][l][k] * g / (I_[n][l][k] + o2)
         
     # except:
     #    print('ERROR / ', n, l, k)
