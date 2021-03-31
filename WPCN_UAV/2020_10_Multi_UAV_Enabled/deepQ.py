@@ -127,7 +127,10 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
         if QofNextStateAction > maxQ: maxQ = QofNextStateAction
 
     # return
-    return maxQ
+    if useDL == True:
+        return (maxQ, rewardsOfActionsOfNextState[0])
+    else:
+        return (maxQ, -1)
 
 # convert state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}] to "1d array with numeric values"
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
@@ -244,11 +247,29 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
-    maxQ = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
+
+    if useDL == True:
+        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, True)
+
+        # if error for deep Q learning test
+        try:
+            if Qvalues == -1: useDL = False
+        except:
+            pass
+    else:
+        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, False)
 
     # update {a[n][l][k_l]} (array of communication times)
     # where k is the index for the device to communicate
     a[n][l] = nextState[1]
+
+    # update Q value when using deep learning
+    if useDL == True:
+        qs = []
+        for i in range(27): qs.append(Qvalues[i])
+        Q.append([[s], qs, l, k])
+
+        return
         
     # update Q value
     sFound = False # find corresponding state?
@@ -435,7 +456,7 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
 # useDL : whether to use deep learning
 def yt(r, r_, Q, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
-    maxQ = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
+    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
