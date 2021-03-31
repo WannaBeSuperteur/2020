@@ -107,7 +107,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
         
         # try testing
         try:
-            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k)
+            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k, False)
         except Exception as e:
             useDL = False
             print(' === error message ===')
@@ -195,7 +195,7 @@ def deepLearningQ_valid(deviceName, epoch, printed, validRate):
         print('Q_input.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
-def deepLearningQ_test(state, k):
+def deepLearningQ_test(state, k, verbose):
 
     # convert state into 1d array
     stateArray = stateTo1dArray(state, k)
@@ -203,7 +203,7 @@ def deepLearningQ_test(state, k):
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
     optimizer = tf.keras.optimizers.Adam(0.001)
-    trainedModel = DL.deepLearningModel('deepQ_model', optimizer, 'mse', True)
+    trainedModel = DL.deepLearningModel('deepQ_model', optimizer, 'mse', verbose)
 
     testO = DL.modelOutput(trainedModel, [stateArray])
     outputLayer = testO[len(testO)-1]
@@ -213,8 +213,9 @@ def deepLearningQ_test(state, k):
         for j in range(len(outputLayer[0])): # for each value of output data
             outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
 
+    if verbose == True: print('test finished')
+
     # return output layer
-    print('test finished')
     return outputLayer
 
 # update Q value

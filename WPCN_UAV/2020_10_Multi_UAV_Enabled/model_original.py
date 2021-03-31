@@ -343,6 +343,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
             newS_list = [] # new states (for each UAV)
             
             for i in range(L): # for each UAV = each cluster
+                print('UAV ' + str(i) + ' / ' + str(L))
                 
                 # get UAV i's next location
                 s_i = dq.getS(UAVs[i], t, i, a, R)
@@ -368,6 +369,8 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                                  Q, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
 
             for i in range(L): # each UAV i
+                print('UAV ' + str(i) + ' / ' + str(L))
+                
                 for j in range(i): # each UAV j
 
                     # UAV i and j's trajectory exists cross
@@ -461,6 +464,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
 
             # store (s,a,r,s') into replay buffer
             for i in range(L): # each UAV i
+                print('UAV ' + str(i) + ' / ' + str(L))
 
                 # for each device k,
                 # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
@@ -480,7 +484,7 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
                     # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
                     # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
                     # and   Q = reward
-                    # from oldS_list, action_listddd and reward
+                    # from oldS_list, action_list and reward
                     action_rewards = copy.deepcopy(zero_27)
                     action_rewards[dq.getActionIndex(action_list[i])] = rewards[k]
                     
