@@ -80,7 +80,7 @@ def create_dataframe(TRI_array, TRO_array, TEI_array,
 
         return (TRI_df, TRO_df, VAI_df, VAO_df)
 
-# reference: https://www.kaggle.com/gunesevitan/tabular-playground-series-jan-2021-models
+# reference: https://www.kaggle.com/gomes555/tps-mar2021-lightgbm-optuna-opt-data-prep
 #            http://machinelearningkorea.com
 
 ################################
@@ -101,24 +101,19 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array,
     test_ds = lgb.Dataset(tv_input, label=tv_output)
 
     # set parameters
-    # refer to https://www.kaggle.com/awwalmalhi/extreme-fine-tuning-lgbm-using-7-step-training (0.84193)
-    params = {'learning_rate': 0.01,
-              'subsample': 0.8,
-              'colsample_bytree': 0.21,
-              'reg_lambda': 11,
-              'reg_alpha': 17,
-              'min_child_samples': 31,
+    # refer to https://www.kaggle.com/gomes555/tps-mar2021-lightgbm-optuna-opt-data-prep (0.89765)
+    params = {'resample': None,
+              'power': False,
+              'boosting_type': 'gbdt',
+              'num_leaves': 200,
+              'min_child_samples': 32,
               'max_depth': 16,
-              'boosting': 'gbdt',
-              'objective': 'regression',
-              'metric': 'rmse',
-              'is_training_metric': True,
-              'num_leaves': 64,
-              'max_bin': 512,
-              'cat_smooth': 80,
-              'cat_l2': 0.03,
-              'bagging_freq': 3,
-              'seed': None}
+              'max_delta_step': 8,
+              'reg_alpha': 0.086,
+              'reg_lambda': 9.52,
+              'colsample_bytree': 0.35,
+              'cat_smooth': 82,
+              'cat_l2': 12}
 
     # create model
     if VAL_rate > 0:
