@@ -231,7 +231,8 @@ def saveArray(fn, _2dArray, splitter='\t', saveSize=0, encoding='utf-8'):
         f.close()
 
 # load result array with splitter
-def loadArray(fn, splitter='\t', UTF8=False):
+# type_ : s(string), i(integer) or f(float)
+def loadArray(fn, splitter='\t', UTF8=False, type_='s'):
     
     # read *.pgn file
     if UTF8 == True:
@@ -252,7 +253,10 @@ def loadArray(fn, splitter='\t', UTF8=False):
 
         # add this row
         temp = []
-        for j in range(cols): temp.append(thisRow[j])
+        for j in range(cols):
+            if type_ == 's': temp.append(thisRow[j])
+            elif type_ == 'i': temp.append(int(thisRow[j]))
+            elif type_ == 'f': temp.append(float(thisRow[j]))
         result.append(temp)
 
     # return the result array
