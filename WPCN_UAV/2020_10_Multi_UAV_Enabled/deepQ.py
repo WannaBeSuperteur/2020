@@ -116,15 +116,14 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
     # action space = [[-1, -1, -1], [-1, -1, 0], [-1, -1, 1], [-1, 0, -1], ..., [1, 1, 1]]
     maxQ = -999999 # max(a')Q(s', a')
-    for action_ in range(len(actionSpace)):
 
-        # when using deep learning, Q value is the maximum value among rewards for actions on the next state
-        # otherwise,                Q value is 0
-        if useDL == True: QofNextStateAction = max(rewardsOfActionsOfNextState[0])
-        else: QofNextStateAction = 0
+    # when using deep learning, Q value is the maximum value among rewards for actions on the next state
+    # otherwise,                Q value is 0
+    if useDL == True: QofNextStateAction = max(rewardsOfActionsOfNextState[0])
+    else: QofNextStateAction = 0
 
-        # update max(a')Q(s', a')
-        if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+    # update max(a')Q(s', a')
+    if QofNextStateAction > maxQ: maxQ = QofNextStateAction
 
     # return
     if useDL == True:
@@ -266,8 +265,14 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     # update Q value when using deep learning
     if useDL == True:
         qs = []
+
+        print('=== Q values ===')
+        print(maxQ)
+        print(Qvalues)
+        
         for i in range(27): qs.append(Qvalues[i])
         Q.append([[s], qs, l, k])
+        print(len(Q))
 
         return
         
