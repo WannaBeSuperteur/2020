@@ -1,0 +1,10 @@
+I 1875
+D 600 relu
+BN
+D 500 relu
+BN
+D 400 relu
+BN
+D 300 relu
+DO sigmoid
+OP adam0 0.001
