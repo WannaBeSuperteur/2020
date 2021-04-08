@@ -15,7 +15,7 @@ def getFinalResult(testResult):
 
 if __name__ == '__main__':
 
-    files = 4
+    files = 16
 
     # [result0, result1, ...]
     # where each element resultX is [1, 3, 4, 2, 9, 6, 5, 7, ...] for example
@@ -25,7 +25,7 @@ if __name__ == '__main__':
     sumTestResults = []
 
     # read file
-    for i in range(4):
+    for i in range(files):
         testResult = np.array(RD.loadArray('test_output_' + str(i) + '.txt'))[:, :9].astype(float)
 
         if i == 0:
