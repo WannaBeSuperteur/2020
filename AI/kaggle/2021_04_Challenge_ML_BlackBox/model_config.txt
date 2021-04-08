@@ -1,10 +1,14 @@
 I 1875
+D 700 relu
+BN
 D 600 relu
 BN
 D 500 relu
 BN
-D 400 relu
+D 450 relu
 BN
-D 300 relu
+D 400 relu
 DO sigmoid
 OP adam0 0.001
+
+# valid/test with 200 epochs

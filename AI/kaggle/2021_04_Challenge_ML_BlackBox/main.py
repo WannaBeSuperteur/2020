@@ -19,7 +19,7 @@ if __name__ == '__main__':
 
     TE_real = None
     TE_report = 'report_test.txt'
-    VAL_rate = 0.15
+    VAL_rate = 0.0
     VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
 
@@ -30,8 +30,8 @@ if __name__ == '__main__':
 
     # training and test
     # 'config.txt' is used for configuration
-    for i in range(1):
-        DL.deepLearning(TRI, TRO, TEI, TEO,
+    for i in range(4):
+        DL.deepLearning(TRI, TRO, TEI, TEO[:-4] + '_' + str(i) + '.txt',
                         TE_real, TE_report[:-4] + '_' + str(i) + '.txt',
                         VAL_rate, VAL_report[:-4] + '_' + str(i) + '.txt',
                         modelConfig, deviceName, epoch, printed, 'model_' + str(i))
