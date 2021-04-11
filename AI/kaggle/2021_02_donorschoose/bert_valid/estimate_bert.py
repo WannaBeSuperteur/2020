@@ -253,11 +253,11 @@ def convertForBert(input_data, print_interval, tokenizer, max_length, precols):
         print('------')
         print(np.array(tokenized_input))
 
-        return tokenized_input
+        return np.array(tokenized_input)
 
     # for valid
     except:
-        return tokenized_input
+        return np.array(tokenized_input)
 
 def createBatchedDataset(processed_dataset, rows, batch_size):
     batched_dataset = processed_dataset.padded_batch(batch_size, padded_shapes=((None, ), ()))
@@ -286,11 +286,12 @@ def mainFunc(count, tokenizer):
     epochs = 15
     batch_size = 32
 
-    trainFile = 'train_train.csv'
-    validFile = 'train_valid.csv'
+    trainFile = 'train.csv'
+    validFile = 'test.csv'
     trainExtractedFile = 'train_extracted.txt'
-    validExtractedFile = 'valid_extracted.txt'
-    validAnswerFile = 'bert_valid_rightAnswer.txt'
+    validExtractedFile = 'test_extracted.txt'
+    validAnswerFile = None
+    isValidTest = True # test mode
 
     # load training data
     train = np.array(pd.read_csv(trainFile, dtype={11:str, 12:str}))
@@ -365,11 +366,12 @@ def mainFunc(count, tokenizer):
     print(np.shape(valid_info))
     print(np.array(valid_info))
 
-    # save validation output data
-    try:
-        valid_rightAnswer = RD.loadArray(validAnswerFile)
-    except:
-        RD.saveArray(validAnswerFile, valid_approved[:rows_to_valid], '\t', 500)
+    # save validation output data (only for VALID mode)
+    if isValidTest == False:
+        try:
+            valid_rightAnswer = RD.loadArray(validAnswerFile)
+        except:
+            RD.saveArray(validAnswerFile, valid_approved[:rows_to_valid], '\t', 500)
 
     with K.tf.device('/gpu:0'):
         
@@ -445,7 +447,7 @@ def mainFunc(count, tokenizer):
             lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
 
             ### TRAIN THE MODEL ###
-            text_models[i].fit(train_data, train_approved, validation_split=0.15, callbacks=[early, lr_reduced], epochs=epochs)
+            text_models[i].fit(train_data, train_approved, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
             text_models[i].summary()
 
             # update train result array
