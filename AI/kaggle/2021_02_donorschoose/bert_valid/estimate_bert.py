@@ -267,15 +267,7 @@ def createBatchedDataset(processed_dataset, rows, batch_size):
 
     return batched_dataset
 
-if __name__ == '__main__':
-
-    # create bert tokenizer
-    BertTokenizer = bert.bert_tokenization.FullTokenizer
-    bert_layer = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1",
-                                trainable=False)
-    vocabulary_file = bert_layer.resolved_object.vocab_file.asset_path.numpy()
-    to_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
-    tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
+def mainFunc(count, tokenizer):
 
     # define configuration
     train_max_rows = 9999999
@@ -294,8 +286,14 @@ if __name__ == '__main__':
     epochs = 15
     batch_size = 32
 
+    trainFile = 'train_train.csv'
+    validFile = 'train_valid.csv'
+    trainExtractedFile = 'train_extracted.txt'
+    validExtractedFile = 'valid_extracted.txt'
+    validAnswerFile = 'bert_valid_rightAnswer.txt'
+
     # load training data
-    train = np.array(pd.read_csv('train_train.csv', dtype={11:str, 12:str}))
+    train = np.array(pd.read_csv(trainFile, dtype={11:str, 12:str}))
     rows_to_train = min(train_max_rows, len(train))
     
     train_title = train[:rows_to_train, 8].astype(str)
@@ -308,7 +306,7 @@ if __name__ == '__main__':
     train_approved = train[:rows_to_train, 15].astype(float)
 
     # load valid data
-    valid = np.array(pd.read_csv('train_valid.csv', dtype={11:str, 12:str}))
+    valid = np.array(pd.read_csv(validFile, dtype={11:str, 12:str}))
     rows_to_valid = min(valid_max_rows, len(valid))
     
     valid_title = valid[:rows_to_valid, 8].astype(str)
@@ -335,18 +333,18 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
 
-    wordCount = ME.getWordCount(option, 'train_train.csv')
+    wordCount = ME.getWordCount(option, trainFile)
 
     try:
-        train_extracted = RD.loadArray('train_extracted.txt', '\t')
-        valid_extracted = RD.loadArray('valid_extracted.txt', '\t')
+        train_extracted = RD.loadArray(trainExtractedFile, '\t')
+        valid_extracted = RD.loadArray(validExtractedFile, '\t')
         
     except:
-        (train_extracted, _, onehot) = ME.extract('train_train.csv', option, title, wordCount, None, [2016, 2017])
-        (valid_extracted, _, _) = ME.extract('train_valid.csv', option, title, wordCount, onehot, [2016, 2017])
+        (train_extracted, _, onehot) = ME.extract(trainFile, option, title, wordCount, None, [2016, 2017])
+        (valid_extracted, _, _) = ME.extract(validFile, option, title, wordCount, onehot, [2016, 2017])
 
-        RD.saveArray('train_extracted.txt', train_extracted, '\t', 500)
-        RD.saveArray('valid_extracted.txt', valid_extracted, '\t', 500)
+        RD.saveArray(trainExtractedFile, train_extracted, '\t', 500)
+        RD.saveArray(validExtractedFile, valid_extracted, '\t', 500)
 
     precols = len(train_extracted[0])
 
@@ -368,7 +366,10 @@ if __name__ == '__main__':
     print(np.array(valid_info))
 
     # save validation output data
-    RD.saveArray('bert_valid_rightAnswer.txt', valid_approved[:rows_to_valid], '\t', 500)
+    try:
+        valid_rightAnswer = RD.loadArray(validAnswerFile)
+    except:
+        RD.saveArray(validAnswerFile, valid_approved[:rows_to_valid], '\t', 500)
 
     with K.tf.device('/gpu:0'):
         
@@ -452,7 +453,7 @@ if __name__ == '__main__':
                 train_result[j][i] = train_approved[j]
 
             # save the model
-            text_models[i].save('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+            text_models[i].save('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
         # validate using each model
         for i in range(2, 3): # 6
@@ -483,7 +484,7 @@ if __name__ == '__main__':
             print(np.array(valid_data))
 
             # load the model
-            loaded_model = tf.keras.models.load_model('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+            loaded_model = tf.keras.models.load_model('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
             # VALIDATION
             prediction = loaded_model.predict(valid_data)
@@ -497,7 +498,23 @@ if __name__ == '__main__':
                 valid_result[j][i] = prediction[j][0]
 
     # write result for training
-    RD.saveArray('bert_train_result.txt', train_result, '\t', 500)
+    RD.saveArray('bert_train_result_count_' + str(count) + '.txt', train_result, '\t', 500)
 
     # write result for validation
-    RD.saveArray('bert_valid_result.txt', valid_result, '\t', 500)
+    RD.saveArray('bert_valid_result_count_' + str(count) + '.txt', valid_result, '\t', 500)
+
+if __name__ == '__main__':
+
+    # create bert tokenizer
+    BertTokenizer = bert.bert_tokenization.FullTokenizer
+    bert_layer = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1",
+                                trainable=False)
+    vocabulary_file = bert_layer.resolved_object.vocab_file.asset_path.numpy()
+    to_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
+    tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
+
+    # repeat 4 times
+    times = 4
+    
+    for i in range(times):
+        mainFunc(i, tokenizer)
