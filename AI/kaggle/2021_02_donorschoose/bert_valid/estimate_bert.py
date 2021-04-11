@@ -20,10 +20,15 @@ import gc
 
 import tensorflow as tf
 import tensorflow_hub as hub
+import keras.backend.tensorflow_backend as K
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras import optimizers
 import bert
+
+import warnings
+warnings.filterwarnings('ignore')
+warnings.filterwarnings('always')
 
 def tokenize_text(text, tokenizer):
     return tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
@@ -67,10 +72,10 @@ class TEXT_MODEL(tf.keras.Model):
         self.e00, self.e01, self.e02, self.e03, self.e04 = 4, 12, 1, 4, 3,
         self.e05, self.e06, self.e07, self.e08           = 4, 4, 12, 20
         
-        self.d00, self.d01, self.d02, self.d03, self.d04 = 4, 4, 4, 4, 4
-        self.d05, self.d06, self.d07, self.d08           = 4, 4, 4, 4
+        self.d00, self.d01, self.d02, self.d03, self.d04 = 12, 12, 12, 12, 12, # 4 -> 12
+        self.d05, self.d06, self.d07, self.d08           = 12, 12, 12, 12
         
-        self.d09, self.d09_final, self.d10, self.dL = 32, 4, 4, 4
+        self.d09, self.d09_final, self.d10, self.dL = 32, 12, 12, 12 # 4 -> 12
 
         # flatten layer
         self.flat = tf.keras.layers.Flatten()
@@ -273,7 +278,7 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # define configuration
-    train_max_rows = 50000 # 9999999 (no limit)
+    train_max_rows = 9999999
     valid_max_rows = 9999999
     print_interval = 400
     batch_size = 32
@@ -365,129 +370,131 @@ if __name__ == '__main__':
     # save validation output data
     RD.saveArray('bert_valid_rightAnswer.txt', valid_approved[:rows_to_valid], '\t', 500)
 
-    # each text model for each dataset
-    text_to_train = [train_title, train_essay1, train_essay2, train_essay3, train_essay4, train_summary]
-    text_to_valid = [valid_title, valid_essay1, valid_essay2, valid_essay3, valid_essay4, valid_summary]
-    text_models = []
-
-    for i in range(6):
-        text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols,
-                                embedding_dimensions=embedding_dim,
-                                cnn_filters=cnn_filters,
-                                dnn_units=dnn_units, dropout_rate=dropout_rate)
+    with K.tf.device('/gpu:0'):
         
-        text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
+        # each text model for each dataset
+        text_to_train = [train_title, train_essay1, train_essay2, train_essay3, train_essay4, train_summary]
+        text_to_valid = [valid_title, valid_essay1, valid_essay2, valid_essay3, valid_essay4, valid_summary]
+        text_models = []
+
+        for i in range(6):
+            text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols,
+                                    embedding_dimensions=embedding_dim,
+                                    cnn_filters=cnn_filters,
+                                    dnn_units=dnn_units, dropout_rate=dropout_rate)
+            
+            text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
+            
+            text_models.append(text_model)
+            
+        # train / valid result array
+        train_result = [[0 for j in range(6)] for i in range(rows_to_train)]
+        valid_result = [[0 for j in range(6)] for i in range(rows_to_valid)]
+
+        # train / valid max length
+
+        # for donorschoose-application-screening,
+        # max_length_train = 132, 2183, 818, 387, 224, 234
         
-        text_models.append(text_model)
-        
-    # train / valid result array
-    train_result = [[0 for j in range(6)] for i in range(rows_to_train)]
-    valid_result = [[0 for j in range(6)] for i in range(rows_to_valid)]
+        max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
 
-    # train / valid max length
+        print('\n[05] max lengths:')
+        print(max_lengths)
 
-    # for donorschoose-application-screening,
-    # max_length_train = 132, 2183, 818, 387, 224, 234
-    
-    max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
+        # model 0: train_title   -> train_approved
+        # model 1: train_essay1  -> train_approved
+        # model 2: train_essay2  -> train_approved
+        # model 3: train_essay3  -> train_approved
+        # model 4: train_essay4  -> train_approved
+        # model 5: train_summary -> train_approved
+        for i in range(2, 3): # 6
+            
+            rows = len(text_to_train[i])
 
-    print('\n[05] max lengths:')
-    print(max_lengths)
+            # process dataset : convert into BERT-usable dataset
+            tokenized_input = convertForBert(text_to_train[i], print_interval, tokenizer, int(max_lengths[i]), precols)
+            
+            train_text = np.array(tokenized_input).astype(float)
+            train_info = np.array(train_info).astype(float)
 
-    # model 0: train_title   -> train_approved
-    # model 1: train_essay1  -> train_approved
-    # model 2: train_essay2  -> train_approved
-    # model 3: train_essay3  -> train_approved
-    # model 4: train_essay4  -> train_approved
-    # model 5: train_summary -> train_approved
-    for i in range(2, 3): # 6
-        
-        rows = len(text_to_train[i])
+            print('\n[06] train text')
+            print(np.shape(train_text))
+            print('------')
+            print(np.array(train_text))
 
-        # process dataset : convert into BERT-usable dataset
-        tokenized_input = convertForBert(text_to_train[i], print_interval, tokenizer, int(max_lengths[i]), precols)
-        
-        train_text = np.array(tokenized_input).astype(float)
-        train_info = np.array(train_info).astype(float)
+            print('\n[07] train info')
+            print(np.shape(train_info))
+            print('------')
+            print(np.array(train_info))
 
-        print('\n[06] train text')
-        print(np.shape(train_text))
-        print('------')
-        print(np.array(train_text))
+            train_data = np.concatenate((train_info, train_text), axis=1).astype(float)
 
-        print('\n[07] train info')
-        print(np.shape(train_info))
-        print('------')
-        print(np.array(train_info))
+            print('\n[08] train info+text (final input)')
+            print(np.shape(train_data))
+            print('------')
+            print(np.array(train_data))
 
-        train_data = np.concatenate((train_info, train_text), axis=1).astype(float)
+            print('\n[09] train approved (final output)')
+            print(np.shape(train_approved))
+            print('------')
+            print(np.array(train_approved[:100]))
 
-        print('\n[08] train info+text (final input)')
-        print(np.shape(train_data))
-        print('------')
-        print(np.array(train_data))
+            # callback list for training
+            early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
+            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
 
-        print('\n[09] train approved (final output)')
-        print(np.shape(train_approved))
-        print('------')
-        print(np.array(train_approved[:100]))
+            ### TRAIN THE MODEL ###
+            text_models[i].fit(train_data, train_approved, validation_split=0.15, callbacks=[early, lr_reduced], epochs=epochs)
+            text_models[i].summary()
 
-        # callback list for training
-        early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
-        lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+            # update train result array
+            for j in range(rows_to_train):
+                train_result[j][i] = train_approved[j]
 
-        ### TRAIN THE MODEL ###
-        text_models[i].fit(train_data, train_approved, validation_split=0.4, callbacks=[early, lr_reduced], epochs=epochs)
-        text_models[i].summary()
+            # save the model
+            text_models[i].save('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
-        # update train result array
-        for j in range(rows_to_train):
-            train_result[j][i] = train_approved[j]
+        # validate using each model
+        for i in range(2, 3): # 6
 
-        # save the model
-        text_models[i].save('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+            rows = len(text_to_valid[i])
 
-    # validate using each model
-    for i in range(2, 3): # 6
+            # process dataset : convert into BERT-usable dataset
+            valid_text = convertForBert(text_to_valid[i], print_interval, tokenizer, int(max_lengths[i]), precols)
+            
+            valid_text = np.array(valid_text).astype(float)
+            valid_info = np.array(valid_info).astype(float)
 
-        rows = len(text_to_valid[i])
+            print('\n[10] valid text')
+            print(np.shape(valid_text))
+            print('------')
+            print(np.array(valid_text))
 
-        # process dataset : convert into BERT-usable dataset
-        valid_text = convertForBert(text_to_valid[i], print_interval, tokenizer, int(max_lengths[i]), precols)
-        
-        valid_text = np.array(valid_text).astype(float)
-        valid_info = np.array(valid_info).astype(float)
+            print('\n[11] valid info')
+            print(np.shape(valid_info))
+            print('------')
+            print(np.array(valid_info))
 
-        print('\n[10] valid text')
-        print(np.shape(valid_text))
-        print('------')
-        print(np.array(valid_text))
+            valid_data = np.concatenate((valid_info, valid_text), axis=1).astype(float)
 
-        print('\n[11] valid info')
-        print(np.shape(valid_info))
-        print('------')
-        print(np.array(valid_info))
+            print('\n[12] valid info+text')
+            print(np.shape(valid_data))
+            print('------')
+            print(np.array(valid_data))
 
-        valid_data = np.concatenate((valid_info, valid_text), axis=1).astype(float)
+            # load the model
+            loaded_model = tf.keras.models.load_model('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
-        print('\n[12] valid info+text')
-        print(np.shape(valid_data))
-        print('------')
-        print(np.array(valid_data))
+            # VALIDATION
+            prediction = loaded_model.predict(valid_data)
 
-        # load the model
-        loaded_model = tf.keras.models.load_model('model_' + str(i) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+            print('\n[13] prediction')
+            print(np.shape(prediction))
+            print(np.array(prediction))
 
-        # VALIDATION
-        prediction = loaded_model.predict(valid_data)
-
-        print('\n[13] prediction')
-        print(np.shape(prediction))
-        print(np.array(prediction))
-
-        # update valid result array
-        for j in range(rows_to_valid):
-            valid_result[j][i] = prediction[j][0]
+            # update valid result array
+            for j in range(rows_to_valid):
+                valid_result[j][i] = prediction[j][0]
 
     # write result for training
     RD.saveArray('bert_train_result.txt', train_result, '\t', 500)

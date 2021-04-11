@@ -8,6 +8,10 @@ import deepLearning_main as DL
 
 from sklearn.metrics import roc_auc_score
 
+import warnings
+warnings.filterwarnings('ignore')
+warnings.filterwarnings('always')
+
 def readResult(pred, real, num):
 
     # assertion
@@ -24,7 +28,7 @@ def readResult(pred, real, num):
         vals.append([pred[i], real[i]])
 
     for i in range(1, 250):
-        threshold = 0.004 * i
+        threshold = round(1 - pow(0.95, i), 6)
 
         TP = 0
         TN = 0
@@ -66,6 +70,7 @@ def readResult(pred, real, num):
                        round(roc_auc_score(real_binary, pred_binary), 4)])
 
     # write result
+    print(result)
     RD.saveArray('bert_val_report_' + str(num) + '.txt', result)
 
 def avgv(valid_result, valid_answer, weights, n):
@@ -78,16 +83,8 @@ if __name__ == '__main__':
     valid_result = np.array(RD.loadArray('bert_valid_result.txt')).astype(float)
     valid_answer = np.array(RD.loadArray('bert_valid_rightAnswer.txt')).astype(float)
 
-    for i in range(6):
+    for i in range(2, 3):
         readResult(valid_result[:, i], valid_answer[:, 0], i)
 
     # weighted average
-    avgv(valid_result, valid_answer, [1, 1, 1, 0, 0, 1], '0125')
-    avgv(valid_result, valid_answer, [1, 1, 1, 1, 1, 1], '012345')
-    
-    avgv(valid_result, valid_answer, [1, 1, 0, 0, 0, 0], '01')
-    avgv(valid_result, valid_answer, [1, 0, 1, 0, 0, 0], '02')
-    avgv(valid_result, valid_answer, [1, 0, 0, 0, 0, 1], '05')
-    avgv(valid_result, valid_answer, [0, 1, 1, 0, 0, 0], '12')
-    avgv(valid_result, valid_answer, [0, 1, 0, 0, 0, 1], '15')
-    avgv(valid_result, valid_answer, [0, 0, 1, 0, 0, 1], '25')
+    #avgv(valid_result, valid_answer, [0, 1, 1, 0, 0, 0], '12')
