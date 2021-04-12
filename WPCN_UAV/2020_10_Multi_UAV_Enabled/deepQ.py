@@ -90,7 +90,7 @@ def getActionSpace():
 
 # get action index: from (-1, -1, -1) as 0, to (1, 1, 1) as 26
 def getActionIndex(action):
-    return (action[0]-1)*9 + (action[1]-1)*3 + (action[2]-1)
+    return (action[0]+1)*9 + (action[1]+1)*3 + (action[2]+1)
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
 # useDL       : whether to use deep learning
@@ -263,10 +263,6 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     if useDL == True:
         qs = []
 
-        print('=== maxQ, directReward, action, actionIndex and Q values ===')
-        print(maxQ, directReward, action, getActionIndex(action))
-        print(Qvalues)
-
         # i equal to actionIndex -> move to directReward with learning rate alphaL
         # i otherwise            -> Q value
         for i in range(27):
@@ -275,9 +271,6 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
             else:
                 qs.append(Qvalues[i])
 
-        print('=== qs ===')
-        print(qs)
-            
         Q.append([[s], qs, l, k])
         print(len(Q))
 
