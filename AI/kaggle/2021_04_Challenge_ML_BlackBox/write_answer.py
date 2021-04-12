@@ -15,7 +15,7 @@ def getFinalResult(testResult):
 
 if __name__ == '__main__':
 
-    files = 16
+    files = 64
 
     # [result0, result1, ...]
     # where each element resultX is [1, 3, 4, 2, 9, 6, 5, 7, ...] for example
