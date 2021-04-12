@@ -263,11 +263,21 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     if useDL == True:
         qs = []
 
-        print('=== Q values ===')
-        print(maxQ)
+        print('=== maxQ, directReward, action, actionIndex and Q values ===')
+        print(maxQ, directReward, action, getActionIndex(action))
         print(Qvalues)
-        
-        for i in range(27): qs.append(Qvalues[i])
+
+        # i equal to actionIndex -> move to directReward with learning rate alphaL
+        # i otherwise            -> Q value
+        for i in range(27):
+            if i == getActionIndex(action):
+                qs.append((1-alphaL) * Qvalues[i] + alphaL * directReward)
+            else:
+                qs.append(Qvalues[i])
+
+        print('=== qs ===')
+        print(qs)
+            
         Q.append([[s], qs, l, k])
         print(len(Q))
 
