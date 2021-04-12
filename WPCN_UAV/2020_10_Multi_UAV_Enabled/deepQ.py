@@ -119,11 +119,8 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
 
     # when using deep learning, Q value is the maximum value among rewards for actions on the next state
     # otherwise,                Q value is 0
-    if useDL == True: QofNextStateAction = max(rewardsOfActionsOfNextState[0])
-    else: QofNextStateAction = 0
-
-    # update max(a')Q(s', a')
-    if QofNextStateAction > maxQ: maxQ = QofNextStateAction
+    if useDL == True: maxQ = max(rewardsOfActionsOfNextState[0])
+    else: maxQ = 0
 
     # return
     if useDL == True:
