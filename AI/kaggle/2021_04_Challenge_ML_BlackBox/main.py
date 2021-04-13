@@ -30,7 +30,7 @@ if __name__ == '__main__':
 
     # training and test
     # 'config.txt' is used for configuration
-    for i in range(46, 64):
+    for i in range(64):
         DL.deepLearning(TRI, TRO, TEI, TEO[:-4] + '_' + str(i) + '.txt',
                         TE_real, TE_report[:-4] + '_' + str(i) + '.txt',
                         VAL_rate, VAL_report[:-4] + '_' + str(i) + '.txt',
