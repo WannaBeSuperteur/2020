@@ -11,23 +11,39 @@ if __name__ == '__main__':
     # final result
     finalResult = 'Id,Votes\n'
 
-    # read file
-    result = RD.loadArray('test_output.txt')
     sampleSub = RD.loadArray('sample_submission.csv', ',')
     
     results = 22956
+    times = 4
 
     # avg and std for votes
     avgs_and_stds = RD.loadArray('train_output_avg_and_std.txt')
     print(avgs_and_stds)
 
+    # sum of prediction of useful votes for each review
+    final_sum = []
+
+    # read file
+    for count in range(times):
+
+        print('count = ' + str(count))
+        result = RD.loadArray('test_output_' + str(count) + '.txt')
+
+        for i in range(results):
+
+            # predicted number of useful votes
+            votes = float(result[i][0]) * float(avgs_and_stds[0][1]) + float(avgs_and_stds[0][0])
+            if i < 10: print(votes)
+
+            if count == 0:
+                final_sum.append(votes)
+            else:
+                final_sum[i] += votes
+
+    # write final prediction of useful votes as non-negative
+    # using average of useful votes for each review
     for i in range(results):
-
-        # sum of funny, useful and cool
-        votes = float(result[i][0]) * float(avgs_and_stds[0][1]) + float(avgs_and_stds[0][0])
-
-        # non-negative
-        finalResult += sampleSub[i+1][0].split(',')[0] + ',' + str(max(0, votes)) + '\n'
+        finalResult += sampleSub[i+1][0].split(',')[0] + ',' + str(max(0, final_sum[i] / times)) + '\n'
 
     f = open('final_sample_submission.csv', 'w')
     f.write(finalResult)

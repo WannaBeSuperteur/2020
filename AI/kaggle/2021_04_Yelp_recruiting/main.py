@@ -28,8 +28,12 @@ if __name__ == '__main__':
     epoch = int(input('epoch'))
     printed = int(input('printed? (0 -> do not print)'))
 
+    times = 4
+
     # training and test
     # 'config.txt' is used for configuration
-    DL.deepLearning(TRI, TRO, TEI, TEO,
-                    TE_real, TE_report, VAL_rate, VAL_report,
-                    modelConfig, deviceName, epoch, printed, 'model')
+    for i in range(times):
+        DL.deepLearning(TRI, TRO, TEI, TEO[:-4] + '_' + str(i) + '.txt',
+                        TE_real, TE_report[:-4] + '_' + str(i) + '.txt',
+                        VAL_rate, VAL_report[:-4] + '_' + str(i) + '.txt',
+                        modelConfig, deviceName, epoch, printed, 'model_' + str(i))
