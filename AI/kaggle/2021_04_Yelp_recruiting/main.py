@@ -13,14 +13,14 @@ if __name__ == '__main__':
 
     # meta info
     TRI = 'train_input.txt'
-    TRO = 'train_output'
+    TRO = 'train_output.txt'
     TEI = 'test_input.txt'
-    TEO = 'test_output'
+    TEO = 'test_output.txt'
 
     TE_real = None
-    TE_report = 'report_test'
+    TE_report = 'report_test.txt'
     VAL_rate = 0.0
-    VAL_report = 'report_val'
+    VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
 
     # user data
@@ -30,8 +30,6 @@ if __name__ == '__main__':
 
     # training and test
     # 'config.txt' is used for configuration
-    for i in ['funny', 'useful', 'cool']:
-        DL.deepLearning(TRI, TRO + '_' + i + '.txt', TEI, TEO + '_' + i + '.txt',
-                        TE_real, TE_report + '_' + i + '.txt',
-                        VAL_rate, VAL_report + '_' + i + '.txt',
-                        modelConfig, deviceName, epoch, printed, 'model_' + i)
+    DL.deepLearning(TRI, TRO, TEI, TEO,
+                    TE_real, TE_report, VAL_rate, VAL_report,
+                    modelConfig, deviceName, epoch, printed, 'model')

@@ -227,44 +227,31 @@ def writeFinalInput(trainTest, rows):
     elif trainTest == 'test':
         RD.saveArray('test_input.txt', finalInput)
 
-# write final training output for funny / useful / cool
+# write final training output for USEFUL votes
 def writeFinalOutput(reviews):
 
     train_review = np.array(pd.read_csv('yelp_training_set_review.csv'))
-
-    TO_funny = []
-    TO_useful = []
-    TO_cool = []
+    train_output = []
 
     for i in range(reviews):
 
         # for example, 'funny': 0, 'useful': 0, 'cool': 0
         votes = train_review[i][1].split('{')[1].split('}')[0]
-
-        funny = int(votes.split(',')[0].split(': ')[1])
         useful = int(votes.split(',')[1].split(': ')[1])
-        cool = int(votes.split(',')[2].split(': ')[1])
-
-        TO_funny.append(funny)
-        TO_useful.append(useful)
-        TO_cool.append(cool)
+        
+        train_output.append(useful)
 
     # average and stddev of each array TO_xxxx
-    avgs_TO = [np.mean(TO_funny), np.mean(TO_useful), np.mean(TO_cool)]
-    stddevs_TO = [np.std(TO_funny), np.std(TO_useful), np.std(TO_cool)]
+    avg = np.mean(train_output)
+    stddev = np.std(train_output)
 
     # normalize each TO_xxxx
     for i in range(reviews):
-        TO_funny[i] = [(TO_funny[i] - avgs_TO[0]) / stddevs_TO[0]]
-        TO_useful[i] = [(TO_useful[i] - avgs_TO[1]) / stddevs_TO[1]]
-        TO_cool[i] = [(TO_cool[i] - avgs_TO[2]) / stddevs_TO[2]]
+        train_output[i] = [(train_output[i] - avg) / stddev]
 
     # save
-    RD.saveArray('train_output_funny.txt', TO_funny)
-    RD.saveArray('train_output_useful.txt', TO_useful)
-    RD.saveArray('train_output_cool.txt', TO_cool)
-
-    RD.saveArray('train_output_avg_and_std.txt', [avgs_TO, stddevs_TO])
+    RD.saveArray('train_output.txt', train_output)
+    RD.saveArray('train_output_avg_and_std.txt', [[avg, stddev]])
 
 if __name__ == '__main__':
 
@@ -311,7 +298,7 @@ if __name__ == '__main__':
     # [ business_id ] : (checkin)  checkin_info  -> length
 
     # FINAL OUTPUT
-    #                 : (review)   votes         -> {'useful': x, 'funny': y, 'cool': z}
+    #                 : (review)   votes         -> (useful) only
 
     # rows: business, checkin, review, user
     train_rows = [11537, 8282, 229907, 43873]

@@ -1,6 +1,6 @@
 json_to_csv.py
 -> my_extract.py
--> main.py (valid mode)
+-> main.py (valid mode : VAL_rate = 0.05)
 -> read_valid_report.py (to check the valid result)
--> main.py (test mode)
+-> main.py (test mode : VAL_rate = 0.0)
 -> write_final_answer.py

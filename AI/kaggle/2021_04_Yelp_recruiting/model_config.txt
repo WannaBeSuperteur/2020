@@ -1,0 +1,10 @@
+I 10
+D 100 relu
+BN
+D 100 relu
+BN
+D 100 relu
+BN
+D 100 relu
+DO sigmoid
+OP adam0 0.001
