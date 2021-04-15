@@ -9,10 +9,12 @@ import readData as RD
 if __name__ == '__main__':
 
     # final result
-    finalResult = ''
+    finalResult = 'Id,Votes\n'
 
     # read file
     result = RD.loadArray('test_output.txt')
+    sampleSub = RD.loadArray('sample_submission.csv', ',')
+    
     results = 22956
 
     # avg and std for votes
@@ -25,8 +27,8 @@ if __name__ == '__main__':
         votes = float(result[i][0]) * float(avgs_and_stds[0][1]) + float(avgs_and_stds[0][0])
 
         # non-negative
-        finalResult += str(max(0, votes)) + '\n'
+        finalResult += sampleSub[i+1][0].split(',')[0] + ',' + str(max(0, votes)) + '\n'
 
-    f = open('final_result.txt', 'w')
+    f = open('final_sample_submission.csv', 'w')
     f.write(finalResult)
     f.close()
