@@ -222,7 +222,10 @@ def writeFinalInput(trainTest, rows):
 
         finalInput.append(thisRow)
 
-    RD.saveArray(trainTest + '_input.txt', finalInput)
+    if trainTest == 'training':
+        RD.saveArray('train_input.txt', finalInput)
+    elif trainTest == 'test':
+        RD.saveArray('test_input.txt', finalInput)
 
 # write final training output for funny / useful / cool
 def writeFinalOutput(reviews):
