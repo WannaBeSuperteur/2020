@@ -14,7 +14,8 @@ if __name__ == '__main__':
     sampleSub = RD.loadArray('sample_submission.csv', ',')
     
     results = 22956
-    times = 4
+    times = 1
+    algorithm = 'lightGBM'
 
     # avg and std for votes
     avgs_and_stds = RD.loadArray('train_output_avg_and_std.txt')
@@ -27,7 +28,11 @@ if __name__ == '__main__':
     for count in range(times):
 
         print('count = ' + str(count))
-        result = RD.loadArray('test_output_' + str(count) + '.txt')
+
+        if algorithm == 'deepLearning':
+            result = RD.loadArray('test_output_' + str(count) + '.txt')
+        else:
+            result = RD.loadArray('lightGBM_test_result_' + str(count) + '.txt')
 
         for i in range(results):
 
