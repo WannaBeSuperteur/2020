@@ -14,8 +14,8 @@ if __name__ == '__main__':
     sampleSub = RD.loadArray('sample_submission.csv', ',')
     
     results = 22956
-    times = 1
-    algorithm = 'lightGBM'
+    times = 16
+    algorithm = 'deepLearning'
 
     # avg and std for votes
     avgs_and_stds = RD.loadArray('train_output_avg_and_std.txt')

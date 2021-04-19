@@ -177,10 +177,12 @@ def writeFinalInput(trainTest, rows):
         thisRow = []
 
         # append review info
+        # columns : ['user_id', 'business_id', 'text', 'stars', 'date']
         for j in range(2, 5):
             thisRow.append(review[i][j])
 
         # append user info
+        # columns : ['user_id', 'review_count', 'average_stars']
         userid = review[i][0]
         users = rows[3]
         userFound = False
@@ -195,20 +197,22 @@ def writeFinalInput(trainTest, rows):
             for k in range(2): thisRow.append(0)
 
         # append business info
+        # columns : ['business_id', 'review_count', 'longitude', 'stars', 'latitude', 'open']
         businessid = review[i][1]
         businesses = rows[0]
         businessFound = False
 
         for j in range(businesses):
             if business[j][0] == businessid:
-                for k in range(1, 5):
+                for k in range(1, 6):
                     thisRow.append(business[j][k])
                 businessFound = True
 
         if businessFound == False:
-            for k in range(4): thisRow.append(0)
+            for k in range(5): thisRow.append(0)
 
         # append checkin info
+        # columns : ['business_id', 'checkin_info']
         checkins = rows[1]
         checkinFound = False
 
@@ -265,6 +269,7 @@ if __name__ == '__main__':
     # business : city, review_count, name, neighborhood, type, [ business_id ], full_address,
     # (11537)    state, longitude, stars, latitude, open, categories
     # (1205)     --------
+    #            review_count  -> continuous
     #            longitude     -> continuous
     #            stars         -> continuous
     #            latitude      -> continuous
@@ -291,6 +296,7 @@ if __name__ == '__main__':
     #                 : (review)   date          -> continuous with converted value
     # [ user_id ]     : (user)     review_count  -> continuous
     # [ user_id ]     : (user)     average_stars -> continuous
+    # [ business_id ] : (business) review_count  -> continuous
     # [ business_id ] : (business) longitude     -> continuous
     # [ business_id ] : (business) stars         -> continuous
     # [ business_id ] : (business) latitude      -> continuous
@@ -305,7 +311,7 @@ if __name__ == '__main__':
     test_rows = [1205, 734, 22956, 5105]
 
     # write info files
-    writeFile('business', ['business_id', 'longitude', 'stars', 'latitude', 'open'], [-1, 1, 1, 1, 2])
+    writeFile('business', ['business_id', 'review_count', 'longitude', 'stars', 'latitude', 'open'], [-1, 1, 1, 1, 1, 2])
     writeFile('checkin', ['business_id', 'checkin_info'], [-1, 4])
     writeFile('review', ['user_id', 'business_id', 'text', 'stars', 'date'], [-1, -1, 4, 1, 5])
     writeFile('user', ['user_id', 'review_count', 'average_stars'], [-1, 1, 1])

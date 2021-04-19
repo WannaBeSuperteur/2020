@@ -91,17 +91,16 @@ def model_00_lightGBM(TRI_array, TRO_array, TEI_array, TEO, VAL_rate, count):
     test_ds = lgb.Dataset(tv_input, label=tv_output)
 
     # set parameters
-    # refer to https://www.kaggle.com/gomes555/tps-mar2021-lightgbm-optuna-opt-data-prep (0.89765)
     params = {'resample': None,
               'boosting': 'gbdt',
-              'num_leaves': 200,
-              'min_child_samples': 32,
+              'num_leaves': 100 + count,
+              'min_child_samples': 32 + count,
               'max_depth': 16,
               'max_delta_step': 8,
-              'reg_alpha': 0.086,
-              'reg_lambda': 9.52,
-              'colsample_bytree': 0.35,
-              'cat_smooth': 82,
+              'reg_alpha': 0.5,
+              'reg_lambda': 8.0,
+              'colsample_bytree': 0.25,
+              'cat_smooth': 80 + count,
               'cat_l2': 12,
               'learning_rate': 0.005, # modified
               'metric': 'rmse'}
@@ -162,8 +161,8 @@ if __name__ == '__main__':
     epoch = int(input('epoch'))
     printed = int(input('printed? (0 -> do not print)'))
 
-    times = 1
-    algorithm = 'lightGBM'
+    times = 16
+    algorithm = 'deepLearning'
 
     # training and test
     # 'config.txt' is used for configuration
