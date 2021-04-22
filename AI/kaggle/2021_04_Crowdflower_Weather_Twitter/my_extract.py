@@ -12,8 +12,8 @@ def writeInput(array_input, state_list):
     for i in range(len(array_input)):
         thisRow = []
 
-        # tweet
-        thisRow.append(array_input[i][0])
+        # tweet (remove all the tabs)
+        thisRow.append(array_input[i][0].replace('\t', ''))
 
         # state
         for j in range(len(state_list)):
