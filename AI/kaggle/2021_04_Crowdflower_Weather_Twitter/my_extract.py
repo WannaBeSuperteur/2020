@@ -3,6 +3,7 @@ sys.path.insert(0, '../../AI_BASE')
 import readData as RD
 import numpy as np
 import pandas as pd
+import re
 
 # write input data
 def writeInput(array_input, state_list):
@@ -12,8 +13,8 @@ def writeInput(array_input, state_list):
     for i in range(len(array_input)):
         thisRow = []
 
-        # tweet (remove all the tabs)
-        thisRow.append(array_input[i][0].replace('\t', ''))
+        # tweet (remove alphabet and space only)
+        thisRow.append(re.sub('[^a-zA-Z ]', '', array_input[i][0]))
 
         # state
         for j in range(len(state_list)):

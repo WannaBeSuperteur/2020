@@ -37,8 +37,8 @@ class TEXT_MODEL(tf.keras.Model):
         super(TEXT_MODEL, self).__init__(name=name)
 
         # constants
-        # u00 : for text (83), u01 : for state (51)
-        self.u_text, self.u_state = 83, 51
+        # u00 : for text (53), u01 : for state (51)
+        self.u_text, self.u_state = 53, 51
         self.d_t = 100
         self.d_s0, self.d_s1, self.d_s2, self.d_sf = 100, 100, 100, 100
         self.output_length = 24
@@ -195,7 +195,7 @@ if __name__ == '__main__':
     text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
 
     # max length of all the train/valid tokenized inputs
-    max_length = 83
+    max_length = 53
 
     # load training and valid/test data
     print('loading training input...')
