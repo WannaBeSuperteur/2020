@@ -22,9 +22,6 @@ def writeInput(array_input, state_list):
             else:
                 thisRow.append(falseVal)
 
-        # location
-        thisRow.append(array_input[i][2])
-
         final_input.append(thisRow)
 
     return final_input
