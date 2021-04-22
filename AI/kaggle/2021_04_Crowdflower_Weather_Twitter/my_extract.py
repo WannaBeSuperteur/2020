@@ -52,3 +52,27 @@ if __name__ == '__main__':
     RD.saveArray('train_input.txt', final_train_input, '\t', 500)
     RD.saveArray('train_output.txt', train_output, '\t', 500)
     RD.saveArray('test_input.txt', final_test_input, '\t', 500)
+
+    # split training input into train_train and train_valid
+    validRate = 0.15
+    trainRows = len(final_train_input)
+
+    train_train_input = []
+    train_train_output = []
+    train_valid_input = []
+    train_valid_output = []
+
+    for i in range(trainRows):
+        if i >= validRate * trainRows: # train_train
+            train_train_input.append(final_train_input[i])
+            train_train_output.append(train_output[i])
+            
+        else: # train_valid
+            train_valid_input.append(final_train_input[i])
+            train_valid_output.append(train_output[i])
+
+    # save splitted training data
+    RD.saveArray('train_train_input.txt', train_train_input, '\t', 500)
+    RD.saveArray('train_train_output.txt', train_train_output, '\t', 500)
+    RD.saveArray('train_valid_input.txt', train_valid_input, '\t', 500)
+    RD.saveArray('train_valid_output.txt', train_valid_output, '\t', 500)
