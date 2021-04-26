@@ -184,7 +184,7 @@ if __name__ == '__main__':
     # configuration
     train_rows = 66253
     valid_rows = 11692
-    print_interval = 400
+    print_interval = 500
     batch_size = 32
 
     embedding_dim = 200
@@ -200,7 +200,7 @@ if __name__ == '__main__':
     useState = False
 
     # max length of all the train/valid tokenized inputs
-    max_length = 53
+    max_length = 71
 
     # create text model
     text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab),

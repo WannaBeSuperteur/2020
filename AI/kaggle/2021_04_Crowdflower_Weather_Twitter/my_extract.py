@@ -41,7 +41,7 @@ def writeInput(array_input, state_list, modify_state_list, use):
 
         # tweet (remove alphabet and space only)
         if use[0] == True:
-            thisRow.append(re.sub('[^a-zA-Z ]', '', array_input[i][0]))
+            thisRow.append(re.sub('[^a-zA-Z0-9!? ]', '', array_input[i][0]))
 
         # state or location
         if use[1] == True:
