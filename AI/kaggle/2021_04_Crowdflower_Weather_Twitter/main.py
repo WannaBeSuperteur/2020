@@ -199,17 +199,17 @@ if __name__ == '__main__':
 
     # load training and valid/test data
     print('loading training input...')
-    train_input = RD.loadArray('train_train_input.txt')
+    train_input = RD.loadArray('train_input.txt')
 
     print('loading training output...')
-    train_output = np.array(RD.loadArray('train_train_output.txt')).astype(float)
+    train_output = np.array(RD.loadArray('train_output.txt')).astype(float)
 
     print('loading valid input...')
-    valid_input = RD.loadArray('train_valid_input.txt')
+    valid_input = RD.loadArray('test_input.txt')
 
     print('loading valid output...')
-    valid_output = np.array(RD.loadArray('train_valid_output.txt')).astype(float)
-
+    valid_output = []
+    
     print(' *----- data -----*')
     print(np.shape(train_input))
     print(np.array(train_input))
