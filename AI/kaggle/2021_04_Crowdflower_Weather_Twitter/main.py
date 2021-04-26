@@ -32,25 +32,29 @@ class TEXT_MODEL(tf.keras.Model):
     
     def __init__(self, vocabulary_size,
                  embedding_dimensions=128, cnn_filters=50, dnn_units=512,
-                 dropout_rate=0.1, training=False, name='text_model'):
+                 dropout_rate=0.1, training=False, name='text_model', useState=True, max_length=0):
         
         super(TEXT_MODEL, self).__init__(name=name)
 
         # constants
-        # u00 : for text (53), u01 : for state (51)
-        self.u_text, self.u_state = 53, 51
+        # u00 : for text (max_length), u01 : for state (51)
+        self.u_text = max_length
         self.d_t = 100
-        self.d_s0, self.d_s1, self.d_s2, self.d_sf = 100, 100, 100, 100
         self.output_length = 24
+
+        if useState == True:
+            self.d_s0, self.d_s1, self.d_s2, self.d_sf = 100, 100, 100, 100
+            self.u_state = 51
 
         # L2 regularization
         L2 = tf.keras.regularizers.l2(0.001)
 
         # for state
-        self.den_state_0 = tf.keras.layers.Dense(units=self.d_s0, activation='relu', kernel_regularizer=L2, name='BERT_dense')
-        self.den_state_1 = tf.keras.layers.Dense(units=self.d_s1, activation='relu', kernel_regularizer=L2, name='BERT_dense')
-        self.den_state_2 = tf.keras.layers.Dense(units=self.d_s2, activation='relu', kernel_regularizer=L2, name='BERT_dense')
-        self.den_state_final = tf.keras.layers.Dense(units=self.d_sf, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+        if useState == True:
+            self.den_state_0 = tf.keras.layers.Dense(units=self.d_s0, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+            self.den_state_1 = tf.keras.layers.Dense(units=self.d_s1, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+            self.den_state_2 = tf.keras.layers.Dense(units=self.d_s2, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+            self.den_state_final = tf.keras.layers.Dense(units=self.d_sf, activation='relu', kernel_regularizer=L2, name='BERT_dense')
 
         # for BERT-tokenized text
         self.embedding = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding')
@@ -68,15 +72,20 @@ class TEXT_MODEL(tf.keras.Model):
     def call(self, inputs, training):
 
         # split input
-        i_text, i_state = tf.split(inputs, [self.u_text, self.u_state], 1)
+        if useState == True:
+            i_text, i_state = tf.split(inputs, [self.u_text, self.u_state], 1)
+        else:
+            i_text = inputs
+            
         i_text = tf.cast(i_text, tf.int32)
 
         # info: state
-        i_state_den0 = self.den_state_0(i_state)
-        i_state_den1 = self.den_state_1(i_state_den0)
-        i_state_den2 = self.den_state_2(i_state_den1)
-        i_state_denFinal = self.den_state_final(i_state_den2)
-        i_state_drop = self.dropout(i_state_denFinal, training)
+        if useState == True:
+            i_state_den0 = self.den_state_0(i_state)
+            i_state_den1 = self.den_state_1(i_state_den0)
+            i_state_den2 = self.den_state_2(i_state_den1)
+            i_state_denFinal = self.den_state_final(i_state_den2)
+            i_state_drop = self.dropout(i_state_denFinal, training)
 
         # BERT-tokenized text
         i_text_emb = self.embedding(i_text)
@@ -93,7 +102,10 @@ class TEXT_MODEL(tf.keras.Model):
         i_text_drop = self.dropout(i_text_den, training)
 
         # concatenate embedded info and concatenated BERT-tokenized text
-        concatenated = tf.concat([i_text_drop, i_state_drop], axis=-1)
+        if useState == True:
+            concatenated = tf.concat([i_text_drop, i_state_drop], axis=-1)
+        else:
+            concatenated = i_text_drop
         
         concatenated = self.dense(concatenated)
         concatenated = self.dropout(concatenated, training)
@@ -185,30 +197,32 @@ if __name__ == '__main__':
 
     epochs = 15
     batch_size = 32
+    useState = False
+
+    # max length of all the train/valid tokenized inputs
+    max_length = 48
 
     # create text model
     text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab),
                             embedding_dimensions=embedding_dim,
                             cnn_filters=cnn_filters,
-                            dnn_units=dnn_units, dropout_rate=dropout_rate)
+                            dnn_units=dnn_units, dropout_rate=dropout_rate,
+                            useState=useState, max_length=max_length)
 
     text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
 
-    # max length of all the train/valid tokenized inputs
-    max_length = 53
-
     # load training and valid/test data
     print('loading training input...')
-    train_input = RD.loadArray('train_input.txt')
+    train_input = RD.loadArray('train_train_input.txt')
 
     print('loading training output...')
-    train_output = np.array(RD.loadArray('train_output.txt')).astype(float)
+    train_output = np.array(RD.loadArray('train_train_output.txt')).astype(float)
 
     print('loading valid input...')
-    valid_input = RD.loadArray('test_input.txt')
+    valid_input = RD.loadArray('train_valid_input.txt')
 
     print('loading valid output...')
-    valid_output = []
+    valid_output = np.array(RD.loadArray('train_valid_output.txt')).astype(float)
     
     print(' *----- data -----*')
     print(np.shape(train_input))
@@ -223,31 +237,45 @@ if __name__ == '__main__':
     # create train input and valid input
     train_text = np.array(train_input)[:, 0].astype(str)
     train_tokenized = np.array(convertForBert(train_text, print_interval, tokenizer, max_length)).astype(float)
-    train_state = np.array(train_input)[:, 1:].astype(float)
+
+    if useState == True:
+        train_state = np.array(train_input)[:, 1:].astype(float)
 
     print(' *----- train -----*')
     print(np.shape(train_text))
     print(train_text)
     print(np.shape(train_tokenized))
     print(train_tokenized)
-    print(np.shape(train_state))
-    print(train_state)
-    
-    final_train_input = np.concatenate((train_tokenized, train_state), axis=1).astype(float)
+
+    if useState == True:
+        print(np.shape(train_state))
+        print(train_state)
+
+    if useState == True:
+        final_train_input = np.concatenate((train_tokenized, train_state), axis=1).astype(float)
+    else:
+        final_train_input = train_tokenized.astype(float)
 
     valid_text = np.array(valid_input)[:, 0].astype(str)
     valid_tokenized = np.array(convertForBert(valid_text, print_interval, tokenizer, max_length)).astype(float)
-    valid_state = np.array(valid_input)[:, 1:].astype(float)
+
+    if useState == True:
+        valid_state = np.array(valid_input)[:, 1:].astype(float)
 
     print(' *----- valid -----*')
     print(np.shape(valid_text))
     print(valid_text)
     print(np.shape(valid_tokenized))
     print(valid_tokenized)
-    print(np.shape(valid_state))
-    print(valid_state)
-    
-    final_valid_input = np.concatenate((valid_tokenized, valid_state), axis=1).astype(float)
+
+    if useState == True:
+        print(np.shape(valid_state))
+        print(valid_state)
+
+    if useState == True:
+        final_valid_input = np.concatenate((valid_tokenized, valid_state), axis=1).astype(float)
+    else:
+        final_valid_input = valid_tokenized.astype(float)
 
     RD.saveArray('train_tokenized.txt', train_tokenized, '\t', 500)
     RD.saveArray('valid_tokenized.txt', valid_tokenized, '\t', 500)
