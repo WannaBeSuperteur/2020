@@ -295,7 +295,7 @@ if __name__ == '__main__':
     lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
 
     # train and save the model
-    text_model.fit(final_train_input, train_output, validation_split=0.2, callbacks=[early, lr_reduced], epochs=epochs)
+    text_model.fit(final_train_input, train_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
     text_model.summary()
     text_model.save('model_e_' + str(epochs))
 
