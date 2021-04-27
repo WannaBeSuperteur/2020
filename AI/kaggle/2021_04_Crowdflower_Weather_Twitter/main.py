@@ -61,6 +61,8 @@ class TEXT_MODEL(tf.keras.Model):
         self.cnn_layer1 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='BERT_cnn1')
         self.cnn_layer2 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='BERT_cnn2')
         self.cnn_layer3 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='BERT_cnn3')
+        self.cnn_layer4 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=5, padding='valid', activation='relu', name='BERT_cnn2')
+        self.cnn_layer5 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=6, padding='valid', activation='relu', name='BERT_cnn3')
         self.pool = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling')
         self.den_text = tf.keras.layers.Dense(units=self.d_t, activation='relu', kernel_regularizer=L2, name='BERT_dense')
 
@@ -96,8 +98,12 @@ class TEXT_MODEL(tf.keras.Model):
         i_text_emb_2 = self.pool(i_text_emb_2)
         i_text_emb_3 = self.cnn_layer3(i_text_emb)
         i_text_emb_3 = self.pool(i_text_emb_3)
+        i_text_emb_4 = self.cnn_layer4(i_text_emb) 
+        i_text_emb_4 = self.pool(i_text_emb_4)
+        i_text_emb_5 = self.cnn_layer5(i_text_emb)
+        i_text_emb_5 = self.pool(i_text_emb_5)
         
-        i_text_concat = tf.concat([i_text_emb_1, i_text_emb_2, i_text_emb_3], axis=-1)
+        i_text_concat = tf.concat([i_text_emb_1, i_text_emb_2, i_text_emb_3, i_text_emb_4, i_text_emb_5], axis=-1)
         i_text_den = self.den_text(i_text_concat)
         i_text_drop = self.dropout(i_text_den, training)
 
