@@ -54,21 +54,31 @@ class TEXT_MODEL(tf.keras.Model):
             self.den_state_0 = tf.keras.layers.Dense(units=self.d_s0, activation='relu', kernel_regularizer=L2, name='BERT_dense')
             self.den_state_1 = tf.keras.layers.Dense(units=self.d_s1, activation='relu', kernel_regularizer=L2, name='BERT_dense')
             self.den_state_2 = tf.keras.layers.Dense(units=self.d_s2, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+            
             self.den_state_final = tf.keras.layers.Dense(units=self.d_sf, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+            self.dropout1 = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout1')
 
         # for BERT-tokenized text
         self.embedding = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding')
+        
         self.cnn_layer1 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='BERT_cnn1')
         self.cnn_layer2 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='BERT_cnn2')
         self.cnn_layer3 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='BERT_cnn3')
-        self.cnn_layer4 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=5, padding='valid', activation='relu', name='BERT_cnn2')
-        self.cnn_layer5 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=6, padding='valid', activation='relu', name='BERT_cnn3')
-        self.pool = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling')
+        self.cnn_layer4 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=5, padding='valid', activation='relu', name='BERT_cnn4')
+        self.cnn_layer5 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=6, padding='valid', activation='relu', name='BERT_cnn5')
+        
+        self.pool1 = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling1')
+        self.pool2 = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling2')
+        self.pool3 = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling3')
+        self.pool4 = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling4')
+        self.pool5 = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling5')
+        
         self.den_text = tf.keras.layers.Dense(units=self.d_t, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+        self.dropout2 = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout2')
 
         # for concatenated layer and output
         self.dense = tf.keras.layers.Dense(units=dnn_units, activation='relu', kernel_regularizer=L2, name='FINAL_dense0')
-        self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
+        self.dropout3 = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout3')
         self.last_dense = tf.keras.layers.Dense(units=self.output_length, activation='sigmoid', name='output') # output layer
 
     def call(self, inputs, training):
@@ -87,25 +97,25 @@ class TEXT_MODEL(tf.keras.Model):
             i_state_den1 = self.den_state_1(i_state_den0)
             i_state_den2 = self.den_state_2(i_state_den1)
             i_state_denFinal = self.den_state_final(i_state_den2)
-            i_state_drop = self.dropout(i_state_denFinal, training)
+            i_state_drop = self.dropout1(i_state_denFinal, training)
 
         # BERT-tokenized text
         i_text_emb = self.embedding(i_text)
         
         i_text_emb_1 = self.cnn_layer1(i_text_emb) 
-        i_text_emb_1 = self.pool(i_text_emb_1) 
+        i_text_emb_1 = self.pool1(i_text_emb_1) 
         i_text_emb_2 = self.cnn_layer2(i_text_emb) 
-        i_text_emb_2 = self.pool(i_text_emb_2)
+        i_text_emb_2 = self.pool2(i_text_emb_2)
         i_text_emb_3 = self.cnn_layer3(i_text_emb)
-        i_text_emb_3 = self.pool(i_text_emb_3)
+        i_text_emb_3 = self.pool3(i_text_emb_3)
         i_text_emb_4 = self.cnn_layer4(i_text_emb) 
-        i_text_emb_4 = self.pool(i_text_emb_4)
+        i_text_emb_4 = self.pool4(i_text_emb_4)
         i_text_emb_5 = self.cnn_layer5(i_text_emb)
-        i_text_emb_5 = self.pool(i_text_emb_5)
+        i_text_emb_5 = self.pool5(i_text_emb_5)
         
         i_text_concat = tf.concat([i_text_emb_1, i_text_emb_2, i_text_emb_3, i_text_emb_4, i_text_emb_5], axis=-1)
         i_text_den = self.den_text(i_text_concat)
-        i_text_drop = self.dropout(i_text_den, training)
+        i_text_drop = self.dropout2(i_text_den, training)
 
         # concatenate embedded info and concatenated BERT-tokenized text
         if useState == True:
@@ -114,7 +124,7 @@ class TEXT_MODEL(tf.keras.Model):
             concatenated = i_text_drop
         
         concatenated = self.dense(concatenated)
-        concatenated = self.dropout(concatenated, training)
+        concatenated = self.dropout3(concatenated, training)
         model_output = self.last_dense(concatenated)
         
         return model_output
@@ -219,16 +229,16 @@ if __name__ == '__main__':
 
     # load training and valid/test data
     print('loading training input...')
-    train_input = RD.loadArray('train_input.txt')
+    train_input = RD.loadArray('train_train_input.txt')
 
     print('loading training output...')
-    train_output = np.array(RD.loadArray('train_output.txt')).astype(float)
+    train_output = np.array(RD.loadArray('train_train_output.txt')).astype(float)
 
     print('loading valid input...')
-    valid_input = RD.loadArray('test_input.txt')
+    valid_input = RD.loadArray('train_valid_input.txt')
 
     print('loading valid output...')
-    valid_output = []
+    valid_output = np.array(RD.loadArray('train_valid_output.txt')).astype(float)
     
     print(' *----- data -----*')
     print(np.shape(train_input))
