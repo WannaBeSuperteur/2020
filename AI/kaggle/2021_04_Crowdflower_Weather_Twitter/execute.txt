@@ -1,0 +1,5 @@
+my_extract.py -> main.py (valid mode) -> rmse.py (to check RMSE) -> main.py (test mode)
+
+If preprocessing of tweet changes,
+run main.py (with "test mode" and 'max_length' should be enoughly large) until train_tokenized.txt and valid_tokenize.txt is created,
+and then run get_tokenized_cols.py to find the number of nonzero columns for tokenized data.
