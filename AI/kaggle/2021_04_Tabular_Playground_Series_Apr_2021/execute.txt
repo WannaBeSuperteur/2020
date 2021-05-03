@@ -1,0 +1,5 @@
+my_extract.py
+-> main_mixed.py (valid mode : valid rate > 0.0)
+-> read_val_report.py (to check loss)
+-> main_mixed.py (test mode : valid rate = 0.0)
+-> write_answer.py
