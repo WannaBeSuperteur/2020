@@ -3,6 +3,7 @@ sys.path.insert(0, '../../AI_BASE')
 import readData as RD
 import numpy as np
 import pandas as pd
+import random
 
 # fn      : name of csv file
 # columns : names of columns to exploit
@@ -13,14 +14,27 @@ import pandas as pd
 # mdopts  : missing data options
 #            0 -> zero
 #            1 -> average
-def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs):
+def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, valid, isValid):
 
-    txtFn = fn[:-4] + '_input.txt'
+    if valid == True:
+        txtFn0 = fn[:-4] + '_train_input.txt'
+    else:
+        txtFn0 = fn[:-4] + '_input.txt'
+        
+    txtFn1 = fn[:-4] + '_valid_input.txt'
+    result_train = []
+    result_valid = []
+        
     data = pd.DataFrame(pd.read_csv(fn))
     rows = len(data)
     cols = len(columns)
-    result = []
     false_val = -1
+
+    # make the valid array
+    if valid == False:
+        isValid = [False]*rows
+
+    assert(rows == len(isValid))
 
     print(data)
     for i in range(cols):
@@ -94,38 +108,58 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs):
             elif options[j] == 2:
                 thisRow.append((np.log(float(cell) + 1.0) - avgs[j]) / stddevs[j])
 
-        result.append(thisRow)
+        if isValid[i] == True:
+            result_valid.append(thisRow)
+        else:
+            result_train.append(thisRow)
 
     print(onehots)
     print(avgs)
     print(stddevs)
 
     # save the file
-    RD.saveArray(txtFn, result, '\t', 500)
+    RD.saveArray(txtFn0, result_train, '\t', 500)
+    
+    if valid == True:
+        RD.saveArray(txtFn1, result_valid, '\t', 500)
 
     return (onehots, avgs, stddevs)
 
-def writeFile(columns, options, mdopts):
+def writeFile(columns, options, mdopts, valid, isValid):
 
     # training data
-    (onehots, avgs, stddevs) = convertToTextFile('train.csv', columns, options, mdopts, None, None, None)
+    (onehots, avgs, stddevs) = convertToTextFile('train.csv', columns, options, mdopts,
+                                                 None, None, None,
+                                                 valid, isValid)
 
     # test data
-    (_, _, _) = convertToTextFile('test.csv', columns, options, mdopts, onehots, avgs, stddevs)
+    (_, _, _) = convertToTextFile('test.csv', columns, options, mdopts,
+                                  onehots, avgs, stddevs,
+                                  False, False)
 
 # write final training output for USEFUL votes
-def writeOutput():
+def writeOutput(valid, isValid):
 
     trainData = np.array(pd.read_csv('train.csv'))
     train_output = []
 
+    if valid == True:
+        valid_output = []
+
     print(trainData)
 
     for i in range(len(trainData)):
-        train_output.append([trainData[i][1]]) # index of 'Survived' is 1
+        if isValid[i] == True:
+            valid_output.append([trainData[i][1]]) # index of 'Survived' is 1
+        else:
+            train_output.append([trainData[i][1]])
 
     # save
-    RD.saveArray('train_output.txt', train_output)
+    if valid == True:
+        RD.saveArray('train_train_output.txt', train_output)
+        RD.saveArray('train_valid_output.txt', valid_output)
+    else:
+        RD.saveArray('train_output.txt', train_output)
 
 if __name__ == '__main__':
 
@@ -151,11 +185,25 @@ if __name__ == '__main__':
     # rows
     train_rows = 100000
     test_rows = 100000
+    valid_rate = 0.1
+
+    isValid = []
+    for i in range(train_rows):
+        isValid.append(False)
+
+    count = 0
+    while count < train_rows * valid_rate:
+        rand = random.randint(0, train_rows - 1)
+
+        if isValid[rand] == False:
+            count += 1
+            isValid[rand] = True
 
     # write info files
     writeFile(['Pclass', 'Sex', 'Age', 'SibSp', 'Parch', 'Fare', 'Embarked'],
               [0, 0, 1, 1, 1, 2, 0],
-              [1, 1, 1, 1, 1, 1, 1])
+              [1, 1, 1, 1, 1, 1, 1],
+              valid_rate > 0, isValid)
     
     # write training output
-    writeOutput()
+    writeOutput(valid_rate > 0, isValid)

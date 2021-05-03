@@ -48,37 +48,14 @@ def designate_val(TRI_array, TRO_array, train_rows, VAL_rate):
 
     return (TRI_, TRO_, VAI_, VAO_)
 
-def create_dataframe(TRI_array, TRO_array, TEI_array,
-                     TEO, TE_report, VAL_rate, VAL_report):
+# create dataframe
+def create_dataframe(TRI_array, TRO_array, TEI_array):
 
-    # length
-    train_rows = len(TRI_array)
-    test_rows = len(TEI_array)
-    train_cols = len(TRI_array[0])
+    TRI_df = pd.DataFrame(np.array(TRI_array).astype(float))
+    TRO_df = pd.DataFrame(np.array(TRO_array).astype(float))
+    TEI_df = pd.DataFrame(np.array(TEI_array).astype(float))
 
-    # TEST
-    if VAL_rate == 0:
-
-        # test : create dataframe
-        TRI_df = pd.DataFrame(np.array(TRI_array).astype(float))
-        TRO_df = pd.DataFrame(np.array(TRO_array).astype(float))
-        TEI_df = pd.DataFrame(np.array(TEI_array).astype(float))
-
-        return (TRI_df, TRO_df, TEI_df, None)
-
-    # VALID
-    else:
-
-        # valid : preparation for the data
-        (TRI_, TRO_, VAI_, VAO_) = designate_val(TRI_array, TRO_array, train_rows, VAL_rate)
-
-        # valid : create dataframe
-        TRI_df = pd.DataFrame(np.array(TRI_).astype(float))
-        TRO_df = pd.DataFrame(np.array(TRO_).astype(float))
-        VAI_df = pd.DataFrame(np.array(VAI_).astype(float))
-        VAO_df = pd.DataFrame(np.array(VAO_).astype(float))
-
-        return (TRI_df, TRO_df, VAI_df, VAO_df)
+    return (TRI_df, TRO_df, TEI_df)
 
 # reference: https://www.kaggle.com/gomes555/tps-mar2021-lightgbm-optuna-opt-data-prep
 #            http://machinelearningkorea.com
@@ -88,22 +65,21 @@ def create_dataframe(TRI_array, TRO_array, TEI_array,
 ##    model 00 : lightGBM     ##
 ##                            ##
 ################################
-def lightGBM(TRI_array, TRO_array, TEI_array, TEO, VAL_rate, count):
+def lightGBM(TRI_array, TRO_array, TEI_array, count):
 
     # create Pandas DataFrame
     # tv_input  : test / validation input
     # tv_output : test / validation output
-    (train_input, train_output, tv_input, tv_output) = create_dataframe(TRI_array, TRO_array, TEI_array, TEO, TE_report, VAL_rate, VAL_report)
+    (train_input, train_output, tv_input) = create_dataframe(TRI_array, TRO_array, TEI_array)
 
     # convert to lightgbm dataset
     train_ds = lgb.Dataset(train_input, label=train_output)
-    test_ds = lgb.Dataset(tv_input, label=tv_output)
 
     # set parameters
     # refer to https://www.kaggle.com/gomes555/tps-mar2021-lightgbm-optuna-opt-data-prep (0.89765)
     params = {'resample': None,
               'boosting': 'gbdt',
-              'num_leaves': 200,
+              'num_leaves': 200 + count,
               'min_child_samples': 32,
               'max_depth': 16,
               'max_delta_step': 8,
@@ -116,31 +92,13 @@ def lightGBM(TRI_array, TRO_array, TEI_array, TEO, VAL_rate, count):
               'metric': 'auc'}
 
     # create model
-    if VAL_rate > 0:
-        model = lgb.train(params, train_ds, 3500, test_ds, verbose_eval=15, early_stopping_rounds=200)
-    else:
-        model = lgb.train(params, train_ds, 6000, train_ds, verbose_eval=20, early_stopping_rounds=200)
+    model = lgb.train(params, train_ds, 4000, train_ds, verbose_eval=20, early_stopping_rounds=200)
 
     # predict
-    predict_train = model.predict(train_input)
     predict_tv = model.predict(tv_input)
     predictions = len(predict_tv)
 
-    # validation mode -> compute RMSE error
-    if VAL_rate > 0:
-        rmse = math.sqrt(mean_squared_error(tv_output, predict_tv))
-        roc_auc = roc_auc_score(tv_output, predict_tv)
-
-        # convert tv_output into list to save
-        tv_output = np.array(tv_output).T
-
-        # save tv_output and predict_tv
-        RD.saveArray('lightGBM_tv_output_' + str(count) + '.txt', tv_output.T)
-        RD.saveArray('lightGBM_tv_predict_' + str(count) + '.txt', np.array([predict_tv]).T)
-        
-        return (rmse, roc_auc)
-
-    return (0, 0)
+    RD.saveArray('lightGBM_tv_predict_' + str(count) + '.txt', np.array([predict_tv]).T)
 
 if __name__ == '__main__':
 
@@ -152,16 +110,22 @@ if __name__ == '__main__':
     # NORMALIZED using avg and stddev of each training input column
 
     # meta info
-    TRI = 'train_input.txt'
-    TRO = 'train_output.txt'
-    TEI = 'test_input.txt'
-    TEO = 'test_output.txt'
-
     TE_real = None
     TE_report = 'report_test.txt'
-    VAL_rate = 0.05
+    VAL_rate = 0.1
     VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
+
+    if VAL_rate > 0: # valid mode
+        TRI = 'train_train_input.txt'
+        TRO = 'train_train_output.txt'
+        TEI = 'train_valid_input.txt'
+        TEO = 'train_valid_predict.txt'
+    else: # test mode
+        TRI = 'train_input.txt'
+        TRO = 'train_output.txt'
+        TEI = 'test_input.txt'
+        TEO = 'test_predict.txt'
 
     # load array
     print('loading training input...')
@@ -184,7 +148,7 @@ if __name__ == '__main__':
     else:
         print('TEST mode')
 
-    times = 1
+    times = 4
     algorithm = 'lightGBM'
 
     # training and test
@@ -196,7 +160,7 @@ if __name__ == '__main__':
             
             DL.deepLearning(TRI, TRO, TEI, TEO[:-4] + '_' + str(i) + '.txt',
                             TE_real, TE_report[:-4] + '_' + str(i) + '.txt',
-                            VAL_rate, VAL_report[:-4] + '_' + str(i) + '.txt',
+                            0, VAL_report[:-4] + '_' + str(i) + '.txt',
                             modelConfig, deviceName, epoch, printed, 'model_' + str(i))
 
         # algorithm 1: lightGBM
@@ -213,8 +177,4 @@ if __name__ == '__main__':
             TEI_array = RD.loadArray(TEI, '\t', UTF8=False, type_='f')
 
             # execute lightGBM
-            (rmse, rocauc) = lightGBM(TRI_array, TRO_array, TEI_array, TEO, VAL_rate, i)
-
-            # write final result (RMSE and ROC-AUC)
-            if VAL_rate > 0.0:
-                RD.saveArray('final_metrics_lgbm_' + str(i) + '.txt', [[rmse, rocauc]], '\t', 500)
+            lightGBM(TRI_array, TRO_array, TEI_array, i)

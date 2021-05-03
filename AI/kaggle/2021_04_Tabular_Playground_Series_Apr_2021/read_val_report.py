@@ -1,65 +1,66 @@
 import numpy as np
 from sklearn.metrics import roc_auc_score
 
+import sys
+sys.path.insert(0, '../../AI_BASE')
+import readData as RD
+
 if __name__ == '__main__':
 
     count = 1
+    algorithm = 'lightGBM'
 
-    for i in range(count):
+    # read file for lightGBM
+    if algorithm == 'lightGBM':
+        fn_out = 'train_valid_output.txt'
+        fl_out = RD.loadArray(fn_out)
+        fl_preds = []
 
-        lightGBM = True
-
-        # read file
-        if lightGBM == True:
-            fn_out = 'lightGBM_tv_output_' + str(i) + '.txt'
+        for i in range(count):
             fn_pred = 'lightGBM_tv_predict_' + str(i) + '.txt'
-            
-            f_out = open(fn_out, 'r')
-            f_pred = open(fn_pred, 'r')
-            
-            fl_out = f_out.readlines()
-            fl_pred = f_pred.readlines()
-            
-            f_out.close()
-            f_pred.close()
+            fl_preds.append(RD.loadArray(fn_pred))
 
-            rows = len(fl_out)-9
+        rows = len(fl_out)
+
+    # read file for basic deep learning
+    elif algorithm == 'deepLearning':
+        fn = 'report_val_' + str(i) + '.txt'
+        f = open(fn, 'r')
+        fl = f.readlines()
+        f.close()
+
+        rows = len(fl)-9
+
+    # extract values
+    pred_array = []
+    real_array = []
+
+    # convert into numeric array
+    fl_preds = np.array(fl_preds).astype(float).T[0]
+        
+    for i in range(rows):
+        if algorithm == 'lightGBM':
+            pred = float(sum(fl_preds[i]) / count)
+            real = float(fl_out[i][0])                
 
         else:
-            fn = 'report_val_' + str(i) + '.txt'
-            f = open(fn, 'r')
-            fl = f.readlines()
-            f.close()
+            pred = float(fl[i].split('[')[2].split(']')[0])
+            real = float(fl[i].split('[')[3].split(']')[0])
 
-            rows = len(fl)-9
+        pred_array.append(pred)
+        real_array.append(real)
 
-        # extract values
-        pred_array = []
-        real_array = []
-        
-        for i in range(rows):
-            if lightGBM == True:
-                pred = float(fl_pred[i])
-                real = float(fl_out[i])                
+    pred_array = np.array(pred_array)
+    real_array = np.array(real_array)
 
-            else:
-                pred = float(fl[i].split('[')[2].split(']')[0])
-                real = float(fl[i].split('[')[3].split(']')[0])
+    for j in range(100):
+        threshold = 0.005 + j * 0.01
 
-            pred_array.append(pred)
-            real_array.append(real)
-
-        pred_array = np.array(pred_array)
-        real_array = np.array(real_array)
-
-        for j in range(100):
-            threshold = 0.005 + j * 0.01
-
-            true_positive = ((pred_array >= threshold) & (real_array >= threshold)).sum()
-            false_positive = ((pred_array < threshold) & (real_array < threshold)).sum()
-            accuracy = (true_positive + false_positive) / rows
+        true_positive = ((pred_array >= threshold) & (real_array >= threshold)).sum()
+        false_positive = ((pred_array < threshold) & (real_array < threshold)).sum()
+        accuracy = (true_positive + false_positive) / rows
             
-            print('accuracy( ' + str(round(threshold, 4)) + ' ) = ' + str(round(accuracy, 6)))
+        print('accuracy( ' + str(round(threshold, 4)) + ' ) = ' + str(round(accuracy, 6)))
             
-        print('RMSE = ' + str(round(np.sqrt(np.mean((np.array(pred_array) - np.array(real_array))**2)), 6)))
-        print('roc-auc = ' + str(round(roc_auc_score(real_array, pred_array), 6)))
+    print('RMSE = ' + str(round(np.sqrt(np.mean((np.array(pred_array) - np.array(real_array))**2)), 6)))
+    print('roc-auc = ' + str(round(roc_auc_score(real_array, pred_array), 6)))
