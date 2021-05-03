@@ -76,23 +76,23 @@ def lightGBM(TRI_array, TRO_array, TEI_array, count):
     train_ds = lgb.Dataset(train_input, label=train_output)
 
     # set parameters
-    # refer to https://www.kaggle.com/gomes555/tps-mar2021-lightgbm-optuna-opt-data-prep (0.89765)
-    params = {'resample': None,
-              'boosting': 'gbdt',
-              'num_leaves': 200 + count,
-              'min_child_samples': 32,
+    # refer to https://www.kaggle.com/hiro5299834/tps-apr-2021-pseudo-labeling-voting-ensemble (0.81722)
+    params = {'metric': 'binary_logloss',
+              'objective': 'binary',
+              'random_state': 2021 + count, # SEED = 2021...
+              'learning_rate': 0.01,
+              'min_child_samples': 150,
+              'reg_alpha': 3e-5,
+              'reg_lambda': 9e-2,
+              'num_leaves': 20,
               'max_depth': 16,
-              'max_delta_step': 8,
-              'reg_alpha': 0.086,
-              'reg_lambda': 9.52,
-              'colsample_bytree': 0.35,
-              'cat_smooth': 82,
-              'cat_l2': 12,
-              'learning_rate': 0.005, # modified
-              'metric': 'auc'}
+              'colsample_bytree': 0.8,
+              'subsample': 0.8,
+              'subsample_freq': 2,
+              'max_bin': 240}
 
     # create model
-    model = lgb.train(params, train_ds, 4000, train_ds, verbose_eval=20, early_stopping_rounds=200)
+    model = lgb.train(params, train_ds, 6000, train_ds, verbose_eval=20, early_stopping_rounds=200)
 
     # predict
     predict_tv = model.predict(tv_input)
