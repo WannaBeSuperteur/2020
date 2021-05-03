@@ -7,23 +7,40 @@ import readData as RD
 
 if __name__ == '__main__':
 
-    count = 1
-    algorithm = 'lightGBM'
+    count_lightGBM = 4
+    count_DecisionTree = 4
+    count_deepLearning = 0
+    count = 0
+
+    # do not use both deepLearning and other algorithm(s)
+    assert(count_deepLearning == 0 or count_lightGBM + count_DecisionTree == 0)
+
+    fn_out = 'train_valid_output.txt'
+    fl_out = RD.loadArray(fn_out)
+    fl_preds = []
 
     # read file for lightGBM
-    if algorithm == 'lightGBM':
-        fn_out = 'train_valid_output.txt'
-        fl_out = RD.loadArray(fn_out)
-        fl_preds = []
+    for i in range(count_lightGBM):
+        count += 1
 
-        for i in range(count):
-            fn_pred = 'lightGBM_tv_predict_' + str(i) + '.txt'
-            fl_preds.append(RD.loadArray(fn_pred))
+        fn_pred = 'lightGBM_tv_predict_' + str(i) + '.txt'
+        fl_preds.append(RD.loadArray(fn_pred))
+
+        rows = len(fl_out)
+
+    # read file for Decision Tree
+    for i in range(count_DecisionTree):
+        count += 1
+
+        fn_pred = 'DecisionTree_tv_predict_' + str(i) + '.txt'
+        fl_preds.append(RD.loadArray(fn_pred))
 
         rows = len(fl_out)
 
     # read file for basic deep learning
-    elif algorithm == 'deepLearning':
+    for i in range(count_deepLearning):
+        count += 1
+        
         fn = 'report_val_' + str(i) + '.txt'
         f = open(fn, 'r')
         fl = f.readlines()
@@ -39,7 +56,7 @@ if __name__ == '__main__':
     fl_preds = np.array(fl_preds).astype(float).T[0]
         
     for i in range(rows):
-        if algorithm == 'lightGBM':
+        if count_deepLearning == 0:
             pred = float(sum(fl_preds[i]) / count)
             real = float(fl_out[i][0])                
 
@@ -54,7 +71,7 @@ if __name__ == '__main__':
     real_array = np.array(real_array)
 
     for j in range(100):
-        threshold = 0.005 + j * 0.01
+        threshold = 0.50025 + j * 0.005
 
         true_positive = ((pred_array >= threshold) & (real_array >= threshold)).sum()
         false_positive = ((pred_array < threshold) & (real_array < threshold)).sum()

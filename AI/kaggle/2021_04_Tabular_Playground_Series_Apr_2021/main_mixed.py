@@ -10,6 +10,7 @@ import readData as RD
 import deepLearning_main as DL
 
 import lightgbm as lgb
+from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.metrics import mean_squared_error, r2_score, roc_auc_score
 
 # designate data to validate
@@ -92,13 +93,43 @@ def lightGBM(TRI_array, TRO_array, TEI_array, count):
               'max_bin': 240}
 
     # create model
-    model = lgb.train(params, train_ds, 6000, train_ds, verbose_eval=20, early_stopping_rounds=200)
+    model = lgb.train(params, train_ds, 2000, train_ds, verbose_eval=20, early_stopping_rounds=200)
 
     # predict
     predict_tv = model.predict(tv_input)
     predictions = len(predict_tv)
 
     RD.saveArray('lightGBM_tv_predict_' + str(count) + '.txt', np.array([predict_tv]).T)
+
+################################
+##                            ##
+##  model 01 : DecisionTree   ##
+##                            ##
+################################
+def DecisionTree(TRI_array, TRO_array, TEI_array, count):
+
+    # create Pandas DataFrame
+    # tv_input  : test / validation input
+    # tv_output : test / validation output
+    (train_input, train_output, tv_input) = create_dataframe(TRI_array, TRO_array, TEI_array)
+
+    # convert to lightgbm dataset
+    train_ds = lgb.Dataset(train_input, label=train_output)
+
+    # set parameters and create model
+    # refer to https://www.kaggle.com/hiro5299834/tps-apr-2021-pseudo-labeling-voting-ensemble (0.81722)
+    model = DecisionTreeClassifier(
+        max_depth = 3 + count % 2,
+        min_samples_leaf = 2 + count // 2,
+        random_state = 2021 + count
+    )
+    model.fit(train_input, train_output)
+
+    # predict
+    predict_tv = model.predict(tv_input)
+    predictions = len(predict_tv)
+
+    RD.saveArray('DecisionTree_tv_predict_' + str(count) + '.txt', np.array([predict_tv]).T)
 
 if __name__ == '__main__':
 
@@ -149,14 +180,14 @@ if __name__ == '__main__':
         print('TEST mode')
 
     times = 4
-    algorithm = 'lightGBM'
+    algorithm = 'lightGBM DecisionTree'
 
     # training and test
     # 'config.txt' is used for configuration
     for i in range(times):
 
         # algorithm 0: basic deep learning
-        if algorithm == 'deepLearning':
+        if 'deepLearning' in algorithm:
             
             DL.deepLearning(TRI, TRO, TEI, TEO[:-4] + '_' + str(i) + '.txt',
                             TE_real, TE_report[:-4] + '_' + str(i) + '.txt',
@@ -164,7 +195,7 @@ if __name__ == '__main__':
                             modelConfig, deviceName, epoch, printed, 'model_' + str(i))
 
         # algorithm 1: lightGBM
-        elif algorithm == 'lightGBM':
+        if 'lightGBM' in algorithm:
 
             # load array
             print('loading training input...')
@@ -178,3 +209,19 @@ if __name__ == '__main__':
 
             # execute lightGBM
             lightGBM(TRI_array, TRO_array, TEI_array, i)
+
+        # algorithm 2: DecisionTree
+        if 'DecisionTree' in algorithm:
+            
+            # load array
+            print('loading training input...')
+            TRI_array = RD.loadArray(TRI, '\t', UTF8=False, type_='f')
+    
+            print('loading training output...')
+            TRO_array = RD.loadArray(TRO, '\t', UTF8=False, type_='f')
+    
+            print('loading test input...')
+            TEI_array = RD.loadArray(TEI, '\t', UTF8=False, type_='f')
+
+            # execute lightGBM
+            DecisionTree(TRI_array, TRO_array, TEI_array, i)
