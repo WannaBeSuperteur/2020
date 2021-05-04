@@ -4,6 +4,7 @@ import readData as RD
 import numpy as np
 import pandas as pd
 import random
+import re
 
 # fn      : name of csv file
 # columns : names of columns to exploit
@@ -81,8 +82,8 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
                 onehots.append(None)
 
     # append to result
-    # yyyy-mm-dd to numeric value
     for i in range(rows):
+        if i % 1000 == 0: print(i)
         
         thisRow = []
         
@@ -108,6 +109,45 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
             elif options[j] == 2:
                 thisRow.append((np.log(float(cell) + 1.0) - avgs[j]) / stddevs[j])
 
+        # reference: https://www.kaggle.com/jeongyoonlee/dae-with-2-lines-of-code-with-kaggler
+
+        # family size
+        familySize = data.at[i, 'SibSp'] + data.at[i, 'Parch']
+        thisRow.append(familySize - 1)
+
+        # ticket No.
+        ticket = str(data.at[i, 'Ticket'])
+        ticket_alp = re.sub('[^A-Z]', '', ticket)
+        ticket_num = re.sub('[^0-9]', '', ticket)
+            
+        if ticket_alp == 'CA':
+            thisRow += [1, false_val, false_val, false_val, false_val, false_val, false_val]
+        elif ticket_alp == 'A':
+            thisRow += [false_val, 1, false_val, false_val, false_val, false_val, false_val]
+        elif ticket_alp == 'AS':
+            thisRow += [false_val, false_val, 1, false_val, false_val, false_val, false_val]
+        elif ticket_alp == 'PC':
+            thisRow += [false_val, false_val, false_val, 1, false_val, false_val, false_val]
+        elif ticket_alp == 'WC':
+            thisRow += [false_val, false_val, false_val, false_val, 1, false_val, false_val]
+        elif ticket_alp == '':
+            thisRow += [false_val, false_val, false_val, false_val, false_val, 1, false_val]
+        else:
+            thisRow += [false_val, false_val, false_val, false_val, false_val, false_val, 1]
+
+        try:
+            ticket_num = int(ticket_num)
+                
+            if ticket_num < 100000:
+                thisRow += [1, false_val, false_val, false_val]
+            elif ticket_num < 1000000:
+                thisRow += [false_val, 1, false_val, false_val]
+            else:
+                thisRow += [false_val, false_val, 1, false_val]
+        except:
+            thisRow += [false_val, false_val, false_val, 1]
+
+        # finally append
         if isValid[i] == True:
             result_valid.append(thisRow)
         else:

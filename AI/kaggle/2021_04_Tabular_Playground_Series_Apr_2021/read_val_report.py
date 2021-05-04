@@ -71,15 +71,15 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_deepLearning, 
 
 if __name__ == '__main__':
 
-    count_lightGBM = 4
-    count_DecisionTree = 4
+    count_lightGBM = 0
+    count_DecisionTree = 1
     count_deepLearning = 0
     fn_out = 'train_valid_output.txt'
 
     (rows, pred_array, real_array) = getPredAndRealArray(count_lightGBM, count_DecisionTree, count_deepLearning, fn_out)
 
     for j in range(100):
-        threshold = 0.50025 + j * 0.005
+        threshold = 0.005 + j * 0.01
 
         true_positive = ((pred_array >= threshold) & (real_array >= threshold)).sum()
         false_positive = ((pred_array < threshold) & (real_array < threshold)).sum()

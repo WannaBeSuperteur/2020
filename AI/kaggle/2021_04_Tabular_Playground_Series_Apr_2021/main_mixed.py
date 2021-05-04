@@ -179,7 +179,7 @@ if __name__ == '__main__':
     else:
         print('TEST mode')
 
-    times = 4
+    times = 1
     algorithm = 'lightGBM DecisionTree'
 
     # training and test
