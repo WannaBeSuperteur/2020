@@ -42,4 +42,4 @@ def useAdvancedModels():
 
 if __name__ == '__main__':         
     useAdvancedModels()
-    useTestOutput('final_test_output.txt', 0.75)
+    useTestOutput('final_test_output.txt', 0.5)

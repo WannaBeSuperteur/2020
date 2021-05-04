@@ -119,22 +119,18 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
         ticket = str(data.at[i, 'Ticket'])
         ticket_alp = re.sub('[^A-Z]', '', ticket)
         ticket_num = re.sub('[^0-9]', '', ticket)
-            
-        if ticket_alp == 'CA':
-            thisRow += [1, false_val, false_val, false_val, false_val, false_val, false_val]
-        elif ticket_alp == 'A':
-            thisRow += [false_val, 1, false_val, false_val, false_val, false_val, false_val]
-        elif ticket_alp == 'AS':
-            thisRow += [false_val, false_val, 1, false_val, false_val, false_val, false_val]
-        elif ticket_alp == 'PC':
-            thisRow += [false_val, false_val, false_val, 1, false_val, false_val, false_val]
-        elif ticket_alp == 'WC':
-            thisRow += [false_val, false_val, false_val, false_val, 1, false_val, false_val]
-        elif ticket_alp == '':
-            thisRow += [false_val, false_val, false_val, false_val, false_val, 1, false_val]
-        else:
-            thisRow += [false_val, false_val, false_val, false_val, false_val, false_val, 1]
 
+        # ticket No. -> alphabet part
+        ticket_alp_map = {'CA':0, 'A':1, 'AS':2, 'PC':3, 'WC':4, '':5}
+        toAdd_t = [false_val, false_val, false_val, false_val, false_val,
+                   false_val, false_val]
+        try:
+            toAdd_t[ticket_alp_map[ticket_alp]] = 1
+        except:
+            toAdd_t[6] = 1
+        thisRow += toAdd_t
+
+        # ticket No. -> number part
         try:
             ticket_num = int(ticket_num)
                 
@@ -146,6 +142,20 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
                 thisRow += [false_val, false_val, 1, false_val]
         except:
             thisRow += [false_val, false_val, false_val, 1]
+
+        # cabin No.
+        cabin = str(data.at[i, 'Cabin'])
+        cabin_alp = cabin[0]
+
+        # cabin No. -> alphabet part
+        cabin_alp_map = {'A':0, 'B':1, 'C':2, 'D':3, 'E':4, 'F':5, 'G':6, 'T':7, 'X':8}
+        toAdd_c = [false_val, false_val, false_val, false_val, false_val,
+                   false_val, false_val, false_val, false_val, false_val]
+        try:
+            toAdd_c[cabin_alp_map[cabin_alp]] = 1
+        except:
+            toAdd_c[9] = 1
+        thisRow += toAdd_c
 
         # finally append
         if isValid[i] == True:
@@ -225,7 +235,7 @@ if __name__ == '__main__':
     # rows
     train_rows = 100000
     test_rows = 100000
-    valid_rate = 0.0
+    valid_rate = 0.1
 
     isValid = []
     for i in range(train_rows):

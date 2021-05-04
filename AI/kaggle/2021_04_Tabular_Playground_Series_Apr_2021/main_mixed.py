@@ -116,9 +116,10 @@ def DecisionTree(TRI_array, TRO_array, TEI_array, count):
 
     # set parameters and create model
     # refer to https://www.kaggle.com/hiro5299834/tps-apr-2021-pseudo-labeling-voting-ensemble (0.81722)
+    #          https://www.kaggle.com/remekkinas/ensemble-learning-meta-classifier-for-stacking (0.81692)
     model = DecisionTreeClassifier(
-        max_depth = 3 + count % 2,
-        min_samples_leaf = 2 + count // 2,
+        max_depth = 12 + count % 2,
+        min_samples_leaf = 6 + count // 2,
         random_state = 2021 + count
     )
     model.fit(train_input, train_output)
@@ -169,7 +170,7 @@ if __name__ == '__main__':
     # meta info
     TE_real = None
     TE_report = 'report_test.txt'
-    VAL_rate = 0.0
+    VAL_rate = 0.1
     VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
 
@@ -205,8 +206,8 @@ if __name__ == '__main__':
     else:
         print('TEST mode')
 
-    times = 4
-    algorithm = 'lightGBM XGBoost'
+    times = 1
+    algorithm = 'lightGBM DecisionTree XGBoost'
 
     # training and test
     # 'config.txt' is used for configuration
