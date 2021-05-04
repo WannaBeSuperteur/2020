@@ -5,12 +5,12 @@ import sys
 sys.path.insert(0, '../../AI_BASE')
 import readData as RD
 
-def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_deepLearning, fn_out):
+def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count_deepLearning, fn_out):
     
     count = 0
 
     # do not use both deepLearning and other algorithm(s)
-    assert(count_deepLearning == 0 or count_lightGBM + count_DecisionTree == 0)
+    assert(count_deepLearning == 0 or count_lightGBM + count_DecisionTree + count_XGBoost == 0)
 
     if fn_out != None:
         fl_out = RD.loadArray(fn_out)
@@ -29,6 +29,13 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_deepLearning, 
         count += 1
 
         fn_pred = 'DecisionTree_tv_predict_' + str(i) + '.txt'
+        fl_preds.append(RD.loadArray(fn_pred))
+
+    # read file for XGBoost
+    for i in range(count_XGBoost):
+        count += 1
+
+        fn_pred = 'XGBoost_tv_predict_' + str(i) + '.txt'
         fl_preds.append(RD.loadArray(fn_pred))
 
     # read file for basic deep learning
@@ -71,12 +78,16 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_deepLearning, 
 
 if __name__ == '__main__':
 
-    count_lightGBM = 0
-    count_DecisionTree = 1
+    count_lightGBM = 4
+    count_DecisionTree = 0
+    count_XGBoost = 4
     count_deepLearning = 0
     fn_out = 'train_valid_output.txt'
 
-    (rows, pred_array, real_array) = getPredAndRealArray(count_lightGBM, count_DecisionTree, count_deepLearning, fn_out)
+    (rows, pred_array, real_array) = getPredAndRealArray(count_lightGBM,
+                                                         count_DecisionTree,
+                                                         count_XGBoost,
+                                                         count_deepLearning, fn_out)
 
     for j in range(100):
         threshold = 0.005 + j * 0.01

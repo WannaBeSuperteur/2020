@@ -27,12 +27,14 @@ def useTestOutput(fn, threshold):
     RD.saveArray('to_submit.txt', finalResult)
 
 def useAdvancedModels():
-    count_lightGBM = 1
-    count_DecisionTree = 1
+    count_lightGBM = 4
+    count_DecisionTree = 0
+    count_XGBoost = 4
     count_deepLearning = 0
 
     pred_array = read_val_report.getPredAndRealArray(count_lightGBM,
                                                      count_DecisionTree,
+                                                     count_XGBoost,
                                                      count_deepLearning,
                                                      None)
 

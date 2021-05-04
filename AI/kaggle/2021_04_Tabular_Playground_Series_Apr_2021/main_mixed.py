@@ -9,6 +9,7 @@ import numpy as np
 import readData as RD
 import deepLearning_main as DL
 
+import xgboost as xgb
 import lightgbm as lgb
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
 from sklearn.metrics import mean_squared_error, r2_score, roc_auc_score
@@ -113,9 +114,6 @@ def DecisionTree(TRI_array, TRO_array, TEI_array, count):
     # tv_output : test / validation output
     (train_input, train_output, tv_input) = create_dataframe(TRI_array, TRO_array, TEI_array)
 
-    # convert to lightgbm dataset
-    train_ds = lgb.Dataset(train_input, label=train_output)
-
     # set parameters and create model
     # refer to https://www.kaggle.com/hiro5299834/tps-apr-2021-pseudo-labeling-voting-ensemble (0.81722)
     model = DecisionTreeClassifier(
@@ -127,9 +125,37 @@ def DecisionTree(TRI_array, TRO_array, TEI_array, count):
 
     # predict
     predict_tv = model.predict(tv_input)
-    predictions = len(predict_tv)
 
     RD.saveArray('DecisionTree_tv_predict_' + str(count) + '.txt', np.array([predict_tv]).T)
+
+################################
+##                            ##
+##     model 02 : XGBoost     ##
+##                            ##
+################################
+def XGBoost(TRI_array, TRO_array, TEI_array, count):
+
+    # create Pandas DataFrame
+    # tv_input  : test / validation input
+    # tv_output : test / validation output
+    (train_input, train_output, tv_input) = create_dataframe(TRI_array, TRO_array, TEI_array)
+
+    # set parameters and create model
+    # refer to https://www.datacamp.com/community/tutorials/xgboost-in-python
+    params = {"objective":"reg:linear",'colsample_bytree': 0.3,'learning_rate': 0.1,
+                'max_depth': 5, 'alpha': 10}
+
+    model = xgb.XGBRegressor(objective ='reg:linear', colsample_bytree = 0.3,
+                             learning_rate = 0.1,
+                             max_depth = 5,
+                             alpha = 10, n_estimators = 10)
+
+    model.fit(train_input, train_output)
+
+    # predict
+    predict_tv = model.predict(tv_input)
+    
+    RD.saveArray('XGBoost_tv_predict_' + str(count) + '.txt', np.array([predict_tv]).T)
 
 if __name__ == '__main__':
 
@@ -179,12 +205,22 @@ if __name__ == '__main__':
     else:
         print('TEST mode')
 
-    times = 1
-    algorithm = 'lightGBM DecisionTree'
+    times = 4
+    algorithm = 'lightGBM XGBoost'
 
     # training and test
     # 'config.txt' is used for configuration
     for i in range(times):
+
+        # load array
+        print('loading training input...')
+        TRI_array = RD.loadArray(TRI, '\t', UTF8=False, type_='f')
+    
+        print('loading training output...')
+        TRO_array = RD.loadArray(TRO, '\t', UTF8=False, type_='f')
+    
+        print('loading test input...')
+        TEI_array = RD.loadArray(TEI, '\t', UTF8=False, type_='f')
 
         # algorithm 0: basic deep learning
         if 'deepLearning' in algorithm:
@@ -197,31 +233,17 @@ if __name__ == '__main__':
         # algorithm 1: lightGBM
         if 'lightGBM' in algorithm:
 
-            # load array
-            print('loading training input...')
-            TRI_array = RD.loadArray(TRI, '\t', UTF8=False, type_='f')
-    
-            print('loading training output...')
-            TRO_array = RD.loadArray(TRO, '\t', UTF8=False, type_='f')
-    
-            print('loading test input...')
-            TEI_array = RD.loadArray(TEI, '\t', UTF8=False, type_='f')
-
             # execute lightGBM
             lightGBM(TRI_array, TRO_array, TEI_array, i)
 
         # algorithm 2: DecisionTree
         if 'DecisionTree' in algorithm:
             
-            # load array
-            print('loading training input...')
-            TRI_array = RD.loadArray(TRI, '\t', UTF8=False, type_='f')
-    
-            print('loading training output...')
-            TRO_array = RD.loadArray(TRO, '\t', UTF8=False, type_='f')
-    
-            print('loading test input...')
-            TEI_array = RD.loadArray(TEI, '\t', UTF8=False, type_='f')
+            # execute DecisionTree
+            DecisionTree(TRI_array, TRO_array, TEI_array, i)
+
+        # algorithm 3: XGBoost
+        if 'XGBoost' in algorithm:
 
             # execute lightGBM
-            DecisionTree(TRI_array, TRO_array, TEI_array, i)
+            XGBoost(TRI_array, TRO_array, TEI_array, i)
