@@ -157,6 +157,24 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
             toAdd_c[9] = 1
         thisRow += toAdd_c
 
+        # name -> First Name, Last Name -> first letter for each name
+        name = str(data.at[i, 'Name'])
+        firstName = name.split(', ')[0]
+        lastName = name.split(', ')[1]
+        firstNameInitial = firstName[0]
+        lastNameInitial = lastName[0]
+
+        # mapping : letter -> numeric value
+        mapping = {'A':-1.2, 'B':-1.1, 'C':-1.0, 'D':-0.9, 'E':-0.8,
+                   'F':-0.7, 'G':-0.6, 'H':-0.5, 'I':-0.4, 'J':-0.3,
+                   'K':-0.2, 'L':-0.1, 'M':0.0, 'N':0.1, 'O':0.2,
+                   'P':0.3, 'Q':0.4, 'R':0.5, 'S':0.6, 'T':0.7,
+                   'U':0.8, 'V':0.9, 'W':1.0, 'X':1.1, 'Y':1.2,
+                   'Z':1.3}
+
+        thisRow.append(mapping[firstNameInitial])
+        thisRow.append(mapping[lastNameInitial])
+
         # finally append
         if isValid[i] == True:
             result_valid.append(thisRow)
