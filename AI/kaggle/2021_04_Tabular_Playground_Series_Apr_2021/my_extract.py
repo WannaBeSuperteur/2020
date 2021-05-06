@@ -235,7 +235,7 @@ if __name__ == '__main__':
     # rows
     train_rows = 100000
     test_rows = 100000
-    valid_rate = 0.0
+    valid_rate = float(RD.loadArray('val_rate.txt')[0][0])
 
     isValid = []
     for i in range(train_rows):

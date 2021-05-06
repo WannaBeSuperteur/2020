@@ -170,7 +170,7 @@ if __name__ == '__main__':
     # meta info
     TE_real = None
     TE_report = 'report_test.txt'
-    VAL_rate = 0.0
+    VAL_rate = float(RD.loadArray('val_rate.txt')[0][0])
     VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
 
