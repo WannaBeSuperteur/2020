@@ -5,13 +5,11 @@ import sys
 sys.path.insert(0, '../../AI_BASE')
 import readData as RD
 
-def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count_deepLearning, fn_out):
+def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count_deepLearning, fn_out, valid):
     
     count = 0
 
     # do not use both deepLearning and other algorithm(s)
-    assert(count_deepLearning == 0 or count_lightGBM + count_DecisionTree + count_XGBoost == 0)
-
     if fn_out != None:
         fl_out = RD.loadArray(fn_out)
 
@@ -42,10 +40,12 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count
     for i in range(count_deepLearning):
         count += 1
         
-        fn = 'report_val_' + str(i) + '.txt'
-        f = open(fn, 'r')
-        fl = f.readlines()
-        f.close()
+        if valid == True:
+            fn_pred = 'train_valid_predict_' + str(i) + '.txt'
+        else:
+            fn_pred = 'test_predict_' + str(i) + '.txt'
+
+        fl_preds.append(np.array(RD.loadArray(fn_pred))[:, 0:1])
 
     # extract values
     pred_array = []
@@ -57,13 +57,8 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count
     rows = len(fl_preds)
         
     for i in range(rows):
-        if count_deepLearning == 0:
-            pred = float(sum(fl_preds[i]) / count)
-            if fn_out != None: real = float(fl_out[i][0])                
-
-        else:
-            pred = float(fl[i].split('[')[2].split(']')[0])
-            if fn_out != None: real = float(fl[i].split('[')[3].split(']')[0])
+        pred = float(sum(fl_preds[i]) / count)
+        if fn_out != None: real = float(fl_out[i][0])                
 
         pred_array.append(pred)
         if fn_out != None: real_array.append(real)
@@ -81,13 +76,14 @@ if __name__ == '__main__':
     count_lightGBM = 1
     count_DecisionTree = 0
     count_XGBoost = 1
-    count_deepLearning = 0
+    count_deepLearning = 1
     fn_out = 'train_valid_output.txt'
+    valid = True
 
     (rows, pred_array, real_array) = getPredAndRealArray(count_lightGBM,
                                                          count_DecisionTree,
                                                          count_XGBoost,
-                                                         count_deepLearning, fn_out)
+                                                         count_deepLearning, fn_out, valid)
 
     for j in range(100):
         threshold = 0.005 + j * 0.01

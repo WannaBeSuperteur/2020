@@ -235,7 +235,7 @@ if __name__ == '__main__':
     # rows
     train_rows = 100000
     test_rows = 100000
-    valid_rate = 0.1
+    valid_rate = 0.0
 
     isValid = []
     for i in range(train_rows):

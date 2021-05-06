@@ -1,0 +1,12 @@
+I 35
+D 400 relu
+BN
+D 400 relu
+BN
+D 400 relu
+BN
+D 400 relu
+BN
+D 400 relu
+DO sigmoid
+OP adam0 0.001
