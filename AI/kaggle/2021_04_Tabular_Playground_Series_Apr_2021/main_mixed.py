@@ -197,7 +197,7 @@ if __name__ == '__main__':
 
     # user data
     deviceName = input('device name (for example, cpu:0 or gpu:0)')
-    epoch = int(input('epoch'))
+    epoch = 8
     printed = int(input('printed? (0 -> do not print)'))
 
     # print mode
@@ -206,8 +206,8 @@ if __name__ == '__main__':
     else:
         print('TEST mode')
 
-    times = 1
-    algorithm = 'lightGBM XGBoost deepLearning'
+    times = 4
+    algorithm = 'lightGBM XGBoost deepLearning DecisionTree'
 
     # training and test
     # 'config.txt' is used for configuration

@@ -73,26 +73,56 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count
 
 if __name__ == '__main__':
 
-    count_lightGBM = 0
-    count_DecisionTree = 0
-    count_XGBoost = 1
-    count_deepLearning = 0
+    count_lightGBM     = [1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 1, 2, 4, 1, 2, 4]
+    count_DecisionTree = [0, 1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1, 2, 4]
+    count_XGBoost      = [0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 1, 2, 4, 1, 2, 4]
+    count_deepLearning = [0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 4, 1, 2, 4, 1, 2, 4]
+    
     fn_out = 'train_valid_output.txt'
     valid = True
 
-    (rows, pred_array, real_array) = getPredAndRealArray(count_lightGBM,
-                                                         count_DecisionTree,
-                                                         count_XGBoost,
-                                                         count_deepLearning, fn_out, valid)
+    assert(len(count_lightGBM) == len(count_DecisionTree))
+    assert(len(count_lightGBM) == len(count_XGBoost))
+    assert(len(count_lightGBM) == len(count_deepLearning))
 
-    for j in range(100):
-        threshold = 0.005 + j * 0.01
+    # count_lightGBM, count_DecisionTree, count_XGBoost, count_deepLearning
+    # max_accuracy, max_accuracy_at, RMSE and roc_auc
+    info = []
 
-        true_positive = ((pred_array >= threshold) & (real_array >= threshold)).sum()
-        false_positive = ((pred_array < threshold) & (real_array < threshold)).sum()
-        accuracy = (true_positive + false_positive) / rows
-            
-        print('accuracy( ' + str(round(threshold, 4)) + ' ) = ' + str(round(accuracy, 6)))
-            
-    print('RMSE = ' + str(round(np.sqrt(np.mean((np.array(pred_array) - np.array(real_array))**2)), 6)))
-    print('roc-auc = ' + str(round(roc_auc_score(real_array, pred_array), 6)))
+    for i in range(len(count_lightGBM)):
+
+        # max accuracy
+        (rows, pred_array, real_array) = getPredAndRealArray(count_lightGBM[i],
+                                                             count_DecisionTree[i],
+                                                             count_XGBoost[i],
+                                                             count_deepLearning[i], fn_out, valid)
+
+        max_accuracy = 0
+        max_accuracy_at = 0.0
+
+        for j in range(100):
+            threshold = 0.005 + j * 0.01
+
+            true_positive = ((pred_array >= threshold) & (real_array >= threshold)).sum()
+            false_positive = ((pred_array < threshold) & (real_array < threshold)).sum()
+            accuracy = (true_positive + false_positive) / rows
+                
+            print('accuracy( ' + str(round(threshold, 4)) + ' ) = ' + str(round(accuracy, 6)))
+
+            # update max_accuracy
+            if accuracy > max_accuracy:
+                max_accuracy = accuracy
+                max_accuracy_at = threshold
+
+        # RMSE and roc_auc
+        RMSE = np.sqrt(np.mean((np.array(pred_array) - np.array(real_array))**2))
+        roc_auc = roc_auc_score(real_array, pred_array)
+        
+        print('RMSE = ' + str(round(RMSE, 6)))
+        print('roc-auc = ' + str(round(roc_auc, 6)))
+
+        info.append([count_lightGBM[i], count_DecisionTree[i], count_XGBoost[i], count_deepLearning[i],
+                     round(max_accuracy, 4), round(max_accuracy_at, 4), round(RMSE, 4), round(roc_auc, 4)])
+
+    # save info
+    RD.saveArray('valid_info.txt', info)
