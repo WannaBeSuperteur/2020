@@ -73,10 +73,10 @@ def getPredAndRealArray(count_lightGBM, count_DecisionTree, count_XGBoost, count
 
 if __name__ == '__main__':
 
-    count_lightGBM     = [1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 1, 2, 4, 1, 2, 4]
-    count_DecisionTree = [0, 1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 0, 0, 0, 0, 1, 2, 4]
-    count_XGBoost      = [0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 4, 0, 1, 2, 4, 1, 2, 4]
-    count_deepLearning = [0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 4, 1, 2, 4, 1, 2, 4]
+    count_lightGBM     = [1, 0, 0, 0, 1, 1]
+    count_DecisionTree = [0, 1, 0, 0, 0, 1]
+    count_XGBoost      = [0, 0, 1, 0, 1, 1]
+    count_deepLearning = [0, 0, 0, 1, 1, 1]
     
     fn_out = 'train_valid_output.txt'
     valid = True

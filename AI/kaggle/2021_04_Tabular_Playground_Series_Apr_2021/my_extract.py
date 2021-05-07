@@ -82,27 +82,6 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
             else:
                 onehots.append(None)
 
-    # set of first, last name
-    firstNames = []
-    lastNames = []
-    firstNameCount = {}
-    lastNameCount = {}
-    
-    for i in range(rows):
-        names = data.at[i, 'Name'].split(', ')
-        firstName = names[0]
-        lastName = names[1]
-
-        try:
-            firstNameCount[firstName] += 1
-        except:
-            firstNameCount[firstName] = 1
-
-        try:
-            lastNameCount[lastName] += 1
-        except:
-            lastNameCount[lastName] = 1
-
     # append to result
     for i in range(rows):
         if i % 1000 == 0: print(i)
@@ -140,30 +119,18 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
         # ticket No.
         ticket = str(data.at[i, 'Ticket'])
         ticket_alp = re.sub('[^A-Z]', '', ticket)
-        ticket_num = re.sub('[^0-9]', '', ticket)
-
+        
         # ticket No. -> alphabet part
-        ticket_alp_map = {'CA':0, 'A':1, 'AS':2, 'PC':3, 'WC':4, '':5}
+        ticket_alp_map = {'CA':0, 'A':1, 'AS':2, 'PC':3, 'WC':4, 'PP':5,
+                          'SCAH':6, 'SCPARIS':7, 'C':8, 'FCC':9, 'C':10, '':11}
         toAdd_t = [false_val, false_val, false_val, false_val, false_val,
-                   false_val, false_val]
+                   false_val, false_val, false_val, false_val, false_val,
+                   false_val, false_val, false_val]
         try:
             toAdd_t[ticket_alp_map[ticket_alp]] = 1
         except:
-            toAdd_t[6] = 1
+            toAdd_t[12] = 1
         thisRow += toAdd_t
-
-        # ticket No. -> number part
-        try:
-            ticket_num = int(ticket_num)
-                
-            if ticket_num < 100000:
-                thisRow += [1, false_val, false_val, false_val]
-            elif ticket_num < 1000000:
-                thisRow += [false_val, 1, false_val, false_val]
-            else:
-                thisRow += [false_val, false_val, 1, false_val]
-        except:
-            thisRow += [false_val, false_val, false_val, 1]
 
         # cabin No.
         cabin = str(data.at[i, 'Cabin'])
@@ -178,18 +145,6 @@ def convertToTextFile(fn, columns, options, mdopts, onehots, avgs, stddevs, vali
         except:
             toAdd_c[9] = 1
         thisRow += toAdd_c
-
-        # name -> First Name, Last Name -> count for each name
-        name = str(data.at[i, 'Name'])
-        firstName = name.split(', ')[0]
-        lastName = name.split(', ')[1]
-
-        # count for each first/last name
-        firstNameCnt = firstNameCount[firstName]
-        lastNameCnt = lastNameCount[lastName]
-
-        thisRow.append((math.log(firstNameCnt) - 2.5) / 2.0)
-        thisRow.append((math.log(lastNameCnt) - 5.0) / 1.5)
 
         # finally append
         if isValid[i] == True:
