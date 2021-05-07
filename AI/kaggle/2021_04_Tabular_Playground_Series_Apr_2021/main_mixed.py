@@ -206,8 +206,8 @@ if __name__ == '__main__':
     else:
         print('TEST mode')
 
-    times = 4
-    algorithm = 'lightGBM XGBoost deepLearning DecisionTree'
+    times = 1
+    algorithm = 'lightGBM XGBoost deepLearning'
 
     # training and test
     # 'config.txt' is used for configuration
