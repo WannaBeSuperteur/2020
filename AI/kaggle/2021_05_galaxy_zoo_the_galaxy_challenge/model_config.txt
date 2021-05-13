@@ -1,14 +1,14 @@
 FI
-R2 54 54
-C2D 64 3 3 relu
+R2 47 47
+C2D 128 3 3 relu
+Dropout 0.25
+C2D 96 3 3 relu
+MP2D 2
+C2D 96 3 3 relu
 Dropout 0.25
 C2D 64 3 3 relu
 MP2D 2
 C2D 64 3 3 relu
-Dropout 0.25
-C2D 32 3 3 relu
-MP2D 2
-C2D 32 3 3 relu
 F
 D 256 relu
 Dropout 0.25

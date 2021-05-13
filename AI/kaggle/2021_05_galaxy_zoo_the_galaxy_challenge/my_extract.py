@@ -13,8 +13,8 @@ from PIL import Image
 def getArrForImages(rows, inputArr, inputDir, inputFiles):
 
     SIZE = 424
-    CROP_SIZE = int(SIZE / 4)
-    MARGIN = int(SIZE / 16)
+    CROP_SIZE = int(SIZE / 3) # 0 ~ SIZE
+    MARGIN = int(CROP_SIZE / 3) # 0 ~ CROP_SIZE/2
     
     for i in range(rows):
         if i % 100 == 0: print(i)
@@ -31,7 +31,7 @@ def getArrForImages(rows, inputArr, inputDir, inputFiles):
         # convert into average of R, G and B
         for j in range(len(imgArr)):
             imgArr_.append(sum(imgArr[j]) / (3 * 255)) # 0 ~ 765 ->  0 ~ 1
-            imgArr_[j] = 3 * imgArr_[j] - 1            # 0 ~ 1   -> -1 ~ 2
+            imgArr_[j] = round(3 * imgArr_[j] - 1, 3)  # 0 ~ 1   -> -1 ~ 2
         
         inputArr.append(imgArr_)
 
@@ -41,8 +41,8 @@ if __name__ == '__main__':
     # prediction of 'survived' column
 
     # rows
-    train_rows = 30000 # 61578
-    test_rows = 30000 # 79975
+    train_rows = 61578
+    test_rows = 79975
     valid_rate = float(RD.loadArray('val_rate.txt')[0][0])
 
     # directories
