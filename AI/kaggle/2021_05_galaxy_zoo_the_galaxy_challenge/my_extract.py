@@ -13,8 +13,10 @@ from PIL import Image
 def getArrForImages(rows, inputArr, inputDir, inputFiles):
 
     SIZE = 424
-    CROP_SIZE = int(SIZE / 3) # 0 ~ SIZE
+    CROP_SIZE = int(SIZE / 4) # 0 ~ SIZE
     MARGIN = int(CROP_SIZE / 3) # 0 ~ CROP_SIZE/2
+
+    # FINAL SIZE : print(CROP_SIZE - MARGIN * 2) => 36
     
     for i in range(rows):
         if i % 100 == 0: print(i)
@@ -26,14 +28,13 @@ def getArrForImages(rows, inputArr, inputDir, inputFiles):
         
         imgSeq = img.getdata()
         imgArr = np.array(imgSeq) # [[255, 0, 127], [255, 1, 126], ..., [7, 64, 255]]
-        imgArr_ = []
+        imgArr = imgArr.T # [[255, 255, ..., 7], [0, 1, ..., 64], [127, 126, ..., 255]]
+        imgArr = imgArr.flatten() # [255, 255, ..., 7, 0, 1, ..., 64, 127, 126, ..., 255]
 
-        # convert into average of R, G and B
-        for j in range(len(imgArr)):
-            imgArr_.append(sum(imgArr[j]) / (3 * 255)) # 0 ~ 765 ->  0 ~ 1
-            imgArr_[j] = round(3 * imgArr_[j] - 1, 3)  # 0 ~ 1   -> -1 ~ 2
+        # convert : 0 ~ 255 -> -1 ~ 2
+        imgArr = np.round_(3 * (imgArr / 255) - 1, 2)
         
-        inputArr.append(imgArr_)
+        inputArr.append(imgArr)
 
 if __name__ == '__main__':
 
