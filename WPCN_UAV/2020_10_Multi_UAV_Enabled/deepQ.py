@@ -247,8 +247,8 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     if useDL == True:
         (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, True)
 
-        #print('Qvalues:')
-        #print(Qvalues)
+        print('Qvalues:')
+        print(Qvalues)
 
         # if error for deep Q learning test
         try:
@@ -274,8 +274,8 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
             else:
                 qs.append(Qvalues[i])
 
-        #print('qs (0):')
-        #print(qs)
+        print('qs (0):')
+        print(qs)
         
         Q.append([[s], qs, l, k])
         print(len(Q))

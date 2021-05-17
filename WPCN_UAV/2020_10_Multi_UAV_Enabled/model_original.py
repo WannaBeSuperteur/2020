@@ -518,6 +518,11 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
     # later
 
 if __name__ == '__main__':
+
+    # ignore warnings
+    import warnings
+    warnings.filterwarnings('ignore')
+    warnings.filterwarnings('always')
     
     # parameters (as TABLE 1)
     fc = 800000000 # carrier frequency
