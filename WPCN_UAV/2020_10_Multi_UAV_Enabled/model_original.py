@@ -535,7 +535,7 @@ if __name__ == '__main__':
     width = 50 # width (m)
     height = 50 # height (m)
 
-    M = 100 # M = 100 episodes (originally 1000)
+    M = 10 # M = 10 episodes (originally 1000)
     L = 7 # L = 7 clusters = 7 UAVs
     devices = 50 # 50 devices
     T = 10 # T = 10s

@@ -247,6 +247,9 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     if useDL == True:
         (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, True)
 
+        #print('Qvalues:')
+        #print(Qvalues)
+
         # if error for deep Q learning test
         try:
             if Qvalues == -1: useDL = False
@@ -259,7 +262,7 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
     # where k is the index for the device to communicate
     a[n][l] = nextState[1]
 
-    # update Q value when using deep learning
+    # update Q value when USING DEEP LEARNING
     if useDL == True:
         qs = []
 
@@ -271,42 +274,31 @@ def updateQvalue(Q, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, us
             else:
                 qs.append(Qvalues[i])
 
+        #print('qs (0):')
+        #print(qs)
+        
         Q.append([[s], qs, l, k])
         print(len(Q))
 
         return
-        
+
     # update Q value
-    sFound = False # find corresponding state?
-    
-    for i in range(len(Q)):
+    # whether the corresponding state is found is NOT IMPORTANT
+    # when NOT USING DEEP LEARNING, ALWAYS mark reward element not matching to the ACTION as 0
 
-        if Q[i][0][0] == s: # Q[i] = [[s0], [q00, q01, ...]], Q[i][0] = [s0], Q[i][0][0] = s0
-
-            # print(str(Q[i][1]) + ' True ' + str(len(Q)))
-            
-            actionIndex = getActionIndex(action)
-            Q[i][1][actionIndex] = (1 - alphaL)*Q[i][1][actionIndex] + alphaL*(directReward + r_*maxQ)
-
-            sFound = True
-            break
-
-    # when corresponding state is not found
-    if sFound == False:
-
-        # create new action-reward array,
-        # and modify the value with corresponding index to the q value for action a
-        qs = []
-        for i in range(27): qs.append(0)
-        actionIndex = getActionIndex(action)
+    # create new action-reward array,
+    # and modify the value with corresponding index to the q value for action a
+    qs = []
+    for i in range(27): qs.append(0)
+    actionIndex = getActionIndex(action)
         
-        qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
+    qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
 
-        # print(str(qs) + ' False ' + str(len(Q)))
+    # print(str(qs) + ' False ' + str(len(Q)))
 
-        # append the state-action-reward [[s], qs] to Q table
-        # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
-        Q.append([[s], qs, l, k])
+    # append the state-action-reward [[s], qs] to Q table
+    # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
+    Q.append([[s], qs, l, k])
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)
