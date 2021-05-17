@@ -17,6 +17,7 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras import optimizers
+import keras.backend.tensorflow_backend as K
 
 class MODEL(tf.keras.Model):
     
@@ -70,8 +71,8 @@ class MODEL(tf.keras.Model):
 
         # after concatenation
         self.dropout3 = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout3')
-        self.dense1 = tf.keras.layers.Dense(units=128, activation='relu', kernel_regularizer=L2, name='dense1')
-        self.dense2 = tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=L2, name='dense2')
+        self.dense1 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2, name='dense1')
+        self.dense2 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2, name='dense2')
         self.dense_out = tf.keras.layers.Dense(units=OUTPUTS, activation='sigmoid', kernel_regularizer=L2, name='dense_out')
 
     def call(self, inputs, training):
@@ -174,55 +175,57 @@ if __name__ == '__main__':
     loss = 'mse'
     opti = optimizers.Adam(0.0005, decay=1e-6)
 
-    # create text model
-    model = MODEL()
-    model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
+    with K.tf.device(deviceName):
 
-    # callback list for training
-    early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', patience=3)
-    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+        # create model
+        model = MODEL()
+        model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
 
-    # training and test
-    # 'config.txt' is used for configuration
-    for i in range(times):
+        # callback list for training
+        early = tf.keras.callbacks.EarlyStopping(monitor='val_loss', mode='min', patience=3)
+        lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
 
-        toTrainLimit = 3000
-        toTestLimit = 3000
+        # training and test
+        # 'config.txt' is used for configuration
+        for i in range(times):
 
-        # load training input
-        print('loading training input...')
-        TRI_array = np.array(RD.loadArray(TRI, '\t', UTF8=False, type_='f'))
-        
-        if len(TRI_array) > toTrainLimit:
-            TRI_array = TRI_array[:toTrainLimit]
+            toTrainLimit = 7500
+            toTestLimit = 7500
 
-        # load training output
-        print('loading training output...')
-        TRO_array = np.array(RD.loadArray(TRO, '\t', UTF8=False, type_='f'))
+            # load training input
+            print('loading training input...')
+            TRI_array = np.array(RD.loadArray(TRI, '\t', UTF8=False, type_='f'))
+            
+            if len(TRI_array) > toTrainLimit:
+                TRI_array = TRI_array[:toTrainLimit]
 
-        if len(TRO_array) > toTrainLimit:
-            TRO_array = TRO_array[:toTrainLimit]
+            # load training output
+            print('loading training output...')
+            TRO_array = np.array(RD.loadArray(TRO, '\t', UTF8=False, type_='f'))
 
-        # load test input
-        print('loading test input...')
-        TEI_array = np.array(RD.loadArray(TEI, '\t', UTF8=False, type_='f'))
+            if len(TRO_array) > toTrainLimit:
+                TRO_array = TRO_array[:toTrainLimit]
 
-        if len(TEI_array) > toTestLimit:
-            TEI_array = TEI_array[:toTestLimit]
+            # load test input
+            print('loading test input...')
+            TEI_array = np.array(RD.loadArray(TEI, '\t', UTF8=False, type_='f'))
 
-        # train and save the model
-        model.fit(TRI_array, TRO_array, validation_split=VAL_rate, callbacks=[early, lr_reduced], epochs=epochs)
-        model.summary()
-        model.save('model_e_' + str(epochs))
+            if len(TEI_array) > toTestLimit:
+                TEI_array = TEI_array[:toTestLimit]
 
-        # load the model
-        loaded_model = tf.keras.models.load_model('model_e_' + str(epochs))
+            # train and save the model
+            model.fit(TRI_array, TRO_array, validation_split=VAL_rate, callbacks=[early, lr_reduced], epochs=epochs)
+            model.summary()
+            model.save('model_e_' + str(epochs))
 
-        # validation
-        prediction = loaded_model.predict(TEI_array)
+            # load the model
+            loaded_model = tf.keras.models.load_model('model_e_' + str(epochs))
 
-        # write result for validation
-        if VAL_rate > 0:
-            RD.saveArray('valid_prediction_' + str(i) + '.txt', prediction, '\t', 500)
-        else:
-            RD.saveArray('test_prediction_' + str(i) + '.txt', prediction, '\t', 500)
+            # validation
+            prediction = loaded_model.predict(TEI_array)
+
+            # write result for validation
+            if VAL_rate > 0:
+                RD.saveArray('valid_prediction_' + str(i) + '.txt', prediction, '\t', 500)
+            else:
+                RD.saveArray('test_prediction_' + str(i) + '.txt', prediction, '\t', 500)
