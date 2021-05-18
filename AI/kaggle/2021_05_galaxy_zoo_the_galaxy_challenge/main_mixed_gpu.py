@@ -7,7 +7,6 @@ import sys
 sys.path.insert(0, '../../AI_BASE')
 import numpy as np
 import readData as RD
-import deepLearning_main as DL
 
 import lightgbm as lgb
 from sklearn.tree import DecisionTreeClassifier, export_graphviz
@@ -17,7 +16,6 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras import optimizers
-import keras.backend.tensorflow_backend as K
 
 class MODEL(tf.keras.Model):
     
@@ -175,7 +173,18 @@ if __name__ == '__main__':
     loss = 'mse'
     opti = optimizers.Adam(0.0005, decay=1e-6)
 
-    with K.tf.device(deviceName):
+    # memory growth
+    # https://modernflow.tistory.com/9
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    if gpus:
+        try:
+            for gpu in gpus:
+                tf.config.experimental.set_memory_growth(gpu, True)
+        except:
+            print('memory growth error')
+
+    # training
+    with tf.device(deviceName):
 
         # create model
         model = MODEL()
