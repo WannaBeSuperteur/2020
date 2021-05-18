@@ -534,7 +534,7 @@ if __name__ == '__main__':
     u1 = 3 # additional path loss for LoS
     u2 = 23 # additional path loss for NLoS
     S_ = 0.0 # (temp) constant value determined by both the antenna and the environment
-    alphaL = 0.0001 # learning rate for DQN
+    alphaL = 0.1 # learning rate for DQN
     r_ = 0.7 # discount factor
 
     width = 50 # width (m)
