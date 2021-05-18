@@ -523,6 +523,7 @@ if __name__ == '__main__':
     import warnings
     warnings.filterwarnings('ignore')
     warnings.filterwarnings('always')
+    warnings.simplefilter('ignore')
     
     # parameters (as TABLE 1)
     fc = 800000000 # carrier frequency

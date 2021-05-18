@@ -283,6 +283,9 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         Q.append([[s], qs, l, k])
         QTable.append([stateTo1dArray(s, k), qs, l, k])
 
+        # update current state s just before return
+        s[2] = a[n]
+
         return
 
     # update Q value
@@ -303,6 +306,9 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
     # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
     Q.append([[s], qs, l, k])
     QTable.append([stateTo1dArray(s, k), qs, l, k])
+
+    # update current state s
+    s[2] = a[n]
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)
