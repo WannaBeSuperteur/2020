@@ -1,1 +1,1 @@
-my_extract.py -> main_mixed.py or main_mixed_gpu.py
+my_extract.py -> train_input_augmentor.py -> main_mixed.py or main_mixed_gpu.py

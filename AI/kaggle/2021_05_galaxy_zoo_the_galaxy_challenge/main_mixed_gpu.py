@@ -193,9 +193,14 @@ if __name__ == '__main__':
     VAL_rate = float(RD.loadArray('val_rate.txt')[0][0])
     VAL_report = 'report_val.txt'
     modelConfig = 'model_config.txt'
+    augmented = True
 
-    TRI = 'train_input.txt'
-    TRO = 'train_output.txt'
+    if augmented == True:
+        TRI = 'train_input_augmented.txt'
+        TRO = 'train_output_augmented.txt'
+    else:
+        TRI = 'train_input.txt'
+        TRO = 'train_output.txt'
     TEI = 'test_input.txt'
     TEO = 'test_predict.txt'
 
