@@ -1,7 +1,6 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as seab
 import json
 import math
 import re
@@ -409,6 +408,10 @@ def executeAlgorithm(finalResult, trainName, testName, ftype, fcolsTrain, fcolsT
         _CV.compare(finalResult, testName, validationCol, trainValid_validRows)
 
 if __name__ == '__main__':
+
+    import warnings
+    warnings.filterwarnings('ignore')
+    warnings.filterwarnings('always')
     
     # ASSUMPTION: DATA IS PREPROCESSED (IF NEEDED, TO APPROPRIATE NUMERIC VALUES) BEFORE EXECUTING THIS CODE
     #             DATA CONTAINS ONLY NUMERIC VALUES
@@ -446,7 +449,7 @@ if __name__ == '__main__':
 
     # validation mode is not available for method 5 and method 6
     # 0: PCA+kNN, 1: PCA+DT, 2: TextVec+NB, 3: PCA+xgboost, 4: xgboost only, 5: PCA+deep learning, 6: deep learning only
-    method = 0
+    method = 6
 
     # use PCA?
     usePCA = False

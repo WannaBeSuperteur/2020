@@ -5,7 +5,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Model, model_from_json
-from keras import backend as K
 
 # print model configuration
 def printModelConfig(model, optimi, loss):
@@ -113,14 +112,9 @@ def deepLearningModel(saveName, op, loss, isPrint):
 ### 4. 학습된 모델에 값을 입력하여 출력을 구하는 함수 ###
 # model        : 학습된 모델
 # testInput    : 입력 배열 [[a0, b0, ...], [a1, b1, ...], ..., [a(n-1), b(n-1), ...]] 꼴 (n개의 입력데이터)
-# simple       : model의 중간에 layer가 갈라지거나 합쳐지는 부분이 없으면 True
 def modelOutput(model, testInput):
 
-    # 값을 입력받아 레이어의 출력을 구하도록 함수 설정하기
-    input_ = model.input
-    output_ = [K.identity(layer.output) for layer in model.layers]
-
-    func = K.function([input_, K.learning_phase()], output_)
     testInput = np.array(testInput)
-    result = func([testInput, 1]) # Neural Network에 넣고 결과 받아오기
-    return result # 결과 반환
+    result = model.predict(testInput)
+    
+    return [result] # 결과 반환

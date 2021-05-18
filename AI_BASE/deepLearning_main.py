@@ -5,7 +5,6 @@ import tensorflow as tf
 import numpy as np
 import math
 from tensorflow import keras
-from keras.models import Model, model_from_json
 
 # save result array
 def saveArray(fn, _2dArray):

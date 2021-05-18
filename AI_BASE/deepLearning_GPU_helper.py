@@ -3,7 +3,6 @@ import random
 import deepLearning_GPU
 import tensorflow as tf
 from tensorflow import keras
-from keras.models import Model, model_from_json
 
 import warnings
 warnings.filterwarnings("error")
