@@ -1,1 +1,2 @@
 my_extract.py -> train_input_augmentor.py -> main_mixed.py or main_mixed_gpu.py
+main_mixed_gpu.py was used this time

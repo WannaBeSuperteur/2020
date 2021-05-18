@@ -16,7 +16,11 @@ import tensorflow as tf
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras import optimizers
-import keras.backend.tensorflow_backend as K
+
+try:
+    from keras import backend as K
+except:
+    import keras.backend.tensorflow_backend as K
 
 import used_model
 
@@ -70,7 +74,7 @@ if __name__ == '__main__':
         # 'config.txt' is used for configuration
         for i in range(times):
 
-            toTrainLimit = 61578
+            toTrainLimit = 2 * 61578
             toTestLimit = 79975
 
             # load training input
