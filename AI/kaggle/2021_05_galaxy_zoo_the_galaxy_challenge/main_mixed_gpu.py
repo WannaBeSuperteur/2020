@@ -50,21 +50,33 @@ class MODEL(tf.keras.Model):
         self.pool2B = tf.keras.layers.MaxPooling2D(pool_size=2, name='pooling2B')
 
         self.cnn1R = tf.keras.layers.Conv2D(filters=128, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn1R')
-        self.cnn2R = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn2R')
+        self.cnn2R_1 = tf.keras.layers.Conv2D(filters=96, kernel_size=(1, 1), padding='same', activation='relu', name='cnn2R_1')
+        self.cnn2R_2 = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='same', activation='relu', name='cnn2R_2')
+        self.cnn2R_3 = tf.keras.layers.Conv2D(filters=96, kernel_size=(5, 5), padding='same', activation='relu', name='cnn2R_3')
         self.cnn3R = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn3R')
-        self.cnn4R = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn4R')
+        self.cnn4R_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=(1, 1), padding='same', activation='relu', name='cnn4R_1')
+        self.cnn4R_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu', name='cnn4R_2')
+        self.cnn4R_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=(5, 5), padding='same', activation='relu', name='cnn4R_3')
         self.cnn5R = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn5R')
 
         self.cnn1G = tf.keras.layers.Conv2D(filters=128, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn1G')
-        self.cnn2G = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn2G')
+        self.cnn2G_1 = tf.keras.layers.Conv2D(filters=96, kernel_size=(1, 1), padding='same', activation='relu', name='cnn2G_1')
+        self.cnn2G_2 = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='same', activation='relu', name='cnn2G_2')
+        self.cnn2G_3 = tf.keras.layers.Conv2D(filters=96, kernel_size=(5, 5), padding='same', activation='relu', name='cnn2G_3')
         self.cnn3G = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn3G')
-        self.cnn4G = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn4G')
+        self.cnn4G_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=(1, 1), padding='same', activation='relu', name='cnn4G_1')
+        self.cnn4G_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu', name='cnn4G_2')
+        self.cnn4G_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=(5, 5), padding='same', activation='relu', name='cnn4G_3')
         self.cnn5G = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn5G')
 
         self.cnn1B = tf.keras.layers.Conv2D(filters=128, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn1B')
-        self.cnn2B = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn2B')
+        self.cnn2B_1 = tf.keras.layers.Conv2D(filters=96, kernel_size=(1, 1), padding='same', activation='relu', name='cnn2B_1')
+        self.cnn2B_2 = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='same', activation='relu', name='cnn2B_2')
+        self.cnn2B_3 = tf.keras.layers.Conv2D(filters=96, kernel_size=(5, 5), padding='same', activation='relu', name='cnn2B_3')
         self.cnn3B = tf.keras.layers.Conv2D(filters=96, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn3B')
-        self.cnn4B = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn4B')
+        self.cnn4B_1 = tf.keras.layers.Conv2D(filters=64, kernel_size=(1, 1), padding='same', activation='relu', name='cnn4B_1')
+        self.cnn4B_2 = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='same', activation='relu', name='cnn4B_2')
+        self.cnn4B_3 = tf.keras.layers.Conv2D(filters=64, kernel_size=(5, 5), padding='same', activation='relu', name='cnn4B_3')
         self.cnn5B = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu', name='cnn5B')
 
         # after concatenation
@@ -87,12 +99,20 @@ class MODEL(tf.keras.Model):
         input_R = self.cnn1R(input_R)
         input_R = self.dropout1R(input_R, training)
         
-        input_R = self.cnn2R(input_R)
+        input_R1 = self.cnn2R_1(input_R)
+        input_R2 = self.cnn2R_2(input_R)
+        input_R3 = self.cnn2R_3(input_R)
+        input_R = tf.concat([input_R1, input_R2, input_R3], axis=-1)
+        
         input_R = self.pool1R(input_R)
         input_R = self.cnn3R(input_R)
         input_R = self.dropout2R(input_R, training)
         
-        input_R = self.cnn4R(input_R)
+        input_R1 = self.cnn4R_1(input_R)
+        input_R2 = self.cnn4R_2(input_R)
+        input_R3 = self.cnn4R_3(input_R)
+        input_R = tf.concat([input_R1, input_R2, input_R3], axis=-1)
+        
         input_R = self.pool2R(input_R)
         input_R = self.cnn5R(input_R)
 
@@ -103,12 +123,20 @@ class MODEL(tf.keras.Model):
         input_G = self.cnn1G(input_G)
         input_G = self.dropout1G(input_G, training)
         
-        input_G = self.cnn2G(input_G)
+        input_G1 = self.cnn2G_1(input_G)
+        input_G2 = self.cnn2G_2(input_G)
+        input_G3 = self.cnn2G_3(input_G)
+        input_G = tf.concat([input_G1, input_G2, input_G3], axis=-1)
+        
         input_G = self.pool1G(input_G)
         input_G = self.cnn3G(input_G)
         input_G = self.dropout2G(input_G, training)
         
-        input_G = self.cnn4G(input_G)
+        input_G1 = self.cnn4G_1(input_G)
+        input_G2 = self.cnn4G_2(input_G)
+        input_G3 = self.cnn4G_3(input_G)
+        input_G = tf.concat([input_G1, input_G2, input_G3], axis=-1)
+        
         input_G = self.pool2G(input_G)
         input_G = self.cnn5G(input_G)
 
@@ -119,12 +147,20 @@ class MODEL(tf.keras.Model):
         input_B = self.cnn1B(input_B)
         input_B = self.dropout1B(input_B, training)
         
-        input_B = self.cnn2B(input_B)
+        input_B1 = self.cnn2B_1(input_B)
+        input_B2 = self.cnn2B_2(input_B)
+        input_B3 = self.cnn2B_3(input_B)
+        input_B = tf.concat([input_B1, input_B2, input_B3], axis=-1)
+        
         input_B = self.pool1B(input_B)
         input_B = self.cnn3B(input_B)
         input_B = self.dropout2B(input_B, training)
         
-        input_B = self.cnn4B(input_B)
+        input_B1 = self.cnn4B_1(input_B)
+        input_B2 = self.cnn4B_2(input_B)
+        input_B3 = self.cnn4B_3(input_B)
+        input_B = tf.concat([input_B1, input_B2, input_B3], axis=-1)
+        
         input_B = self.pool2B(input_B)
         input_B = self.cnn5B(input_B)
 
