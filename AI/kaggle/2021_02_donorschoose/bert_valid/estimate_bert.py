@@ -61,9 +61,9 @@ class TEXT_MODEL(tf.keras.Model):
         # i10_ts  :                                   1
         #
         # total   : i0_tp, i1_ss, ..., i10_ts     ( 152 unique columns)
-        # text    : tokenized by BERT             ( 818        columns)
+        # text    : tokenized by BERT             ( 993        columns)
         #
-        #                                         ( 970        columns)
+        #                                         (1145        columns)
 
         # constants
         self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 2, 12, 7
@@ -126,7 +126,7 @@ class TEXT_MODEL(tf.keras.Model):
 
         # split input
         i0_tp, i1_ss, i2_d_y, i3_d_m, i4_d_d, i5_d_h, i6_pgc, i7_psc, i8_pss, i9_len, i10_ts, inputs_text =\
-        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 818], 1)
+        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 993], 1)
 
         inputs_text = tf.cast(inputs_text, tf.int32)
 
@@ -243,6 +243,9 @@ def convertForBert(input_data, print_interval, tokenizer, max_length, precols):
 
     # append 0 so that the length is all the same for each tokenized input
     for i in range(rows):
+        if len(tokenized_input[i]) > max_length:
+            print('error: [' + str(i) + '] ( max length = ' + str(max_length) + ') ' + str(len(tokenized_input[i])))
+        
         while len(tokenized_input[i]) < max_length:
             tokenized_input[i].append(0)
 
@@ -253,11 +256,11 @@ def convertForBert(input_data, print_interval, tokenizer, max_length, precols):
         print('------')
         print(np.array(tokenized_input))
 
-        return np.array(tokenized_input)
+        return np.stack(tokenized_input)
 
     # for valid
     except:
-        return np.array(tokenized_input)
+        return np.stack(tokenized_input)
 
 def createBatchedDataset(processed_dataset, rows, batch_size):
     batched_dataset = processed_dataset.padded_batch(batch_size, padded_shapes=((None, ), ()))
@@ -397,7 +400,7 @@ def mainFunc(count, tokenizer):
         # train / valid max length
 
         # for donorschoose-application-screening,
-        # max_length_train = 132, 2183, 818, 387, 224, 234
+        # max_length_train = 132, 2183, 993, 387, 224, 234
         
         max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
 
