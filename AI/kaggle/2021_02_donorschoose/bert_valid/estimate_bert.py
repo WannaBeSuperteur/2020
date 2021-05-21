@@ -35,7 +35,7 @@ def tokenize_text(text, tokenizer):
 class TEXT_MODEL(tf.keras.Model):
     
     def __init__(self, vocabulary_size, precols,
-                 embedding_dimensions=128, cnn_filters=50, dnn_units=512,
+                 embedding_dimensions=256, cnn_filters=50, dnn_units=512,
                  dropout_rate=0.1, training=False, name='text_model'):
         
         super(TEXT_MODEL, self).__init__(name=name)
@@ -60,9 +60,9 @@ class TEXT_MODEL(tf.keras.Model):
         # i10_ts  :                                   1
         #
         # total   : i0_tp, i1_ss, ..., i10_ts     ( 152 unique columns)
-        # text    : tokenized by BERT             ( 500        columns) (993)
+        # text    : tokenized by BERT         6 * ( 100        columns)
         #
-        #                                         ( 652        columns) (1145)
+        #                                         ( 752        columns)
 
         # constants
         self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 2, 12, 7
@@ -124,10 +124,15 @@ class TEXT_MODEL(tf.keras.Model):
     def call(self, inputs, training):
 
         # split input
-        i0_tp, i1_ss, i2_d_y, i3_d_m, i4_d_d, i5_d_h, i6_pgc, i7_psc, i8_pss, i9_len, i10_ts, inputs_text =\
-        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 500], 1)
+        i0_tp, i1_ss, i2_d_y, i3_d_m, i4_d_d, i5_d_h, i6_pgc, i7_psc, i8_pss, i9_len, i10_ts, i_text0, i_text1, i_text2, i_text3, i_text4, i_text5 =\
+        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 100, 100, 100, 100, 100, 100], 1)
 
-        inputs_text = tf.cast(inputs_text, tf.int32)
+        i_text0 = tf.cast(i_text0, tf.int32)
+        i_text1 = tf.cast(i_text1, tf.int32)
+        i_text2 = tf.cast(i_text2, tf.int32)
+        i_text3 = tf.cast(i_text3, tf.int32)
+        i_text4 = tf.cast(i_text4, tf.int32)
+        i_text5 = tf.cast(i_text5, tf.int32)
 
         # info 0, 1, 2, 3, 4, 5, 6, 7 and 8
         i0_emb = self.emb00(i0_tp)
@@ -184,17 +189,56 @@ class TEXT_MODEL(tf.keras.Model):
         i10_den = self.den10(i10_ts)
         i10_drop = self.dropout(i10_den, training)
 
-        # BERT-tokenized text
-        l = self.embedding(inputs_text)
+        # concatenate: titles / essays / resource summaries
+        lt = i_text0
+        le = tf.concat([i_text1, i_text2, i_text3, i_text4], axis=-1)
+        lrs = i_text5
+
+        # BERT-tokenized text (for each lt, le and lrs)
+        # for titles
+        lt_emb = self.embedding(lt)
         
-        l_1 = self.cnn_layer1(l) 
-        l_1 = self.pool(l_1) 
-        l_2 = self.cnn_layer2(l) 
-        l_2 = self.pool(l_2)
-        l_3 = self.cnn_layer3(l)
-        l_3 = self.pool(l_3)
+        lt_1 = self.cnn_layer1(lt_emb) 
+        lt_1 = self.pool(lt_1) 
+        lt_2 = self.cnn_layer2(lt_emb) 
+        lt_2 = self.pool(lt_2)
+        lt_3 = self.cnn_layer3(lt_emb)
+        lt_3 = self.pool(lt_3)
         
-        l_concat = tf.concat([l_1, l_2, l_3], axis=-1)
+        lt_concat = tf.concat([lt_1, lt_2, lt_3], axis=-1)
+        lt_den = self.denL(lt_concat)
+        lt_drop = self.dropout(lt_den, training)
+
+        # for essays
+        le_emb = self.embedding(le)
+        
+        le_1 = self.cnn_layer1(le_emb) 
+        le_1 = self.pool(le_1) 
+        le_2 = self.cnn_layer2(le_emb) 
+        le_2 = self.pool(le_2)
+        le_3 = self.cnn_layer3(le_emb)
+        le_3 = self.pool(le_3)
+        
+        le_concat = tf.concat([le_1, le_2, le_3], axis=-1)
+        le_den = self.denL(le_concat)
+        le_drop = self.dropout(le_den, training)
+
+        # for resource summaries
+        lrs_emb = self.embedding(lrs)
+        
+        lrs_1 = self.cnn_layer1(lrs_emb) 
+        lrs_1 = self.pool(lrs_1) 
+        lrs_2 = self.cnn_layer2(lrs_emb) 
+        lrs_2 = self.pool(lrs_2)
+        lrs_3 = self.cnn_layer3(lrs_emb)
+        lrs_3 = self.pool(lrs_3)
+        
+        lrs_concat = tf.concat([lrs_1, lrs_2, lrs_3], axis=-1)
+        lrs_den = self.denL(lrs_concat)
+        lrs_drop = self.dropout(lrs_den, training)
+
+        # concatenate all
+        l_concat = tf.concat([lt_drop, le_drop, lrs_drop], axis=-1)
         l_den = self.denL(l_concat)
         l_drop = self.dropout(l_den, training)
 
@@ -274,7 +318,7 @@ def mainFunc(count, tokenizer):
     # define configuration
     train_max_rows = 9999999
     valid_max_rows = 9999999
-    print_interval = 400
+    print_interval = 3200
     batch_size = 32
 
     embedding_dim = 200
@@ -382,17 +426,13 @@ def mainFunc(count, tokenizer):
         # each text model for each dataset
         text_to_train = [train_title, train_essay1, train_essay2, train_essay3, train_essay4, train_summary]
         text_to_valid = [valid_title, valid_essay1, valid_essay2, valid_essay3, valid_essay4, valid_summary]
-        text_models = []
 
-        for i in range(6):
-            text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols,
-                                    embedding_dimensions=embedding_dim,
-                                    cnn_filters=cnn_filters,
-                                    dnn_units=dnn_units, dropout_rate=dropout_rate)
+        text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols,
+                                embedding_dimensions=embedding_dim,
+                                cnn_filters=cnn_filters,
+                                dnn_units=dnn_units, dropout_rate=dropout_rate)
             
-            text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
-            
-            text_models.append(text_model)
+        text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
             
         # train / valid result array
         train_result = [[0 for j in range(6)] for i in range(rows_to_train)]
@@ -401,12 +441,20 @@ def mainFunc(count, tokenizer):
         # train / valid max length
 
         # for donorschoose-application-screening,
-        # max_length_train = 132, 2183, 500(993), 387, 224, 234
+        # max_length_train = 132, 2183, 993, 387, 224, 234
+        # to use           = 100,  100, 100, 100, 100, 100
         
         max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
 
         print('\n[05] max lengths:')
         print(max_lengths)
+
+        # callback list for training
+        early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
+        lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+
+        # information (152 columns)
+        train_info = np.array(train_info).astype(float)
 
         # model 0: train_title   -> train_approved
         # model 1: train_essay1  -> train_approved
@@ -414,15 +462,14 @@ def mainFunc(count, tokenizer):
         # model 3: train_essay3  -> train_approved
         # model 4: train_essay4  -> train_approved
         # model 5: train_summary -> train_approved
-        for i in range(2, 3): # 6
+        for i in range(6):
             
-            rows = len(text_to_train[i])
+            train_rows = len(text_to_train[i])
 
             # process dataset : convert into BERT-usable dataset
+            # text (6 * 100 columns)
             tokenized_input = convertForBert(text_to_train[i], print_interval, tokenizer, int(max_lengths[i]), precols)
-            
-            train_text = np.array(tokenized_input).astype(float)[:, :500]
-            train_info = np.array(train_info).astype(float)
+            train_text = np.array(tokenized_input).astype(float)[:, :100]
 
             print('\n[06] train text')
             print(np.shape(train_text))
@@ -434,7 +481,11 @@ def mainFunc(count, tokenizer):
             print('------')
             print(np.array(train_info))
 
-            train_data = np.concatenate((train_info, train_text), axis=1).astype(float)
+            # use first 100 tokens for training data
+            if i == 0:
+                train_data = np.concatenate((train_info, train_text), axis=1).astype(float)
+            else:
+                train_data = np.concatenate((train_data, train_text), axis=1).astype(float)
 
             print('\n[08] train info+text (final input)')
             print(np.shape(train_data))
@@ -446,31 +497,28 @@ def mainFunc(count, tokenizer):
             print('------')
             print(np.array(train_approved[:100]))
 
-            # callback list for training
-            early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
-            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+        ### TRAIN THE MODEL ###
+        text_model.fit(train_data, train_approved, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
+        text_model.summary()
 
-            ### TRAIN THE MODEL ###
-            text_models[i].fit(train_data, train_approved, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
-            text_models[i].summary()
+        # update train result array
+        for j in range(rows_to_train):
+            train_result[j][i] = train_approved[j]
 
-            # update train result array
-            for j in range(rows_to_train):
-                train_result[j][i] = train_approved[j]
+        # save the model
+        text_model.save('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
-            # save the model
-            text_models[i].save('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+        # information (152 columns)
+        valid_info = np.array(valid_info).astype(float)
 
-        # validate using each model
-        for i in range(2, 3): # 6
+        # validate/test using each model
+        for i in range(6):
 
-            rows = len(text_to_valid[i])
+            valid_rows = len(text_to_valid[i])
 
             # process dataset : convert into BERT-usable dataset
             valid_text = convertForBert(text_to_valid[i], print_interval, tokenizer, int(max_lengths[i]), precols)
-            
-            valid_text = np.array(valid_text).astype(float)
-            valid_info = np.array(valid_info).astype(float)
+            valid_text = np.array(valid_text).astype(float)[:, :100]
 
             print('\n[10] valid text')
             print(np.shape(valid_text))
@@ -482,7 +530,11 @@ def mainFunc(count, tokenizer):
             print('------')
             print(np.array(valid_info))
 
-            valid_data = np.concatenate((valid_info, valid_text), axis=1).astype(float)
+            # use first 100 tokens for valid/test data
+            if i == 0:
+                valid_data = np.concatenate((valid_info, valid_text), axis=1).astype(float)
+            else:
+                valid_data = np.concatenate((valid_data, valid_text), axis=1).astype(float)
 
             print('\n[12] valid info+text')
             print(np.shape(valid_data))
