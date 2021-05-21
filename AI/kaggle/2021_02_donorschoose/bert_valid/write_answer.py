@@ -1,6 +1,5 @@
 import sys
-sys.path.insert(0, '../../../AI_BASE')
-sys.path.insert(1, '../')
+sys.path.insert(0, '../../AI_BASE')
 
 import math
 import numpy as np
@@ -8,7 +7,7 @@ import readData as RD
 
 if __name__ == '__main__':
 
-    count = 4
+    count = 1
 
     for i in range(count):
         if i == 0:

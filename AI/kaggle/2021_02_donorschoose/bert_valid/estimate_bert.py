@@ -20,7 +20,6 @@ import gc
 
 import tensorflow as tf
 import tensorflow_hub as hub
-import keras.backend.tensorflow_backend as K
 from tensorflow.keras import layers
 from tensorflow.keras.models import Model
 from tensorflow.keras import optimizers
@@ -61,9 +60,9 @@ class TEXT_MODEL(tf.keras.Model):
         # i10_ts  :                                   1
         #
         # total   : i0_tp, i1_ss, ..., i10_ts     ( 152 unique columns)
-        # text    : tokenized by BERT             ( 993        columns)
+        # text    : tokenized by BERT             ( 500        columns) (993)
         #
-        #                                         (1145        columns)
+        #                                         ( 652        columns) (1145)
 
         # constants
         self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 2, 12, 7
@@ -126,7 +125,7 @@ class TEXT_MODEL(tf.keras.Model):
 
         # split input
         i0_tp, i1_ss, i2_d_y, i3_d_m, i4_d_d, i5_d_h, i6_pgc, i7_psc, i8_pss, i9_len, i10_ts, inputs_text =\
-        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 993], 1)
+        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 500], 1)
 
         inputs_text = tf.cast(inputs_text, tf.int32)
 
@@ -296,6 +295,8 @@ def mainFunc(count, tokenizer):
     validAnswerFile = None
     isValidTest = True # test mode
 
+    deviceName = 'gpu:0'
+
     # load training data
     train = np.array(pd.read_csv(trainFile, dtype={11:str, 12:str}))
     rows_to_train = min(train_max_rows, len(train))
@@ -376,7 +377,7 @@ def mainFunc(count, tokenizer):
         except:
             RD.saveArray(validAnswerFile, valid_approved[:rows_to_valid], '\t', 500)
 
-    with K.tf.device('/gpu:0'):
+    with tf.device(deviceName):
         
         # each text model for each dataset
         text_to_train = [train_title, train_essay1, train_essay2, train_essay3, train_essay4, train_summary]
@@ -400,7 +401,7 @@ def mainFunc(count, tokenizer):
         # train / valid max length
 
         # for donorschoose-application-screening,
-        # max_length_train = 132, 2183, 993, 387, 224, 234
+        # max_length_train = 132, 2183, 500(993), 387, 224, 234
         
         max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
 
@@ -420,7 +421,7 @@ def mainFunc(count, tokenizer):
             # process dataset : convert into BERT-usable dataset
             tokenized_input = convertForBert(text_to_train[i], print_interval, tokenizer, int(max_lengths[i]), precols)
             
-            train_text = np.array(tokenized_input).astype(float)
+            train_text = np.array(tokenized_input).astype(float)[:, :500]
             train_info = np.array(train_info).astype(float)
 
             print('\n[06] train text')
