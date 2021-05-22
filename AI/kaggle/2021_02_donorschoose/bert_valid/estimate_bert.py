@@ -74,7 +74,7 @@ class TEXT_MODEL(tf.keras.Model):
         self.d00, self.d01, self.d02, self.d03, self.d04 = 12, 12, 12, 12, 12, # 4 -> 12
         self.d05, self.d06, self.d07, self.d08           = 12, 12, 12, 12
         
-        self.d09, self.d09_final, self.d10, self.dL = 32, 12, 12, 12 # 4 -> 12
+        self.d09, self.d09_final, self.d10, self.dL0, self.dL1 = 32, 12, 12, 12, 32 # 4 -> 12
 
         # flatten layer
         self.flat = tf.keras.layers.Flatten()
@@ -109,12 +109,27 @@ class TEXT_MODEL(tf.keras.Model):
         self.den10 = tf.keras.layers.Dense(units=self.d10, activation='relu', kernel_regularizer=L2, name='CONT_den10')
 
         # for BERT-tokenized text
-        self.embedding = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding')
-        self.cnn_layer1 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='BERT_cnn1')
-        self.cnn_layer2 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='BERT_cnn2')
-        self.cnn_layer3 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='BERT_cnn3')
+        self.embedding0 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding0')
+        self.cnn_layer01 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='BERT_cnn01')
+        self.cnn_layer02 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='BERT_cnn02')
+        self.cnn_layer03 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='BERT_cnn03')
+
+        self.embedding1 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding1')
+        self.cnn_layer11 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='BERT_cnn11')
+        self.cnn_layer12 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='BERT_cnn12')
+        self.cnn_layer13 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='BERT_cnn13')
+
+        self.embedding2 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding2')
+        self.cnn_layer21 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='BERT_cnn21')
+        self.cnn_layer22 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='BERT_cnn22')
+        self.cnn_layer23 = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='BERT_cnn23')
+
         self.pool = tf.keras.layers.GlobalMaxPool1D(name='BERT_pooling')
-        self.denL = tf.keras.layers.Dense(units=self.dL, activation='relu', kernel_regularizer=L2, name='BERT_dense')
+
+        self.denL00 = tf.keras.layers.Dense(units=self.dL0, activation='relu', kernel_regularizer=L2, name='BERT_dense00')
+        self.denL01 = tf.keras.layers.Dense(units=self.dL0, activation='relu', kernel_regularizer=L2, name='BERT_dense01')
+        self.denL02 = tf.keras.layers.Dense(units=self.dL0, activation='relu', kernel_regularizer=L2, name='BERT_dense02')
+        self.denL1 = tf.keras.layers.Dense(units=self.dL1, activation='relu', kernel_regularizer=L2, name='BERT_dense1')
 
         # for concatenated layer and output
         self.dense = tf.keras.layers.Dense(units=dnn_units, activation='relu', kernel_regularizer=L2, name='FINAL_dense0')
@@ -196,50 +211,50 @@ class TEXT_MODEL(tf.keras.Model):
 
         # BERT-tokenized text (for each lt, le and lrs)
         # for titles
-        lt_emb = self.embedding(lt)
+        lt_emb = self.embedding0(lt)
         
-        lt_1 = self.cnn_layer1(lt_emb) 
+        lt_1 = self.cnn_layer01(lt_emb) 
         lt_1 = self.pool(lt_1) 
-        lt_2 = self.cnn_layer2(lt_emb) 
+        lt_2 = self.cnn_layer02(lt_emb) 
         lt_2 = self.pool(lt_2)
-        lt_3 = self.cnn_layer3(lt_emb)
+        lt_3 = self.cnn_layer03(lt_emb)
         lt_3 = self.pool(lt_3)
         
         lt_concat = tf.concat([lt_1, lt_2, lt_3], axis=-1)
-        lt_den = self.denL(lt_concat)
+        lt_den = self.denL00(lt_concat)
         lt_drop = self.dropout(lt_den, training)
 
         # for essays
-        le_emb = self.embedding(le)
+        le_emb = self.embedding1(le)
         
-        le_1 = self.cnn_layer1(le_emb) 
+        le_1 = self.cnn_layer11(le_emb) 
         le_1 = self.pool(le_1) 
-        le_2 = self.cnn_layer2(le_emb) 
+        le_2 = self.cnn_layer12(le_emb) 
         le_2 = self.pool(le_2)
-        le_3 = self.cnn_layer3(le_emb)
+        le_3 = self.cnn_layer13(le_emb)
         le_3 = self.pool(le_3)
         
         le_concat = tf.concat([le_1, le_2, le_3], axis=-1)
-        le_den = self.denL(le_concat)
+        le_den = self.denL01(le_concat)
         le_drop = self.dropout(le_den, training)
 
         # for resource summaries
-        lrs_emb = self.embedding(lrs)
+        lrs_emb = self.embedding2(lrs)
         
-        lrs_1 = self.cnn_layer1(lrs_emb) 
+        lrs_1 = self.cnn_layer21(lrs_emb) 
         lrs_1 = self.pool(lrs_1) 
-        lrs_2 = self.cnn_layer2(lrs_emb) 
+        lrs_2 = self.cnn_layer22(lrs_emb) 
         lrs_2 = self.pool(lrs_2)
-        lrs_3 = self.cnn_layer3(lrs_emb)
+        lrs_3 = self.cnn_layer23(lrs_emb)
         lrs_3 = self.pool(lrs_3)
         
         lrs_concat = tf.concat([lrs_1, lrs_2, lrs_3], axis=-1)
-        lrs_den = self.denL(lrs_concat)
+        lrs_den = self.denL02(lrs_concat)
         lrs_drop = self.dropout(lrs_den, training)
 
         # concatenate all
         l_concat = tf.concat([lt_drop, le_drop, lrs_drop], axis=-1)
-        l_den = self.denL(l_concat)
+        l_den = self.denL1(l_concat)
         l_drop = self.dropout(l_den, training)
 
         # concatenate embedded info and concatenated BERT-tokenized text
@@ -329,7 +344,7 @@ def mainFunc(count, tokenizer):
     loss = 'mse'
     opti = optimizers.Adam(0.0005, decay=1e-6)
 
-    epochs = 15
+    epochs = 1
     batch_size = 32
 
     trainFile = 'train.csv'
@@ -441,7 +456,7 @@ def mainFunc(count, tokenizer):
         # train / valid max length
 
         # for donorschoose-application-screening,
-        # max_length_train = 132, 2183, 993, 387, 224, 234
+        # max_length_train = 159, 2583, 993, 387, 224, 234
         # to use           = 100,  100, 100, 100, 100, 100
         
         max_lengths = RD.loadArray('bert_max_lengths_train.txt')[0]
@@ -506,7 +521,7 @@ def mainFunc(count, tokenizer):
             train_result[j][i] = train_approved[j]
 
         # save the model
-        text_model.save('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+        text_model.save('model_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
         # information (152 columns)
         valid_info = np.array(valid_info).astype(float)
@@ -541,19 +556,19 @@ def mainFunc(count, tokenizer):
             print('------')
             print(np.array(valid_data))
 
-            # load the model
-            loaded_model = tf.keras.models.load_model('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+        # load the model
+        loaded_model = tf.keras.models.load_model('model_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
 
-            # VALIDATION
-            prediction = loaded_model.predict(valid_data)
+        # VALIDATION
+        prediction = loaded_model.predict(valid_data)
 
-            print('\n[13] prediction')
-            print(np.shape(prediction))
-            print(np.array(prediction))
+        print('\n[13] prediction')
+        print(np.shape(prediction))
+        print(np.array(prediction))
 
-            # update valid result array
-            for j in range(rows_to_valid):
-                valid_result[j][i] = prediction[j][0]
+        # update valid result array
+        for j in range(rows_to_valid):
+            valid_result[j][i] = prediction[j][0]
 
     # write result for training
     RD.saveArray('bert_train_result_count_' + str(count) + '.txt', train_result, '\t', 500)
