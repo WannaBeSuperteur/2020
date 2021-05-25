@@ -1,5 +1,5 @@
 import sys
-sys.path.insert(0, '../../../AI_BASE')
+sys.path.insert(0, '../../AI_BASE')
 
 import math
 import numpy as np
