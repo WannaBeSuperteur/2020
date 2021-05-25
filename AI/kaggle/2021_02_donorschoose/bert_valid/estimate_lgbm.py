@@ -55,26 +55,25 @@ def lightGBM(TRI_array, TRO_array, TEI_array, TEO_array, count, valid):
         train_ds = lgb.Dataset(train_input, label=train_output)
 
     # set parameters
-    # refer to https://www.kaggle.com/hiro5299834/tps-apr-2021-pseudo-labeling-voting-ensemble (0.81722)
-    params = {'metric': 'binary_logloss',
-              'objective': 'binary',
+    params = {'metric': 'AUC',
+              'objective': 'regression',
               'random_state': 2021 + count, # SEED = 2021...
-              'learning_rate': 0.01,
-              'min_child_samples': 150,
+              'learning_rate': 0.005,
+              'min_child_samples': 256,
               'reg_alpha': 3e-5,
               'reg_lambda': 9e-2,
-              'num_leaves': 20,
-              'max_depth': 16,
+              'num_leaves': 32,
+              'max_depth': 32,
               'colsample_bytree': 0.8,
               'subsample': 0.8,
               'subsample_freq': 2,
-              'max_bin': 240}
+              'max_bin': 1024}
 
     # create model
     if valid == True:
-        model = lgb.train(params, train_ds, 2000, valid_ds, verbose_eval=20, early_stopping_rounds=200)
+        model = lgb.train(params, train_ds, 4000, valid_ds, verbose_eval=30, early_stopping_rounds=200)
     else:
-        model = lgb.train(params, train_ds, 2000, train_ds, verbose_eval=20, early_stopping_rounds=200)
+        model = lgb.train(params, train_ds, 4000, train_ds, verbose_eval=30, early_stopping_rounds=200)
 
     # predict
     predict_tv = model.predict(tv_input)
@@ -123,13 +122,7 @@ def mainFunc(times):
     train_info = []
     test_info = []
 
-    option = [-1, -1, 2, 2, 7, 2, 8, 8, 5, 5, 5, 5, 5, 5, 1, -1]
-    title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
-             'project_submitted_datetime', 'project_grade_category',
-             'project_subject_categories', 'project_subject_subcategories',
-             'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
-             'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
-
+    (option, title) = ME.getOptionsAndTitle()
     wordCount = ME.getWordCount(option, trainFile)
 
     # load training output data

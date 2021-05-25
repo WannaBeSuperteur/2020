@@ -8,6 +8,16 @@ import datetime
 
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 
+def getOptionsAndTitle():
+    option = [-1, -1, 2, 2, 7, 2, 8, 8, 5, 5, 5, 5, 5, 5, 1, -1]
+    title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
+             'project_submitted_datetime', 'project_grade_category',
+             'project_subject_categories', 'project_subject_subcategories',
+             'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
+             'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
+
+    return (option, title)
+
 # word count for top 100 words for word count (marked as 6)
 def getWordCount(option, trainFile):
     wordCount = []
