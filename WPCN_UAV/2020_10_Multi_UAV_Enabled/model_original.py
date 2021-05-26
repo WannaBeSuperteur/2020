@@ -214,7 +214,10 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 # alpha, u1, u2,
 # alphaL, r_, S_
 # deviceName         : cpu:0 or gpu:0 for example
-def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_, deviceName):
+# QTable_rate        : rate of used elements from Q Table (most recently)
+def algorithm1(M, T, L, devices, width, height,
+               H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
+               deviceName, QTable_rate):
 
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -508,11 +511,13 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
         ### TRAIN and VALIDATION for M = 0,1,2,3,4 ###
         print(episode)
         if episode < 5:
-            dq.deepLearningQ_training(QTable, deviceName, 10, False)
+            QTable_use = len(QTable) * QTable_rate
+            dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
             dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TRAIN and VALIDATION ###
-    dq.deepLearningQ_training(QTable, deviceName, 10, False)
+    QTable_use = len(QTable) * QTable_rate
+    dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
     dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TEST ###
@@ -528,6 +533,9 @@ if __name__ == '__main__':
 
     # device setting
     deviceName = 'gpu:0'
+
+    # configuration
+    QTable_rate = 0.7
     
     # parameters (as TABLE 1)
     fc = 800000000 # carrier frequency
@@ -552,4 +560,6 @@ if __name__ == '__main__':
     H = 15 # H = 15m
 
     # run
-    algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_, deviceName)
+    algorithm1(M, T, L, devices, width, height,
+               H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
+               deviceName, QTable_rate)
