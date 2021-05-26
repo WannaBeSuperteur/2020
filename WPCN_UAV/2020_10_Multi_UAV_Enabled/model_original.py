@@ -508,20 +508,25 @@ def algorithm1(M, T, L, devices, width, height,
                 rand = random.randint(0, len(replayBuffer)-1) # randomly select from the replay buffer
                 minibatch.append(replayBuffer[rand]) # append to the buffer
 
-        ### TRAIN and VALIDATION for M = 0,1,2,3,4 ###
-        print(episode)
-        if episode < 5:
+        ### TRAIN and VALIDATION ###
+        if episode % 5 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
             dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
-    ### TRAIN and VALIDATION ###
+    ### TRAIN and VALIDATION (FINAL) ###
     QTable_use = len(QTable) * QTable_rate
     dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
     dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TEST ###
     # later
+
+def convertToNumeric(value):
+    try:
+        return float(value)
+    except:
+        return float(int(value))
 
 if __name__ == '__main__':
 
@@ -531,33 +536,92 @@ if __name__ == '__main__':
     warnings.filterwarnings('always')
     warnings.simplefilter('ignore')
 
-    # device setting
-    deviceName = 'gpu:0'
+    # load settings
+    settingsFile = open('settings.txt', 'r')
+    settings = settingsFile.readlines()
+    settingsFile.close()
 
-    # configuration
-    QTable_rate = 0.7
-    
-    # parameters (as TABLE 1)
-    fc = 800000000 # carrier frequency
-    B = 1000000 # bandwidth
-    o2 = -110 # Noise power spectral
-    b1 = 0.36 # environmental parameter
-    b2 = 0.21 # environmental parameter
-    alpha = 2 # path loss exponent
-    u1 = 3 # additional path loss for LoS
-    u2 = 23 # additional path loss for NLoS
-    S_ = 0.0 # (temp) constant value determined by both the antenna and the environment
-    alphaL = 0.1 # learning rate for DQN
-    r_ = 0.7 # discount factor
+    for i in range(len(settings)):
+        argName = settings[i].split('=')[0]
+        argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
 
-    width = 50 # width (m)
-    height = 50 # height (m)
+        if argName == 'deviceName':
+            deviceName = argValue
+            
+        elif argName == 'QTable_rate':
+            QTable_rate = float(argValue)
 
-    M = 10 # M = 10 episodes (originally 1000)
-    L = 7 # L = 7 clusters = 7 UAVs
-    devices = 50 # 50 devices
-    T = 10 # T = 10s
-    H = 15 # H = 15m
+        # carrier frequency
+        elif argName == 'fc':
+            fc = float(argValue)
+
+        # bandwidth
+        elif argName == 'B':
+            B = float(argValue)
+
+        # Noise power spectral
+        elif argName == 'o2':
+            o2 = float(argValue)
+
+        # environmental parameter
+        elif argName == 'b1':
+            b1 = float(argValue)
+
+        # environmental parameter
+        elif argName == 'b2':
+            b2 = float(argValue)
+
+        # path loss exponent
+        elif argName == 'alpha':
+            alpha = float(argValue)
+
+        # additional path loss for LoS
+        elif argName == 'u1':
+            u1 = float(argValue)
+
+        # additional path loss for NLoS
+        elif argName == 'u2':
+            u2 = float(argValue)
+
+        # (temp) constant value determined by both the antenna and the environment
+        elif argName == 'S_':
+            S_ = float(argValue)
+
+        # learning rate for DQN
+        elif argName == 'alphaL':
+            alphaL = float(argValue)
+
+        # discount factor
+        elif argName == 'r_':
+            r_ = float(argValue)
+
+        # width (m)
+        elif argName == 'width':
+            width = float(argValue)
+
+        # height (m)
+        elif argName == 'height':
+            height = float(argValue)
+
+        # episodes (originally 1000)
+        elif argName == 'M':
+            M = int(argValue)
+
+        # number of clusters = number of UAVs
+        elif argName == 'L':
+            L = int(argValue)
+
+        # number of devices
+        elif argName == 'devices':
+            devices = int(argValue)
+
+        # time (s, discrete)
+        elif argName == 'T':
+            T = int(argValue)
+
+        # hovering elevation (m)
+        elif argName == 'H':
+            H = float(argValue)
 
     # run
     algorithm1(M, T, L, devices, width, height,

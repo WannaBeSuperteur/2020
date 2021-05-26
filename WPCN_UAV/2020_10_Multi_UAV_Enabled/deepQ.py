@@ -111,7 +111,6 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
             rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k, False)
         except Exception as e:
             useDL = False
-            print(' === error message ===')
             print(e)
 
     # find optimal action a' = a_ that is corresponding to max(a')Q(s', a')
