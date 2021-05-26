@@ -221,7 +221,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
         DLmain.deepLearning('Q_input_normalized.txt', 'Q_output.txt', None, None, None,
                             None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
-        print('Q_input_normalized.txt or Q_output.txt does not exist.')
+        print('[train] Q_input_normalized.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (validation)
 def deepLearningQ_valid(deviceName, epoch, printed, validRate):
@@ -230,7 +230,7 @@ def deepLearningQ_valid(deviceName, epoch, printed, validRate):
         DLmain.deepLearning('Q_input_normalized.txt', 'Q_output.txt', None, None, None,
                             None, validRate, 'Q_valid_report.txt', 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
-        print('Q_input_normalized.txt or Q_output.txt does not exist.')
+        print('[valid] Q_input_normalized.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose):

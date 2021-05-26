@@ -1,4 +1,4 @@
-I 54
+I 19
 D 64 relu
 D 64 relu
 D 64 relu

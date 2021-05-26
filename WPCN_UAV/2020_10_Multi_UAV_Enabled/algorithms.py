@@ -4,6 +4,16 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 import numpy as np
 
+def plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height):
+    plt.suptitle('clustering: ' + str(count))
+            
+    for i in range(L):
+        plt.scatter(UAVloc[i][0], UAVloc[i][1], s=20, c=markerColors[i])
+        for j in range(len(clusters[i])):
+            plt.scatter(clusters[i][j][0], clusters[i][j][1], s=3, c=markerColors[i])
+                    
+    plt.axis([-1, width+1, -1, height+1])
+
 # k Means Clustering algorithm
 # return 'UAVs' and 'clusters'
 
@@ -22,7 +32,7 @@ import numpy as np
 ## clusters: [c0_deviceList, c1_deviceList, ...]
 # cK_deviceList: device list of cluster k,
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
-def kMeansClustering(L, deviceList, width, height, H, T, display):
+def kMeansClustering(L, deviceList, width, height, H, T, display, saveImg):
 
     # init clusters
     clusters = [] # clusters to return (each cluster contains corresponding devices)
@@ -111,17 +121,18 @@ def kMeansClustering(L, deviceList, width, height, H, T, display):
             UAVloc[i][0] = mean[0]
             UAVloc[i][1] = mean[1]
 
-        # print cluster info if display is True
-        if display == True:
-            plt.suptitle('clustering: ' + str(count))
+        # print or save info
+        if display == True or saveImg == True:
             
-            for i in range(L):
-                plt.scatter(UAVloc[i][0], UAVloc[i][1], s=20, c=markerColors[i])
-                for j in range(len(clusters[i])):
-                    plt.scatter(clusters[i][j][0], clusters[i][j][1], s=3, c=markerColors[i])
-                    
-            plt.axis([-1, width+1, -1, height+1])
-            plt.show()
+            # print cluster info
+            if display == True:
+                plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height)
+                plt.show()
+
+            # save image
+            if saveImg == True:
+                plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height)
+                plt.savefig('clustering_result.png')
 
         # break for the same cluster
         print('\nclustering ' + str(count))
@@ -175,7 +186,7 @@ if __name__ == '__main__':
         deviceList.append(device_i)
 
     # do K means clustering
-    (UAVs, clusters) = kMeansClustering(L, deviceList, width, height, H, T, True)
+    (UAVs, clusters) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
 
     # print result
     print(' << UAV location >>\n')

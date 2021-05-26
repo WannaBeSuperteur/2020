@@ -250,7 +250,7 @@ def algorithm1(M, T, L, devices, width, height,
 
     # cluster UAVs using K-means clustering
     # clusters (number of clusters = L, number of total devices = devices)
-    (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False)
+    (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False, True)
 
     # no need to init target network and online network now
 
