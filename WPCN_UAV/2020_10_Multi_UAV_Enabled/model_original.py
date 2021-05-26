@@ -213,7 +213,8 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 # fc, B, o2, b1, b2, : parameters (as Table 1)
 # alpha, u1, u2,
 # alphaL, r_, S_
-def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_):
+# deviceName         : cpu:0 or gpu:0 for example
+def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_, deviceName):
 
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -507,12 +508,12 @@ def algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1,
         ### TRAIN and VALIDATION for M = 0,1,2,3,4 ###
         print(episode)
         if episode < 5:
-            dq.deepLearningQ_training(QTable, 'cpu:0', 10, False)
-            dq.deepLearningQ_valid('cpu:0', 10, False, 0.05)
+            dq.deepLearningQ_training(QTable, deviceName, 10, False)
+            dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TRAIN and VALIDATION ###
-    dq.deepLearningQ_training(QTable, 'cpu:0', 10, False)
-    dq.deepLearningQ_valid('cpu:0', 10, False, 0.05)
+    dq.deepLearningQ_training(QTable, deviceName, 10, False)
+    dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TEST ###
     # later
@@ -524,6 +525,9 @@ if __name__ == '__main__':
     warnings.filterwarnings('ignore')
     warnings.filterwarnings('always')
     warnings.simplefilter('ignore')
+
+    # device setting
+    deviceName = 'gpu:0'
     
     # parameters (as TABLE 1)
     fc = 800000000 # carrier frequency
@@ -548,4 +552,4 @@ if __name__ == '__main__':
     H = 15 # H = 15m
 
     # run
-    algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_)
+    algorithm1(M, T, L, devices, width, height, H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_, deviceName)
