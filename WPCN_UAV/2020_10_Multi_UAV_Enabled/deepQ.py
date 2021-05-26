@@ -149,6 +149,32 @@ def stateTo1dArray(state, k):
     
     return q + [a] + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
 
+# normalize by each column
+def normalize(array):
+
+    arr = np.array(array)
+    rows = len(arr)
+    cols = len(arr[0])
+
+    # avg and stddev for each column marked as 1, 4 or 5
+    avgs = []
+    stddevs = []
+    
+    for j in range(cols):
+        col = arr[:, j]
+        avgs.append(np.mean(col))
+        stddevs.append(np.std(col))
+
+    # convert values
+    for i in range(rows):
+        for j in range(cols):
+            if stddevs[j] == 0: # to fix divide by 0
+                arr[i][j] = 0
+            else:
+                arr[i][j] = (arr[i][j] - avgs[j]) / stddevs[j]
+
+    return arr
+
 # deep Learning using Q table (training function)
 # printed : print the detail?
 def deepLearningQ_training(Q, deviceName, epoch, printed):
@@ -184,23 +210,28 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     if len(outputData) > 0:
         RD.saveArray('Q_output.txt', outputData)
 
+    # save normalized data
+    if len(inputData) > 0:
+        normalizedInputData = normalize(inputData)
+        RD.saveArray('Q_input_normalized.txt', normalizedInputData)
+
     # train using deep learning and save the model (testInputFile and testOutputFile is None)
     # need: modelConfig.txt
     # DON'T NEED TO APPLY SIGMOID to training output data, because DLmain.deeplearning applies it
     try:
-        DLmain.deepLearning('Q_input.txt', 'Q_output.txt', None, None, None,
+        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output.txt', None, None, None,
                             None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
-        print('Q_input.txt or Q_output.txt does not exist.')
+        print('Q_input_normalized.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (validation)
 def deepLearningQ_valid(deviceName, epoch, printed, validRate):
     
     try:
-        DLmain.deepLearning('Q_input.txt', 'Q_output.txt', None, None, None,
+        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output.txt', None, None, None,
                             None, validRate, 'Q_valid_report.txt', 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
-        print('Q_input.txt or Q_output.txt does not exist.')
+        print('Q_input_normalized.txt or Q_output.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose):
