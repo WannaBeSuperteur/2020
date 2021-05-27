@@ -208,7 +208,8 @@ def run_gradcam(start, end):
             cam, heatmap = grad_cam(model, reshaped_img, predicted_class, layerNos[j], layerNames[j])
 
             if gradcam_write == True:
-                cv2.imwrite("gradcam_" + str(start + i) + "_" + layerNames[j] + ".jpg", cam)
+                cv2.imwrite("gradcam_" + str(start + i) + "_" + layerNames[j] + "_cam.jpg", cam)
+                cv2.imwrite("gradcam_" + str(start + i) + "_" + layerNames[j] + "_heatmap.jpg", heatmap)
 
         # convert (64, 64, 1) into (64, 64, 3)
         reshaped_img = reshaped_img.reshape((1, imgSize, imgSize))
