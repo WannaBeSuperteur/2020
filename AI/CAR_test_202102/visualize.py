@@ -63,5 +63,12 @@ def visualizeImages(train, start, end):
     
 if __name__ == '__main__':
 
-    # visualize training image from index 234 to index 250
-    visualizeImages(True, 234, 251)
+    # save grayscaled images for 350~354th and 850~854th test images
+
+    for i in range(350, 355):
+        imgArray = readImages(False, i, i+1)
+        visualizeFromImgArray(imgArray, 'grayscale_' + str(i) + '.png', True)
+
+    for i in range(850, 855):
+        imgArray = readImages(False, i, i+1)
+        visualizeFromImgArray(imgArray, 'grayscale_' + str(i) + '.png', True)
