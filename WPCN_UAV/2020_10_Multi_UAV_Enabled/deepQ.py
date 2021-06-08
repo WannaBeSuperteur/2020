@@ -155,6 +155,11 @@ def normalize(array):
     rows = len(arr)
     cols = len(arr[0])
 
+    # x -> log(x+1)
+    for i in range(rows):
+        for j in range(cols):
+            arr[i][j] = math.log(arr[i][j] + 1, 2)
+
     # avg and stddev for each column marked as 1, 4 or 5
     avgs = []
     stddevs = []
