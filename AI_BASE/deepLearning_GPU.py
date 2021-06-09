@@ -40,10 +40,23 @@ def create_model(modelInfo, optimi, loss, isPrint):
 # deviceName: name of device (ex: 'cpu:0', 'gpu:0')
 def learning(model, inputs, outputs, saveName, epoch, deviceName):
 
-    print(np.shape(inputs))
-    print(np.array(inputs))
-    print(np.shape(outputs))
-    print(np.array(outputs))
+    if len(inputs) > 10:
+        print(np.shape(inputs))
+        print(np.array(inputs[:5]))
+        print('...')
+        print(np.array(inputs[len(inputs)-5:]))
+    else:
+        print(np.shape(inputs))
+        print(np.array(inputs))
+    
+    if len(outputs) > 10:
+        print(np.shape(outputs))
+        print(np.array(outputs[:5]))
+        print('...')
+        print(np.array(outputs[len(outputs)-5:]))
+    else:
+        print(np.shape(outputs))
+        print(np.array(outputs))
 
     # 학습 실시
     with tf.device('/' + deviceName):
