@@ -1,6 +1,7 @@
 import sys
 import math
 sys.path.insert(0, '../../AI_BASE')
+import copy
 
 import deepLearning_GPU as DL
 import deepLearning_GPU_helper as helper
@@ -149,16 +150,17 @@ def stateTo1dArray(state, k):
     return q + [a] + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
 
 # normalize by each column
-def normalize(array):
+def normalize(array, applyLog):
 
-    arr = np.array(array)
+    arr = np.array(copy.deepcopy(array))
     rows = len(arr)
     cols = len(arr[0])
 
     # x -> log(x+1)
-    for i in range(rows):
-        for j in range(cols):
-            arr[i][j] = math.log(arr[i][j] + 1, 2)
+    if applyLog == True:
+        for i in range(rows):
+            for j in range(cols):
+                arr[i][j] = math.log(arr[i][j] + 1, 2)
 
     # avg and stddev for each column marked as 1, 4 or 5
     avgs = []
@@ -194,7 +196,6 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     # input array (need to convert original array [s0])
     inputData = []
     for i in range(len(Q)):
-        print(i, Q[i])
 
         # convert into 1d array (valid if not converted)
         try:
@@ -216,14 +217,16 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # save normalized data
     if len(inputData) > 0:
-        normalizedInputData = normalize(inputData)
+        normalizedInputData = normalize(inputData, False)
+        normalizedOutputData = normalize(outputData, False)
         RD.saveArray('Q_input_normalized.txt', normalizedInputData)
+        RD.saveArray('Q_output_normalized.txt', normalizedOutputData)
 
     # train using deep learning and save the model (testInputFile and testOutputFile is None)
     # need: modelConfig.txt
     # DON'T NEED TO APPLY SIGMOID to training output data, because DLmain.deeplearning applies it
     try:
-        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output.txt', None, None, None,
+        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output_normalized.txt', None, None, None,
                             None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
         print('[train] Q_input_normalized.txt or Q_output.txt does not exist.')
@@ -232,10 +235,10 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 def deepLearningQ_valid(deviceName, epoch, printed, validRate):
     
     try:
-        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output.txt', None, None, None,
+        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output_normalized.txt', None, None, None,
                             None, validRate, 'Q_valid_report.txt', 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
-        print('[valid] Q_input_normalized.txt or Q_output.txt does not exist.')
+        print('[valid] Q_input_normalized.txt or Q_output_normalized.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose):
