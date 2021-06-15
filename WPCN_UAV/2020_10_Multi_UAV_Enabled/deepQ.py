@@ -12,6 +12,7 @@ import formula as f
 import random
 import readData as RD
 import numpy as np
+import pandas as pd
 
 import tensorflow as tf
 from tensorflow import keras
@@ -172,11 +173,20 @@ def normalize(array, applyLog, title, printAnalysis):
         stddevs.append(np.std(col))
 
         if printAnalysis == True:
+
+            # save analysis result
             print('\n ==== ' + title + ' col ' + str(j) + ' info ====')
+            print('vals =')
+            print(str(np.array(col)[:30]))
             print('mean = ' + str(np.mean(col)))
             print('std  = ' + str(np.std(col)))
             print('max  = ' + str(np.max(col)))
             print('min  = ' + str(np.min(col)))
+
+            # save as *.csv file
+            fn = 'colAnalysis_' + title + '_' + str(j) + '.csv'
+            df = pd.DataFrame(np.array([np.array(col)]).T)
+            df.to_csv(fn)
 
     # convert values
     for i in range(rows):
@@ -185,7 +195,6 @@ def normalize(array, applyLog, title, printAnalysis):
                 arr[i][j] = 0
             else:
                 arr[i][j] = (arr[i][j] - avgs[j]) / stddevs[j]
-                #if i == 0: print('col ' + str(j) + ' : ' + str(arr[i][j]))
 
     return arr
 
