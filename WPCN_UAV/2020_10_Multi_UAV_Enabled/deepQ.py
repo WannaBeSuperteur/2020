@@ -150,7 +150,7 @@ def stateTo1dArray(state, k):
     return q + [a] + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
 
 # normalize by each column
-def normalize(array, applyLog):
+def normalize(array, applyLog, title, printAnalysis):
 
     arr = np.array(copy.deepcopy(array))
     rows = len(arr)
@@ -171,6 +171,13 @@ def normalize(array, applyLog):
         avgs.append(np.mean(col))
         stddevs.append(np.std(col))
 
+        if printAnalysis == True:
+            print('\n ==== ' + title + ' col ' + str(j) + ' info ====')
+            print('mean = ' + str(np.mean(col)))
+            print('std  = ' + str(np.std(col)))
+            print('max  = ' + str(np.max(col)))
+            print('min  = ' + str(np.min(col)))
+
     # convert values
     for i in range(rows):
         for j in range(cols):
@@ -178,6 +185,7 @@ def normalize(array, applyLog):
                 arr[i][j] = 0
             else:
                 arr[i][j] = (arr[i][j] - avgs[j]) / stddevs[j]
+                #if i == 0: print('col ' + str(j) + ' : ' + str(arr[i][j]))
 
     return arr
 
@@ -217,8 +225,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # save normalized data
     if len(inputData) > 0:
-        normalizedInputData = normalize(inputData, False)
-        normalizedOutputData = normalize(outputData, False)
+        normalizedInputData = normalize(inputData, False, 'input', True)
+        normalizedOutputData = normalize(outputData, False, 'output', True)
         RD.saveArray('Q_input_normalized.txt', normalizedInputData)
         RD.saveArray('Q_output_normalized.txt', normalizedOutputData)
 
