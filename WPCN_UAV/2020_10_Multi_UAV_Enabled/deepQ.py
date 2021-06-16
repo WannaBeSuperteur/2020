@@ -3,11 +3,6 @@ import math
 sys.path.insert(0, '../../AI_BASE')
 import copy
 
-import deepLearning_GPU as DL
-import deepLearning_GPU_helper as helper
-import deepLearning_main as DLmain
-import AIBASE_main as main
-
 import formula as f
 import random
 import readData as RD
@@ -198,9 +193,55 @@ def normalize(array, applyLog, title, printAnalysis):
 
     return arr
 
+# model
+class MODEL(tf.keras.Model):
+    def __init__(self, name='model'):
+        super(MODEL, self).__init__(name=name)
+
+        # L2 regularization
+        L2 = tf.keras.regularizers.l2(0.001)
+
+        # deep learning model
+        self.hidden_0 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
+        self.hidden_1 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
+        self.hidden_2 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
+        self.hidden_3 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
+        self.output_layer = tf.keras.layers.Dense(units=27, activation='tanh')
+
+    def call(self, inputs, training):
+
+        # deep learning model
+        inputs_0 = self.hidden_0(inputs)
+        inputs_1 = self.hidden_1(inputs_0)
+        inputs_2 = self.hidden_2(inputs_1)
+        inputs_3 = self.hidden_3(inputs_2)
+
+        output = self.output_layer(inputs_3)
+        return output
+
+# define model
+def defineModel():
+    model = MODEL()
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+    return model
+
+# train data with model
+def trainDataWithModel(Q_input, Q_output, model, epochs):
+    
+    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+
+    model.fit(Q_input, Q_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
+    model.summary()
+
+    model.save('model')
+
 # deep Learning using Q table (training function)
 # printed : print the detail?
 def deepLearningQ_training(Q, deviceName, epoch, printed):
+
+    model = defineModel()
     
     # Q : [state, action_reward, i (UAV/cluster index), k (device index)]
     
@@ -234,8 +275,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # save normalized data
     if len(inputData) > 0:
-        normalizedInputData = normalize(inputData, False, 'input', True)
-        normalizedOutputData = normalize(outputData, False, 'output', True)
+        normalizedInputData = normalize(inputData, False, 'input' + str(len(inputData)), True)
+        normalizedOutputData = normalize(outputData, False, 'output' + str(len(inputData)), True)
         RD.saveArray('Q_input_normalized.txt', normalizedInputData)
         RD.saveArray('Q_output_normalized.txt', normalizedOutputData)
 
@@ -243,19 +284,12 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     # need: modelConfig.txt
     # DON'T NEED TO APPLY SIGMOID to training output data, because DLmain.deeplearning applies it
     try:
-        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output_normalized.txt', None, None, None,
-                            None, 0.0, None, 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
-    except:
-        print('[train] Q_input_normalized.txt or Q_output.txt does not exist.')
+        Q_input_noramlized = np.array(RD.loadArray('Q_input_normalized.txt', '\t')).astype(float)
+        Q_output_noramlized = np.array(RD.loadArray('Q_output_normalized.txt', '\t')).astype(float)
+        trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, 15)
 
-# deep Learning using Q table (validation)
-def deepLearningQ_valid(deviceName, epoch, printed, validRate):
-    
-    try:
-        DLmain.deepLearning('Q_input_normalized.txt', 'Q_output_normalized.txt', None, None, None,
-                            None, validRate, 'Q_valid_report.txt', 'modelConfig.txt', deviceName, epoch, printed, 'deepQ_model')
     except:
-        print('[valid] Q_input_normalized.txt or Q_output_normalized.txt does not exist.')
+        print('[train] Q_input_normalized.txt or Q_output_normalized.txt does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose):
@@ -266,20 +300,13 @@ def deepLearningQ_test(state, k, verbose):
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
     optimizer = tf.keras.optimizers.Adam(0.001)
-    trainedModel = DL.deepLearningModel('deepQ_model', optimizer, 'mse', verbose)
-
-    testO = DL.modelOutput(trainedModel, [stateArray])
-    outputLayer = testO[len(testO)-1]
-
-    # apply inverse sigmoid to output values
-    for i in range(len(outputLayer)): # for each output data
-        for j in range(len(outputLayer[0])): # for each value of output data
-            outputLayer[i][j] = helper.invSigmoid(outputLayer[i][j])
+    trainedModel = tf.keras.models.load_model('model')
+    testO = trainedModel.predict(stateArray)
 
     if verbose == True: print('test finished')
 
     # return output layer
-    return outputLayer
+    return testO
 
 # update Q value
 

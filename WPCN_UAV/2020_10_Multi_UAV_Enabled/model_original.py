@@ -509,15 +509,13 @@ def algorithm1(M, T, L, devices, width, height,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
 
         ### TRAIN and VALIDATION ###
-        if episode % 5 == 0:
+        if episode % 1 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
-            dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TRAIN and VALIDATION (FINAL) ###
     QTable_use = len(QTable) * QTable_rate
     dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
-    dq.deepLearningQ_valid(deviceName, 10, False, 0.05)
 
     ### TEST ###
     # later
