@@ -2,7 +2,7 @@
 
   **The content from the [Kaggle:Herose](https://www.kaggle.com/piantic/tps-june-2021-basic-eda-t-sne-visualization)** **and also change the data with May-2021**
 
-  ![image-20210621123021188](C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621123021188.png)
+  ![image-20210621123021188](https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/EDA/12.png)
 
   The above picture is about the *sample_submission.csv* it will let us predict the each **class**'s probablity for every **id**.And it is the target of this competition.
 
