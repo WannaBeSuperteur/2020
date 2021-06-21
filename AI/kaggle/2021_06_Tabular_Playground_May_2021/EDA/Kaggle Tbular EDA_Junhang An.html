@@ -1,0 +1,60 @@
+<!doctype html>
+<html>
+<head>
+<meta charset='UTF-8'><meta name='viewport' content='width=device-width initial-scale=1'>
+<title>Kaggle Tbular EDA_Junhang An</title>
+</head>
+<body><ul>
+<li><p><strong>Kaggle Tbular EDA</strong></p>
+<p><strong>The content from the <a href='https://www.kaggle.com/piantic/tps-june-2021-basic-eda-t-sne-visualization'>Kaggle:Herose</a></strong> <strong>and also change the data with May-2021</strong></p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621123021188.png" referrerpolicy="no-referrer" alt="image-20210621123021188"></p>
+<p>The above picture is about the <em>sample_submission.csv</em> it will let us predict the each <strong>class</strong>&#39;s probablity for every <strong>id</strong>.And it is the target of this competition.</p>
+<ul>
+<li><p><strong>General EDA</strong></p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621124755373.png" referrerpolicy="no-referrer" alt="image-20210621124755373"></p>
+<ul>
+<li><p><strong>Basic EDA</strong></p>
+<ul>
+<li><p><strong>Target Distribution</strong></p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621130700253.png" referrerpolicy="no-referrer"></p>
+<pre><code>Class_1     8490
+Class_2    57497
+Class_3    21420
+Class_4    12593
+</code></pre>
+<p>From this distribution graph I think the data have too many bias. And it will be a big problem of the training.</p>
+<p>Also check the range from &#39;feature_0&#39; to &#39;feature_49&#39;</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621132801639.png" alt="image-20210621132801639"  /></p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621132942541.png" referrerpolicy="no-referrer" alt="image-20210621132942541"></p>
+</li>
+
+</ul>
+<p><strong>Make a statistics in train data and test data</strong></p>
+<p>First, let make the difference between two dataset.</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621133309305.png" referrerpolicy="no-referrer" alt="image-20210621133309305"></p>
+<p>The above picture shows the difference between train data and test data.</p>
+<p>The follow picutre shows the Features_0 to Feature_49 range, the green block means Trian&gt;Test, the red block means Train&lt;Test.</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621133808615.png" referrerpolicy="no-referrer" alt="image-20210621133808615"></p>
+<p>The following picture shows the sorted Feature range.</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621133903041.png" referrerpolicy="no-referrer" alt="image-20210621133903041"></p>
+<p> Also check the kdeplot, the following picture shows:</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621134625164.png" referrerpolicy="no-referrer" alt="image-20210621134625164"></p>
+<p>The zeor value by feature:</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621134747565.png" referrerpolicy="no-referrer" alt="image-20210621134747565"></p>
+<p>The average by feature(Blue=Class_1,Yellow=Class_2,Green=Class_3,Red = Class_4)</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621134900796.png" referrerpolicy="no-referrer" alt="image-20210621134900796"></p>
+<p>The correlation between Feature_0 to Feature_49</p>
+<p><img src="C:\Users\AnJunkang\AppData\Roaming\Typora\typora-user-images\image-20210621134941946.png" referrerpolicy="no-referrer" alt="image-20210621134941946"></p>
+<p>&nbsp;</p>
+</li>
+
+</ul>
+</li>
+
+</ul>
+</li>
+
+</ul>
+<p>&nbsp;</p>
+</body>
+</html>
