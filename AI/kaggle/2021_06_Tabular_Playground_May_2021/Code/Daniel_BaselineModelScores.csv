@@ -1,0 +1,11 @@
+,Model,Score,Model,Score,Model,Score,Model,Score
+0,LR,1.1824,standardLR,1.1069,minmaxLR,1.1069,cleaned_minmaxLR,1.1085
+1,LDA,1.107,standardLDA,1.107,minmaxLDA,1.107,cleaned_minmaxLDA,1.1085
+2,KNN,7.2073,standardKNN,7.0799,minmaxKNN,7.0694,cleaned_minmaxKNN,7.1529
+3,DTC,20.5288,standardDTC,20.5582,minmaxDTC,20.5374,cleaned_minmaxDTC,20.7747
+4,NB,1.7199,standardNB,2.4158,minmaxNB,2.4158,cleaned_minmaxNB,2.0391
+5,SVM,1.1186,standardSVM,1.1276,minmaxSVM,1.1237,cleaned_minmaxSVM,1.1296
+6,AB,1.3745,standardAB,1.3745,minmaxAB,1.3745,cleaned_minmaxAB,1.3747
+7,RF,1.1273,standardRF,1.1273,minmaxRF,1.1285,cleaned_minmaxRF,1.1319
+8,ET,1.1274,standardET,1.129,minmaxET,1.1293,cleaned_minmaxET,1.134
+9,LGBM,1.0958,standardLGBM,1.0957,minmaxLGBM,1.0958,cleaned_minmaxLGBM,1.103
