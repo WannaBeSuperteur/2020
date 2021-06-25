@@ -16,6 +16,9 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import log_loss
 
+# team members' Python codes
+import Daniel_BaselineModels as Daniel_Baseline
+
 # predict and save the prediction
 def predict(train_X, train_Y, test_X, predictionFileName):
     
@@ -52,10 +55,10 @@ def encodeOneHot(df, numClass):
 
     return encodedData
 
-# validate and return multiclass loss
+# compute and return multiclass loss
 # ground_truth : label      , shape=(rows, 1)
 # prediction   : probability, shape=(rows, numClass)
-def validate(prediction, ground_truth):
+def computeMulticlassLoss(prediction, ground_truth):
 
     prediction_np = np.array(prediction)
     ground_truth_np = np.array(ground_truth)
@@ -117,7 +120,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     # validation
     valid_prediction = predict(train_train_X, train_train_Y, train_valid_X, 'validation' + str(fileID))
-    error = validate(valid_prediction, train_valid_Y)
+    error = computeMulticlassLoss(valid_prediction, train_valid_Y)
 
     print('loss = ' + str(error))
 
