@@ -1,0 +1,6 @@
+normalize = False, log2 = False : 1.0792887933081055
+normalize = False, log2 = True  : 1.079476009535445
+normalize = True , log2 = False : 1.0792887933081055
+normalize = True , log2 = True  : 1.079476009535445
+
+(using 90,000 training rows and 10,000 validation rows)
