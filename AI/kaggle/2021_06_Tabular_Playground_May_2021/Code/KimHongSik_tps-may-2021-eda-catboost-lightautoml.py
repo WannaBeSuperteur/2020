@@ -83,6 +83,9 @@ def applyLog(df):
 # log2      : X -> log2(X+1) if X >= 0
 #                  0         if X <  0
 def run(train_df, test_df, dic, normalize, log2, final, fileID):
+
+    train_rows = 100000
+    numClass = 4
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -100,40 +103,41 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
         train_X = applyNormalization(train_X)
         test_X = applyNormalization(test_X)
 
-    # split training data into train_train and train_valid data
+    # split training data into train_train and train_valid data using K-fold
     # training using train_train data
     # valid    using train_valid data
-    train_rate = 0.9
-    train_train_rows = train_rows * train_rate
+
+    k = 10
+    unit_rows = int(train_rows / k) # rows in a k-folded unit
+    error = []
+
+    for i in range(k):
     
-    train_train_X = train_X.loc[:train_train_rows-1, :]
-    train_train_Y = train_Y.loc[:train_train_rows-1, :]
-    train_valid_X = train_X.loc[train_train_rows:, :]
-    train_valid_Y = train_Y.loc[train_train_rows:, :]
+        train_train_X = pd.concat([train_X.loc[:unit_rows*i - 1, :], train_X.loc[unit_rows*(i+1):, :]])
+        train_train_Y = pd.concat([train_Y.loc[:unit_rows*i - 1, :], train_Y.loc[unit_rows*(i+1):, :]])
+        train_valid_X = train_X.loc[unit_rows*i : unit_rows*(i+1) - 1, :]
+        train_valid_Y = train_Y.loc[unit_rows*i : unit_rows*(i+1) - 1, :]
 
-    print(' ======== normalize:' + str(normalize) + ' log2:' + str(log2) + ' ========')
-    print(train_train_X)
-    print(train_train_Y)
-    print(train_valid_X)
-    print(train_valid_Y)
-    print(' ========================================')
+        print(' ======== normalize:' + str(normalize) + ' log2:' + str(log2) + ' ========')
+        print(train_train_X)
+        print(train_train_Y)
+        print(train_valid_X)
+        print(train_valid_Y)
+        print(' ========================================')
 
-    # validation
-    valid_prediction = predict(train_train_X, train_train_Y, train_valid_X, 'validation' + str(fileID))
-    error = computeMulticlassLoss(valid_prediction, train_valid_Y)
+        # validation
+        valid_prediction = predict(train_train_X, train_train_Y, train_valid_X, 'validation' + str(fileID) + '_' + str(i))
+        error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
 
     print('loss = ' + str(error))
 
     # final prediction
     if final == True:
-        predict(train_X, train_Y, test_X, 'final_prediction' + str(fileID))
+        predict(train_X, train_Y, test_X, 'final_prediction' + str(fileID) + '_' + str(i))
 
     return error
 
 if __name__ == '__main__':
-
-    train_rows = 100000
-    numClass = 4
 
     # read data
     train_df = pd.read_csv('../train.csv')
@@ -147,7 +151,7 @@ if __name__ == '__main__':
     error2 = run(train_df, test_df, dic, True, False, False, 2)
     error3 = run(train_df, test_df, dic, True, True, False, 3)
 
-    print('normalize = False, log2 = False : ' + str(error0))
-    print('normalize = False, log2 = True  : ' + str(error1))
-    print('normalize = True , log2 = False : ' + str(error2))
-    print('normalize = True , log2 = True  : ' + str(error3))
+    print('\nnormalize = False, log2 = False :\n' + str(error0) + '\navg = ' + str(np.mean(error0)))
+    print('\nnormalize = False, log2 = True  :\n' + str(error1) + '\navg = ' + str(np.mean(error1)))
+    print('\nnormalize = True , log2 = False :\n' + str(error2) + '\navg = ' + str(np.mean(error2)))
+    print('\nnormalize = True , log2 = True  :\n' + str(error3) + '\navg = ' + str(np.mean(error3)))
