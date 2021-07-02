@@ -19,9 +19,12 @@ from sklearn.metrics import log_loss
 # team members' Python codes
 import Daniel_BaselineModels as Daniel_Baseline
 
-# predict and save the prediction
-def predict(train_X, train_Y, test_X, predictionFileName):
-    
+# models
+# XGBoost            : An Jun Hang's idea
+# LR, LDA, ..., LGBM : Daniel's idea
+# CatBoost           : Hong Sik Kim's idea
+def getCatBoostModel():
+
     # catboost classifier
     model = CatBoostClassifier(iterations=17000,
                             learning_rate=0.01,
@@ -30,7 +33,12 @@ def predict(train_X, train_Y, test_X, predictionFileName):
                             od_wait=1000,
                             od_type='Iter',                           
                             min_data_in_leaf=1,
-                            max_ctr_complexity=15)                            
+                            max_ctr_complexity=15)
+
+    return model
+
+# predict and save the prediction
+def predict(model, train_X, train_Y, test_X, predictionFileName):                            
                             
     model.fit(train_X, train_Y, verbose=1000)
     
@@ -77,6 +85,24 @@ def applyLog(df):
     df[df < 0] = 0
     return df
 
+# predict using multiple models
+def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
+
+    # models (classifiers)
+    model = getCatBoostModel() # catboost classifier
+
+    # array of models
+    models = [model]
+
+    # using weighted average of models
+    for i in range(len(weights)):
+        if i == 0:
+            prediction = weights[i] * predict(model, train_X, train_Y, test_X, predictionFileName)
+        else:
+            prediction += weights[i] * predict(model, train_X, train_Y, test_X, predictionFileName)
+
+    return prediction
+
 # run with normalize / log2 option for INPUT data (True/False each)
 
 # noramlize : noramlize X using average and stddev
@@ -107,9 +133,12 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
     # training using train_train data
     # valid    using train_valid data
 
-    k = 10
+    k = 5
     unit_rows = int(train_rows / k) # rows in a k-folded unit
     error = []
+
+    # weight
+    weights = [1.0]
 
     for i in range(k):
     
@@ -126,14 +155,14 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
         print(' ========================================')
 
         # validation
-        valid_prediction = predict(train_train_X, train_train_Y, train_valid_X, 'validation' + str(fileID) + '_' + str(i))
+        valid_prediction = predictWithModels(weights, train_train_X, train_train_Y, train_valid_X, 'validation' + str(fileID) + '_' + str(i))
         error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
 
     print('loss = ' + str(error))
 
     # final prediction
     if final == True:
-        predict(train_X, train_Y, test_X, 'final_prediction' + str(fileID) + '_' + str(i))
+        predictWithModels(weights, train_X, train_Y, test_X, 'final_prediction' + str(fileID) + '_' + str(i))
 
     return error
 
