@@ -16,6 +16,9 @@ from sklearn.metrics import classification_report
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import log_loss
 
+import lightgbm
+from lightgbm import LGBMClassifier
+
 # team members' Python codes
 import Daniel_BaselineModels as Daniel_Baseline
 
@@ -34,6 +37,30 @@ def getCatBoostModel():
                             od_type='Iter',                           
                             min_data_in_leaf=1,
                             max_ctr_complexity=15)
+
+    return model
+
+# lightGBM (ref: Daniel's Kaggle - https://www.kaggle.com/danieljhk/lgbm-baseline/output?scriptVersionId=67233275)
+def getLGBMModel():
+
+    # LGBM classifier
+    params = {
+        'learning_rate': 0.22296318552587047,
+        'max_depth': 3,
+        'num_leaves': 85,
+        'n_estimators': 253,
+        'min_child_samples': 115,
+        'colsample_bytree': 0.8217788951229221,
+        'subsample': 0.7488378856367371,
+        'reg_lambda': 731.663645944627,
+        'reg_alpha': 0.10179189160953969,
+        'scale_pos_weight': 0.18191544558601597,
+        'class_weight': None,
+        'objective': 'multiclass',
+        'random_state': 314,
+        'verbose': -1
+    }
+    model = LGBMClassifier(**params)
 
     return model
 
@@ -91,18 +118,19 @@ def applyLog(df):
 def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model = getCatBoostModel() # catboost classifier
+    model0 = getCatBoostModel() # catboost classifier
+    model1 = getLGBMModel() # lightGBM classifier
 
     # array of models
-    modelNames = ['catboost']
-    models = [model]
+    modelNames = ['catboost', 'lightgbm']
+    models = [model0, model1]
 
     # using weighted average of models
     for i in range(len(weights)):
         if i == 0:
-            prediction = weights[i] * predict(model, train_X, train_Y, test_X, None)
+            prediction = weights[i] * predict(models[i], train_X, train_Y, test_X, None)
         else:
-            prediction += weights[i] * predict(model, train_X, train_Y, test_X, None)
+            prediction += weights[i] * predict(models[i], train_X, train_Y, test_X, None)
 
     # save prediction and weights for each model
     prediction.to_csv(predictionFileName + '.csv')
@@ -183,7 +211,7 @@ if __name__ == '__main__':
     rounds = 1 # temp
 
     # initial weights for each model
-    weights = [1.0]
+    weights = [0.5, 0.5]
 
     # log
     log = ''
@@ -191,9 +219,43 @@ if __name__ == '__main__':
     for i in range(rounds):
         error = run(weights, train_df, test_df, dic, False, False, False, 0)
         meanError = np.mean(error)
-        log += ('weights=' + str(weights) + ' error=' + str(error) + ' avg=' + str(round(meanError, 6)))
+        log += ('[ round ' + str(i) + ' ]\nweights=' + str(weights) + ' error=' + str(error) + ' avg=' + str(round(meanError, 6)) + '\n')
+
+        # explore neighboring cases
+        weights_neighbor0 = [min(weights[0] + 0.05, 1.0), max(weights[1] - 0.05, 0.0)]
+        weights_neighbor1 = [max(weights[0] - 0.05, 0.0), min(weights[1] + 0.05, 1.0)]
+
+        error_neighbor0 = run(weights_neighbor0, train_df, test_df, dic, False, False, False, 0)
+        error_neighbor1 = run(weights_neighbor1, train_df, test_df, dic, False, False, False, 0)
+
+        meanError_neighbor0 = np.mean(error_neighbor0)
+        meanError_neighbor1 = np.mean(error_neighbor1)
 
         # save log for each round
         f = open('log.txt', 'w')
         f.write(log)
         f.close()
+
+        # modify weights using meanError
+        log += ('neighbor0=' + str(weights_neighbor0) + ' error=' + str(meanError_neighbor0) + '\n')
+        log += ('neighbor1=' + str(weights_neighbor1) + ' error=' + str(meanError_neighbor1) + '\n')
+
+        # error(neighbor1) < error < error(neighbor0) -> move to neighbor1
+        if meanError < meanError_neighbor0 and meanError > meanError_neighbor1:
+            weights[0] = max(weights[0] - 0.05, 0.0)
+            weights[1] = min(weights[1] + 0.05, 1.0)
+            log += 'move to neighbor0\n'
+
+        # error(neighbor0) < error < error(neighbor1) -> move to neighbor0
+        elif meanError > meanError_neighbor0 and meanError < meanError_neighbor1:
+            weights[0] = min(weights[0] + 0.05, 1.0)
+            weights[1] = max(weights[1] - 0.05, 0.0)
+            log += 'move to neighbor1\n'
+
+        else:
+            break
+
+    # save log for each round at finish
+    f = open('log.txt', 'w')
+    f.write(log)
+    f.close()
