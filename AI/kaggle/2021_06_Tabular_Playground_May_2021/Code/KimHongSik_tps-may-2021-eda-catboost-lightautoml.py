@@ -26,7 +26,7 @@ import Daniel_BaselineModels as Daniel_Baseline
 def getCatBoostModel():
 
     # catboost classifier
-    model = CatBoostClassifier(iterations=17000,
+    model = CatBoostClassifier(iterations=170, # 17000
                             learning_rate=0.01,
                             depth=4,
                             loss_function='MultiClass',
@@ -47,7 +47,9 @@ def predict(model, train_X, train_Y, test_X, predictionFileName):
     prediction = pd.DataFrame(prediction)
 
     # save prediction
-    prediction.to_csv(predictionFileName + '.csv')
+    if predictionFileName != None:
+        prediction.to_csv(predictionFileName + '.csv')
+        
     return prediction
 
 # one-hot encode dataset (not used in this file)
@@ -92,14 +94,19 @@ def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
     model = getCatBoostModel() # catboost classifier
 
     # array of models
+    modelNames = ['catboost']
     models = [model]
 
     # using weighted average of models
     for i in range(len(weights)):
         if i == 0:
-            prediction = weights[i] * predict(model, train_X, train_Y, test_X, predictionFileName)
+            prediction = weights[i] * predict(model, train_X, train_Y, test_X, None)
         else:
-            prediction += weights[i] * predict(model, train_X, train_Y, test_X, predictionFileName)
+            prediction += weights[i] * predict(model, train_X, train_Y, test_X, None)
+
+    # save prediction and weights for each model
+    prediction.to_csv(predictionFileName + '.csv')
+    pd.DataFrame(weights).to_csv(predictionFileName + '_weights.csv')
 
     return prediction
 
@@ -155,14 +162,14 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
         print(' ========================================')
 
         # validation
-        valid_prediction = predictWithModels(weights, train_train_X, train_train_Y, train_valid_X, 'validation' + str(fileID) + '_' + str(i))
+        valid_prediction = predictWithModels(weights, train_train_X, train_train_Y, train_valid_X, 'val' + str(fileID) + '_' + str(i))
         error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
 
     print('loss = ' + str(error))
 
     # final prediction
     if final == True:
-        predictWithModels(weights, train_X, train_Y, test_X, 'final_prediction' + str(fileID) + '_' + str(i))
+        predictWithModels(weights, train_X, train_Y, test_X, 'fin' + str(fileID) + '_' + str(i))
 
     return error
 
@@ -175,12 +182,13 @@ if __name__ == '__main__':
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3}
 
     # run
+    
     error0 = run(train_df, test_df, dic, False, False, False, 0)
-    error1 = run(train_df, test_df, dic, False, True, False, 1)
-    error2 = run(train_df, test_df, dic, True, False, False, 2)
-    error3 = run(train_df, test_df, dic, True, True, False, 3)
+    #error1 = run(train_df, test_df, dic, False, True, False, 1)
+    #error2 = run(train_df, test_df, dic, True, False, False, 2)
+    #error3 = run(train_df, test_df, dic, True, True, False, 3)
 
     print('\nnormalize = False, log2 = False :\n' + str(error0) + '\navg = ' + str(np.mean(error0)))
-    print('\nnormalize = False, log2 = True  :\n' + str(error1) + '\navg = ' + str(np.mean(error1)))
-    print('\nnormalize = True , log2 = False :\n' + str(error2) + '\navg = ' + str(np.mean(error2)))
-    print('\nnormalize = True , log2 = True  :\n' + str(error3) + '\navg = ' + str(np.mean(error3)))
+    #print('\nnormalize = False, log2 = True  :\n' + str(error1) + '\navg = ' + str(np.mean(error1)))
+    #print('\nnormalize = True , log2 = False :\n' + str(error2) + '\navg = ' + str(np.mean(error2)))
+    #print('\nnormalize = True , log2 = True  :\n' + str(error3) + '\navg = ' + str(np.mean(error3)))
