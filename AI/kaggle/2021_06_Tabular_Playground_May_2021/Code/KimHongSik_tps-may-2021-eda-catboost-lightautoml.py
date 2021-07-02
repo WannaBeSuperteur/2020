@@ -26,7 +26,7 @@ import Daniel_BaselineModels as Daniel_Baseline
 def getCatBoostModel():
 
     # catboost classifier
-    model = CatBoostClassifier(iterations=1700,
+    model = CatBoostClassifier(iterations=17000,
                             learning_rate=0.01,
                             depth=4,
                             loss_function='MultiClass',
@@ -185,7 +185,15 @@ if __name__ == '__main__':
     # initial weights for each model
     weights = [1.0]
 
+    # log
+    log = ''
+
     for i in range(rounds):
         error = run(weights, train_df, test_df, dic, False, False, False, 0)
         meanError = np.mean(error)
-        print('\nnormalize = False, log2 = False :\n' + str(error) + '\navg = ' + str(meanError))
+        log += ('weights=' + str(weights) + ' error=' + str(error) + ' avg=' + str(round(meanError, 6)))
+
+        # save log for each round
+        f = open('log.txt', 'w')
+        f.write(log)
+        f.close()
