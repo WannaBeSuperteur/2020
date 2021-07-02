@@ -26,7 +26,7 @@ import Daniel_BaselineModels as Daniel_Baseline
 def getCatBoostModel():
 
     # catboost classifier
-    model = CatBoostClassifier(iterations=170, # 17000
+    model = CatBoostClassifier(iterations=1700,
                             learning_rate=0.01,
                             depth=4,
                             loss_function='MultiClass',
@@ -106,7 +106,6 @@ def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
 
     # save prediction and weights for each model
     prediction.to_csv(predictionFileName + '.csv')
-    pd.DataFrame(weights).to_csv(predictionFileName + '_weights.csv')
 
     return prediction
 
@@ -115,7 +114,7 @@ def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
 # noramlize : noramlize X using average and stddev
 # log2      : X -> log2(X+1) if X >= 0
 #                  0         if X <  0
-def run(train_df, test_df, dic, normalize, log2, final, fileID):
+def run(weights, train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
@@ -144,9 +143,6 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
     unit_rows = int(train_rows / k) # rows in a k-folded unit
     error = []
 
-    # weight
-    weights = [1.0]
-
     for i in range(k):
     
         train_train_X = pd.concat([train_X.loc[:unit_rows*i - 1, :], train_X.loc[unit_rows*(i+1):, :]])
@@ -166,6 +162,8 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
         error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
 
     print('loss = ' + str(error))
+    pd.DataFrame(weights).to_csv('val' + str(fileID) + '_weights.csv')
+    pd.DataFrame(error).to_csv('val' + str(fileID) + '_loss.csv')
 
     # final prediction
     if final == True:
@@ -181,14 +179,13 @@ if __name__ == '__main__':
 
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3}
 
-    # run
-    
-    error0 = run(train_df, test_df, dic, False, False, False, 0)
-    #error1 = run(train_df, test_df, dic, False, True, False, 1)
-    #error2 = run(train_df, test_df, dic, True, False, False, 2)
-    #error3 = run(train_df, test_df, dic, True, True, False, 3)
+    # run for 200 rounds
+    rounds = 1 # temp
 
-    print('\nnormalize = False, log2 = False :\n' + str(error0) + '\navg = ' + str(np.mean(error0)))
-    #print('\nnormalize = False, log2 = True  :\n' + str(error1) + '\navg = ' + str(np.mean(error1)))
-    #print('\nnormalize = True , log2 = False :\n' + str(error2) + '\navg = ' + str(np.mean(error2)))
-    #print('\nnormalize = True , log2 = True  :\n' + str(error3) + '\navg = ' + str(np.mean(error3)))
+    # initial weights for each model
+    weights = [1.0]
+
+    for i in range(rounds):
+        error = run(weights, train_df, test_df, dic, False, False, False, 0)
+        meanError = np.mean(error)
+        print('\nnormalize = False, log2 = False :\n' + str(error) + '\navg = ' + str(meanError))
