@@ -170,38 +170,39 @@ def run(weights, train_df, test_df, dic, normalize, log2, final, fileID):
     # split training data into train_train and train_valid data using K-fold
     # training using train_train data
     # valid    using train_valid data
+    if final == False:
 
-    k = 5
-    unit_rows = int(train_rows / k) # rows in a k-folded unit
-    error = []
+        k = 5
+        unit_rows = int(train_rows / k) # rows in a k-folded unit
+        error = []
 
-    for i in range(k):
-    
-        train_train_X = pd.concat([train_X.loc[:unit_rows*i - 1, :], train_X.loc[unit_rows*(i+1):, :]])
-        train_train_Y = pd.concat([train_Y.loc[:unit_rows*i - 1, :], train_Y.loc[unit_rows*(i+1):, :]])
-        train_valid_X = train_X.loc[unit_rows*i : unit_rows*(i+1) - 1, :]
-        train_valid_Y = train_Y.loc[unit_rows*i : unit_rows*(i+1) - 1, :]
+        for i in range(k):
+        
+            train_train_X = pd.concat([train_X.loc[:unit_rows*i - 1, :], train_X.loc[unit_rows*(i+1):, :]])
+            train_train_Y = pd.concat([train_Y.loc[:unit_rows*i - 1, :], train_Y.loc[unit_rows*(i+1):, :]])
+            train_valid_X = train_X.loc[unit_rows*i : unit_rows*(i+1) - 1, :]
+            train_valid_Y = train_Y.loc[unit_rows*i : unit_rows*(i+1) - 1, :]
 
-        print(' ======== normalize:' + str(normalize) + ' log2:' + str(log2) + ' ========')
-        print(train_train_X)
-        print(train_train_Y)
-        print(train_valid_X)
-        print(train_valid_Y)
-        print(' ========================================')
+            print(' ======== normalize:' + str(normalize) + ' log2:' + str(log2) + ' ========')
+            print(train_train_X)
+            print(train_train_Y)
+            print(train_valid_X)
+            print(train_valid_Y)
+            print(' ========================================')
 
-        # validation
-        valid_prediction = predictWithModels(weights, train_train_X, train_train_Y, train_valid_X, 'val' + str(fileID) + '_' + str(i))
-        error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
+            # validation
+            valid_prediction = predictWithModels(weights, train_train_X, train_train_Y, train_valid_X, 'val' + str(fileID) + '_' + str(i))
+            error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
 
-    print('loss = ' + str(error))
-    pd.DataFrame(weights).to_csv('val' + str(fileID) + '_weights.csv')
-    pd.DataFrame(error).to_csv('val' + str(fileID) + '_loss.csv')
+        print('loss = ' + str(error))
+        pd.DataFrame(weights).to_csv('val' + str(fileID) + '_weights.csv')
+        pd.DataFrame(error).to_csv('val' + str(fileID) + '_loss.csv')
+
+        return error
 
     # final prediction
-    if final == True:
-        predictWithModels(weights, train_X, train_Y, test_X, 'fin' + str(fileID) + '_' + str(i))
-
-    return error
+    else: # final == True
+        predictWithModels(weights, train_X, train_Y, test_X, 'fin' + str(fileID))
 
 if __name__ == '__main__':
 
@@ -260,6 +261,16 @@ if __name__ == '__main__':
             break
 
     # save log for each round at finish
+    f = open('log.txt', 'w')
+    f.write(log)
+    f.close()
+
+    # final prediction
+    run(weights, train_df, test_df, dic, False, False, True, 99999)
+
+    # save log for final prediction
+    log += ('final prediction with ' + str(weights))
+    
     f = open('log.txt', 'w')
     f.write(log)
     f.close()
