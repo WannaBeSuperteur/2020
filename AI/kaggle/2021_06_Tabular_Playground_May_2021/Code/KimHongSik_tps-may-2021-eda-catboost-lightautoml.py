@@ -65,7 +65,8 @@ def getLGBMModel():
     return model
 
 # predict and save the prediction
-def predict(model, train_X, train_Y, test_X, predictionFileName):                            
+def predict(model, train_X, train_Y, test_X, predictionFileName):
+    print(' ==== predict using model : ' + str(model) + ' ====')
                             
     model.fit(train_X, train_Y, verbose=1000)
     
@@ -127,10 +128,13 @@ def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
 
     # using weighted average of models
     for i in range(len(weights)):
+        predictionUsingModel = weights[i] * predict(models[i], train_X, train_Y, test_X, None)
+        print('\nprediction using model ' + str(i) + ' : (w=' + str(weights[i]) + ') = \n' + str(predictionUsingModel[:5]) + '\n')
+        
         if i == 0:
-            prediction = weights[i] * predict(models[i], train_X, train_Y, test_X, None)
+            prediction = predictionUsingModel
         else:
-            prediction += weights[i] * predict(models[i], train_X, train_Y, test_X, None)
+            prediction += predictionUsingModel
 
     # save prediction and weights for each model
     prediction.to_csv(predictionFileName + '.csv')
@@ -208,7 +212,7 @@ if __name__ == '__main__':
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3}
 
     # run for 200 rounds
-    rounds = 1 # temp
+    rounds = 5 # temp
 
     # initial weights for each model
     weights = [0.5, 0.5]
@@ -217,7 +221,7 @@ if __name__ == '__main__':
     log = ''
 
     for i in range(rounds):
-        error = run(weights, train_df, test_df, dic, False, False, False, 0)
+        error = run(weights, train_df, test_df, dic, False, False, False, 10000 + i*10)
         meanError = np.mean(error)
         log += ('[ round ' + str(i) + ' ]\nweights=' + str(weights) + ' error=' + str(error) + ' avg=' + str(round(meanError, 6)) + '\n')
 
@@ -225,8 +229,8 @@ if __name__ == '__main__':
         weights_neighbor0 = [min(weights[0] + 0.05, 1.0), max(weights[1] - 0.05, 0.0)]
         weights_neighbor1 = [max(weights[0] - 0.05, 0.0), min(weights[1] + 0.05, 1.0)]
 
-        error_neighbor0 = run(weights_neighbor0, train_df, test_df, dic, False, False, False, 0)
-        error_neighbor1 = run(weights_neighbor1, train_df, test_df, dic, False, False, False, 0)
+        error_neighbor0 = run(weights_neighbor0, train_df, test_df, dic, False, False, False, 10000 + i*10 + 1)
+        error_neighbor1 = run(weights_neighbor1, train_df, test_df, dic, False, False, False, 10000 + i*10 + 2)
 
         meanError_neighbor0 = np.mean(error_neighbor0)
         meanError_neighbor1 = np.mean(error_neighbor1)
