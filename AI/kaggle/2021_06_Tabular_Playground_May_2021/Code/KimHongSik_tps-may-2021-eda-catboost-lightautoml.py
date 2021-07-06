@@ -116,7 +116,7 @@ def applyLog(df):
     return df
 
 # predict using multiple models
-def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
+def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
     model0 = getCatBoostModel() # catboost classifier
@@ -125,31 +125,29 @@ def predictWithModels(weights, train_X, train_Y, test_X, predictionFileName):
     # array of models
     modelNames = ['catboost', 'lightgbm']
     models = [model0, model1]
+    predictions = []
 
-    # using weighted average of models
-    for i in range(len(weights)):
-        predictionUsingModel = weights[i] * predict(models[i], train_X, train_Y, test_X, None)
-        print('\nprediction using model ' + str(i) + ' : (w=' + str(weights[i]) + ') = \n' + str(predictionUsingModel[:5]) + '\n')
+    # predict using these models
+    for i in range(len(models)):
+        prediction = predict(models[i], train_X, train_Y, test_X, None)
+        print('\nprediction using model ' + str(i) + ' :\n' + str(prediction[:5]) + '\n')
         
-        if i == 0:
-            prediction = predictionUsingModel
-        else:
-            prediction += predictionUsingModel
+        # save prediction for each model
+        prediction.to_csv(predictionFileName + '_model_' + str(i) + '.csv')
+        predictions.append(prediction)
 
-    # save prediction and weights for each model
-    prediction.to_csv(predictionFileName + '.csv')
-
-    return prediction
+    return predictions
 
 # run with normalize / log2 option for INPUT data (True/False each)
 
 # noramlize : noramlize X using average and stddev
 # log2      : X -> log2(X+1) if X >= 0
 #                  0         if X <  0
-def run(weights, train_df, test_df, dic, normalize, log2, final, fileID):
+def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
+    numModel = 2
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -167,14 +165,18 @@ def run(weights, train_df, test_df, dic, normalize, log2, final, fileID):
         train_X = applyNormalization(train_X)
         test_X = applyNormalization(test_X)
 
+    # VALIDATION
     # split training data into train_train and train_valid data using K-fold
     # training using train_train data
     # valid    using train_valid data
     if final == False:
 
-        k = 5
+        k = 10
         unit_rows = int(train_rows / k) # rows in a k-folded unit
         error = []
+
+        # the whole merged predictions of each k-folded rows 0~9999, 10000~19999, ..., 90000~99999, for each model
+        merged_predictions = np.zeros((numModel, train_rows, numClass))
 
         for i in range(k):
         
@@ -191,24 +193,41 @@ def run(weights, train_df, test_df, dic, normalize, log2, final, fileID):
             print(' ========================================')
 
             # validation
-            valid_prediction = predictWithModels(weights, train_train_X, train_train_Y, train_valid_X, 'val' + str(fileID) + '_' + str(i))
-            error.append(round(computeMulticlassLoss(valid_prediction, train_valid_Y), 6))
+            valid_predictions = predictWithModels(train_train_X, train_train_Y, train_valid_X, 'val' + str(fileID) + '_' + str(i))
 
-        print('loss = ' + str(error))
-        pd.DataFrame(weights).to_csv('val' + str(fileID) + '_weights.csv')
-        pd.DataFrame(error).to_csv('val' + str(fileID) + '_loss.csv')
+            # the whole merged prediction for each model
+            for j in range(numModel):
+                merged_predictions[j][unit_rows*i : unit_rows*(i+1)] += valid_predictions[j]
 
-        return error
+        # save merged predictions as *.csv file
+        for i in range(numModel):
+            pd.DataFrame(merged_predictions[i]).to_csv('merged_predictions_model_' + str(i) + '.csv')
+            
+        return merged_predictions
 
-    # final prediction
+    # FINAL PREDICTION
     else: # final == True
-        predictWithModels(weights, train_X, train_Y, test_X, 'fin' + str(fileID))
+        return predictWithModels(train_X, train_Y, test_X, 'fin' + str(fileID))
+
+# compute error between merged prediction with weights
+def computeError(merged_predictions, weights, train_Y):
+
+    # compute merged prediction with the sum of (merged_prediction * weight)
+    # shape of both merged_prediction and train_Y : (train_rows, numClass)
+    for i in range(len(weights)):
+        if i == 0:
+            merged_prediction = weights[0] * merged_predictions[0]
+        else:
+            merged_prediction += weights[i] * merged_predictions[i]
+    
+    return computeMulticlassLoss(merged_prediction, train_Y)
 
 if __name__ == '__main__':
 
     # read data
     train_df = pd.read_csv('../train.csv')
     test_df = pd.read_csv('../test.csv')
+    train_Y = train_df.loc[:, 'target']
 
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3}
 
@@ -218,23 +237,22 @@ if __name__ == '__main__':
     # initial weights for each model
     weights = [0.5, 0.5]
 
+    # get merged predictions first
+    merged_predictions = run(train_df, test_df, dic, False, False, False, 0)
+
     # log
     log = ''
 
     for i in range(rounds):
-        error = run(weights, train_df, test_df, dic, False, False, False, 10000 + i*10)
-        meanError = np.mean(error)
-        log += ('[ round ' + str(i) + ' ]\nweights=' + str(weights) + ' error=' + str(error) + ' avg=' + str(round(meanError, 6)) + '\n')
+        error = computeError(merged_predictions, weights, train_Y)
+        log += ('[ round ' + str(i) + ' ]\nweights=' + str(weights) + ' error=' + str(error) + '\n')
 
         # explore neighboring cases
         weights_neighbor0 = [min(weights[0] + 0.05, 1.0), max(weights[1] - 0.05, 0.0)]
         weights_neighbor1 = [max(weights[0] - 0.05, 0.0), min(weights[1] + 0.05, 1.0)]
 
-        error_neighbor0 = run(weights_neighbor0, train_df, test_df, dic, False, False, False, 10000 + i*10 + 1)
-        error_neighbor1 = run(weights_neighbor1, train_df, test_df, dic, False, False, False, 10000 + i*10 + 2)
-
-        meanError_neighbor0 = np.mean(error_neighbor0)
-        meanError_neighbor1 = np.mean(error_neighbor1)
+        error_neighbor0 = computeError(merged_predictions, weights_neighbor0, train_Y)
+        error_neighbor1 = computeError(merged_predictions, weights_neighbor1, train_Y)
 
         # save log for each round
         f = open('log.txt', 'w')
@@ -242,17 +260,17 @@ if __name__ == '__main__':
         f.close()
 
         # modify weights using meanError
-        log += ('neighbor0=' + str(weights_neighbor0) + ' error=' + str(meanError_neighbor0) + '\n')
-        log += ('neighbor1=' + str(weights_neighbor1) + ' error=' + str(meanError_neighbor1) + '\n')
+        log += ('neighbor0=' + str(weights_neighbor0) + ' error=' + str(error_neighbor0) + '\n')
+        log += ('neighbor1=' + str(weights_neighbor1) + ' error=' + str(error_neighbor1) + '\n')
 
         # error(neighbor1) < error < error(neighbor0) -> move to neighbor1
-        if meanError < meanError_neighbor0 and meanError > meanError_neighbor1:
+        if error < error_neighbor0 and error > error_neighbor1:
             weights[0] = max(weights[0] - 0.05, 0.0)
             weights[1] = min(weights[1] + 0.05, 1.0)
             log += 'move to neighbor0\n'
 
         # error(neighbor0) < error < error(neighbor1) -> move to neighbor0
-        elif meanError > meanError_neighbor0 and meanError < meanError_neighbor1:
+        elif error > error_neighbor0 and error < error_neighbor1:
             weights[0] = min(weights[0] + 0.05, 1.0)
             weights[1] = max(weights[1] - 0.05, 0.0)
             log += 'move to neighbor1\n'
@@ -266,7 +284,15 @@ if __name__ == '__main__':
     f.close()
 
     # final prediction
-    run(weights, train_df, test_df, dic, False, False, True, 99999)
+    final_predictions = run(train_df, test_df, dic, False, False, True, 0)
+
+    for i in range(len(weights)):
+        if i == 0:
+            final_prediction = weights[0] * final_predictions[0]
+        else:
+            final_prediction += weights[i] * final_predictions[i]
+
+    pd.DataFrame(final_prediction).to_csv('final_prediction.csv')
 
     # save log for final prediction
     log += ('final prediction with ' + str(weights))
