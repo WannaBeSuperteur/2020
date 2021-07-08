@@ -138,6 +138,16 @@ def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     return predictions
 
+# get merged predictions if merged_predictions_model_X.csv already exists
+def getMergedPredictions(numModel):
+
+    merged_predictions = []
+
+    for i in range(numModel):
+        merged_predictions.append(pd.read_csv('merged_predictions_model_' + str(i) + '.csv', index_col=0))
+
+    return merged_predictions
+
 # run with normalize / log2 option for INPUT data (True/False each)
 
 # noramlize : noramlize X using average and stddev
@@ -231,8 +241,8 @@ if __name__ == '__main__':
 
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3}
 
-    # run for 200 rounds
-    rounds = 5 # temp
+    # run for at most 200 rounds
+    rounds = 200
 
     # initial weights for each model : [CatBoost, LGBM]
     weights = [0.15, 0.85]
@@ -241,7 +251,12 @@ if __name__ == '__main__':
     wcr = 0.025
 
     # get merged predictions first
-    merged_predictions = run(train_df, test_df, dic, False, False, False, 0)
+    try:
+        merged_predictions = getMergedPredictions(len(weights))
+    except:
+        merged_predictions = run(train_df, test_df, dic, False, False, False, 0)
+
+    print(merged_predictions)
 
     # log
     log = ''
