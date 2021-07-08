@@ -293,9 +293,10 @@ if __name__ == '__main__':
             final_prediction += weights[i] * final_predictions[i]
 
     # change row number and column as 'sample_submission.csv'
+    # you need to write 'id' to the top-left cell
     final_prediction = pd.DataFrame(final_prediction)
     final_prediction.index = range(100000, 150000)
-    final_prediction.columns = ['Class1', 'Class2', 'Class3', 'Class4']
+    final_prediction.columns = ['Class_1', 'Class_2', 'Class_3', 'Class_4']
     final_prediction.to_csv('final_prediction.csv')
 
     # save log for final prediction
