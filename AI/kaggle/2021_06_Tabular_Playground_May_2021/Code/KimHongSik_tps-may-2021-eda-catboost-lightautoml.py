@@ -234,8 +234,11 @@ if __name__ == '__main__':
     # run for 200 rounds
     rounds = 5 # temp
 
-    # initial weights for each model
-    weights = [0.5, 0.5]
+    # initial weights for each model : [CatBoost, LGBM]
+    weights = [0.15, 0.85]
+
+    # weight change rate
+    wcr = 0.025
 
     # get merged predictions first
     merged_predictions = run(train_df, test_df, dic, False, False, False, 0)
@@ -248,8 +251,8 @@ if __name__ == '__main__':
         log += ('[ round ' + str(i) + ' ]\nweights=' + str(weights) + ' error=' + str(error) + '\n')
 
         # explore neighboring cases
-        weights_neighbor0 = [min(weights[0] + 0.05, 1.0), max(weights[1] - 0.05, 0.0)]
-        weights_neighbor1 = [max(weights[0] - 0.05, 0.0), min(weights[1] + 0.05, 1.0)]
+        weights_neighbor0 = [min(weights[0] + wcr, 1.0), max(weights[1] - wcr, 0.0)]
+        weights_neighbor1 = [max(weights[0] - wcr, 0.0), min(weights[1] + wcr, 1.0)]
 
         error_neighbor0 = computeError(merged_predictions, weights_neighbor0, train_Y)
         error_neighbor1 = computeError(merged_predictions, weights_neighbor1, train_Y)
@@ -265,14 +268,14 @@ if __name__ == '__main__':
 
         # error(neighbor1) < error < error(neighbor0) -> move to neighbor1
         if error < error_neighbor0 and error > error_neighbor1:
-            weights[0] = max(weights[0] - 0.05, 0.0)
-            weights[1] = min(weights[1] + 0.05, 1.0)
+            weights[0] = max(weights[0] - wcr, 0.0)
+            weights[1] = min(weights[1] + wcr, 1.0)
             log += 'move to neighbor0\n'
 
         # error(neighbor0) < error < error(neighbor1) -> move to neighbor0
         elif error > error_neighbor0 and error < error_neighbor1:
-            weights[0] = min(weights[0] + 0.05, 1.0)
-            weights[1] = max(weights[1] - 0.05, 0.0)
+            weights[0] = min(weights[0] + wcr, 1.0)
+            weights[1] = max(weights[1] - wcr, 0.0)
             log += 'move to neighbor1\n'
 
         else:
