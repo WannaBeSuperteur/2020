@@ -292,7 +292,11 @@ if __name__ == '__main__':
         else:
             final_prediction += weights[i] * final_predictions[i]
 
-    pd.DataFrame(final_prediction).to_csv('final_prediction.csv')
+    # change row number and column as 'sample_submission.csv'
+    final_prediction = pd.DataFrame(final_prediction)
+    final_prediction.index = range(100000, 150000)
+    final_prediction.columns = ['Class1', 'Class2', 'Class3', 'Class4']
+    final_prediction.to_csv('final_prediction.csv')
 
     # save log for final prediction
     log += ('final prediction with ' + str(weights))
