@@ -17,7 +17,9 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import log_loss
 
 import lightgbm
+import xgboost
 from lightgbm import LGBMClassifier
+from xgboost import XGBClassifier
 
 # team members' Python codes
 import Daniel_BaselineModels as Daniel_Baseline
@@ -38,6 +40,13 @@ def getCatBoostModel():
                             min_data_in_leaf=1,
                             max_ctr_complexity=15)
 
+    return model
+
+# xgboost (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/AnJunkang_xgboost.ipynb)
+def getXgboostModel():
+
+    # xgboost classifier
+    model = XGBClassifier(num_class=4, objective='multi:softprob')
     return model
 
 # lightGBM (ref: Daniel's Kaggle - https://www.kaggle.com/danieljhk/lgbm-baseline/output?scriptVersionId=67233275)
@@ -121,10 +130,11 @@ def predictWithModels(train_X, train_Y, test_X, predictionFileName):
     # models (classifiers)
     model0 = getCatBoostModel() # catboost classifier
     model1 = getLGBMModel() # lightGBM classifier
+    model2 = getXgboostModel() # xgboost classifier
 
     # array of models
-    modelNames = ['catboost', 'lightgbm']
-    models = [model0, model1]
+    modelNames = ['catboost', 'lightgbm', 'xgboost']
+    models = [model0, model1, model2]
     predictions = []
 
     # predict using these models
@@ -157,7 +167,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
-    numModel = 2
+    numModel = 3
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -244,11 +254,11 @@ if __name__ == '__main__':
     # run for at most 200 rounds
     rounds = 200
 
-    # initial weights for each model : [CatBoost, LGBM]
-    weights = [0.15, 0.85]
+    # initial weights for each model : [CatBoost, LGBM, XGBoost]
+    weights = [1/3, 1/3, 1/3]
 
     # weight change rate
-    wcr = 0.025
+    wcr = 1/60
 
     # get merged predictions first
     try:
@@ -263,14 +273,16 @@ if __name__ == '__main__':
 
     for i in range(rounds):
         error = computeError(merged_predictions, weights, train_Y)
-        log += ('[ round ' + str(i) + ' ]\nweights=' + str(weights) + ' error=' + str(error) + '\n')
+        log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(weights, 6)) + ' error=' + str(round(error, 8)) + '\n')
 
         # explore neighboring cases
-        weights_neighbor0 = [min(weights[0] + wcr, 1.0), max(weights[1] - wcr, 0.0)]
-        weights_neighbor1 = [max(weights[0] - wcr, 0.0), min(weights[1] + wcr, 1.0)]
+        weights_neighbor0 = [min(weights[0] + 2*wcr, 1.0), max(weights[1] - wcr, 0.0), max(weights[2] - wcr, 0.0)]
+        weights_neighbor1 = [max(weights[0] - wcr, 0.0), min(weights[1] + 2*wcr, 1.0), max(weights[2] - wcr, 0.0)]
+        weights_neighbor2 = [max(weights[0] - wcr, 0.0), min(weights[1] - wcr, 1.0), min(weights[2] + 2*wcr, 1.0)]
 
         error_neighbor0 = computeError(merged_predictions, weights_neighbor0, train_Y)
         error_neighbor1 = computeError(merged_predictions, weights_neighbor1, train_Y)
+        error_neighbor2 = computeError(merged_predictions, weights_neighbor2, train_Y)
 
         # save log for each round
         f = open('log.txt', 'w')
@@ -278,20 +290,23 @@ if __name__ == '__main__':
         f.close()
 
         # modify weights using meanError
-        log += ('neighbor0=' + str(weights_neighbor0) + ' error=' + str(error_neighbor0) + '\n')
-        log += ('neighbor1=' + str(weights_neighbor1) + ' error=' + str(error_neighbor1) + '\n')
+        log += ('neighbor0=' + str(np.round_(weights_neighbor0, 6)) + ' error=' + str(round(error_neighbor0, 8)) + '\n')
+        log += ('neighbor1=' + str(np.round_(weights_neighbor1, 6)) + ' error=' + str(round(error_neighbor1, 8)) + '\n')
+        log += ('neighbor2=' + str(np.round_(weights_neighbor2, 6)) + ' error=' + str(round(error_neighbor2, 8)) + '\n')
 
-        # error(neighbor1) < error < error(neighbor0) -> move to neighbor1
-        if error < error_neighbor0 and error > error_neighbor1:
-            weights[0] = max(weights[0] - wcr, 0.0)
-            weights[1] = min(weights[1] + wcr, 1.0)
-            log += 'move to neighbor0\n'
+        # move to the neighbor with minimum loss
+        # stop if no neighbor with loss less than 'error'
+        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2])
+        moveTo = errors.argmin()
 
-        # error(neighbor0) < error < error(neighbor1) -> move to neighbor0
-        elif error > error_neighbor0 and error < error_neighbor1:
-            weights[0] = min(weights[0] + wcr, 1.0)
-            weights[1] = max(weights[1] - wcr, 0.0)
-            log += 'move to neighbor1\n'
+        if errors[moveTo] < error:
+            for i in range(len(weights)):
+                if i == moveTo:
+                    weights[i] = min(weights[i] + 2*wcr, 1.0)
+                else:
+                    weights[i] = max(weights[i] - wcr, 0.0)
+                    
+            log += 'move to neighbor' + str(moveTo) + '\n'
 
         else:
             break
