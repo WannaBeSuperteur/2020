@@ -42,11 +42,26 @@ def getCatBoostModel():
 
     return model
 
-# xgboost (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/AnJunkang_xgboost.ipynb)
+# xgboost (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/
+#          Code/AJK-tabular/AnJunkang-xgboost%2Brandomsearchcv.ipynb) and
+#         (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/
+#          Code/AJK-tabular/random-grid-search-5folds.csv)
 def getXgboostModel():
 
     # xgboost classifier
-    model = XGBClassifier(num_class=4, objective='multi:softprob')
+    model = XGBClassifier(num_class=4, 
+                          objective='multi:softprob',
+                          tree_method='gpu_hist',
+                          n_estimators=600,
+                          use_label_encoder=False,
+                          eval_metric='mlogloss',
+                          subsample=0.6,
+                          min_child_weight=7,
+                          max_depth=6,
+                          learning_rate=0.05,
+                          gamma=0,
+                          colsample_bytree=0.9)
+    
     return model
 
 # lightGBM (ref: Daniel's Kaggle - https://www.kaggle.com/danieljhk/lgbm-baseline/output?scriptVersionId=67233275)
