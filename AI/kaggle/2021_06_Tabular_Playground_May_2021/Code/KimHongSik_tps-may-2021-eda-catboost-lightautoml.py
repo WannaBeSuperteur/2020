@@ -20,6 +20,11 @@ import lightgbm
 import xgboost
 from lightgbm import LGBMClassifier
 from xgboost import XGBClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+from sklearn.naive_bayes import GaussianNB
 
 # team members' Python codes
 import Daniel_BaselineModels as Daniel_Baseline
@@ -38,7 +43,8 @@ def getCatBoostModel():
                             od_wait=1000,
                             od_type='Iter',                           
                             min_data_in_leaf=1,
-                            max_ctr_complexity=15)
+                            max_ctr_complexity=15,
+                            verbose=400)
 
     return model
 
@@ -88,11 +94,23 @@ def getLGBMModel():
 
     return model
 
+# kNN classifier ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py )
+def getKNNModel():
+    return KNeighborsClassifier()
+
+# Decision Tree classifier ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py )
+def getDecisionTreeModel():
+    return DecisionTreeClassifier()
+
+# Gaussian Naive Bayes ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py )
+def getGaussianNBModel():
+    return GaussianNB()
+
 # predict and save the prediction
 def predict(model, train_X, train_Y, test_X, predictionFileName):
     print(' ==== predict using model : ' + str(model) + ' ====')
                             
-    model.fit(train_X, train_Y, verbose=1000)
+    model.fit(train_X, train_Y)
     
     prediction = model.predict_proba(test_X)
     prediction = np.clip(prediction, 0.08, 0.95)
@@ -146,10 +164,13 @@ def predictWithModels(train_X, train_Y, test_X, predictionFileName):
     model0 = getCatBoostModel() # catboost classifier
     model1 = getLGBMModel() # lightGBM classifier
     model2 = getXgboostModel() # xgboost classifier
+    model3 = getKNNModel() # k-Nearest Neighbor classifier
+    model4 = getDecisionTreeModel() # Decision Tree classifier
+    model5 = getGaussianNBModel() # Gaussian Naive Bayes classifier
 
     # array of models
-    modelNames = ['catboost', 'lightgbm', 'xgboost']
-    models = [model0, model1, model2]
+    modelNames = ['catboost', 'lightgbm', 'xgboost', 'knn', 'decisiontree', 'gaussiannb']
+    models = [model0, model1, model2, model3, model4, model5]
     predictions = []
 
     # predict using these models
@@ -182,7 +203,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
-    numModel = 3
+    numModel = 6
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -269,15 +290,15 @@ if __name__ == '__main__':
     # run for at most 200 rounds
     rounds = 200
 
-    # initial weights for each model : [CatBoost, LGBM, XGBoost]
-    weights = [1/3, 1/3, 1/3]
+    # initial weights for each model : [CatBoost, LGBM, XGBoost, kNN, DecisionTree, GaussianNB]
+    w = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]
 
     # weight change rate
-    wcr = 1/60
+    wcr = 1/120
 
     # get merged predictions first
     try:
-        merged_predictions = getMergedPredictions(len(weights))
+        merged_predictions = getMergedPredictions(len(w))
     except:
         merged_predictions = run(train_df, test_df, dic, False, False, False, 0)
 
@@ -287,17 +308,23 @@ if __name__ == '__main__':
     log = ''
 
     for i in range(rounds):
-        error = computeError(merged_predictions, weights, train_Y)
-        log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(weights, 6)) + ' error=' + str(round(error, 8)) + '\n')
+        error = computeError(merged_predictions, w, train_Y)
+        log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(w, 6)) + ' error=' + str(round(error, 8)) + '\n')
 
         # explore neighboring cases
-        weights_neighbor0 = [min(weights[0] + 2*wcr, 1.0), max(weights[1] - wcr, 0.0), max(weights[2] - wcr, 0.0)]
-        weights_neighbor1 = [max(weights[0] - wcr, 0.0), min(weights[1] + 2*wcr, 1.0), max(weights[2] - wcr, 0.0)]
-        weights_neighbor2 = [max(weights[0] - wcr, 0.0), min(weights[1] - wcr, 1.0), min(weights[2] + 2*wcr, 1.0)]
+        w_neighbor0 = [min(w[0] + 5*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
+        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 5*wcr, 1.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
+        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 5*wcr, 1.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
+        w_neighbor3 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), min(w[3] + 5*wcr, 1.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
+        w_neighbor4 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), min(w[4] + 5*wcr, 1.0), max(w[5] - wcr, 0.0)]
+        w_neighbor5 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), min(w[5] + 5*wcr, 1.0)]
 
-        error_neighbor0 = computeError(merged_predictions, weights_neighbor0, train_Y)
-        error_neighbor1 = computeError(merged_predictions, weights_neighbor1, train_Y)
-        error_neighbor2 = computeError(merged_predictions, weights_neighbor2, train_Y)
+        error_neighbor0 = computeError(merged_predictions, w_neighbor0, train_Y)
+        error_neighbor1 = computeError(merged_predictions, w_neighbor1, train_Y)
+        error_neighbor2 = computeError(merged_predictions, w_neighbor2, train_Y)
+        error_neighbor3 = computeError(merged_predictions, w_neighbor3, train_Y)
+        error_neighbor4 = computeError(merged_predictions, w_neighbor4, train_Y)
+        error_neighbor5 = computeError(merged_predictions, w_neighbor5, train_Y)
 
         # save log for each round
         f = open('log.txt', 'w')
@@ -305,21 +332,25 @@ if __name__ == '__main__':
         f.close()
 
         # modify weights using meanError
-        log += ('neighbor0=' + str(np.round_(weights_neighbor0, 6)) + ' error=' + str(round(error_neighbor0, 8)) + '\n')
-        log += ('neighbor1=' + str(np.round_(weights_neighbor1, 6)) + ' error=' + str(round(error_neighbor1, 8)) + '\n')
-        log += ('neighbor2=' + str(np.round_(weights_neighbor2, 6)) + ' error=' + str(round(error_neighbor2, 8)) + '\n')
+        log += ('neighbor0=' + str(np.round_(w_neighbor0, 6)) + ' error=' + str(round(error_neighbor0, 8)) + '\n')
+        log += ('neighbor1=' + str(np.round_(w_neighbor1, 6)) + ' error=' + str(round(error_neighbor1, 8)) + '\n')
+        log += ('neighbor2=' + str(np.round_(w_neighbor2, 6)) + ' error=' + str(round(error_neighbor2, 8)) + '\n')
+        log += ('neighbor3=' + str(np.round_(w_neighbor3, 6)) + ' error=' + str(round(error_neighbor3, 8)) + '\n')
+        log += ('neighbor4=' + str(np.round_(w_neighbor4, 6)) + ' error=' + str(round(error_neighbor4, 8)) + '\n')
+        log += ('neighbor5=' + str(np.round_(w_neighbor5, 6)) + ' error=' + str(round(error_neighbor5, 8)) + '\n')
 
         # move to the neighbor with minimum loss
         # stop if no neighbor with loss less than 'error'
-        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2])
+        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2,
+                           error_neighbor3, error_neighbor4, error_neighbor5])
         moveTo = errors.argmin()
 
         if errors[moveTo] < error:
-            for i in range(len(weights)):
+            for i in range(len(w)):
                 if i == moveTo:
-                    weights[i] = min(weights[i] + 2*wcr, 1.0)
+                    w[i] = min(w[i] + 5*wcr, 1.0)
                 else:
-                    weights[i] = max(weights[i] - wcr, 0.0)
+                    w[i] = max(w[i] - wcr, 0.0)
                     
             log += 'move to neighbor' + str(moveTo) + '\n'
 
@@ -334,11 +365,11 @@ if __name__ == '__main__':
     # final prediction
     final_predictions = run(train_df, test_df, dic, False, False, True, 0)
 
-    for i in range(len(weights)):
+    for i in range(len(w)):
         if i == 0:
-            final_prediction = weights[0] * final_predictions[0]
+            final_prediction = w[0] * final_predictions[0]
         else:
-            final_prediction += weights[i] * final_predictions[i]
+            final_prediction += w[i] * final_predictions[i]
 
     # change row number and column as 'sample_submission.csv'
     # you need to write 'id' to the top-left cell
@@ -348,7 +379,7 @@ if __name__ == '__main__':
     final_prediction.to_csv('final_prediction.csv')
 
     # save log for final prediction
-    log += ('final prediction with ' + str(weights))
+    log += ('final prediction with ' + str(w))
     
     f = open('log.txt', 'w')
     f.write(log)
