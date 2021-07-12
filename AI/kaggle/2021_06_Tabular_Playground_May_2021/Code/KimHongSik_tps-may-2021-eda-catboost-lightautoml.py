@@ -48,28 +48,6 @@ def getCatBoostModel():
 
     return model
 
-# xgboost (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/
-#          Code/AJK-tabular/AnJunkang-xgboost%2Brandomsearchcv.ipynb) and
-#         (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/
-#          Code/AJK-tabular/random-grid-search-5folds.csv)
-def getXgboostModel():
-
-    # xgboost classifier
-    model = XGBClassifier(num_class=4, 
-                          objective='multi:softprob',
-                          tree_method='gpu_hist',
-                          n_estimators=600,
-                          use_label_encoder=False,
-                          eval_metric='mlogloss',
-                          subsample=0.6,
-                          min_child_weight=7,
-                          max_depth=6,
-                          learning_rate=0.05,
-                          gamma=0,
-                          colsample_bytree=0.9)
-    
-    return model
-
 # lightGBM (ref: Daniel's Kaggle - https://www.kaggle.com/danieljhk/lgbm-baseline/output?scriptVersionId=67233275)
 def getLGBMModel():
 
@@ -94,17 +72,10 @@ def getLGBMModel():
 
     return model
 
-# kNN classifier ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py )
-def getKNNModel():
-    return KNeighborsClassifier()
-
-# Decision Tree classifier ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py )
-def getDecisionTreeModel():
-    return DecisionTreeClassifier()
-
-# Gaussian Naive Bayes ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py )
-def getGaussianNBModel():
-    return GaussianNB()
+# Linear Discriminant Analysis ( https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModels.py
+#                                https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/Code/Daniel_BaselineModelScores.csv )
+def getLDAModel():
+    return LinearDiscriminantAnalysis()
 
 # predict and save the prediction
 def predict(model, train_X, train_Y, test_X, predictionFileName):
@@ -163,14 +134,11 @@ def predictWithModels(train_X, train_Y, test_X, predictionFileName):
     # models (classifiers)
     model0 = getCatBoostModel() # catboost classifier
     model1 = getLGBMModel() # lightGBM classifier
-    model2 = getXgboostModel() # xgboost classifier
-    model3 = getKNNModel() # k-Nearest Neighbor classifier
-    model4 = getDecisionTreeModel() # Decision Tree classifier
-    model5 = getGaussianNBModel() # Gaussian Naive Bayes classifier
+    model2 = getLDAModel() # Linear Discriminant Analysis
 
     # array of models
-    modelNames = ['catboost', 'lightgbm', 'xgboost', 'knn', 'decisiontree', 'gaussiannb']
-    models = [model0, model1, model2, model3, model4, model5]
+    modelNames = ['catboost', 'lightgbm', 'lda']
+    models = [model0, model1, model2]
     predictions = []
 
     # predict using these models
@@ -203,7 +171,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
-    numModel = 6
+    numModel = 3
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -290,11 +258,11 @@ if __name__ == '__main__':
     # run for at most 200 rounds
     rounds = 200
 
-    # initial weights for each model : [CatBoost, LGBM, XGBoost, kNN, DecisionTree, GaussianNB]
-    w = [1/6, 1/6, 1/6, 1/6, 1/6, 1/6]
+    # initial weights for each model : [CatBoost, LGBM, LDA]
+    w = [1/3, 1/3, 1/3]
 
     # weight change rate
-    wcr = 1/120
+    wcr = 1/60
 
     # get merged predictions first
     try:
@@ -312,19 +280,13 @@ if __name__ == '__main__':
         log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(w, 6)) + ' error=' + str(round(error, 8)) + '\n')
 
         # explore neighboring cases
-        w_neighbor0 = [min(w[0] + 5*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
-        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 5*wcr, 1.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
-        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 5*wcr, 1.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
-        w_neighbor3 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), min(w[3] + 5*wcr, 1.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0)]
-        w_neighbor4 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), min(w[4] + 5*wcr, 1.0), max(w[5] - wcr, 0.0)]
-        w_neighbor5 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), min(w[5] + 5*wcr, 1.0)]
-
+        w_neighbor0 = [min(w[0] + 2*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0)]
+        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 2*wcr, 1.0), max(w[2] - wcr, 0.0)]
+        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 2*wcr, 1.0)]
+        
         error_neighbor0 = computeError(merged_predictions, w_neighbor0, train_Y)
         error_neighbor1 = computeError(merged_predictions, w_neighbor1, train_Y)
         error_neighbor2 = computeError(merged_predictions, w_neighbor2, train_Y)
-        error_neighbor3 = computeError(merged_predictions, w_neighbor3, train_Y)
-        error_neighbor4 = computeError(merged_predictions, w_neighbor4, train_Y)
-        error_neighbor5 = computeError(merged_predictions, w_neighbor5, train_Y)
 
         # save log for each round
         f = open('log.txt', 'w')
@@ -335,20 +297,16 @@ if __name__ == '__main__':
         log += ('neighbor0=' + str(np.round_(w_neighbor0, 6)) + ' error=' + str(round(error_neighbor0, 8)) + '\n')
         log += ('neighbor1=' + str(np.round_(w_neighbor1, 6)) + ' error=' + str(round(error_neighbor1, 8)) + '\n')
         log += ('neighbor2=' + str(np.round_(w_neighbor2, 6)) + ' error=' + str(round(error_neighbor2, 8)) + '\n')
-        log += ('neighbor3=' + str(np.round_(w_neighbor3, 6)) + ' error=' + str(round(error_neighbor3, 8)) + '\n')
-        log += ('neighbor4=' + str(np.round_(w_neighbor4, 6)) + ' error=' + str(round(error_neighbor4, 8)) + '\n')
-        log += ('neighbor5=' + str(np.round_(w_neighbor5, 6)) + ' error=' + str(round(error_neighbor5, 8)) + '\n')
 
         # move to the neighbor with minimum loss
         # stop if no neighbor with loss less than 'error'
-        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2,
-                           error_neighbor3, error_neighbor4, error_neighbor5])
+        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2])
         moveTo = errors.argmin()
 
         if errors[moveTo] < error:
             for i in range(len(w)):
                 if i == moveTo:
-                    w[i] = min(w[i] + 5*wcr, 1.0)
+                    w[i] = min(w[i] + 2*wcr, 1.0)
                 else:
                     w[i] = max(w[i] - wcr, 0.0)
                     
