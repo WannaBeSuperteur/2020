@@ -33,10 +33,10 @@ import Daniel_BaselineModels as Daniel_Baseline
 # XGBoost            : An Jun Hang's idea
 # LR, LDA, ..., LGBM : Daniel's idea
 # CatBoost           : Hong Sik Kim's idea
-def getCatBoostModel():
+def getCatBoostModel(iterations):
 
     # catboost classifier
-    model = CatBoostClassifier(iterations=17000,
+    model = CatBoostClassifier(iterations=iterations,
                             learning_rate=0.01,
                             depth=4,
                             loss_function='MultiClass',
@@ -49,11 +49,11 @@ def getCatBoostModel():
     return model
 
 # lightGBM (ref: Daniel's Kaggle - https://www.kaggle.com/danieljhk/lgbm-baseline/output?scriptVersionId=67233275)
-def getLGBMModel():
+def getLGBMModel(learning_rate):
 
     # LGBM classifier
     params = {
-        'learning_rate': 0.22296318552587047,
+        'learning_rate': learning_rate,
         'max_depth': 3,
         'num_leaves': 85,
         'n_estimators': 253,
@@ -132,13 +132,17 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel() # catboost classifier
-    model1 = getLGBMModel() # lightGBM classifier
-    model2 = getLDAModel() # Linear Discriminant Analysis
+    model0 = getCatBoostModel(4200)  # catboost classifier
+    model1 = getCatBoostModel(8500)  # catboost classifier
+    model2 = getCatBoostModel(17000) # catboost classifier
+    model3 = getLGBMModel(0.055)     # lightGBM classifier
+    model4 = getLGBMModel(0.111)     # lightGBM classifier
+    model5 = getLGBMModel(0.223)     # lightGBM classifier
+    model6 = getLDAModel()           # Linear Discriminant Analysis
 
     # array of models
-    modelNames = ['catboost', 'lightgbm', 'lda']
-    models = [model0, model1, model2]
+    modelNames = ['catboost0', 'catboost1', 'catboost2', 'lightgbm0', 'lightgbm1', 'lightgbm2', 'lda']
+    models = [model0, model1, model2, model3, model4, model5, model6]
     predictions = []
 
     # predict using these models
@@ -171,7 +175,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
-    numModel = 3
+    numModel = 7
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -258,11 +262,11 @@ if __name__ == '__main__':
     # run for at most 200 rounds
     rounds = 200
 
-    # initial weights for each model : [CatBoost, LGBM, LDA]
-    w = [1/3, 1/3, 1/3]
+    # initial weights for each model : [CatBoost0, CatBoost1, CatBoost2, LGBM0, LGBM1, LGBM2, LDA]
+    w = [1/7, 1/7, 1/7, 1/7, 1/7, 1/7, 1/7]
 
     # weight change rate
-    wcr = 1/60
+    wcr = 1/280
 
     # get merged predictions first
     try:
@@ -280,13 +284,21 @@ if __name__ == '__main__':
         log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(w, 6)) + ' error=' + str(round(error, 8)) + '\n')
 
         # explore neighboring cases
-        w_neighbor0 = [min(w[0] + 2*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0)]
-        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 2*wcr, 1.0), max(w[2] - wcr, 0.0)]
-        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 2*wcr, 1.0)]
+        w_neighbor0 = [min(w[0] + 6*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
+        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 6*wcr, 1.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
+        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 6*wcr, 1.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
+        w_neighbor3 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), min(w[3] + 6*wcr, 1.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
+        w_neighbor4 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), min(w[4] + 6*wcr, 1.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
+        w_neighbor5 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), min(w[5] + 6*wcr, 1.0), max(w[6] - wcr, 0.0)]
+        w_neighbor6 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), min(w[6] + 6*wcr, 1.0)]
         
         error_neighbor0 = computeError(merged_predictions, w_neighbor0, train_Y)
         error_neighbor1 = computeError(merged_predictions, w_neighbor1, train_Y)
         error_neighbor2 = computeError(merged_predictions, w_neighbor2, train_Y)
+        error_neighbor3 = computeError(merged_predictions, w_neighbor3, train_Y)
+        error_neighbor4 = computeError(merged_predictions, w_neighbor4, train_Y)
+        error_neighbor5 = computeError(merged_predictions, w_neighbor5, train_Y)
+        error_neighbor6 = computeError(merged_predictions, w_neighbor6, train_Y)
 
         # save log for each round
         f = open('log.txt', 'w')
@@ -297,16 +309,20 @@ if __name__ == '__main__':
         log += ('neighbor0=' + str(np.round_(w_neighbor0, 6)) + ' error=' + str(round(error_neighbor0, 8)) + '\n')
         log += ('neighbor1=' + str(np.round_(w_neighbor1, 6)) + ' error=' + str(round(error_neighbor1, 8)) + '\n')
         log += ('neighbor2=' + str(np.round_(w_neighbor2, 6)) + ' error=' + str(round(error_neighbor2, 8)) + '\n')
+        log += ('neighbor3=' + str(np.round_(w_neighbor3, 6)) + ' error=' + str(round(error_neighbor3, 8)) + '\n')
+        log += ('neighbor4=' + str(np.round_(w_neighbor4, 6)) + ' error=' + str(round(error_neighbor4, 8)) + '\n')
+        log += ('neighbor5=' + str(np.round_(w_neighbor5, 6)) + ' error=' + str(round(error_neighbor5, 8)) + '\n')
+        log += ('neighbor6=' + str(np.round_(w_neighbor6, 6)) + ' error=' + str(round(error_neighbor6, 8)) + '\n')
 
         # move to the neighbor with minimum loss
         # stop if no neighbor with loss less than 'error'
-        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2])
+        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2, error_neighbor3, error_neighbor4, error_neighbor5, error_neighbor6])
         moveTo = errors.argmin()
 
         if errors[moveTo] < error:
             for i in range(len(w)):
                 if i == moveTo:
-                    w[i] = min(w[i] + 2*wcr, 1.0)
+                    w[i] = min(w[i] + 6*wcr, 1.0)
                 else:
                     w[i] = max(w[i] - wcr, 0.0)
                     
@@ -314,6 +330,15 @@ if __name__ == '__main__':
 
         else:
             break
+
+        # modify weight to make the sum 1.0
+        sumWeights = sum(w)
+
+        if sumWeights != 1.0:
+            for i in range(len(w)):
+                w[i] /= sumWeights
+
+            log += 'modify weight to make the sum 1.0\nmodified weight: ' + str(w) + '\n'
 
     # save log for each round at finish
     f = open('log.txt', 'w')
