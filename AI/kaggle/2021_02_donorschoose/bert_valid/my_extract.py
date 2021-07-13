@@ -1,22 +1,10 @@
 import sys
-sys.path.insert(0, '../../AI_BASE')
-import readData as RD
 import random
 import numpy as np
 import pandas as pd
 import datetime
 
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
-
-def getOptionsAndTitle():
-    option = [-1, -1, 2, 2, 7, 2, 8, 8, 5, 5, 5, 5, 5, 5, 1, -1]
-    title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
-             'project_submitted_datetime', 'project_grade_category',
-             'project_subject_categories', 'project_subject_subcategories',
-             'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
-             'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
-
-    return (option, title)
 
 # word count for top 100 words for word count (marked as 6)
 def getWordCount(option, trainFile):
@@ -324,7 +312,7 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
 
-    (train_extracted, train_newTitle) = extract('train.csv', train_option, train_title, wordCount, None, [2016, 2017])
+    (train_extracted, train_newTitle, onehot) = extract('train.csv', train_option, train_title, wordCount, None, [2016, 2017])
 
     train_newTitle_input = train_newTitle[:len(train_newTitle)-1]
     train_newTitle_output = [train_newTitle[len(train_newTitle)-1]]
@@ -341,8 +329,8 @@ if __name__ == '__main__':
         train_input.append(train_extracted[i][:train_lenm1])
         train_output.append([train_extracted[i][train_lenm1]])
         
-    RD.saveArray('train_input.txt', train_input, '\t', 500)
-    RD.saveArray('train_output.txt', train_output, '\t', 500)
+    pd.DataFrame(train_input).to_csv('train_input.csv')
+    pd.DataFrame(train_output).to_csv('train_output.csv')
 
     # TEST
     
@@ -353,11 +341,11 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects']
 
-    (test_extracted, test_newTitle, _) = extract('test.csv', test_option, test_title, wordCount)
+    (test_extracted, test_newTitle, _) = extract('test.csv', test_option, test_title, wordCount, onehot, [2016, 2017])
 
     test_toWrite = [] # [test_newTitle]
     
     for i in range(len(test_extracted)):
         test_toWrite.append(test_extracted[i])
         
-    RD.saveArray('test_input.txt', test_toWrite, '\t', 500)
+    pd.DataFrame(test_toWrite).to_csv('test_input.csv')
