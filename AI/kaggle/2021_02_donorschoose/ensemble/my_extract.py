@@ -59,7 +59,7 @@ def getWordCount(option, trainFile):
 #  2 : one-hot vector
 #  3 : one-hot vector with first 3 letters
 #  4 : yyyy-mm-dd hh:mm:ss to numeric with normalization
-#  5 : length with normalization
+#  5 : length and number of words with normalization
 def appendNormalizedLength(thisRow, textLen, avgLen, stdLen):
     thisRow.append((float(textLen) - avgLen) / stdLen)
     
@@ -92,6 +92,7 @@ def extract(fn, option, title, wordCount, onehot, years):
 
     array = np.array(pd.read_csv(fn))
     array_textLen = np.array(pd.read_csv(fn))
+    array_textWords = np.array(pd.read_csv(fn))
     print(array)
     
     rows = len(array)
@@ -130,6 +131,7 @@ def extract(fn, option, title, wordCount, onehot, years):
             # length with normalization
             elif option[j] == 5 or option[j] == 56:
                 array_textLen[i][j] = len(str(array_textLen[i][j]))
+                array_textWords[i][j] = len(str(array_textWords[i][j]).split(' '))
 
     # avg and stddev for each column marked as 1, 4, 5 or 56
     avgs = []
@@ -140,16 +142,20 @@ def extract(fn, option, title, wordCount, onehot, years):
         
         if option[i] == 1 or option[i] == 4 or option[i] == 5 or option[i] == 56:
 
-            # text length (5 or 56)
+            # text length and number of words (5 or 56)
             if option[i] == 5 or option[i] == 56:
-                thisCol = array_textLen[:, i]
+                thisCol_0 = array_textLen[:, i]
+                thisCol_1 = array_textWords[:, i]
+
+                avgs.append([np.mean(thisCol_0), np.mean(thisCol_1)])
+                stddevs.append([np.std(thisCol_0), np.std(thisCol_1)])
 
             # numeric value (1 or 4)
             else:
                 thisCol = array[:, i]
 
-            avgs.append(np.mean(thisCol))
-            stddevs.append(np.std(thisCol))
+                avgs.append(np.mean(thisCol))
+                stddevs.append(np.std(thisCol))
         else:
             avgs.append(-1)
             stddevs.append(-1)
@@ -219,11 +225,19 @@ def extract(fn, option, title, wordCount, onehot, years):
 
             #  1 : numeric with normalization
             #  4 : yyyy-mm-dd hh:mm:ss to numeric with normalization
-            #  5 : length with normalization
-            elif option[j] == 1 or option[j] == 4 or option[j] == 5:
-                appendNormalizedLength(thisRow, array_textLen[i][j], avgs[j], stddevs[j])
+            elif option[j] == 1 or option[j] == 4:
+                appendNormalizedLength(thisRow, float(array[i][j]), avgs[j], stddevs[j])
 
                 if i == 0: newTitle.append(str(j) + '_zval')
+
+            #  5 : length and number of words with normalization
+            elif option[j] == 5:
+                appendNormalizedLength(thisRow, array_textLen[i][j], avgs[j][0], stddevs[j][0])
+                appendNormalizedLength(thisRow, array_textWords[i][j], avgs[j][1], stddevs[j][1])
+
+                if i == 0:
+                    newTitle.append(str(j) + '_len_zval')
+                    newTitle.append(str(j) + '_words_zval')
 
             #  2 : one-hot vector
             #  3 : one-hot vector with first 3 letters
@@ -311,12 +325,17 @@ def extract(fn, option, title, wordCount, onehot, years):
                     else:
                         thisRow.append(0)
 
-            # 56 : length with normalization + word count
+            # 56 : length and number of words with normalization + top 25 word count
             elif option[j] == 56:
                 appendWordCount(thisRow, wordCount[j], array[i][j], j)
-                appendNormalizedLength(thisRow, array_textLen[i][j], avgs[j], stddevs[j])
+                
+                appendNormalizedLength(thisRow, array_textLen[i][j], avgs[j][0], stddevs[j][0])
+                appendNormalizedLength(thisRow, array_textWords[i][j], avgs[j][1], stddevs[j][1])
 
                 if i == 0:
+                    newTitle.append(str(j) + '_len_zval')
+                    newTitle.append(str(j) + '_words_zval')
+                    
                     for k in range(25):
                         newTitle.append(str(j) + '_word_' + str(k))
 
