@@ -359,8 +359,8 @@ if __name__ == '__main__':
         train_input.append(train_extracted[i][:train_lenm1])
         train_output.append([train_extracted[i][train_lenm1]])
         
-    RD.saveArray('train_input.txt', train_input, '\t', 500)
-    RD.saveArray('train_output.txt', train_output, '\t', 500)
+    pd.DataFrame(train_input).to_csv('train_input.csv')
+    pd.DataFrame(train_output).to_csv('train_output.csv')
 
     # TEST
     
@@ -378,4 +378,4 @@ if __name__ == '__main__':
     for i in range(len(test_extracted)):
         test_toWrite.append(test_extracted[i])
         
-    RD.saveArray('test_input.txt', test_toWrite, '\t', 500)
+    pd.DataFrame(test_toWrite).to_csv('test_input.csv')
