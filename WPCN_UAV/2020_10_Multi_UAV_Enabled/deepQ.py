@@ -9,6 +9,7 @@ import pandas as pd
 
 import tensorflow as tf
 from tensorflow import keras
+from tensorflow.keras.models import Sequential
 
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
@@ -192,35 +193,20 @@ def normalize(array, applyLog, title, printAnalysis):
 
     return arr
 
-# model
-class MODEL(tf.keras.Model):
-    def __init__(self, name='model'):
-        super(MODEL, self).__init__(name=name)
-
-        # L2 regularization
-        L2 = tf.keras.regularizers.l2(0.001)
-
-        # deep learning model
-        self.hidden_0 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
-        self.hidden_1 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
-        self.hidden_2 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
-        self.hidden_3 = tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2)
-        self.output_layer = tf.keras.layers.Dense(units=27, activation='tanh')
-
-    def call(self, inputs, training):
-
-        # deep learning model
-        inputs_0 = self.hidden_0(inputs)
-        inputs_1 = self.hidden_1(inputs_0)
-        inputs_2 = self.hidden_2(inputs_1)
-        inputs_3 = self.hidden_3(inputs_2)
-
-        output = self.output_layer(inputs_3)
-        return output
-
 # define model
 def defineModel():
-    model = MODEL()
+
+    # L2 regularization
+    L2 = tf.keras.regularizers.l2(0.001)
+
+    # define the model
+    model = Sequential()
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=27, activation='tanh'))
+    
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
     return model
@@ -276,19 +262,19 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     if len(inputData) > 0:
         normalizedInputData = normalize(inputData, False, 'input' + str(len(inputData)), True)
         normalizedOutputData = normalize(outputData, False, 'output' + str(len(inputData)), True)
-        pd.DataFrame(normalizedInputData).to_csv('Q_input_normalized.txt')
-        pd.DataFrame(normalizedOutputData).to_csv('Q_output_normalized.txt')
+        pd.DataFrame(normalizedInputData).to_csv('Q_input_normalized.csv')
+        pd.DataFrame(normalizedOutputData).to_csv('Q_output_normalized.csv')
 
     # train using deep learning and save the model (testInputFile and testOutputFile is None)
     # need: modelConfig.txt
     # DON'T NEED TO APPLY SIGMOID to training output data, because DLmain.deeplearning applies it
     try:
-        Q_input_noramlized = np.array(pd.read_csv('Q_input_normalized.txt', index_col=0)).astype(float)
-        Q_output_noramlized = np.array(pd.read_csv('Q_output_normalized.txt', index_col=0)).astype(float)
+        Q_input_noramlized = np.array(pd.read_csv('Q_input_normalized.csv', index_col=0)).astype(float)
+        Q_output_noramlized = np.array(pd.read_csv('Q_output_normalized.csv', index_col=0)).astype(float)
         trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, 15)
 
     except:
-        print('[train] Q_input_normalized.txt or Q_output_normalized.txt does not exist.')
+        print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose):
