@@ -218,7 +218,6 @@ def trainDataWithModel(Q_input, Q_output, model, epochs):
     lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
 
     model.fit(Q_input, Q_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
-    model.summary()
 
     model.save('model')
 
@@ -280,14 +279,12 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 def deepLearningQ_test(state, k, verbose):
 
     # convert state into 1d array
-    stateArray = np.array(stateTo1dArray(state, k))
-    print('stateArray : ' + str(stateArray))
-
+    stateArray = np.array([stateTo1dArray(state, k)])
+    
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
     optimizer = tf.keras.optimizers.Adam(0.001)
     trainedModel = tf.keras.models.load_model('model')
-    trainedModel.summary()
     testO = trainedModel.predict(stateArray) # error occurs
 
     if verbose == True: print('test finished')
