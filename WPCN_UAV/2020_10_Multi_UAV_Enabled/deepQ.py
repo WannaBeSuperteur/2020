@@ -259,8 +259,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # save normalized data
     if len(inputData) > 0:
-        normalizedInputData = normalize(inputData, False, 'input' + str(len(inputData)), True)
-        normalizedOutputData = normalize(outputData, False, 'output' + str(len(inputData)), True)
+        normalizedInputData = normalize(inputData, False, 'input' + str(len(inputData)), False)
+        normalizedOutputData = normalize(outputData, False, 'output' + str(len(inputData)), False)
         pd.DataFrame(normalizedInputData).to_csv('Q_input_normalized.csv')
         pd.DataFrame(normalizedOutputData).to_csv('Q_output_normalized.csv')
 
