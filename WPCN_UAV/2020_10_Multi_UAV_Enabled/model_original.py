@@ -1,9 +1,4 @@
 import sys
-sys.path.insert(0, '../../AI_BASE')
-import deepLearning_GPU as DL
-import deepLearning_GPU_helper as helper
-import deepLearning_main as DLmain
-import AIBASE_main as main
 
 import formula as f
 import deepQ as dq

@@ -1,11 +1,9 @@
 import sys
 import math
-sys.path.insert(0, '../../AI_BASE')
 import copy
 
 import formula as f
 import random
-import readData as RD
 import numpy as np
 import pandas as pd
 
@@ -270,23 +268,23 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
 
     # save input and output array as file
     if len(inputData) > 0:
-        RD.saveArray('Q_input.txt', inputData)
+        pd.DataFrame(inputData).to_csv('Q_input.csv')
     if len(outputData) > 0:
-        RD.saveArray('Q_output.txt', outputData)
+        pd.DataFrame(outputData).to_csv('Q_output.csv')
 
     # save normalized data
     if len(inputData) > 0:
         normalizedInputData = normalize(inputData, False, 'input' + str(len(inputData)), True)
         normalizedOutputData = normalize(outputData, False, 'output' + str(len(inputData)), True)
-        RD.saveArray('Q_input_normalized.txt', normalizedInputData)
-        RD.saveArray('Q_output_normalized.txt', normalizedOutputData)
+        pd.DataFrame(normalizedInputData).to_csv('Q_input_normalized.txt')
+        pd.DataFrame(normalizedOutputData).to_csv('Q_output_normalized.txt')
 
     # train using deep learning and save the model (testInputFile and testOutputFile is None)
     # need: modelConfig.txt
     # DON'T NEED TO APPLY SIGMOID to training output data, because DLmain.deeplearning applies it
     try:
-        Q_input_noramlized = np.array(RD.loadArray('Q_input_normalized.txt', '\t')).astype(float)
-        Q_output_noramlized = np.array(RD.loadArray('Q_output_normalized.txt', '\t')).astype(float)
+        Q_input_noramlized = np.array(pd.read_csv('Q_input_normalized.txt', index_col=0)).astype(float)
+        Q_output_noramlized = np.array(pd.read_csv('Q_output_normalized.txt', index_col=0)).astype(float)
         trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, 15)
 
     except:
