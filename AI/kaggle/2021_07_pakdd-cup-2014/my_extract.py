@@ -24,13 +24,7 @@ def preprocess(repairTrain):
     repairTrainArray = np.array(repairTrain)
     print(repairTrainArray)
 
-    # module_category    : one-hot     (9)
-    # component_category : one-hot     (31)
-    # year               : avg and std (5)
-    # month              : avg and std (12)
-    # year*12+(month-1)  : avg and std (59)
-    # so 9 * 31 * 59 = 16,461 records needed for aggregation
-
+    # aggregate
     agg_dic = {}
 
     for row in range(rows):
@@ -58,10 +52,7 @@ def preprocess(repairTrain):
     print(np.array(agg_data))
 
     # convert this array into preprocessed array
-    modules = 9
-    components = 31
-    
-    train_X = np.zeros((agg_len, modules + components + 4))
+    train_X = np.zeros((agg_len, modules + components + 2))
     train_Y = np.zeros((agg_len, 1))
 
     for i in range(agg_len):
@@ -74,37 +65,25 @@ def preprocess(repairTrain):
         # component
         train_X[i][modules + int(X_split[1][1:]) - 1] = 1
 
-        # sale
-        train_X[i][modules + components] = yearMonthToInt(X_split[2])
-
-        # sale (month)
-        train_X[i][modules + components + 1] = int(X_split[2].split('/')[1])
-
         # repair
-        train_X[i][modules + components + 2] = yearMonthToInt(X_split[3])
+        train_X[i][modules + components] = yearMonthToInt(X_split[3])
 
         # repair (month)
-        train_X[i][modules + components + 3] = int(X_split[3].split('/')[1])
+        train_X[i][modules + components + 1] = int(X_split[3].split('/')[1])
 
         # count (apply base 2 log)
         train_Y[i][0] = math.log(int(agg_data[i][1]) + 1, 2)
 
     # find avg and stddev
-    sale_mean        = train_X.mean(axis=0)[modules + components]
-    saleMonth_mean   = train_X.mean(axis=0)[modules + components + 1]
-    repair_mean      = train_X.mean(axis=0)[modules + components + 2]
-    repairMonth_mean = train_X.mean(axis=0)[modules + components + 3]
+    repair_mean      = train_X.mean(axis=0)[modules + components]
+    repairMonth_mean = train_X.mean(axis=0)[modules + components + 1]
     countLog_mean    = train_Y.mean(axis=0)[0]
 
-    sale_std         = train_X.std(axis=0)[modules + components]
-    saleMonth_std    = train_X.std(axis=0)[modules + components + 1]
-    repair_std       = train_X.std(axis=0)[modules + components + 2]
-    repairMonth_std  = train_X.std(axis=0)[modules + components + 3]
+    repair_std       = train_X.std(axis=0)[modules + components]
+    repairMonth_std  = train_X.std(axis=0)[modules + components + 1]
     countLog_std     = train_Y.std(axis=0)[0]
 
-    meanAndStd = np.array([[sale_mean, sale_std],
-                           [saleMonth_mean, saleMonth_std],
-                           [repair_mean, repair_std],
+    meanAndStd = np.array([[repair_mean, repair_std],
                            [repairMonth_mean, repairMonth_std],
                            [countLog_mean, countLog_std]])
 
@@ -112,16 +91,55 @@ def preprocess(repairTrain):
 
     # convert using avg and stddev
     for i in range(agg_len):
-        train_X[i][modules + components]     = (train_X[i][modules + components] - sale_mean)            / sale_std
-        train_X[i][modules + components + 1] = (train_X[i][modules + components + 1] - saleMonth_mean)   / saleMonth_std
-        train_X[i][modules + components + 2] = (train_X[i][modules + components + 2] - repair_mean)      / repair_std
-        train_X[i][modules + components + 3] = (train_X[i][modules + components + 3] - repairMonth_mean) / repairMonth_std
+        train_X[i][modules + components]     = (train_X[i][modules + components] - repair_mean)          / repair_std
+        train_X[i][modules + components + 1] = (train_X[i][modules + components + 1] - repairMonth_mean) / repairMonth_std
         train_Y[i][0]                        = (train_Y[i][0] - countLog_mean)                           / countLog_std
 
     pd.DataFrame(train_X).to_csv('train_X.csv')
     pd.DataFrame(train_Y).to_csv('train_Y.csv')
 
+# create test_X data using output target ID mapping
+def createTestX(outputTargetIDMapping):
+
+    test_X_rows = len(outputTargetIDMapping)
+    test_X = np.zeros((test_X_rows, modules + components + 2))
+
+    for i in range(test_X_rows):
+
+        # module
+        test_X[i][int(outputTargetIDMapping[i][0][1:]) - 1] = 1
+
+        # component
+        test_X[i][modules + int(outputTargetIDMapping[i][1][1:]) - 1] = 1
+
+        # repair
+        test_X[i][modules + components] = yearAndMonthToInt(outputTargetIDMapping[i][2], outputTargetIDMapping[i][3])
+
+        # repair (month)
+        test_X[i][modules + components + 1] = math.log(int(outputTargetIDMapping[i][3]), 2)
+
+    # normalize using avg and stddev
+    avgAndStd = np.array(pd.read_csv('train_meanAndStd.csv', index_col=0))
+
+    repair_mean      = avgAndStd[0][0]
+    repairMonth_mean = avgAndStd[1][0]
+    countLog_mean    = avgAndStd[2][0]
+
+    repair_std       = avgAndStd[0][1]
+    repairMonth_std  = avgAndStd[1][1]
+    countLog_std     = avgAndStd[2][1]
+
+    # convert using avg and stddev
+    for i in range(test_X_rows):
+        test_X[i][modules + components]     = (test_X[i][modules + components] - repair_mean)          / repair_std
+        test_X[i][modules + components + 1] = (test_X[i][modules + components + 1] - repairMonth_mean) / repairMonth_std
+        
+    pd.DataFrame(test_X).to_csv('test_X.csv')
+
 if __name__ == '__main__':
+
+    modules = 9
+    components = 31
 
     desireOutputRef = pd.DataFrame(np.array(pd.read_csv('DesireOutputRef.csv')))
     fixTrain = pd.DataFrame(np.array(pd.read_csv('FixTrain.csv')))
@@ -147,3 +165,5 @@ if __name__ == '__main__':
     # preprocess repair-train data
     preprocess(repairTrain)
     
+    # create test_X data using output target ID mapping
+    createTestX(np.array(outputTargetIDMapping))
