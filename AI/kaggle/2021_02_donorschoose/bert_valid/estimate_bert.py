@@ -336,8 +336,8 @@ def mainFunc(count, tokenizer):
     wordCount = ME.getWordCount(option, trainFile)
 
     try:
-        train_extracted = pd.read_csv(trainExtractedFile, index_col=0)
-        valid_extracted = pd.read_csv(validExtractedFile, index_col=0)
+        train_extracted = np.array(pd.read_csv(trainExtractedFile, index_col=0))
+        valid_extracted = np.array(pd.read_csv(validExtractedFile, index_col=0))
         
     except:
         (train_extracted, _, onehot) = ME.extract(trainFile, option, title, wordCount, None, [2016, 2017])
@@ -399,7 +399,7 @@ def mainFunc(count, tokenizer):
         # for donorschoose-application-screening,
         # max_length_train = 132, 2183, 993, 387, 224, 234
         
-        max_lengths = pd.read_csv('bert_max_lengths_train.csv', index_col=0)
+        max_lengths = pd.read_csv('bert_max_length_train.csv', index_col=0)
         max_lengths = np.array(max_lengths)[0]
 
         print('\n[05] max lengths:')
@@ -518,8 +518,8 @@ if __name__ == '__main__':
     to_lower_case = bert_layer.resolved_object.do_lower_case.numpy()
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
-    # repeat 4 times
-    times = 4
+    # repeat once
+    times = 1
     
     for i in range(times):
         mainFunc(i, tokenizer)

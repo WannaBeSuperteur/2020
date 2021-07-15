@@ -5,7 +5,7 @@ import pandas as pd
 
 if __name__ == '__main__':
 
-    count = 4
+    count = 1
 
     for i in range(count):
         bert_result = pd.read_csv('bert_valid_result_count_' + str(i) + '.csv', index_col=0)
@@ -17,4 +17,4 @@ if __name__ == '__main__':
 
     answer_array /= count
 
-    answer_array.to_csv('final_answer.csv')
+    pd.DataFrame(answer_array).to_csv('final_answer.csv')
