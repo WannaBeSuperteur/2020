@@ -13,6 +13,10 @@ def yearMonthToInt(yearMonth):
 def yearAndMonthToInt(year, month):
     return year * 12 + (month - 1)
 
+# sigmoid
+def sigmoid(value):
+    return 1.0 / (1.0 + math.exp(-value))
+
 # preprocess RepairTrain.csv
 def preprocess(repairTrain):
 
@@ -90,10 +94,13 @@ def preprocess(repairTrain):
     pd.DataFrame(meanAndStd).to_csv('train_meanAndStd.csv')
 
     # convert using avg and stddev
+    # Y -> log2(Y+1) -> normalize(log2(Y+1)) -> sigmoid(normalize(log2(Y+1)))
     for i in range(agg_len):
         train_X[i][modules + components]     = (train_X[i][modules + components] - repair_mean)          / repair_std
         train_X[i][modules + components + 1] = (train_X[i][modules + components + 1] - repairMonth_mean) / repairMonth_std
         train_Y[i][0]                        = (train_Y[i][0] - countLog_mean)                           / countLog_std
+        
+        train_Y[i][0] = sigmoid(train_Y[i][0])
 
     pd.DataFrame(train_X).to_csv('train_X.csv')
     pd.DataFrame(train_Y).to_csv('train_Y.csv')
@@ -116,7 +123,7 @@ def createTestX(outputTargetIDMapping):
         test_X[i][modules + components] = yearAndMonthToInt(outputTargetIDMapping[i][2], outputTargetIDMapping[i][3])
 
         # repair (month)
-        test_X[i][modules + components + 1] = math.log(int(outputTargetIDMapping[i][3]), 2)
+        test_X[i][modules + components + 1] = int(outputTargetIDMapping[i][3])
 
     # normalize using avg and stddev
     avgAndStd = np.array(pd.read_csv('train_meanAndStd.csv', index_col=0))

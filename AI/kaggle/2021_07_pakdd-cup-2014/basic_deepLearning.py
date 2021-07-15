@@ -33,9 +33,9 @@ def getBasicNNModel(units):
     model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dense(units=1, activation='tanh'))
+    model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
     
-    model.compile(loss='mse', optimizer='adam', metrics=['mean_absolute_error'])
+    model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mean_absolute_error'])
 
     return model
 
