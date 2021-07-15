@@ -27,7 +27,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 
 # team members' Python codes
-import Daniel_BaselineModels as Daniel_Baseline
+#import Daniel_BaselineModels as Daniel_Baseline
 
 # models
 # XGBoost            : An Jun Hang's idea
@@ -45,6 +45,29 @@ def getCatBoostModel(iterations):
                             min_data_in_leaf=1,
                             max_ctr_complexity=15,
                             verbose=400)
+
+    return model
+
+# xgboost (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/
+#          Code/AJK-tabular/AnJunkang-xgboost%2Brandomsearchcv.ipynb) and
+#         (https://github.com/WannaBeSuperteur/2020/blob/master/AI/kaggle/2021_06_Tabular_Playground_May_2021/
+#          Code/AJK-tabular/random-grid-search-5folds.csv)
+def getXgboostModel():
+
+    # xgboost classifier
+    model = XGBClassifier(num_class=4, objective='multi:softprob')
+    model = XGBClassifier(num_class=4, 
+                          objective='multi:softprob',
+                          tree_method='gpu_hist',
+                          n_estimators=600,
+                          use_label_encoder=False,
+                          eval_metric='mlogloss',
+                          subsample=0.6,
+                          min_child_weight=7,
+                          max_depth=6,
+                          learning_rate=0.05,
+                          gamma=0,
+                          colsample_bytree=0.9)
 
     return model
 
@@ -84,7 +107,6 @@ def predict(model, train_X, train_Y, test_X, predictionFileName):
     model.fit(train_X, train_Y)
     
     prediction = model.predict_proba(test_X)
-    prediction = np.clip(prediction, 0.08, 0.95)
     prediction = pd.DataFrame(prediction)
 
     # save prediction
@@ -132,17 +154,14 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(4200)  # catboost classifier
-    model1 = getCatBoostModel(8500)  # catboost classifier
-    model2 = getCatBoostModel(17000) # catboost classifier
-    model3 = getLGBMModel(0.055)     # lightGBM classifier
-    model4 = getLGBMModel(0.111)     # lightGBM classifier
-    model5 = getLGBMModel(0.223)     # lightGBM classifier
-    model6 = getLDAModel()           # Linear Discriminant Analysis
+    model0 = getCatBoostModel(17000) # catboost classifier
+    model1 = getLGBMModel(0.223)     # lightGBM classifier
+    model2 = getXgboostModel()       # XGBoost classifier
+    model3 = getLDAModel()           # Linear Discriminant Analysis
 
     # array of models
-    modelNames = ['catboost0', 'catboost1', 'catboost2', 'lightgbm0', 'lightgbm1', 'lightgbm2', 'lda']
-    models = [model0, model1, model2, model3, model4, model5, model6]
+    modelNames = ['catboost', 'lightgbm', 'xgboost', 'lda']
+    models = [model0, model1, model2, model3]
     predictions = []
 
     # predict using these models
@@ -175,7 +194,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 100000
     numClass = 4
-    numModel = 7
+    numModel = 4
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
@@ -262,11 +281,11 @@ if __name__ == '__main__':
     # run for at most 200 rounds
     rounds = 200
 
-    # initial weights for each model : [CatBoost0, CatBoost1, CatBoost2, LGBM0, LGBM1, LGBM2, LDA]
-    w = [1/7, 1/7, 1/7, 1/7, 1/7, 1/7, 1/7]
+    # initial weights for each model : [CatBoost LightGBM, XGBoost, LDA]
+    w = [0.25, 0.25, 0.25, 0.25]
 
     # weight change rate
-    wcr = 1/280
+    wcr = 0.01
 
     # get merged predictions first
     try:
@@ -284,21 +303,15 @@ if __name__ == '__main__':
         log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(w, 6)) + ' error=' + str(round(error, 8)) + '\n')
 
         # explore neighboring cases
-        w_neighbor0 = [min(w[0] + 6*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
-        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 6*wcr, 1.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
-        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 6*wcr, 1.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
-        w_neighbor3 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), min(w[3] + 6*wcr, 1.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
-        w_neighbor4 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), min(w[4] + 6*wcr, 1.0), max(w[5] - wcr, 0.0), max(w[6] - wcr, 0.0)]
-        w_neighbor5 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), min(w[5] + 6*wcr, 1.0), max(w[6] - wcr, 0.0)]
-        w_neighbor6 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0), max(w[4] - wcr, 0.0), max(w[5] - wcr, 0.0), min(w[6] + 6*wcr, 1.0)]
+        w_neighbor0 = [min(w[0] + 6*wcr, 1.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0)]
+        w_neighbor1 = [max(w[0] - wcr, 0.0), min(w[1] + 6*wcr, 1.0), max(w[2] - wcr, 0.0), max(w[3] - wcr, 0.0)]
+        w_neighbor2 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), min(w[2] + 6*wcr, 1.0), max(w[3] - wcr, 0.0)]
+        w_neighbor3 = [max(w[0] - wcr, 0.0), max(w[1] - wcr, 0.0), max(w[2] - wcr, 0.0), min(w[3] + 6*wcr, 1.0)]
         
         error_neighbor0 = computeError(merged_predictions, w_neighbor0, train_Y)
         error_neighbor1 = computeError(merged_predictions, w_neighbor1, train_Y)
         error_neighbor2 = computeError(merged_predictions, w_neighbor2, train_Y)
         error_neighbor3 = computeError(merged_predictions, w_neighbor3, train_Y)
-        error_neighbor4 = computeError(merged_predictions, w_neighbor4, train_Y)
-        error_neighbor5 = computeError(merged_predictions, w_neighbor5, train_Y)
-        error_neighbor6 = computeError(merged_predictions, w_neighbor6, train_Y)
 
         # save log for each round
         f = open('log.txt', 'w')
@@ -310,13 +323,10 @@ if __name__ == '__main__':
         log += ('neighbor1=' + str(np.round_(w_neighbor1, 6)) + ' error=' + str(round(error_neighbor1, 8)) + '\n')
         log += ('neighbor2=' + str(np.round_(w_neighbor2, 6)) + ' error=' + str(round(error_neighbor2, 8)) + '\n')
         log += ('neighbor3=' + str(np.round_(w_neighbor3, 6)) + ' error=' + str(round(error_neighbor3, 8)) + '\n')
-        log += ('neighbor4=' + str(np.round_(w_neighbor4, 6)) + ' error=' + str(round(error_neighbor4, 8)) + '\n')
-        log += ('neighbor5=' + str(np.round_(w_neighbor5, 6)) + ' error=' + str(round(error_neighbor5, 8)) + '\n')
-        log += ('neighbor6=' + str(np.round_(w_neighbor6, 6)) + ' error=' + str(round(error_neighbor6, 8)) + '\n')
 
         # move to the neighbor with minimum loss
         # stop if no neighbor with loss less than 'error'
-        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2, error_neighbor3, error_neighbor4, error_neighbor5, error_neighbor6])
+        errors = np.array([error_neighbor0, error_neighbor1, error_neighbor2, error_neighbor3])
         moveTo = errors.argmin()
 
         if errors[moveTo] < error:
