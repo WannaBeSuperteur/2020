@@ -40,12 +40,14 @@ def applyLog(df):
 def run(train_df, test_df, dic, normalize, log2):
 
     train_rows = 100000
+    test_rows = 50000
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_49']
     train_Y = train_df.loc[:, 'target':]
     test_X = test_df.loc[:, 'feature_0':'feature_49']
     train_Y['target'].replace(dic, inplace=True)
+    train_Y = pd.get_dummies(train_Y['target'])
 
     # apply X -> log2(X+1) to train_X and test_X
     if log2 == True:
@@ -57,13 +59,22 @@ def run(train_df, test_df, dic, normalize, log2):
         train_X = applyNormalization(train_X)
         test_X = applyNormalization(test_X)
 
+    # add ID columns to train_X, train_Y and test_X
+    train_X['id'] = range(train_rows)
+    train_Y['id'] = range(train_rows)
+    test_X['id'] = range(test_rows)
+
+    print(train_X)
+    print(train_Y)
+    print(test_X)
+
     # VALIDATION
     # CHANGED TabularAutoML to TabularUtilizedAutoML for timeout utilization
     N_THREADS = 4
     N_FOLDS = 10
     RANDOM_STATE = 2021
     TEST_SIZE = 0.1
-    TIMEOUT = 1800
+    TIMEOUT = 120 # 1800
 
     task = Task('multiclass', metric='crossentropy')
     roles = {'target': 'target'}
@@ -77,7 +88,15 @@ def run(train_df, test_df, dic, normalize, log2):
     automl_prediction = automl.fit_predict(train_df, roles=roles)
 
     test_Y = automl.predict(test_X)
-    test_Y.to_csv('automl_final_prediction.csv')
+    test_Y = test_Y.data
+    
+    print('\n\nfinal prediction:')
+    print(test_Y)
+    
+    test_Y = np.concatenate((test_Y[:, 3:], test_Y[:, 0:3]), axis=1)
+    pd.DataFrame(test_Y).to_csv('automl_final_prediction.csv')
+
+    return test_Y
 
 if __name__ == '__main__':
 
@@ -89,13 +108,7 @@ if __name__ == '__main__':
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3}
 
     # final prediction using AutoML
-    final_predictions = run(train_df, test_df, dic, True, True)
-
-    for i in range(len(w)):
-        if i == 0:
-            final_prediction = w[0] * final_predictions[0]
-        else:
-            final_prediction += w[i] * final_predictions[i]
+    final_prediction = run(train_df, test_df, dic, True, True)
 
     # change row number and column as 'sample_submission.csv'
     # you need to write 'id' to the top-left cell
