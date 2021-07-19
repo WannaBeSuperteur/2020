@@ -18,26 +18,29 @@ from tensorflow.keras.models import Sequential
 
 import predict_helper as ph
 
-# basic NN model
-# ref : https://github.com/WannaBeSuperteur/2020/blob/master/WPCN_UAV/2020_10_Multi_UAV_Enabled/deepQ.py
-def getBasicNNModel(units):
+import lightgbm
+import xgboost
+from lightgbm import LGBMClassifier, LGBMRegressor
+from xgboost import XGBClassifier, XGBRegressor
 
-    with tf.device('/gpu:0'):
+# XGBoost model
+# ref : https://www.kaggle.com/safavieh/ultimate-feature-engineering-xgb-lgb-nn
+def getXGBoostModel(max_depth, min_child_weight):
 
-        # L2 regularization
-        L2 = tf.keras.regularizers.l2(0.001)
+    params = {
+        'eta': 0.05,
+        'max_depth': max_depth,
+        'subsample': 0.85,
+        'colsample_bytree': 0.25,
+        'min_child_weight': min_child_weight,
+        'objective': 'binary:logistic',
+        'eval_metric': 'auc',
+        'seed': 0,
+        'silent': 1,
+    }
 
-        # define the model
-        model = Sequential()
-        model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
-        model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
-        model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
-        model.add(tf.keras.layers.Dense(units=units, activation='relu', kernel_regularizer=L2))
-        model.add(tf.keras.layers.Dense(units=1, activation='sigmoid'))
-        
-        model.compile(loss='mean_absolute_error', optimizer='adam', metrics=['mean_absolute_error'])
-
-        return model
+    model = XGBRegressor(**params)
+    return model
 
 if __name__ == '__main__':
 
@@ -58,14 +61,14 @@ if __name__ == '__main__':
     wcr = 0.01
 
     # model info
-    model0 = getBasicNNModel(64)
-    model1 = getBasicNNModel(96)
-    model2 = getBasicNNModel(128)
-    model3 = getBasicNNModel(192)
+    model0 = getXGBoostModel(4, 3)
+    model1 = getXGBoostModel(4, 4)
+    model2 = getXGBoostModel(5, 3)
+    model3 = getXGBoostModel(5, 4)
 
     models = [model0, model1, model2, model3]
-    isModelNN = [True, True, True, True]
-    modelNames = ['NN0', 'NN1', 'NN2', 'NN3']
+    isModelNN = [False, False, False, False]
+    modelNames = ['LGBM0', 'LGBM1', 'LGBM2', 'XGBOOST']
     numModel = len(models)
 
     model_info = [models, isModelNN, modelNames]

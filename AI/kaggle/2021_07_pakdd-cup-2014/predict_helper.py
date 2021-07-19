@@ -163,3 +163,88 @@ def modifySumTo1(w):
         return 'modify weight to make the sum 1.0\nmodified weight: ' + str(w) + '\n'
     else:
         return ''
+
+# compute merged predictions
+def computeMergedPredictions(train_X, train_Y, test_X, w, train_rows, model_info):
+    try:
+        merged_predictions = getMergedPredictions(len(w))
+    except:
+        merged_predictions = run(train_X, train_Y, test_X, False, 0, train_rows, model_info)
+
+    print(merged_predictions)
+    return merged_predictions
+
+# find best weights (w) using hill-climbing and return the log
+def findBestWeights(train_Y, merged_predictions, w, wcr, rounds, numModel):
+    
+    # log
+    log = ''
+
+    for i in range(rounds):
+        error = computeMetric(merged_predictions, w, train_Y)
+        log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(w, 6)) + ' error=' + str(round(error, 8)) + '\n')
+
+        # explore neighboring cases
+        w_neighbors = []
+        error_neighbors = []
+        
+        for j in range(numModel):
+            w_neighbor = []
+
+            for k in range(numModel):
+                if j == k:
+                    w_neighbor.append(min(w[k] + (numModel - 1)*wcr, 1.0))
+                else:
+                    w_neighbor.append(max(w[k] - wcr, 0.0))
+            
+            w_neighbors.append(w_neighbor)
+            error_neighbors.append(computeMetric(merged_predictions, w_neighbor, train_Y))
+
+        # save log for each round
+        f = open('log.txt', 'w')
+        f.write(log)
+        f.close()
+
+        # modify weights using computed losses
+        for j in range(numModel):
+            log += ('neighbor' + str(j) + '=' + str(np.round_(w_neighbors[j], 6)) + ' error=' + str(round(error_neighbors[j], 8)) + '\n')
+        
+        # move to the neighbor with minimum loss
+        # stop if no neighbor with loss less than 'error'
+        errors = np.array(error_neighbors)
+        moveTo = errors.argmin()
+
+        if errors[moveTo] < error:
+            for i in range(len(w)):
+                if i == moveTo:
+                    w[i] = min(w[i] + (numModel - 1)*wcr, 1.0)
+                else:
+                    w[i] = max(w[i] - wcr, 0.0)
+                    
+            log += 'move to neighbor' + str(moveTo) + '\n'
+
+        else:
+            break
+
+        # modify weight to make the sum 1.0
+        sumWeights = sum(w)
+        log += modifySumTo1(w)
+        
+    # save log for each round at finish
+    f = open('log.txt', 'w')
+    f.write(log)
+    f.close()
+
+    return log
+
+# get final prediction with weights (w)
+def getFinalPrediction(w, train_X, train_Y, test_X, train_rows, model_info):
+    final_predictions = run(train_X, train_Y, test_X, True, 0, train_rows, model_info)
+
+    for i in range(len(w)):
+        if i == 0:
+            final_prediction = w[0] * final_predictions[0]
+        else:
+            final_prediction += w[i] * final_predictions[i]
+
+    return final_prediction
