@@ -54,7 +54,7 @@ def EDA(data, option, categoryNo):
         # show EDA result
         plt.axis([0, len(arrays[i][0]), 0, len(arrays[i])])
         plt.pcolor(distrib_df)
-        plt.title(titles[i])
+        plt.title(titles[i] + ' for ' + option + str(categoryNo))
 
         if i == 0:
             plt.xlabel('repair month (Feb 2005~)')
