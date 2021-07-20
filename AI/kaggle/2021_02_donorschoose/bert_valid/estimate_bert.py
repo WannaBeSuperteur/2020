@@ -32,7 +32,7 @@ def tokenize_text(text, tokenizer):
 class TEXT_MODEL(tf.keras.Model):
     
     def __init__(self, vocabulary_size, precols, textcols,
-                 embedding_dimensions=128, cnn_filters=50, dnn_units=512,
+                 embedding_dimensions=128, cnn_filters=64, dnn_units=512,
                  dropout_rate=0.1, training=False, name='text_model'):
         
         super(TEXT_MODEL, self).__init__(name=name)
@@ -275,15 +275,15 @@ def createBatchedDataset(processed_dataset, rows, batch_size):
 def mainFunc(tokenizer):
 
     # define configuration
-    train_max_rows = 1000 # 9999999
+    train_max_rows = 182080
     test_max_rows = 9999999
     print_interval = 400
     batch_size = 32
 
-    embedding_dim = 200
+    embedding_dim = 128
     cnn_filters = 50
-    dnn_units = 256
-    dropout_rate = 0.5
+    dnn_units = 192
+    dropout_rate = 0.25
 
     loss = 'mse'
     opti = optimizers.Adam(0.0005, decay=1e-6)
@@ -466,7 +466,7 @@ def mainFunc(tokenizer):
             print(np.array(train_approved[:100]))
 
             # callback list for training
-            early = tf.keras.callbacks.EarlyStopping(monitor="accuracy", mode="max", patience=3)
+            early = tf.keras.callbacks.EarlyStopping(monitor="accuracy", mode="max", patience=999)
             lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
 
             ### TRAIN THE MODEL WITH K-FOLD ###
@@ -477,6 +477,7 @@ def mainFunc(tokenizer):
 
                 print('\n====================')
                 print('training model ' + str(i) + ' for k-fold ' + str(k) + ' / ' + str(kfold))
+                print('valid_start = ' + str(valid_start) + ', valid_end = ' + str(valid_end) + ', rows_to_train = ' + str(rows_to_train))
                 print('====================\n')
                 
                 text_models[i][k].fit(np.concatenate((train_data[:valid_start], train_data[valid_end:rows_to_train]), axis=0),
