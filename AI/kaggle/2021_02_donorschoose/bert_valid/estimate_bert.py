@@ -31,7 +31,7 @@ def tokenize_text(text, tokenizer):
 
 class TEXT_MODEL(tf.keras.Model):
     
-    def __init__(self, vocabulary_size, precols,
+    def __init__(self, vocabulary_size, precols, textcols,
                  embedding_dimensions=128, cnn_filters=50, dnn_units=512,
                  dropout_rate=0.1, training=False, name='text_model'):
         
@@ -57,9 +57,12 @@ class TEXT_MODEL(tf.keras.Model):
         # i10_ts  :                                   1
         #
         # total   : i0_tp, i1_ss, ..., i10_ts     ( 152 unique columns)
-        # text    : tokenized by BERT             ( 993        columns)
-        #
-        #                                         (1145        columns)
+        # text    : tokenized by BERT             ( 158        columns) for title
+        #                                         (2583        columns) for essay1
+        #                                         ( 993        columns) for essay2
+        #                                         ( 387        columns) for essay3
+        #                                         ( 224        columns) for essay4
+        #                                         ( 234        columns) for summary
 
         # constants
         self.u00, self.u01, self.u02, self.u03, self.u04 = 6, 51, 2, 12, 7
@@ -72,6 +75,9 @@ class TEXT_MODEL(tf.keras.Model):
         self.d05, self.d06, self.d07, self.d08           = 12, 12, 12, 12
         
         self.d09, self.d09_final, self.d10, self.dL = 32, 12, 12, 12 # 4 -> 12
+
+        self.precols = precols
+        self.textcols = textcols
 
         # flatten layer
         self.flat = tf.keras.layers.Flatten()
@@ -122,7 +128,7 @@ class TEXT_MODEL(tf.keras.Model):
 
         # split input
         i0_tp, i1_ss, i2_d_y, i3_d_m, i4_d_d, i5_d_h, i6_pgc, i7_psc, i8_pss, i9_len, i10_ts, inputs_text =\
-        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, 993], 1)
+        tf.split(inputs, [self.u00, self.u01, self.u02, self.u03, self.u04, self.u05, self.u06, self.u07, self.u08, 6, 1, self.textcols], 1)
 
         inputs_text = tf.cast(inputs_text, tf.int32)
 
@@ -266,11 +272,11 @@ def createBatchedDataset(processed_dataset, rows, batch_size):
 
     return batched_dataset
 
-def mainFunc(count, tokenizer):
+def mainFunc(tokenizer):
 
     # define configuration
-    train_max_rows = 9999999
-    valid_max_rows = 9999999
+    train_max_rows = 1000 # 9999999
+    test_max_rows = 9999999
     print_interval = 400
     batch_size = 32
 
@@ -282,16 +288,17 @@ def mainFunc(count, tokenizer):
     loss = 'mse'
     opti = optimizers.Adam(0.0005, decay=1e-6)
 
-    epochs = 15
+    epochs = 10
     batch_size = 32
 
-    trainFile = 'train.csv'
-    validFile = 'test.csv'
-    trainExtractedFile = 'train_extracted.csv'
-    validExtractedFile = 'test_extracted.csv'
-    validAnswerFile = None
-    isValidTest = True # test mode
+    # for k-fold
+    kfold = 5
 
+    trainFile = 'train.csv'
+    testFile = 'test.csv'
+    trainExtractedFile = 'train_extracted.csv'
+    testExtractedFile = 'test_extracted.csv'
+    
     # load training data
     train = np.array(pd.read_csv(trainFile, dtype={11:str, 12:str}))
     rows_to_train = min(train_max_rows, len(train))
@@ -305,26 +312,26 @@ def mainFunc(count, tokenizer):
 
     train_approved = train[:rows_to_train, 15].astype(float)
 
-    # load valid data
-    valid = np.array(pd.read_csv(validFile, dtype={11:str, 12:str}))
-    rows_to_valid = min(valid_max_rows, len(valid))
+    # load test data
+    test = np.array(pd.read_csv(testFile, dtype={11:str, 12:str}))
+    rows_to_test = min(test_max_rows, len(test))
     
-    valid_title = valid[:rows_to_valid, 8].astype(str)
-    valid_essay1 = valid[:rows_to_valid, 9].astype(str)
-    valid_essay2 = valid[:rows_to_valid, 10].astype(str)
-    valid_essay3 = valid[:rows_to_valid, 11].astype(str)
-    valid_essay4 = valid[:rows_to_valid, 12].astype(str)
-    valid_summary = valid[:rows_to_valid, 13].astype(str)
+    test_title = test[:rows_to_test, 8].astype(str)
+    test_essay1 = test[:rows_to_test, 9].astype(str)
+    test_essay2 = test[:rows_to_test, 10].astype(str)
+    test_essay3 = test[:rows_to_test, 11].astype(str)
+    test_essay4 = test[:rows_to_test, 12].astype(str)
+    test_summary = test[:rows_to_test, 13].astype(str)
 
-    valid_approved = valid[:rows_to_valid, 15:].astype(float)
+    test_approved = test[:rows_to_test, 15:].astype(float)
 
-    # print the number of rows to train/valid
+    # print the number of rows to train/test
     print('\n[00] rows to train : ' + str(rows_to_train))
-    print('\n[01] rows to valid : ' + str(rows_to_valid))
+    print('\n[01] rows to test  : ' + str(rows_to_test))
 
     # extract data from training dataset
     train_info = []
-    valid_info = []
+    test_info = []
 
     option = [-1, -1, 2, 2, 7, 2, 8, 8, 5, 5, 5, 5, 5, 5, 1, -1]
     title = ['id', 'teacher_id', 'teacher_prefix', 'school_state',
@@ -337,14 +344,14 @@ def mainFunc(count, tokenizer):
 
     try:
         train_extracted = np.array(pd.read_csv(trainExtractedFile, index_col=0))
-        valid_extracted = np.array(pd.read_csv(validExtractedFile, index_col=0))
+        test_extracted = np.array(pd.read_csv(testExtractedFile, index_col=0))
         
     except:
         (train_extracted, _, onehot) = ME.extract(trainFile, option, title, wordCount, None, [2016, 2017])
-        (valid_extracted, _, _) = ME.extract(validFile, option, title, wordCount, onehot, [2016, 2017])
+        (test_extracted, _, _) = ME.extract(testFile, option, title, wordCount, onehot, [2016, 2017])
 
         pd.DataFrame(train_extracted).to_csv(trainExtractedFile)
-        pd.DataFrame(valid_extracted).to_csv(validExtractedFile)
+        pd.DataFrame(test_extracted).to_csv(testExtractedFile)
 
     precols = len(train_extracted[0])
 
@@ -354,47 +361,20 @@ def mainFunc(count, tokenizer):
     for i in range(rows_to_train):
         train_info.append(train_extracted[i])
 
-    for i in range(rows_to_valid):
-        valid_info.append(valid_extracted[i])
+    for i in range(rows_to_test):
+        test_info.append(test_extracted[i])
 
     print('\n[03] train info:')
     print(np.shape(train_info))
     print(np.array(train_info))
 
-    print('\n[04] valid info:')
-    print(np.shape(valid_info))
-    print(np.array(valid_info))
-
-    # save validation output data (only for VALID mode)
-    if isValidTest == False:
-        try:
-            valid_rightAnswer = pd.read_csv(validAnswerFile, index_col=0)
-        except:
-            valid_approved = np.array(valid_approved)
-            pd.DataFrame(valid_approved[:rows_to_valid]).to_csv(validAnswerFile)
+    print('\n[04] test info:')
+    print(np.shape(test_info))
+    print(np.array(test_info))
 
     with K.tf.device('/gpu:0'):
-        
-        # each text model for each dataset
-        text_to_train = [train_title, train_essay1, train_essay2, train_essay3, train_essay4, train_summary]
-        text_to_valid = [valid_title, valid_essay1, valid_essay2, valid_essay3, valid_essay4, valid_summary]
-        text_models = []
 
-        for i in range(6):
-            text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols,
-                                    embedding_dimensions=embedding_dim,
-                                    cnn_filters=cnn_filters,
-                                    dnn_units=dnn_units, dropout_rate=dropout_rate)
-            
-            text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
-            
-            text_models.append(text_model)
-            
-        # train / valid result array
-        train_result = [[0 for j in range(6)] for i in range(rows_to_train)]
-        valid_result = [[0 for j in range(6)] for i in range(rows_to_valid)]
-
-        # train / valid max length
+        # train / test max length
 
         # for donorschoose-application-screening,
         # max_length_train = 132, 2183, 993, 387, 224, 234
@@ -405,15 +385,56 @@ def mainFunc(count, tokenizer):
         print('\n[05] max lengths:')
         print(max_lengths)
 
+        # list of training data [info part + (text part) for each text (title, essay1, ..., summary)] :
+        #                       [[info part + (text part) for title  ],
+        #                        [info part + (text part) for essay1 ],
+        #                         ...
+        #                        [info part + (text part) for summary]]
+        train_data_for_each_text = []
+        
+        # each text model for each dataset
+        text_to_train = [train_title, train_essay1, train_essay2, train_essay3, train_essay4, train_summary]
+        text_to_test = [test_title, test_essay1, test_essay2, test_essay3, test_essay4, test_summary]
+        
+        text_models = [[0 for j in range(kfold)] for i in range(6)]
+        text_models_for_test = [None, None, None, None, None, None]
+
+        for i in range(6):
+
+            # text model (k-fold)
+            for k in range(kfold):
+                text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols, textcols=max_lengths[i],
+                                        embedding_dimensions=embedding_dim,
+                                        cnn_filters=cnn_filters,
+                                        dnn_units=dnn_units, dropout_rate=dropout_rate)
+                
+                text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
+                
+                text_models[i][k] = text_model
+
+            # text model (test : final training and final prediction)
+            text_model_test = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab), precols=precols, textcols=max_lengths[i],
+                                         embedding_dimensions=embedding_dim,
+                                         cnn_filters=cnn_filters,
+                                         dnn_units=dnn_units, dropout_rate=dropout_rate)
+                
+            text_model_test.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
+                
+            text_models_for_test[i] = text_model_test
+
         # model 0: train_title   -> train_approved
         # model 1: train_essay1  -> train_approved
         # model 2: train_essay2  -> train_approved
         # model 3: train_essay3  -> train_approved
         # model 4: train_essay4  -> train_approved
         # model 5: train_summary -> train_approved
-        for i in range(2, 3): # 6
+        for i in range(6):
             
             rows = len(text_to_train[i])
+
+            # train/valid result array
+            train_output = np.zeros((rows_to_train, 1))
+            valid_prediction = np.zeros((rows_to_train, 1))
 
             # process dataset : convert into BERT-usable dataset
             tokenized_input = convertForBert(text_to_train[i], print_interval, tokenizer, int(max_lengths[i]), precols)
@@ -432,6 +453,7 @@ def mainFunc(count, tokenizer):
             print(np.array(train_info))
 
             train_data = np.concatenate((train_info, train_text), axis=1).astype(float)
+            train_data_for_each_text.append(train_data)
 
             print('\n[08] train info+text (final input)')
             print(np.shape(train_data))
@@ -444,69 +466,110 @@ def mainFunc(count, tokenizer):
             print(np.array(train_approved[:100]))
 
             # callback list for training
-            early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
-            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+            early = tf.keras.callbacks.EarlyStopping(monitor="accuracy", mode="max", patience=3)
+            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
 
-            ### TRAIN THE MODEL ###
-            text_models[i].fit(train_data, train_approved, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
-            text_models[i].summary()
+            ### TRAIN THE MODEL WITH K-FOLD ###
+            for k in range(kfold):
 
-            # update train result array
-            for j in range(rows_to_train):
-                train_result[j][i] = train_approved[j]
+                valid_start = int(rows_to_train * k / kfold)
+                valid_end = int(rows_to_train * (k + 1) / kfold)
 
-            # save the model
-            text_models[i].save('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+                print('\n====================')
+                print('training model ' + str(i) + ' for k-fold ' + str(k) + ' / ' + str(kfold))
+                print('====================\n')
+                
+                text_models[i][k].fit(np.concatenate((train_data[:valid_start], train_data[valid_end:rows_to_train]), axis=0),
+                                      np.concatenate((train_approved[:valid_start], train_approved[valid_end:rows_to_train]), axis=0),
+                                      callbacks=[early, lr_reduced], epochs=epochs)
 
-        # validate using each model
-        for i in range(2, 3): # 6
+                # print summary of model at first and last iteration
+                if (i == 0 and k == 0) or (i == 5 and k == kfold-1):
+                    text_models[i][k].summary()
 
-            rows = len(text_to_valid[i])
+                # save the model
+                text_models[i][k].save('model_' + str(i) + '_Kfold_' + str(k) + '_e_' + str(epochs))
+
+                # perform valid prediction
+                valid_predict = text_models[i][k].predict(train_data[valid_start:valid_end])
+
+                for j in range(valid_start, valid_end):
+                    valid_prediction[j][0] = valid_predict[j - valid_start][0]
+
+            valid_prediction = pd.DataFrame(valid_prediction)
+            valid_prediction.to_csv('bert_valid_prediction_model_' + str(i) + '.csv')
+
+            # PERFORM ONCE
+            if i == 0:
+                
+                # update train output array
+                for j in range(rows_to_train):
+                    train_output[j][0] = train_approved[j]
+
+                # write result for training
+                train_output = pd.DataFrame(train_output)
+                train_output.to_csv('bert_train_output.csv')
+
+        # test using each model (final training and final prediction)
+        for i in range(6):
+
+            rows = len(text_to_test[i])
+
+            # load training data to train FINAL PREDICTION models
+            train_data = train_data_for_each_text[i]
+
+            # test prediction array
+            test_prediction = np.zeros((rows_to_test, 1))
 
             # process dataset : convert into BERT-usable dataset
-            valid_text = convertForBert(text_to_valid[i], print_interval, tokenizer, int(max_lengths[i]), precols)
+            test_text = convertForBert(text_to_test[i], print_interval, tokenizer, int(max_lengths[i]), precols)
             
-            valid_text = np.array(valid_text).astype(float)
-            valid_info = np.array(valid_info).astype(float)
+            test_text = np.array(test_text).astype(float)
+            test_info = np.array(test_info).astype(float)
 
-            print('\n[10] valid text')
-            print(np.shape(valid_text))
+            print('\n[10] test text')
+            print(np.shape(test_text))
             print('------')
-            print(np.array(valid_text))
+            print(np.array(test_text))
 
-            print('\n[11] valid info')
-            print(np.shape(valid_info))
+            print('\n[11] test info')
+            print(np.shape(test_info))
             print('------')
-            print(np.array(valid_info))
+            print(np.array(test_info))
 
-            valid_data = np.concatenate((valid_info, valid_text), axis=1).astype(float)
+            test_data = np.concatenate((test_info, test_text), axis=1).astype(float)
 
-            print('\n[12] valid info+text')
-            print(np.shape(valid_data))
+            print('\n[12] test info+text')
+            print(np.shape(test_data))
             print('------')
-            print(np.array(valid_data))
+            print(np.array(test_data))
 
-            # load the model
-            loaded_model = tf.keras.models.load_model('model_' + str(i) + '_count_' + str(count) + '_train_' + str(train_max_rows) + '_e_' + str(epochs))
+            # TRAIN using FINAL training model
+            print('\n====================')
+            print('training model ' + str(i) + ' for FINAL PREDICTION')
+            print('====================\n')
+                
+            text_models_for_test[i].fit(train_data[:rows_to_train],
+                                        train_approved[:rows_to_train],
+                                        callbacks=[early, lr_reduced], epochs=epochs)
 
-            # VALIDATION
-            prediction = loaded_model.predict(valid_data)
+            # save trained final model
+            text_models_for_test[i].save('model_' + str(i) + '_final_e_' + str(epochs))
+            
+            # TEST (FINAL PREDICTION)
+            prediction = text_models_for_test[i].predict(test_data)
 
             print('\n[13] prediction')
             print(np.shape(prediction))
             print(np.array(prediction))
 
-            # update valid result array
-            for j in range(rows_to_valid):
-                valid_result[j][i] = prediction[j][0]
+            # update test result array
+            for j in range(rows_to_test):
+                test_prediction[j][0] = prediction[j][0]
 
-    # write result for training
-    train_result = pd.DataFrame(train_result)
-    train_result.to_csv('bert_train_result_count_' + str(count) + '.csv')
-
-    # write result for validation
-    valid_result = pd.DataFrame(valid_result)
-    valid_result.to_csv('bert_valid_result_count_' + str(count) + '.csv')
+            # write result for test
+            test_prediction = pd.DataFrame(test_prediction)
+            test_prediction.to_csv('bert_test_prediction_model_' + str(i) + '.csv')
 
 if __name__ == '__main__':
 
@@ -519,7 +582,4 @@ if __name__ == '__main__':
     tokenizer = BertTokenizer(vocabulary_file, to_lower_case)
 
     # repeat once
-    times = 1
-    
-    for i in range(times):
-        mainFunc(i, tokenizer)
+    mainFunc(tokenizer)

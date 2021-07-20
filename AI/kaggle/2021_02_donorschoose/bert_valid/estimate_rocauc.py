@@ -4,20 +4,29 @@ import sys
 from sklearn.metrics import roc_auc_score
 import pandas as pd
 
-if __name__ == '__main__':
+def findROCAUC(ground_truth, prediction, verbose):
 
-    ground_truth = 'bert_train_output.csv'
-    prediction = 'bert_valid_prediction_model_0.csv'
+    prediction_fn = prediction
     
     # read output data file
     ground_truth = np.array(pd.read_csv(ground_truth, index_col=0))
     prediction = np.array(pd.read_csv(prediction, index_col=0))
 
-    print('ground truth:')
-    print(np.array(ground_truth[:15]))
+    if verbose == True:
+        print('\nground truth:')
+        print(np.array(ground_truth[:15]))
 
-    print('prediction:')
-    print(np.array(prediction[:15]))
+        print('\nprediction:')
+        print(np.array(prediction[:15]))
 
     # print ROC-AUC score
-    print(round(roc_auc_score(ground_truth, prediction), 4))
+    print('\nfile name: ' + prediction_fn)
+    print('ROC-AUC : ' + str(round(roc_auc_score(ground_truth, prediction), 6)))
+    
+if __name__ == '__main__':
+
+    for i in range(6):
+        ground_truth = 'bert_train_output.csv'
+        prediction = 'bert_valid_prediction_model_' + str(i) + '.csv'
+    
+        findROCAUC(ground_truth, prediction, False)
