@@ -51,6 +51,10 @@ def EDA(data, option, categoryNo):
     for i in range(3):
         distrib_df = pd.DataFrame(arrays[i])
 
+        # for P01, P02, ..., P09
+        if option == 'P':
+            categoryNo = '%02d' % int(categoryNo)
+
         # show EDA result
         plt.axis([0, len(arrays[i][0]), 0, len(arrays[i])])
         plt.pcolor(distrib_df)

@@ -36,14 +36,21 @@ def EDA(data, option, categoryNo):
     for i in range(numSaleMonth):
         distrib_sale[i] = max(0, distrib_sale[i])
 
+    # for P01, P02, ..., P09
+    if option == 'P':
+        optionWithNum = option + ('%02d' % categoryNo)
+    else:
+        optionWithNum = option + str(categoryNo)
+
     # show EDA result
     index = np.arange(numSaleMonth)
     plt.bar(index, distrib_sale)
-    plt.title('sale EDA for ' + option + str(categoryNo))
+        
+    plt.title('sale EDA for ' + optionWithNum)
 
     plt.xlabel('sale month (Jan 2005~)')
     plt.ylabel('sale count')
-    fileTitle = 'EDA_sale_' + option + str(categoryNo) + '.png'
+    fileTitle = 'EDA_sale_' + optionWithNum + '.png'
     
     plt.savefig(fileTitle)
     plt.clf()
