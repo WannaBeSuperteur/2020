@@ -1,0 +1,13 @@
+(directory /bert_valid)
+execute : my_extract.py -> estimate_bert.py
+-> to get bert_train_output.csv, bert_valid_prediction_model_X.csv and bert_test_prediction_model_X.csv
+-> X: 0,1,2,3,4,5
+
+(directory /ensemble)
+execute : my_extract.py -> main_py
+-> to get merget_predictions_model_Y.csv and fin0_model_Y.csv
+-> Y: 0,1,2,3
+
+[BERT] valid : bert_valid_prediction_model_X.csv, test : bert_test_prediction_model_X.csv
+[Non-BERT] valid : merged_predictions_model_Y.csv, test : fin0_model_Y.csv
+to compare with : bert_train_output.csv
