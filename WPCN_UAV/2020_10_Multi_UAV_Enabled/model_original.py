@@ -212,7 +212,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 # QTable_rate        : rate of used elements from Q Table (most recently)
 def algorithm1(M, T, L, devices, width, height,
                H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
-               deviceName, QTable_rate):
+               deviceName, QTable_rate, iteration):
 
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -506,11 +506,11 @@ def algorithm1(M, T, L, devices, width, height,
         ### TRAIN and VALIDATION ###
         if episode % 1 == 0:
             QTable_use = len(QTable) * QTable_rate
-            dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
+            dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode)
 
     ### TRAIN and VALIDATION (FINAL) ###
     QTable_use = len(QTable) * QTable_rate
-    dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False)
+    dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, M)
 
     ### TEST ###
     # later
@@ -616,7 +616,10 @@ if __name__ == '__main__':
         elif argName == 'H':
             H = float(argValue)
 
-    # run
-    algorithm1(M, T, L, devices, width, height,
-               H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
-               deviceName, QTable_rate)
+    # run for 20 iterations
+    iters = 20
+    
+    for i in range(iters):
+        algorithm1(M, T, L, devices, width, height,
+                   H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
+                   deviceName, QTable_rate, i)

@@ -10,6 +10,7 @@ import pandas as pd
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.models import Sequential
+import matplotlib.pyplot as plt
 
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
@@ -212,18 +213,59 @@ def defineModel():
     return model
 
 # train data with model
-def trainDataWithModel(Q_input, Q_output, model, epochs):
+def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
     
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
-    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
 
-    model.fit(Q_input, Q_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
+    hist = model.fit(Q_input, Q_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
 
     model.save('model')
 
+    # save result as *.png image and *.csv file
+    # https://snowdeer.github.io/machine-learning/2018/01/11/keras-use-history-function/
+    if episode >= M - 2:
+
+        # *.png file
+        plt.clf()
+        plt.title('train result at iter ' + str(iteration) + ' episode ' + str(episode) + ' / ' + str(M))
+            
+        fig, loss_ax = plt.subplots()
+        acc_ax = loss_ax.twinx()
+
+        h_tl = hist.history['loss']
+        h_vl = hist.history['val_loss']
+        h_ta = hist.history['accuracy']
+        h_va = hist.history['val_accuracy']
+
+        loss_ax.plot(h_tl, 'y', label='train loss')
+        loss_ax.plot(h_vl, 'r', label='val loss')
+        loss_ax.set_xlabel('epoch')
+        loss_ax.set_ylabel('loss')
+        loss_ax.legend(loc='upper left')
+            
+        acc_ax.plot(h_ta, 'b', label='train acc')
+        acc_ax.plot(h_va, 'g', label='val acc')
+        acc_ax.set_ylabel('accuracy')
+        acc_ax.legend(loc='upper left')
+            
+        plt.savefig('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '.png')
+
+        # *.csv file
+        h_tl = np.array(h_tl)
+        h_vl = np.array(h_vl)
+        h_ta = np.array(h_ta)
+        h_va = np.array(h_va)
+
+        hist_entire = np.column_stack((h_tl, h_vl, h_ta, h_va))
+        hist_entire = pd.DataFrame(hist_entire)
+        hist_entire.columns = ['train_loss', 'val_loss', 'train_acc', 'val_acc']
+
+        hist_entire.to_csv('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '.csv')
+
 # deep Learning using Q table (training function)
 # printed : print the detail?
-def deepLearningQ_training(Q, deviceName, epoch, printed):
+def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode):
 
     model = defineModel()
     
@@ -270,7 +312,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed):
     try:
         Q_input_noramlized = np.array(pd.read_csv('Q_input_normalized.csv', index_col=0)).astype(float)
         Q_output_noramlized = np.array(pd.read_csv('Q_output_normalized.csv', index_col=0)).astype(float)
-        trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, 15)
+        trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, 15, iteration, M, episode)
 
     except:
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
