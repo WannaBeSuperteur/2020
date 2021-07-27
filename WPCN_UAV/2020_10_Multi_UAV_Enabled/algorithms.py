@@ -5,6 +5,7 @@ import matplotlib.colors as clr
 import numpy as np
 
 def plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height):
+    plt.clf()
     plt.suptitle('clustering: ' + str(count))
             
     for i in range(L):
