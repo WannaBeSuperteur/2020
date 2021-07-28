@@ -224,11 +224,10 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
     # save result as *.png image and *.csv file
     # https://snowdeer.github.io/machine-learning/2018/01/11/keras-use-history-function/
-    if episode >= M - 2:
+    if episode >= 0: # M - 2
 
         # *.png file
         plt.clf()
-        plt.title('train result at iter ' + str(iteration) + ' episode ' + str(episode) + ' / ' + str(M))
             
         fig, loss_ax = plt.subplots()
         acc_ax = loss_ax.twinx()
@@ -247,9 +246,10 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
         acc_ax.plot(h_ta, 'b', label='train acc')
         acc_ax.plot(h_va, 'g', label='val acc')
         acc_ax.set_ylabel('accuracy')
-        acc_ax.legend(loc='upper left')
-            
-        plt.savefig('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '.png')
+        acc_ax.legend(loc='upper right')
+
+        plt.title('train result at iter ' + str(iteration) + ' episode ' + str(episode) + ' / ' + str(M))
+        plt.savefig('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '(' + str(len(Q_input)) + ').png')
 
         # *.csv file
         h_tl = np.array(h_tl)
