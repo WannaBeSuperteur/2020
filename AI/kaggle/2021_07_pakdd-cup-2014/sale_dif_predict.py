@@ -78,11 +78,13 @@ def fillDistribArray(distrib):
                 sumAvailable      = np.sum(distrib[:biggestAvailableMonth + 1, :biggestAvailableSaleRepairDif + 1])
 
                 try:
-                    filled_distrib[saleMonth][saleRepairDif] = thisSaleMonth * thisSaleRepairDif / sumAvailable
-
-                    # handle NaN
-                    if np.isnan(filled_distrib[saleMonth][saleRepairDif]):
+                    # invalid value test
+                    test = thisSaleMonth * thisSaleRepairDif / sumAvailable
+                    test = test + 1
+                    if np.isnan(test) or np.isinf(test):
                         filled_distrib[saleMonth][saleRepairDif] = 0.0
+                    else:
+                        filled_distrib[saleMonth][saleRepairDif] = thisSaleMonth * thisSaleRepairDif / sumAvailable
                 except:
                     filled_distrib[saleMonth][saleRepairDif] = 0.0
 
