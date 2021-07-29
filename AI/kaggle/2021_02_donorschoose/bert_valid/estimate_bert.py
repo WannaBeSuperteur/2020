@@ -584,6 +584,9 @@ def mainFunc(tokenizer):
 
 if __name__ == '__main__':
 
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+
     # create bert tokenizer
     BertTokenizer = bert.bert_tokenization.FullTokenizer
     bert_layer = hub.KerasLayer("https://tfhub.dev/tensorflow/bert_en_uncased_L-12_H-768_A-12/1",
