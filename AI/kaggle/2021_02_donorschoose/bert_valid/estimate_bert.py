@@ -285,10 +285,7 @@ def mainFunc(tokenizer):
     dnn_units = 192
     dropout_rate = 0.25
 
-    loss = 'mse'
-    opti = optimizers.Adam(0.0005, decay=1e-6)
-
-    epochs = 10
+    epochs = 20
     batch_size = 32
 
     # for k-fold
@@ -399,7 +396,7 @@ def mainFunc(tokenizer):
         text_models = [[0 for j in range(kfold)] for i in range(6)]
         text_models_for_test = [None, None, None, None, None, None]
 
-        for i in range(6):
+        for i in range(3): # do not use train_essay3, train_essay4 and train_summary
 
             # text model (k-fold)
             for k in range(kfold):
@@ -407,7 +404,9 @@ def mainFunc(tokenizer):
                                         embedding_dimensions=embedding_dim,
                                         cnn_filters=cnn_filters,
                                         dnn_units=dnn_units, dropout_rate=dropout_rate)
-                
+
+                loss = 'mse'
+                opti = optimizers.Adam(0.0005, decay=1e-6)
                 text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
                 
                 text_models[i][k] = text_model
@@ -417,7 +416,9 @@ def mainFunc(tokenizer):
                                          embedding_dimensions=embedding_dim,
                                          cnn_filters=cnn_filters,
                                          dnn_units=dnn_units, dropout_rate=dropout_rate)
-                
+
+            loss = 'mse'
+            opti = optimizers.Adam(0.0005, decay=1e-6)
             text_model_test.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
                 
             text_models_for_test[i] = text_model_test
@@ -428,7 +429,8 @@ def mainFunc(tokenizer):
         # model 3: train_essay3  -> train_approved
         # model 4: train_essay4  -> train_approved
         # model 5: train_summary -> train_approved
-        for i in range(6):
+        
+        for i in range(3): # do not use train_essay3, train_essay4 and train_summary
             
             rows = len(text_to_train[i])
 
@@ -465,27 +467,29 @@ def mainFunc(tokenizer):
             print('------')
             print(np.array(train_approved[:100]))
 
-            # callback list for training
-            early = tf.keras.callbacks.EarlyStopping(monitor="accuracy", mode="max", patience=999)
-            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
-
             ### TRAIN THE MODEL WITH K-FOLD ###
             for k in range(kfold):
 
                 valid_start = int(rows_to_train * k / kfold)
                 valid_end = int(rows_to_train * (k + 1) / kfold)
 
+                # callback list for training
+                early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
+                lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
+
                 print('\n====================')
                 print('training model ' + str(i) + ' for k-fold ' + str(k) + ' / ' + str(kfold))
                 print('valid_start = ' + str(valid_start) + ', valid_end = ' + str(valid_end) + ', rows_to_train = ' + str(rows_to_train))
                 print('====================\n')
                 
-                text_models[i][k].fit(np.concatenate((train_data[:valid_start], train_data[valid_end:rows_to_train]), axis=0),
-                                      np.concatenate((train_approved[:valid_start], train_approved[valid_end:rows_to_train]), axis=0),
-                                      callbacks=[early, lr_reduced], epochs=epochs)
+                hist = text_models[i][k].fit(np.concatenate((train_data[:valid_start], train_data[valid_end:rows_to_train]), axis=0),
+                                             np.concatenate((train_approved[:valid_start], train_approved[valid_end:rows_to_train]), axis=0),
+                                             validation_data=(train_data[valid_start:valid_end],
+                                                              train_approved[valid_start:valid_end]),
+                                             callbacks=[early, lr_reduced], epochs=epochs)
 
                 # print summary of model at first and last iteration
-                if (i == 0 and k == 0) or (i == 5 and k == kfold-1):
+                if (i == 0 and k == 0) or (i == 2 and k == kfold-1):
                     text_models[i][k].summary()
 
                 # save the model
@@ -512,7 +516,8 @@ def mainFunc(tokenizer):
                 train_output.to_csv('bert_train_output.csv')
 
         # test using each model (final training and final prediction)
-        for i in range(6):
+        
+        for i in range(3): # do not use train_essay3, train_essay4 and train_summary
 
             rows = len(text_to_test[i])
 
@@ -545,13 +550,18 @@ def mainFunc(tokenizer):
             print('------')
             print(np.array(test_data))
 
+            # callback list for FINAL training
+            early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
+            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
+
             # TRAIN using FINAL training model
             print('\n====================')
             print('training model ' + str(i) + ' for FINAL PREDICTION')
             print('====================\n')
-                
+
             text_models_for_test[i].fit(train_data[:rows_to_train],
                                         train_approved[:rows_to_train],
+                                        validation_split=0.05,
                                         callbacks=[early, lr_reduced], epochs=epochs)
 
             # save trained final model
