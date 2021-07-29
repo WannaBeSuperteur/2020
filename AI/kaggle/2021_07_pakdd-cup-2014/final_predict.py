@@ -112,3 +112,14 @@ if __name__ == '__main__':
         
     final_submission_Ps = makeSubmission(prediction_Ps, 'P')
     final_submission_Ps.to_csv('final_submission_Ps.csv')
+
+    # final submission using average
+    fs_all = np.array(final_submission_all)
+    fs_Ms = np.array(final_submission_Ms)
+    fs_Ps = np.array(final_submission_Ps)
+    
+    final_submission_avg = (fs_all + fs_Ms + fs_Ps) / 3
+    final_submission_avg = np.clip(final_submission_avg, 0.0, 1.0)
+    final_submission_avg = pd.DataFrame(final_submission_avg)
+    
+    final_submission_avg.to_csv('final_submission_avg.csv')
