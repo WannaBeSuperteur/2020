@@ -1,5 +1,13 @@
+[DEEP LEARNING APPROACH]
 my_extract.py
 -> basic_deepLearning.py / ...
 -> convert_output.py
+
+[STATISTICAL APPROACH]
+my_extract.py
+-> sale_dif_predict.py
+-> final_predict.py
+
+use: STATISTICAL APPROACH
 
 for EDA: sale_eda.py, sale_repair_eda.py (after my_extract.py)

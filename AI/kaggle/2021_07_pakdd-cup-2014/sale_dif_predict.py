@@ -79,6 +79,10 @@ def fillDistribArray(distrib):
 
                 try:
                     filled_distrib[saleMonth][saleRepairDif] = thisSaleMonth * thisSaleRepairDif / sumAvailable
+
+                    # handle NaN
+                    if np.isnan(filled_distrib[saleMonth][saleRepairDif]):
+                        filled_distrib[saleMonth][saleRepairDif] = 0.0
                 except:
                     filled_distrib[saleMonth][saleRepairDif] = 0.0
 
@@ -90,6 +94,8 @@ def predict(option, categoryNo):
     # make prediction
     distrib = pd.DataFrame(getDistribArray(repairTrain, option, categoryNo))
     filledDistrib = pd.DataFrame(fillDistribArray(np.array(distrib)))
+
+    print(np.array(filledDistrib))
 
     numSaleMonth = len(np.array(distrib))
     numSaleRepairDif = len(np.array(distrib)[0])
