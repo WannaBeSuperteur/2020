@@ -8,6 +8,9 @@ my_extract.py
 -> sale_dif_predict.py
 -> final_predict.py
 
-use: STATISTICAL APPROACH
+[k-NN APPROACH]
+kNN.py
+
+use: k-NN APPROACH
 
 for EDA: sale_eda.py, sale_repair_eda.py (after my_extract.py)
