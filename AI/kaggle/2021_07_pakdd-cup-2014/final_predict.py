@@ -27,6 +27,28 @@ def getPrediction(data):
 
     return prediction
 
+# add weighted sum using weighted array
+def addWeightedSum(data, yearMonthIndex, weightedArray):
+
+    # make the sum of weighted array to 1
+    weightedArray = np.array(weightedArray).astype(float)
+    sumWeights = sum(weightedArray)
+    weightedArray /= sumWeights
+    
+    # add weighted sum
+    result = 0.0
+    available_weight_sum = 0.0
+    midIndex = int((len(weightedArray) - 1) / 2)
+
+    for i in range(len(weightedArray)):
+        ymIndex = yearMonthIndex + i - midIndex
+        
+        if ymIndex >= 0 and ymIndex < len(data):
+            result += data[yearMonthIndex + i - midIndex] * weightedArray[i]
+            available_weight_sum += weightedArray[i]
+
+    return result / available_weight_sum
+
 # make submission using prediction by getPrediction(data)
 # dataset : [data_all] or
 #           [data_M1, data_M2, ..., data_M9] or
@@ -54,7 +76,8 @@ def makeSubmission(dataset, option):
 
         # option == 'all' -> sum(dataset) / (Ms * Ps) for each month
         if option == 'all':
-            final_submission[i] = dataset[0][yearMonthIndex] / (Ms * Ps)
+            final_submission[i] += addWeightedSum(dataset[0], yearMonthIndex,
+                                                  [1, 2, 3, 4, 5, 4, 3, 2, 1]) / (Ms * Ps)
 
         # option == 'M' -> sum(dataset with MX) / Ps for each month
         elif option == 'M':
@@ -62,7 +85,8 @@ def makeSubmission(dataset, option):
             # find corresponding data with MX from the dataset
             for j in range(Ms):
                 if M_index == j:
-                    final_submission[i] = dataset[j][yearMonthIndex] / Ps
+                    final_submission[i] = addWeightedSum(dataset[j], yearMonthIndex,
+                                                         [1, 2, 3, 4, 5, 4, 3, 2, 1]) / Ps
 
         # option == 'P' -> sum(dataset with PX) / Ms for each month
         elif option == 'P':
@@ -70,7 +94,8 @@ def makeSubmission(dataset, option):
             # find corresponding data with PX from the dataset
             for j in range(Ps):
                 if P_index == j:
-                    final_submission[i] = dataset[j][yearMonthIndex] / Ms
+                    final_submission[i] = addWeightedSum(dataset[j], yearMonthIndex,
+                                                         [1, 2, 3, 4, 5, 4, 3, 2, 1]) / Ms
 
     return pd.DataFrame(final_submission)
 
@@ -118,7 +143,7 @@ if __name__ == '__main__':
     fs_Ms = np.array(final_submission_Ms)
     fs_Ps = np.array(final_submission_Ps)
     
-    final_submission_avg = (fs_all + fs_Ms + fs_Ps) / 3
+    final_submission_avg = pow(fs_all * fs_Ms * fs_Ps, 1/3) - 1.0
     final_submission_avg = np.clip(final_submission_avg, 0.0, 1.0)
     final_submission_avg = pd.DataFrame(final_submission_avg)
     
