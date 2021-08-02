@@ -1,13 +1,21 @@
 import numpy as np
 import pandas as pd
 import math
+from sklearn.metrics import mean_absolute_error
+
+# to do : find the best result for each # of neighbors (N) and the limit
 
 Ms = 9 # M1~M9
 Ps = 31 # P01~P31
-repairYM = 59 # repair year and month, 2005/02 ~ 2009/12
+repairYM_train = 57 # repair year and month, 2005/02 ~ 2009/03 for training
+repairYM_valid = 2  # repair year and month, 2009/04 ~ 2009/12 for validation
+
+# sum of repairYM_train and repairYM_valid MUST be 59
 
 # aggregate repair count from RepairTrain.csv
 def aggregateRepairCount():
+
+    repairYM = repairYM_train + repairYM_valid
     aggregated = np.zeros((Ms * Ps * repairYM, 5)).astype(str)
 
     # aggregation columns
@@ -34,19 +42,20 @@ def aggregateRepairCount():
 
         aggregated[aggregated_index][4] = float(aggregated[aggregated_index][4]) + repair_count
 
-    pd.DataFrame(aggregated).to_csv('aggregate_repair.csv')
     return aggregated
 
 # compure correlation coefficient for each MX
 # using repair count for each year(repair), month(repair) and PX
 def computeCorrCoef_MX(aggregated):
 
+    repairYM = repairYM_train + repairYM_valid
+
     # repair count for each MX (M1~M9)
     MX_arrays = []
-    for i in range(Ms): MX_arrays.append([])
+    for i in range(Ms):
+        MX_arrays.append([])
 
     for i in range(Ms * Ps * repairYM):
-        
         M_no = int(aggregated[i][0][1:])
         MX_arrays[M_no - 1].append(float(aggregated[i][4]))
 
@@ -61,12 +70,14 @@ def computeCorrCoef_MX(aggregated):
 # using repair count for each year(repair), month(repair) and MX
 def computeCorrCoef_PX(aggregated):
 
+    repairYM = repairYM_train + repairYM_valid
+
     # repair count for each PX (P01~P31)
     PX_arrays = []
-    for i in range(Ps): PX_arrays.append([])
+    for i in range(Ps):
+        PX_arrays.append([])
 
     for i in range(Ms * Ps * repairYM):
-
         P_no = int(aggregated[i][1][1:])
         PX_arrays[P_no - 1].append(float(aggregated[i][4]))
 
@@ -116,17 +127,64 @@ def distance_ym(val0, val1):
     return distance / 24
 
 # kNN for [MX, PX, year(repair), year*12+month(repair)] and make final submission
-def kNN(aggregated, MX_corrcoef, PX_corrcoef):
+def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid):
     
-    # read Output_TargetID_Mapping.csv
-    mapping = pd.read_csv('Output_TargetID_Mapping.csv')
-    mapping = np.array(mapping)
+    # read mapping data
+    # train -> Output_TargetID_Mapping.csv
+    # valid -> aggregate_repair.csv
+    
+    if valid == True: # valid
+        mapping = pd.read_csv('kNN_aggregate.csv')
+        mapping = np.array(mapping)
 
-    result_to_submit = []
+        # remove ID column
+        mapping = np.delete(mapping, 0, 1)
+
+        # remove rows with training months from mapping
+        for i in range(len(mapping)-1, -1, -1):
+            ym = (mapping[i][2] - 2005) * 12 + (mapping[i][3] - 2)
+            
+            if ym < repairYM_train:
+                mapping = np.delete(mapping, i, 0)
+
+        # save mapping array
+        pd.DataFrame(mapping).to_csv('kNN_valid_groundTruth.csv')
+
+        # remove repair count column
+        mapping = np.delete(mapping, 4, 1)
+
+        # remove validation data of aggregated array
+        for i in range(len(aggregated)-1, -1, -1):
+            ym = (int(aggregated[i][2]) - 2005) * 12 + (int(aggregated[i][3]) - 2)
+            
+            if ym >= repairYM_train:
+                aggregated = np.delete(aggregated, i, 0)
+
+        repairYM = repairYM_train
+
+    else: # test
+        mapping = pd.read_csv('Output_TargetID_Mapping.csv')
+        mapping = np.array(mapping)
+        
+        repairYM = repairYM_train + repairYM_valid
+
+    print('\n === valid ===')
+    print(valid)
+    print('\n === aggregated ===')
+    print(aggregated)
+    print('\n === mapping ===')
+    print(mapping)
+
+    prediction = []
     explanation = []
 
     N = 10
-    limit = 5
+    limit = 1.0
+
+    if valid == True:
+        state_text = 'valid'
+    else:
+        state_text = 'test'
 
     for i in range(len(mapping)):
         print(i)
@@ -136,12 +194,12 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef):
         val0_M = map_i[0]
         val0_P = map_i[1]
         val0_mo = map_i[3]
-        val0_ym = int(map_i[2]) * 12 + val0_mo
+        val0_ym = int(map_i[2]) * 12 + int(val0_mo)
 
         # compute distance
         dist_aggregated = []
 
-        for j in range(len(aggregated)):
+        for j in range(Ms * Ps * repairYM):
 
             agg_j = aggregated[j]
 
@@ -184,22 +242,39 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef):
                                 dist_aggregated[j][4], dist_aggregated[j][5],
                                 dist_aggregated[j][6]])
 
-        result_to_submit.append(repairSum / distanceSum)
+        prediction.append(repairSum / distanceSum)
 
-        # write result periodically
+        # write prediction periodically
         if (i + 1) % 500 == 0:
-            print('writing result ...')
-            pd.DataFrame(result_to_submit).to_csv('kNN_result_to_submit_' + str(i) + '.csv')
-            pd.DataFrame(explanation).to_csv('kNN_explanation_' + str(i) + '.csv')
+            print('writing prediction ...')
+            pd.DataFrame(prediction).to_csv('kNN_' + state_text + '_prediction_' + str(i) + '.csv')
+            pd.DataFrame(explanation).to_csv('kNN_' + state_text + '_explanation_' + str(i) + '.csv')
 
-    # write final result
-    result_to_submit = pd.DataFrame(result_to_submit)
-    result_to_submit_with_limit = result_to_submit.clip(0, limit)
-    explanation = pd.DataFrame(explanation)
-    
-    result_to_submit.to_csv('kNN_result_to_submit.csv')
-    result_to_submit_with_limit.to_csv('kNN_result_to_submit_limit_' + str(limit) + '.csv')
-    explanation.to_csv('kNN_explanation.csv')
+    # write valid prediction and compute error (if valid)
+    if valid == True:
+        valid_groundTruth = pd.read_csv('kNN_valid_groundTruth.csv', index_col=0)
+        valid_groundTruth = np.array(valid_groundTruth)
+
+        # compare prediction with valid_groundTruth and compute mean absolute error
+        valid_groundTruth_values = valid_groundTruth[:, 4]
+        prediction_values = np.array(prediction)
+
+        MAE = mean_absolute_error(valid_groundTruth_values, prediction_values)
+        print('MAE = ' + str(round(MAE, 6)))
+        
+        return MAE
+
+    # write final prediction (if test)
+    else:
+        prediction = pd.DataFrame(prediction)
+        prediction_with_limit = prediction.clip(0, limit)
+        explanation = pd.DataFrame(explanation)
+        
+        prediction.to_csv('kNN_test_prediction.csv')
+        prediction_with_limit.to_csv('kNN_test_prediction_limit_' + str(limit) + '.csv')
+        explanation.to_csv('kNN_test_explanation.csv')
+
+        return -1
 
 # 0. aggregate repair count : group by (MX, PX, year(repair), month(repair))
 
@@ -221,4 +296,6 @@ if __name__ == '__main__':
     MP_corrcoef = computeCorrCoef_PX(repairAggregated)
     pd.DataFrame(MP_corrcoef).to_csv('kNN_MP_corr.csv')
 
-    kNN(repairAggregated, MX_corrcoef, MP_corrcoef)
+    valid = False
+    MAE = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, valid)
+    print(MAE)
