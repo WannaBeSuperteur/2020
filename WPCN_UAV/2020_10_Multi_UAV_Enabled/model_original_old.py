@@ -1,7 +1,7 @@
 import sys
 
 import formula as f
-import deepQ as dq
+import deepQ_old as dq
 import algorithms as algo
 
 import math
@@ -10,10 +10,7 @@ import copy
 import numpy as np
 from shapely.geometry import LineString
 
-import tensorflow as tf
 import time
-
-# time consumption per time slot : 38 seconds -> 3.0 seconds (about 1/13)
 
 # PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
@@ -187,8 +184,7 @@ def h(UAVs):
 # alpha             : value of alpha
 # directReward_list : direct reward list to update
 def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
-                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
-                 trainedModel, optimizer):
+                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g):
 
     # for each device k
     for k in range(len(clusters[i])):
@@ -200,9 +196,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         # update Q value                
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
 
-        dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, I_, o2,
-                        trainedModel, optimizer)
-        
+        dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, I_, o2)
         directReward_list[i] += value
 
 # ALGORITHM 1
@@ -329,16 +323,8 @@ def algorithm1(M, T, L, devices, width, height,
         print('episode ' + str(episode) + ' / ' + str(M))
 
         # use deep learning if length of Q table >= 100
-        # load trained model for episode = 1, 2, ...
-        if len(Q) > 0 and M > 0:
-            useDL = True
-            trainedModel = tf.keras.models.load_model('model')
-            optimizer = tf.keras.optimizers.Adam(0.001)
-            
-        else:
-            useDL = False
-            trainedModel = None
-            optimizer = None
+        if len(Q) > 0 and M > 0: useDL = True
+        else: useDL = False
 
         # initialize a
         for i in range(len(a)):
@@ -381,8 +367,7 @@ def algorithm1(M, T, L, devices, width, height,
                     
                     # UAV i gets a penalty of -1
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
-                                 trainedModel, optimizer)
+                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
 
             for i in range(L): # each UAV i
                 print('UAV ' + str(i) + ' / ' + str(L))
@@ -401,13 +386,11 @@ def algorithm1(M, T, L, devices, width, height,
                         # UAV i and UAV j get a penalty of -1
                         s_i = dq.getS(UAVs[i], t, i, a, R)
                         updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                     Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
-                                     trainedModel, optimizer)
+                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
 
                         s_j = dq.getS(UAVs[j], t, j, a, R)
                         updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                     Q, QTable, s_j, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
-                                     trainedModel, optimizer)
+                                 Q, QTable, s_j, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
 
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
                 # error if (time slot value) > (devices)
@@ -454,8 +437,7 @@ def algorithm1(M, T, L, devices, width, height,
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, R)
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
-                                 trainedModel, optimizer)
+                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
 
             # if time slot is T
             if t == T:
@@ -478,9 +460,7 @@ def algorithm1(M, T, L, devices, width, height,
                     for UAV in UAVs:
                         s_UAV = dq.getS(UAV, t, index, a, R)
                         updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                     Q, QTable, s_UAV, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
-                                     trainedModel, optimizer)
-                        
+                                 Q, QTable, s_UAV, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g)
                         index += 1
 
             # store (s,a,r,s') into replay buffer
@@ -500,9 +480,7 @@ def algorithm1(M, T, L, devices, width, height,
                     
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
 
-                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g_i, I_, o2,
-                                           useDL, trainedModel, optimizer)
-                    
+                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g_i, I_, o2, useDL)
                     maxQs.append(maxQ)
                     rewards.append(alphaL * (directReward_list[i] + r_ * maxQs[k]))
 

@@ -99,8 +99,9 @@ def getActionIndex(action):
 # l           : UAV index
 # a           : list of a[n][l][k_l] (a part of s)
 # R           : list of R[n][k_l]    (a part of s)
-def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
-            useDL, trainedModel, optimizer):
+def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
+
+    #print('before getMaxQ')
 
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -108,7 +109,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
         
         # try testing
         try:
-            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k, False, trainedModel, optimizer)
+            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k, False)
             
         except Exception as e:
             useDL = False
@@ -122,6 +123,8 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
     # otherwise,                Q value is 0
     if useDL == True: maxQ = max(rewardsOfActionsOfNextState[0])
     else: maxQ = 0
+
+    #print('after getMaxQ')
 
     # return
     if useDL == True:
@@ -321,19 +324,25 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
-def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
+def deepLearningQ_test(state, k, verbose):
 
     # execution time = episodes * time(second) * 3 * cluster * (avg. number of devices per cluster)
     #                = episodes * time(second) * 3 * (number of devices)
+
+    #print('before deepLearningQ_test')
 
     # convert state into 1d array
     stateArray = np.array([stateTo1dArray(state, k)])
     
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
+    optimizer = tf.keras.optimizers.Adam(0.001)
+    trainedModel = tf.keras.models.load_model('model')
     testO = trainedModel.predict(stateArray)
 
     if verbose == True: print('test finished')
+
+    #print('after deepLearningQ_test')
 
     # return output layer
     return testO
@@ -359,16 +368,14 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, l_, o2,
-                 trainedModel, optimizer):
+def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, l_, o2):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
 
     if useDL == True:
-        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
-                                  True, trainedModel, optimizer)
+        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, True)
         
         # if error for deep Q learning test
         try:
@@ -377,8 +384,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
             pass
 
     else:
-        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
-                            False, trainedModel, optimizer)
+        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, False)
 
     # update {a[n][l][k_l]} (array of communication times)
     # where k is the index for the device to communicate
@@ -578,11 +584,8 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
 # useDL : whether to use deep learning
-def yt(r, r_, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
-       useDL, trainedModel, optimizer):
-    
-    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
-                        useDL, trainedModel, optimizer)
+def yt(r, r_, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
+    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]
