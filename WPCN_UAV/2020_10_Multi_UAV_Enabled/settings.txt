@@ -14,7 +14,7 @@ r_=0.7 # discount factor
 width=50 # width (m)
 height=50 # height (m)
 M=10 # episodes (originally 1000)
-L=5 # number of clusters = number of UAVs
+L=10 # number of clusters = number of UAVs
 devices=50 # number of devices
 T=30 # time (s)
 H=15 # hovering elevation (m)

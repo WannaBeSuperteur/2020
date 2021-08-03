@@ -345,7 +345,9 @@ def algorithm1(M, T, L, devices, width, height,
             for j in range(len(a[i])):
                 for k in range(len(a[i][j])):
                     a[i][j][k] = 0
-        
+
+        # rows to be created: (for training data) when QTable_rate = 1.0 :
+        # [T = time slots (second)] * [devices = number of devices] * 3     
         for t in range(T): # each time slot t
             print('time slot ' + str(t) + ' / ' + str(T) + ' time=' + str(time.time()))
 
