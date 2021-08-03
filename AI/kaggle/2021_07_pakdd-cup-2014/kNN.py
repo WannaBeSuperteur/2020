@@ -307,10 +307,14 @@ if __name__ == '__main__':
     if valid == True:
         MAE_array = []
         
-        # [1, 3, 5, 7, 10, 15, 20, 30, 50, 75, 100]
-        for N in [5]:
+        # 
+        for N in [1, 2, 3, 4, 5, 7, 10, 15, 20, 30,
+                  50, 75, 100]:
+            
             MAEs = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True,
-                       N, [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0, 5.0])
+                       N, [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0,
+                           5.0, 6.0, 7.5, 10.0, 12.5, 15.0, 20.0])
+            
             MAE_array.append(MAEs)
 
         MAE_array = np.array(MAE_array)
