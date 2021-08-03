@@ -206,8 +206,11 @@ def defineModel():
     # define the model
     model = Sequential()
     model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dropout(0.25))
+    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dropout(0.25))
+    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dropout(0.25))
     model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=27, activation='tanh'))
     
