@@ -12,6 +12,8 @@ from tensorflow import keras
 from tensorflow.keras.models import Sequential
 import matplotlib.pyplot as plt
 
+import time
+
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
 
@@ -99,6 +101,8 @@ def getActionIndex(action):
 # R           : list of R[n][k_l]    (a part of s)
 def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, useDL):
 
+    #print('before getMaxQ')
+
     # get Q values for the action space of next state s'
     if useDL == True:
         (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
@@ -119,6 +123,8 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_,
     # otherwise,                Q value is 0
     if useDL == True: maxQ = max(rewardsOfActionsOfNextState[0])
     else: maxQ = 0
+
+    #print('after getMaxQ')
 
     # return
     if useDL == True:
@@ -320,16 +326,27 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose):
 
+    # execution time = episodes * time(second) * 3 * cluster * (avg. number of devices per cluster)
+    #                = episodes * time(second) * 3 * (number of devices)
+
+    #print('before deepLearningQ_test')
+
     # convert state into 1d array
     stateArray = np.array([stateTo1dArray(state, k)])
     
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
     optimizer = tf.keras.optimizers.Adam(0.001)
+
+    print('before model load : ' + str(time.time()))
     trainedModel = tf.keras.models.load_model('model')
-    testO = trainedModel.predict(stateArray) # error occurs
+    print('after  model load : ' + str(time.time()))
+    
+    testO = trainedModel.predict(stateArray)
 
     if verbose == True: print('test finished')
+
+    #print('after deepLearningQ_test')
 
     # return output layer
     return testO

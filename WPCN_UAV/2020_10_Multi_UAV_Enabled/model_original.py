@@ -474,6 +474,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # for each device k
                 for k in range(len(clusters[i])):
+                    print(k)
                     PLoS_i = f.getPLoS(False, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
                     PNLoS_i = f.getPLoS(True, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
                     
