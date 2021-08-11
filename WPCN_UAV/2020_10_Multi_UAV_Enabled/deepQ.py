@@ -200,20 +200,30 @@ def normalize(array, applyLog, title, printAnalysis):
 # define model
 def defineModel():
 
+    # load settings and find learning rate
+    settingsFile = open('settings.txt', 'r')
+    settings = settingsFile.readlines()
+    settingsFile.close()
+
+    for i in range(len(settings)):
+        argName = settings[i].split('=')[0]
+        argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
+
+        if argName == 'learningRate':
+            learningRate = argValue
+
     # L2 regularization
     L2 = tf.keras.regularizers.l2(0.001)
 
     # define the model
     model = Sequential()
-    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dropout(0.25))
-    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dropout(0.25))
-    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dropout(0.25))
-    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=32, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=128, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=27, activation='tanh'))
-    
+
+    adamOpt = tf.keras.optimizers.Adam(learning_rate=learningRate)
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
     return model
@@ -274,6 +284,7 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode):
 
     model = defineModel()
+    epochs = 30
     
     # Q : [state, action_reward, i (UAV/cluster index), k (device index)]
     
@@ -318,7 +329,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
     try:
         Q_input_noramlized = np.array(pd.read_csv('Q_input_normalized.csv', index_col=0)).astype(float)
         Q_output_noramlized = np.array(pd.read_csv('Q_output_normalized.csv', index_col=0)).astype(float)
-        trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, 15, iteration, M, episode)
+        trainDataWithModel(Q_input_noramlized, Q_output_noramlized, model, epochs, iteration, M, episode)
 
     except:
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
