@@ -303,23 +303,35 @@ if __name__ == '__main__':
     test_N = 10
     test_limit = 1.0
 
+    Ns = [1, 2, 3, 4, 5, 6, 7, 10, 12, 15, 17, 20, 25, 30, 40, 50, 75, 100]
+
+    # apply test limits PROPORTIONALLY to the average of all repair_count
+    limits = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0,
+              5.0, 6.0, 7.5, 10.0, 12.5, 15.0, 20.0, 25.0, 30.0, 40.0, 50.0,
+              60.0, 70.0, 80.0, 90.0, 100.0, 115.0, 130.0, 150.0, 175.0, 200.0,
+              225.0, 250.0, 275.0, 300.0, 330.0, 360.0, 400.0, 450.0, 500.0, 550.0,
+              600.0, 650.0, 700.0, 750.0, 800.0, 850.0, 900.0, 950.0, 1000.0, 1100.0,
+              1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0, 1900.0, 2000.0, 2130.0,
+              2260.0, 2400.0, 2600.0, 2800.0, 3000.0, 3200.0, 3400.0, 3600.0, 3800.0, 4000.0]
+
     # validation
     if valid == True:
         MAE_array = []
+        count = 0
         
-        # 
-        for N in [1, 2, 3, 4, 5, 7, 10, 15, 20, 30,
-                  50, 75, 100]:
+        for N in Ns:
+            count += 1
             
-            MAEs = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True,
-                       N, [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0,
-                           5.0, 6.0, 7.5, 10.0, 12.5, 15.0, 20.0])
-            
+            MAEs = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True, N, limits)
+
+            MAE_array.append(limits)
             MAE_array.append(MAEs)
 
-        MAE_array = np.array(MAE_array)
-        print(MAE_array)
-        pd.DataFrame(MAE_array).to_csv('kNN_valid_MAE.csv')
+            MAE_df = np.array(MAE_array)
+            MAE_df = MAE_df.T
+            MAE_df = pd.DataFrame(MAE_df)
+            MAE_df.columns = np.array([-1] + Ns[:count]).astype(str)
+            MAE_df.to_csv('kNN_valid_MAE.csv')
 
     # test
     else:
