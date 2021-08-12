@@ -128,6 +128,9 @@ def distance_ym(val0, val1):
 
 # kNN for [MX, PX, year(repair), year*12+month(repair)] and make final submission
 def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits):
+
+    N_float = N % 1.0
+    N = math.ceil(N)
     
     # read mapping data
     # train -> Output_TargetID_Mapping.csv
@@ -227,8 +230,19 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits):
         distanceSum = 0.0
         
         for j in range(N):
-            repairSum += float(dist_aggregated[j][2]) / float(dist_aggregated[j][1])
-            distanceSum += 1.0 / float(dist_aggregated[j][1])
+
+            if j == N-1: # last part
+                if N_float == 0: # (last) integer part
+                    weight = 1.0
+                    
+                else: # (last) float part
+                    weight = N_float
+                
+            else: # (not last) integer part
+                weight = 1.0
+
+            repairSum += weight * float(dist_aggregated[j][2]) / float(dist_aggregated[j][1])
+            distanceSum += weight / float(dist_aggregated[j][1])
 
             # write explanation
             # [val0_M, val0_P, val0_year, val0_month, rank,
@@ -303,7 +317,7 @@ if __name__ == '__main__':
     test_N = 10
     test_limit = 1.0
 
-    Ns = [1, 2, 3, 4, 5, 6, 7, 10, 12, 15, 17, 20, 25, 30, 40, 50, 75, 100]
+    Ns = [1, 1.1, 1.25, 1.5, 2, 3, 4, 5, 6, 7, 10, 12, 15, 17, 20, 25, 30, 40, 50, 75, 100]
 
     # apply test limits PROPORTIONALLY to the average of all repair_count
     limits = [0.0, 0.25, 0.5, 0.75, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0,
@@ -317,19 +331,19 @@ if __name__ == '__main__':
     # validation
     if valid == True:
         MAE_array = []
+        MAE_array.append(limits)
         count = 0
         
         for N in Ns:
             count += 1
             
             MAEs = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True, N, limits)
-
-            MAE_array.append(limits)
             MAE_array.append(MAEs)
 
             MAE_df = np.array(MAE_array)
             MAE_df = MAE_df.T
             MAE_df = pd.DataFrame(MAE_df)
+            
             MAE_df.columns = np.array([-1] + Ns[:count]).astype(str)
             MAE_df.to_csv('kNN_valid_MAE.csv')
 
