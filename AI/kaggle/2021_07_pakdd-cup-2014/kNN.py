@@ -286,6 +286,9 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits):
             prediction = pd.DataFrame(prediction)
             prediction_with_limit = prediction.clip(0, limit)
             explanation = pd.DataFrame(explanation)
+
+            # change row index (0..N-1 to 1..N) for final prediction
+            prediction_with_limit = prediction_with_limit.rename(index=lambda x:x+1)
             
             prediction.to_csv('kNN_test_prediction.csv')
             prediction_with_limit.to_csv('kNN_test_prediction_limit_' + str(limit) + '.csv')
@@ -313,9 +316,9 @@ if __name__ == '__main__':
     MP_corrcoef = computeCorrCoef_PX(repairAggregated)
     pd.DataFrame(MP_corrcoef).to_csv('kNN_MP_corr.csv')
 
-    valid = True
-    test_N = 10
-    test_limit = 1.0
+    valid = False
+    test_N = 1 # best valid N
+    test_limit = 348 # 1700 (best valid limit) * 6.859 (test average) / 33.49283 (valid average)
 
     Ns = [1, 1.1, 1.25, 1.5, 2, 3, 4, 5, 6, 7, 10, 12, 15, 17, 20, 25, 30, 40, 50, 75, 100]
 
