@@ -210,7 +210,7 @@ def defineModel():
         argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
 
         if argName == 'learningRate':
-            learningRate = argValue
+            learningRate = float(argValue)
 
     # L2 regularization
     L2 = tf.keras.regularizers.l2(0.001)

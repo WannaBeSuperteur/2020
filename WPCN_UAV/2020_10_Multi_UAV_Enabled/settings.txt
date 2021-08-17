@@ -13,9 +13,10 @@ alphaL=0.1 # learning rate for DQN
 r_=0.7 # discount factor
 width=50 # width (m)
 height=50 # height (m)
-M=30 # episodes
+M=1000 # episodes
 L=10 # number of clusters = number of UAVs
 devices=80 # number of devices
 T=30 # time (s)
 H=15 # hovering elevation (m)
 learningRate=0.0001 # learning rate of DQN
+printTimeDif=False # print time difference
