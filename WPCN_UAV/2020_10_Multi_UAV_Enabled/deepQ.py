@@ -573,6 +573,8 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
     # assumption: randomly select the device to communicate with
     # so, the probability for increasing next_a is 1/len(clusters[l])
     deviceToCommunicate = random.randint(0, len(clusters[l])-1)
+
+    for i in range(len(next_a)): next_a[i] = 0 # init to satisfy (5) of the paper
     next_a[deviceToCommunicate] += 1
 
     # derive next R[n][k_l]
