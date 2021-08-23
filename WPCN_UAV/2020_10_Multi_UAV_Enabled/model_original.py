@@ -95,27 +95,27 @@ def getXYH_ofUAV(UAVs, element, T):
 
 # check if minimum throughput of all devices in a cluster == 0
 # ASSUMPTION: 'a cluster' means the cluster with index l
-def isMinThroughputOfAllDevicesInCluster0(clusters, T, N, l, k, B, n, PU, g, I_, o2):
+def isMinThroughputOfAllDevicesInCluster0(clusters, T, N, l, k, a, B, n, PU, g, I_, o2):
 
     # minimum throughput == 0 <=> there are some devices with throughput == 0
     # clusters[l] = cluster l, and k[l] = a device in K[l] (cluster l)
     for k in range(len(clusters[l])):
-        thrput = R_kl(T, N, l, k, B, n, PU, g, I_, o2)
+        thrput = R_kl(T, N, l, k, a, B, n, PU, g, I_, o2)
         if thrput == 0: return True # return True if the throughput is 0
 
     return False
 
 # check if minimum throughput of all devices does not increase
 # ASSUMPTION: between time n-1(= t-1), time n(= t)
-def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, B, n, PU, g, I_, o2):
+def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, a, B, n, PU, g, I_, o2):
 
     # clusters[l] = cluster l (total L clusters), and k[l] = a device in K[l] (cluster l)
     for l in range(L):
 
         # get throughput for (cluster l, device k)
         for k in range(len(clusters[l])):
-            thrputBefore = R_kl(T, N, l, k, B, n-1, PU, g, I_, o2) # throughput at time n-1 = t-1
-            thrputAfter = R_kl(T, N, l, k, B, n, PU, g, I_, o2) # throughput at time n = t
+            thrputBefore = R_kl(T, N, l, k, a, B, n-1, PU, g, I_, o2) # throughput at time n-1 = t-1
+            thrputAfter = R_kl(T, N, l, k, a, B, n, PU, g, I_, o2) # throughput at time n = t
 
         # initialize minThroughputBefore and minThroughputAfter as that of (cluster l=0, device k=0)
         if l == 0 and k == 0:
@@ -514,13 +514,13 @@ def algorithm1(M, T, L, devices, width, height,
                 for i in range(L):
                     
                     # if minimum throughput of all devices in a cluster == 0
-                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], t) == True:
+                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], t, N, l, k, a, B, n, PU, g, I_, o2) == True:
 
                         # The UAV get a penalty of -2
                         directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
-                if isMinThroughputOfAllDevicesDoesNotInc(t) == True:
+                if isMinThroughputOfAllDevicesDoesNotInc(t, N, l, k, a, B, n, PU, g, I_, o2) == True:
 
                     # All UAVs get a penalty of -1
                     index = 0

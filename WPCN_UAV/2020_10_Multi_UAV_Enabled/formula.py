@@ -159,7 +159,7 @@ def R_nkl(B, k, l, n, PU, g, I_, o2):
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T
 # R[k_l] = (1/T) * Sum(n=1,N)(a[n][l][k_l] * R_[n][k_l]) ... (11)
-def R_kl(T, N, l, k, B, n, PU, g, I_, o2):
+def R_kl(T, N, l, k, a, B, n, PU, g, I_, o2):
     result = 0
     for n in range(1, N+1):
         result += a[n][l][k] * R_nkl(B, k, l, n, PU, g, I_, o2)
