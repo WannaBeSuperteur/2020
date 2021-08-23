@@ -139,19 +139,20 @@ def I_nkl(L, PU, n, l, k, g):
     result = 0
     for j in range(L):
         if j == l: continue # except for j!=l
-        result += PU[n][j][k] * g[n][l][k][j]
+
+        # do not compute for error cases where k >= (the number of devices in cluster j)
+        try:
+            result += PU[n][j][k] * g[n][l][k][j]
+        except:
+            pass
 
     return result
     
 def R_nkl(L, B, n, l, k, PU, g, o2):
 
-    # inference received by UAV l from cluster j, j in L, j is not equal to l
+    # using inference received by UAV l from cluster j, j in L, j is not equal to l
     inference = I_nkl(L, PU, n, l, k, g)
-
-    try:   
-        r = PU[n][l][k] * g[n][l][k][l] / (inference + o2)
-    except:
-        r = PU[n][l][k] * g / (inference + o2)
+    r = PU[n][l][k] * g[n][l][k][l] / (inference + o2)
     
     return B * math.log(1+r, 2)
 
@@ -160,7 +161,7 @@ def R_nkl(L, B, n, l, k, PU, g, o2):
 def R_kl(L, T, N, l, k, a, B, n, PU, g, o2):
     result = 0
     for n in range(1, N+1):
-        result += a[n][l][k][l] * R_nkl(L, B, n, l, k, PU, g, o2)
+        result += a[n][l][k] * R_nkl(L, B, n, l, k, PU, g, o2)
     return result / T
 
 # location of UAV[l] at time t

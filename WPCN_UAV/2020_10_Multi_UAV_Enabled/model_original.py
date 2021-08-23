@@ -95,27 +95,27 @@ def getXYH_ofUAV(UAVs, element, T):
 
 # check if minimum throughput of all devices in a cluster == 0
 # ASSUMPTION: 'a cluster' means the cluster with index l
-def isMinThroughputOfAllDevicesInCluster0(clusters, T, N, l, k, a, B, n, PU, g, o2):
+def isMinThroughputOfAllDevicesInCluster0(clusters, L, T, N, l, k, a, B, n, PU, g, o2):
 
     # minimum throughput == 0 <=> there are some devices with throughput == 0
     # clusters[l] = cluster l, and k[l] = a device in K[l] (cluster l)
     for k in range(len(clusters[l])):
-        thrput = R_kl(T, N, l, k, a, B, n, PU, g, o2)
+        thrput = R_kl(L, T, N, l, k, a, B, n, PU, g, o2)
         if thrput == 0: return True # return True if the throughput is 0
 
     return False
 
 # check if minimum throughput of all devices does not increase
 # ASSUMPTION: between time n-1(= t-1), time n(= t)
-def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, a, B, n, PU, g, o2):
+def isMinThroughputOfAllDevicesDoesNotInc(L, T, N, l, k, a, B, n, PU, g, o2):
 
     # clusters[l] = cluster l (total L clusters), and k[l] = a device in K[l] (cluster l)
     for l in range(L):
 
         # get throughput for (cluster l, device k)
         for k in range(len(clusters[l])):
-            thrputBefore = R_kl(T, N, l, k, a, B, n-1, PU, g, o2) # throughput at time n-1 = t-1
-            thrputAfter = R_kl(T, N, l, k, a, B, n, PU, g, o2) # throughput at time n = t
+            thrputBefore = R_kl(L, T, N, l, k, a, B, n-1, PU, g, o2) # throughput at time n-1 = t-1
+            thrputAfter = R_kl(L, T, N, l, k, a, B, n, PU, g, o2) # throughput at time n = t
 
         # initialize minThroughputBefore and minThroughputAfter as that of (cluster l=0, device k=0)
         if l == 0 and k == 0:
@@ -299,11 +299,11 @@ def algorithm1(M, T, L, devices, width, height,
     for i in range(27): zero_27.append(0)
 
     # init ac and R where
-    # a[n][l][k_l] (a[n][l][k])  : the number of times that each device communicates with UAV l
-    # g[n][l][k_l] (g[n][l][k])  : the channel's power gain between UAV l and device k_l
-    # R[n][k_l]    (R[n][l][k])  : the average throughput of devices (for each device k),
-    #                              in l-th cluster (1d array, for the devices in l-th cluster)
-    # PU[n][k_l]   (PU[n][l][k]) : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
+    # a[n][l][k_l] (a[n][l][k])    : the number of times that each device communicates with UAV l
+    # g[n][l][k_l] (g[n][l][k][l]) : the channel's power gain between UAV l and device k_l
+    # R[n][k_l]    (R[n][l][k])    : the average throughput of devices (for each device k),
+    #                                in l-th cluster (1d array, for the devices in l-th cluster)
+    # PU[n][k_l]   (PU[n][l][k])   : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
     a = []
     g = []
     PU = []
@@ -327,7 +327,12 @@ def algorithm1(M, T, L, devices, width, height,
 
             for k in range(K): # k = 0,...,K-1 (# of devices for each UAV l)
                 temp_a_.append(0)
-                temp_g_.append(0)
+
+                temp_g__ = []
+                for ll in range(L): # ll = 0,1,...,L-1 (# of clusters = # of UAVs)
+                    temp_g__.append(0)
+                temp_g_.append(temp_g__)
+                    
                 temp_PU_.append(-20)
                 temp_R_.append(0)
                 
@@ -507,13 +512,13 @@ def algorithm1(M, T, L, devices, width, height,
                 for i in range(L):
                     
                     # if minimum throughput of all devices in a cluster == 0
-                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], t, N, l, k, a, B, n, PU, g, o2) == True:
+                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], L, t, N, l, k, a, B, n, PU, g, o2) == True:
 
                         # The UAV get a penalty of -2
                         directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
-                if isMinThroughputOfAllDevicesDoesNotInc(t, N, l, k, a, B, n, PU, g, o2) == True:
+                if isMinThroughputOfAllDevicesDoesNotInc(L, t, N, l, k, a, B, n, PU, g, o2) == True:
 
                     # All UAVs get a penalty of -1
                     index = 0
@@ -544,11 +549,13 @@ def algorithm1(M, T, L, devices, width, height,
                 for k in range(len(clusters[i])):
                     PLoS_i = f.getPLoS(False, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
                     PNLoS_i = f.getPLoS(True, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
-                    
+
+                    # update g (g[n][l][k_l]) : the channel's power gain between UAV l and device k_l
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+                    g[t][i][k][i] = g_i
 
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' before getMaxQ')
-                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g_i, o2, L,
+                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
                                            useDL, trainedModel, optimizer)
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' after getMaxQ')
                     
