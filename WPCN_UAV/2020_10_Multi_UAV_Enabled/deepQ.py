@@ -564,18 +564,20 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
     # UAV broadcasts energy flow or selects the device that owns the best channel condition
     # in its cluster for uplink communication.
 
-    # find the device with best channel condition
+    # find the device with best channel condition (WITHIN CURRENT CLUSTER)
     # NO NEED TO WRITE CODE FOR IT because RANDOMLY SELECT the device
 
-    # init next a[n][l] as current a[n][l] from s (a number, not an array)
-    next_a = s[1]
+    # init next a[n][l]
+    next_a = []
     
     # assumption: randomly select the device to communicate with
     # so, the probability for increasing next_a is 1/len(clusters[l])
     deviceToCommunicate = random.randint(0, len(clusters[l])-1)
 
-    for i in range(len(next_a)): next_a[i] = 0 # init to satisfy (5) of the paper
+    for i in range(len(s[1])): next_a.append(0) # init to satisfy (5) of the paper
     next_a[deviceToCommunicate] += 1
+
+    print('next a : ' + str(next_a))
 
     # derive next R[n][k_l]
     # the average throughput of devices in l-th cluster
