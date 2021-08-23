@@ -62,8 +62,10 @@ def eucNorm(array):
     return math.sqrt(result)
 
 # the distance between UAV l and device k_l
-# d[n][l][k_l] = sqrt((x[n][l] - x[k_l])^2 + (y[n][l] - y[k_l])^2 + h[n][l]^2)
-# k           : device k_l
+# d[n][l][k][l] = sqrt((x[n][l] - x[k_l])^2 + (y[n][l] - y[k_l])^2 + h[n][l]^2)
+# d[n][l][k][j] = sqrt((x[n][l] - x[k_j])^2 + (y[n][l] - y[k_j])^2 + h[n][l]^2)
+# k, l        : device k_l
+# k, j        : device k_j
 # x, y, and h : for each UAV (cluster) (moving, h>0)
 # xd and yd   : for each device (not moving, h=0)
 # clusters    : in the form of [list([[x of device 0, y of device 0], ...]), ...]
@@ -106,15 +108,6 @@ def g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, clusters, x, y, h, alpha):
 
     return result0 * result1
 
-# inference received by UAV l from cluster j, j in L(script letter), j != l
-# I_[n][k_l] = Sum(j=1, j!=l, L) P^U[n][k_j] * g[n][j][k_j] (gArray = g)
-def getI(L, PU, n, k, l, gArray):
-    result = 0
-    for j in range(1, L+1):
-        if j != l: result += PU[n][j][k] * gArray[n][j][k]
-        
-    return result
-
 # the collected energy of each IoT device k_l at period T
 # E[k_l] = Sum(i=1,L)(ng * alpha * T * a[0][i] * g[0][i][k_l] * P^D), ... (6)
 #           where all l in deviceList, kl in K
@@ -127,7 +120,7 @@ def E_kl(deviceList, L, ng, alpha, T, a, g, k, PD):
 
 # available energy E_[n][k_l] of device k_l in n-th time slot
 # E_[n][k_l] = E[k_l] - Sum(j=1,n-1)(a[j][l][k_l] * SN * PU[j][k_l]) ... (7)
-def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
+def E_nkl(n, l, k, SN, PU, L, ng, alpha, T, a, g, PD):
     result = E_kl(L, ng, alpha, T, a, g, k, PD)
     for j in range(1, n):
         result -= a[j][l][k] * SN * PU[j][l][k]
@@ -135,34 +128,39 @@ def E_nkl(n, k, l, SN, PU, L, ng, alpha, T, a, g, PD):
     return result
 
 # instantaneous throughput R_[n][k_l] of IoT device k_l
-# R_[n][k_l] = B[k_l]*log2(1 + r[n][k_l]) ... (10)
+# R_[n][k_l]  = B[k_l]*log2(1 + r[n][k_l]) ... (10)
 #               where r[n][k_l] = P^U[n][k_l]*g[n][l][k_l] / (I_[n][k_l] + o^2)
 # PU[n][l][k] : P^U[n][k_l]
 # g           : g[n][l][k_l]
-# I_[n][l][k] : I_[n][k_l]
 # B           : B[k_l]
-def R_nkl(B, k, l, n, PU, g, I_, o2):
 
-    # try:
+# where I_[n][k_l] = Sum(j=1, j!=l, L)(P^U[n][k_j]*g[n][l][k_j])
+def I_nkl(L, PU, n, l, k, g):
+    result = 0
+    for j in range(L):
+        if j == l: continue # except for j!=l
+        result += PU[n][j][k] * g[n][l][k][j]
+
+    return result
+    
+def R_nkl(L, B, n, l, k, PU, g, o2):
+
+    # inference received by UAV l from cluster j, j in L, j is not equal to l
+    inference = I_nkl(L, PU, n, l, k, g)
 
     try:   
-        r = PU[n][l][k] * g[n][l][k] / (I_[n][l][k] + o2)
+        r = PU[n][l][k] * g[n][l][k][l] / (inference + o2)
     except:
-        r = PU[n][l][k] * g / (I_[n][l][k] + o2)
-        
-    # except:
-    #    print('ERROR / ', n, l, k)
-    #    for i in range(len(PU)):
-    #        print(PU[i])
+        r = PU[n][l][k] * g / (inference + o2)
     
     return B * math.log(1+r, 2)
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T
 # R[k_l] = (1/T) * Sum(n=1,N)(a[n][l][k_l] * R_[n][k_l]) ... (11)
-def R_kl(T, N, l, k, a, B, n, PU, g, I_, o2):
+def R_kl(L, T, N, l, k, a, B, n, PU, g, o2):
     result = 0
     for n in range(1, N+1):
-        result += a[n][l][k] * R_nkl(B, k, l, n, PU, g, I_, o2)
+        result += a[n][l][k][l] * R_nkl(L, B, n, l, k, PU, g, o2)
     return result / T
 
 # location of UAV[l] at time t

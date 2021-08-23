@@ -99,12 +99,12 @@ def getActionIndex(action):
 # l           : UAV index
 # a           : list of a[n][l][k_l] (a part of s)
 # R           : list of R[n][k_l]    (a part of s)
-def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
+def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer):
 
     # get Q values for the action space of next state s'
     if useDL == True:
-        (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
+        (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L)
         
         # try testing
         try:
@@ -373,15 +373,15 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, l_, o2,
+def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2)
+    (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L)
 
     if useDL == True:
-        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
+        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
                                   True, trainedModel, optimizer)
         
         # if error for deep Q learning test
@@ -391,7 +391,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
             pass
 
     else:
-        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
+        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
                             False, trainedModel, optimizer)
 
     # update {a[n][l][k_l]} (array of communication times)
@@ -547,11 +547,12 @@ def getNextLocation(s, action, n, UAVs, l, a, R):
 # l       : UAV index
 # a       : list of a[n][l][k_l] (a part of s)
 # R       : list of R[n][k_l]    (a part of s)
+# L       : the number of clusters = the number of UAVs
 
 ## clusters: [c0_deviceList, c1_deviceList, ...]
 # cK_deviceList: device list of cluster k,
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
-def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
+def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L):
 
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, R)
@@ -577,8 +578,6 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
     for i in range(len(s[1])): next_a.append(0) # init to satisfy (5) of the paper
     next_a[deviceToCommunicate] += 1
 
-    print('next a : ' + str(next_a))
-
     # derive next R[n][k_l]
     # the average throughput of devices in l-th cluster
     
@@ -587,7 +586,7 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
         
         nextR_UAV = []
         for k in range(len(clusters[UAV])): # for each device in cluster l
-            nextR_UAV.append(f.R_nkl(B, k, UAV, n, PU, g, l_, o2))
+            nextR_UAV.append(f.R_nkl(L, B, n, UAV, k, PU, g, o2))
         nextR.append(nextR_UAV)
 
     #### return ####
@@ -596,10 +595,10 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, l_, o2):
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
 # useDL : whether to use deep learning
-def yt(r, r_, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
+def yt(r, r_, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, L,
        useDL, trainedModel, optimizer):
     
-    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2,
+    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, L,
                         useDL, trainedModel, optimizer)
     return r + r_ * maxQ
     

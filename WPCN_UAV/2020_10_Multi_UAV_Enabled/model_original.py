@@ -95,27 +95,27 @@ def getXYH_ofUAV(UAVs, element, T):
 
 # check if minimum throughput of all devices in a cluster == 0
 # ASSUMPTION: 'a cluster' means the cluster with index l
-def isMinThroughputOfAllDevicesInCluster0(clusters, T, N, l, k, a, B, n, PU, g, I_, o2):
+def isMinThroughputOfAllDevicesInCluster0(clusters, T, N, l, k, a, B, n, PU, g, o2):
 
     # minimum throughput == 0 <=> there are some devices with throughput == 0
     # clusters[l] = cluster l, and k[l] = a device in K[l] (cluster l)
     for k in range(len(clusters[l])):
-        thrput = R_kl(T, N, l, k, a, B, n, PU, g, I_, o2)
+        thrput = R_kl(T, N, l, k, a, B, n, PU, g, o2)
         if thrput == 0: return True # return True if the throughput is 0
 
     return False
 
 # check if minimum throughput of all devices does not increase
 # ASSUMPTION: between time n-1(= t-1), time n(= t)
-def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, a, B, n, PU, g, I_, o2):
+def isMinThroughputOfAllDevicesDoesNotInc(T, N, l, k, a, B, n, PU, g, o2):
 
     # clusters[l] = cluster l (total L clusters), and k[l] = a device in K[l] (cluster l)
     for l in range(L):
 
         # get throughput for (cluster l, device k)
         for k in range(len(clusters[l])):
-            thrputBefore = R_kl(T, N, l, k, a, B, n-1, PU, g, I_, o2) # throughput at time n-1 = t-1
-            thrputAfter = R_kl(T, N, l, k, a, B, n, PU, g, I_, o2) # throughput at time n = t
+            thrputBefore = R_kl(T, N, l, k, a, B, n-1, PU, g, o2) # throughput at time n-1 = t-1
+            thrputAfter = R_kl(T, N, l, k, a, B, n, PU, g, o2) # throughput at time n = t
 
         # initialize minThroughputBefore and minThroughputAfter as that of (cluster l=0, device k=0)
         if l == 0 and k == 0:
@@ -187,7 +187,7 @@ def h(UAVs):
 # alpha             : value of alpha
 # directReward_list : direct reward list to update
 def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
-                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
+                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                  trainedModel, optimizer):
 
     # for each device k
@@ -202,7 +202,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl')
-        dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, I_, o2,
+        dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, o2, L,
                         trainedModel, optimizer)
 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue')
@@ -304,13 +304,11 @@ def algorithm1(M, T, L, devices, width, height,
     # R[n][k_l]    (R[n][l][k])  : the average throughput of devices (for each device k),
     #                              in l-th cluster (1d array, for the devices in l-th cluster)
     # PU[n][k_l]   (PU[n][l][k]) : peak power for IoT devices' uplink transmit (at most -20dBm -> assumption: -20dBm)
-    # I_[n][k_l]   (I_[n][l][k]) : inference received by UAV l (assumption: 0 as default)
     a = []
     g = []
     PU = []
     R = []
-    I_ = []
-    
+
     for t in range(T + 1): # n = 0,1,...,T (# of time slots)
 
         # not n = 0,1,...,T-1 to prevent bug
@@ -318,15 +316,13 @@ def algorithm1(M, T, L, devices, width, height,
         temp_g = []
         temp_PU = []
         temp_R = []
-        temp_I = []
         
         for l in range(L): # l = 0,1,...,L-1 (# of clusters = # of UAVs)
             temp_a_ = []
             temp_g_ = []
             temp_PU_ = []
             temp_R_ = []
-            temp_I_ = []
-
+            
             K = len(clusters[l]) # number of devices for UAV l
 
             for k in range(K): # k = 0,...,K-1 (# of devices for each UAV l)
@@ -334,20 +330,17 @@ def algorithm1(M, T, L, devices, width, height,
                 temp_g_.append(0)
                 temp_PU_.append(-20)
                 temp_R_.append(0)
-                temp_I_.append(0)
-
+                
             temp_a.append(temp_a_)
             temp_g.append(temp_g_)
             temp_PU.append(temp_PU_)
             temp_R.append(temp_R_)
-            temp_I.append(temp_I_)
                 
         a.append(temp_a)
         g.append(temp_g)
         PU.append(temp_PU)
         R.append(temp_R)
-        I_.append(temp_I)
-
+        
     # init Q Table
     # Q Table = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     Q = []
@@ -420,7 +413,7 @@ def algorithm1(M, T, L, devices, width, height,
                     # UAV i gets a penalty of -1
                     currentTime = getTimeDif(currentTime, '0 before updateDRlist')
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
+                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                  trainedModel, optimizer)
                     currentTime = getTimeDif(currentTime, '0 after updateDRlist')
 
@@ -445,21 +438,21 @@ def algorithm1(M, T, L, devices, width, height,
 
                         currentTime = getTimeDif(currentTime, '1-0 before updateDRlist')
                         updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                     Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
+                                     Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                      trainedModel, optimizer)
 
                         s_j = dq.getS(UAVs[j], t, j, a, R)
 
                         currentTime = getTimeDif(currentTime, '1-1 before updateDRlist')
                         updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                     Q, QTable, s_j, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
+                                     Q, QTable, s_j, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                      trainedModel, optimizer)
                         currentTime = getTimeDif(currentTime, '1-1 after updateDRlist')
 
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
                 # error if (time slot value) > (devices)
                 try:
-                    beforeThroughput = f.R_nkl(B, min(t, len(PU[t][i])-1), i, t, PU, g, I_, o2)
+                    beforeThroughput = f.R_nkl(B, min(t, len(PU[t][i])-1), i, t, PU, g, o2)
                 except:
                     print('cannot find throughput (before) because there are no device in cluster ' + str(i))
                     continue
@@ -474,7 +467,7 @@ def algorithm1(M, T, L, devices, width, height,
                 s = dq.getS(UAVs[i], t, i, a, R) # current state                
                 oldS = copy.deepcopy(s) # save old state
 
-                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, I_, o2)
+                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, o2)
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
                 R_next = copy.deepcopy(nextState[2])
@@ -488,7 +481,7 @@ def algorithm1(M, T, L, devices, width, height,
                 # get throughput (after) (time = t+1) (n = t+1, l = i, k = t)
                 # error if (time slot value) > (devices)
                 try:
-                    afterThroughput = f.R_nkl(B, min(t, len(PU[t+1][i])-1), i, t+1, PU, g, I_, o2)
+                    afterThroughput = f.R_nkl(B, min(t, len(PU[t+1][i])-1), i, t+1, PU, g, o2)
                 except:
                     print('cannot find throughput (after) because there are no device in cluster ' + str(i))
                     continue
@@ -503,7 +496,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                     currentTime = getTimeDif(currentTime, '2 before updateDRlist')
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
+                                 Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                  trainedModel, optimizer)
                     currentTime = getTimeDif(currentTime, '2 after updateDRlist')
 
@@ -514,13 +507,13 @@ def algorithm1(M, T, L, devices, width, height,
                 for i in range(L):
                     
                     # if minimum throughput of all devices in a cluster == 0
-                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], t, N, l, k, a, B, n, PU, g, I_, o2) == True:
+                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], t, N, l, k, a, B, n, PU, g, o2) == True:
 
                         # The UAV get a penalty of -2
                         directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
-                if isMinThroughputOfAllDevicesDoesNotInc(t, N, l, k, a, B, n, PU, g, I_, o2) == True:
+                if isMinThroughputOfAllDevicesDoesNotInc(t, N, l, k, a, B, n, PU, g, o2) == True:
 
                     # All UAVs get a penalty of -1
                     index = 0
@@ -530,7 +523,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                         currentTime = getTimeDif(currentTime, '3 before updateDRlist')
                         updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
-                                     Q, QTable, s_UAV, alpha, alphaL, r_, R, useDL, clusters, B, PU, I_, o2, directReward_list, g,
+                                     Q, QTable, s_UAV, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                      trainedModel, optimizer)
                         currentTime = getTimeDif(currentTime, '3 after updateDRlist')
                         
@@ -555,7 +548,7 @@ def algorithm1(M, T, L, devices, width, height,
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
 
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' before getMaxQ')
-                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g_i, I_, o2,
+                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g_i, o2, L,
                                            useDL, trainedModel, optimizer)
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' after getMaxQ')
                     
