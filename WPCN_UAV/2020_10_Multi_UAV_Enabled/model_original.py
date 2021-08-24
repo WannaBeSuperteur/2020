@@ -457,7 +457,7 @@ def algorithm1(M, T, L, devices, width, height,
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
                 # error if (time slot value) > (devices)
                 try:
-                    beforeThroughput = f.R_nkl(B, min(t, len(PU[t][i])-1), i, t, PU, g, o2)
+                    beforeThroughput = f.R_nkl(L, B, t, i, min(t, len(PU[t][i])-1), PU, g, o2)
                 except:
                     print('cannot find throughput (before) because there are no device in cluster ' + str(i))
                     continue
@@ -472,7 +472,7 @@ def algorithm1(M, T, L, devices, width, height,
                 s = dq.getS(UAVs[i], t, i, a, R) # current state                
                 oldS = copy.deepcopy(s) # save old state
 
-                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, o2)
+                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, o2, L)
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
                 R_next = copy.deepcopy(nextState[2])
@@ -482,11 +482,11 @@ def algorithm1(M, T, L, devices, width, height,
                 oldS_list.append(oldS)
                 newS_list.append(s)
                 action_list.append(action)
-
+                
                 # get throughput (after) (time = t+1) (n = t+1, l = i, k = t)
                 # error if (time slot value) > (devices)
                 try:
-                    afterThroughput = f.R_nkl(B, min(t, len(PU[t+1][i])-1), i, t+1, PU, g, o2)
+                    afterThroughput = f.R_nkl(L, B, t+1, i, min(t, len(PU[t+1][i])-1), PU, g, o2)
                 except:
                     print('cannot find throughput (after) because there are no device in cluster ' + str(i))
                     continue
@@ -555,6 +555,7 @@ def algorithm1(M, T, L, devices, width, height,
                     g[t][i][k][i] = g_i
 
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' before getMaxQ')
+
                     (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
                                            useDL, trainedModel, optimizer)
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' after getMaxQ')

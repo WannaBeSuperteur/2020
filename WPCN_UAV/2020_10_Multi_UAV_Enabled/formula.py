@@ -147,13 +147,14 @@ def I_nkl(L, PU, n, l, k, g):
             pass
 
     return result
-    
+
+# compute throughput of R_[n][k_l]    
 def R_nkl(L, B, n, l, k, PU, g, o2):
 
     # using inference received by UAV l from cluster j, j in L, j is not equal to l
     inference = I_nkl(L, PU, n, l, k, g)
     r = PU[n][l][k] * g[n][l][k][l] / (inference + o2)
-    
+
     return B * math.log(1+r, 2)
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T
