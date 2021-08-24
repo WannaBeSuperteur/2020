@@ -11,3 +11,7 @@ execute : my_extract.py -> main_py
 [BERT] valid : bert_valid_prediction_model_X.csv, test : bert_test_prediction_model_X.csv
 [Non-BERT] valid : merged_predictions_model_Y.csv, test : fin0_model_Y.csv
 to compare with : bert_train_output.csv
+
+(final)
+execute : makeFinalPrediction.py (with the files above) -> makeFinalSubmission.py
+requirement : sample_submission.csv
