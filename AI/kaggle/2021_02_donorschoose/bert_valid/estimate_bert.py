@@ -57,7 +57,7 @@ class TEXT_MODEL(tf.keras.Model):
         # i10_ts  :                                   1
         #
         # total   : i0_tp, i1_ss, ..., i10_ts     ( 152 unique columns)
-        # text    : tokenized by BERT             ( 158        columns) for title
+        # text    : tokenized by BERT             ( 159        columns) for title
         #                                         (2583        columns) for essay1
         #                                         ( 993        columns) for essay2
         #                                         ( 387        columns) for essay3
@@ -285,7 +285,7 @@ def mainFunc(tokenizer):
     dnn_units = 192
     dropout_rate = 0.25
 
-    epochs = 20
+    epochs = 10
     batch_size = 32
 
     # for k-fold
@@ -375,8 +375,9 @@ def mainFunc(tokenizer):
 
         # for donorschoose-application-screening,
         # max_length_train = 132, 2183, 993, 387, 224, 234
+        # max_length       = 159, 2583, 993, 387, 224, 234
         
-        max_lengths = pd.read_csv('bert_max_length_train.csv', index_col=0)
+        max_lengths = pd.read_csv('bert_max_lengths.csv', index_col=0)
         max_lengths = np.array(max_lengths)[0]
 
         print('\n[05] max lengths:')
@@ -584,8 +585,14 @@ def mainFunc(tokenizer):
 
 if __name__ == '__main__':
 
-    config = tf.compat.v1.ConfigProto()
-    config.gpu_options.allow_growth = True
+    # fix GPU memory error
+    # ref: https://stackoverflow.com/questions/55120206/resource-exhausted-oom-when-allocating-tensor-only-on-gpu
+    if tf.config.list_physical_devices('GPU'):
+        physical_devices = tf.config.list_physical_devices('GPU')
+
+        for i in range(len(physical_devices)):
+            tf.config.experimental.set_memory_growth(physical_devices[i], enable=True)
+            tf.config.experimental.set_virtual_device_configuration(physical_devices[i], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=65536)])
 
     # create bert tokenizer
     BertTokenizer = bert.bert_tokenization.FullTokenizer
