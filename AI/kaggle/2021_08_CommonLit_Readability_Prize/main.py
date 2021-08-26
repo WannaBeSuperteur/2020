@@ -3,6 +3,7 @@
 import math
 import numpy as np
 import pandas as pd
+import re
 
 import tensorflow as tf
 from tensorflow import keras
@@ -33,8 +34,8 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
 
         # layers
         self.embedding   = tf.keras.layers.Embedding(vocab_size, embed_dim)
-        self.LSTM        = tf.keras.layers.LSTM(256, name='LSTM')
-        self.dense       = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense')
+        self.LSTM        = tf.keras.layers.LSTM(64, name='LSTM')
+        self.dense       = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense')
         self.dense_final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
@@ -75,6 +76,13 @@ def loadData():
 
 def tokenizeInput(train_X, test_X):
     all_X = np.concatenate((train_X, test_X), axis=0)
+    regex = re.compile('[^a-zA-Z ]')
+
+    # remove excpet for a-z, A-Z and space, and all words to lowercase
+    for i in range(len(all_X)):
+        all_X[i] = regex.sub('', str(all_X[i]))
+        all_X[i] = all_X[i].lower()
+
     t = Tokenizer()
     t.fit_on_texts(all_X)
     return t
@@ -117,7 +125,7 @@ def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced
 
 def defineAndTrainModel(vocab_size, max_len, encoded_train_X, train_Y):
     # create model
-    model = defineModel(vocab_size, max_len, 200, 0.25)
+    model = defineModel(vocab_size, max_len, 64, 0.25)
         
     # train/valid using model
     trainModel(model, encoded_train_X, train_Y,
