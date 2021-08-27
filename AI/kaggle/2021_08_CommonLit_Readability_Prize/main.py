@@ -32,21 +32,39 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         self.flat    = tf.keras.layers.Flatten()
         L2           = tf.keras.regularizers.l2(0.001)
 
-        # layers
+        # layers for inputs_text
         self.embedding   = tf.keras.layers.Embedding(vocab_size, embed_dim)
         self.LSTM        = tf.keras.layers.LSTM(64, name='LSTM')
-        self.dense       = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense')
+        self.dense_text  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text')
+
+        # layers for inputs_info
+        self.dense_info  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
+
+        # layers for final output
+        self.merged      = tf.keras.layers.Dense(2, activation='relu', kernel_regularizer=L2, name='merged')
         self.dense_final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
 
-        # Embedding, LSTM and dense
-        inputs = self.embedding(inputs)
-        inputs = self.LSTM(inputs)
-        inputs = self.dropout(inputs, training)
-        inputs = self.dense(inputs)
-        inputs = self.dropout(inputs, training)
-        model_output = self.dense_final(inputs)
+        # split inputs
+        max_len = self.maxLength
+        inputs_text, inputs_info = tf.split(inputs, [max_len - 1, 9])
+
+        # Embedding, LSTM and dense for inputs_text
+        inputs_text = self.embedding(inputs_text)
+        inputs_text = self.LSTM(inputs_text)
+        inputs_text = self.dropout(inputs_text, training)
+        inputs_text = self.dense_text(inputs_text)
+        inputs_text = self.dropout(inputs_text, training)
+
+        # DNN for inputs_info
+        inputs_info = self.dense_info(inputs_info)
+        inputs_info = self.dropout(inputs_info, training)
+
+        # output
+        concatenated = tf.concat([inputs_text, inputs_info], axis=1)
+        model_merged = self.merged(concatenated)
+        model_output = self.dense_final(model_merged)
         
         return model_output
 
@@ -74,8 +92,7 @@ def loadData():
 
     return (train_X, train_Y, test_X, testData['id'])
 
-def tokenizeInput(train_X, test_X):
-    all_X = np.concatenate((train_X, test_X), axis=0)
+def tokenizeInput(all_X):
     regex = re.compile('[^a-zA-Z ]')
 
     # remove excpet for a-z, A-Z and space, and all words to lowercase
@@ -123,12 +140,12 @@ def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
     model.fit(X, Y, validation_split=validation_split, callbacks=[early, lr_reduced], epochs=epochs)
 
-def defineAndTrainModel(vocab_size, max_len, encoded_train_X, train_Y):
+def defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y):
     # create model
     model = defineModel(vocab_size, max_len, 64, 0.25)
         
     # train/valid using model
-    trainModel(model, encoded_train_X, train_Y,
+    trainModel(model, pad_encoded_train_X, train_Y,
                validation_split=0.1,
                epochs=10,
                early_patience=5,
@@ -155,10 +172,77 @@ def normalize(Y):
         
     return (Y, avg, stddev)
 
+# find info : distribution of vocab index (min, 10%, median, 90%, max and average) with applying log2
+def getVocabIndexDistribution(encoded_train_X, tokenizer):
+    
+    leng = len(encoded_train_X)
+    
+    # get max, min and average
+    info_max = max(encoded_train_X)
+    info_min = min(encoded_train_X)
+    info_avg = np.mean(encoded_train_X)
+
+    # get 10%, median and 90%
+    leng_10p = int(0.1 * leng)
+    leng_med = int(0.5 * leng)
+    leng_90p = int(0.9 * leng)
+    
+    info_10p = np.partition(encoded_train_X, leng_10p)[leng_10p]
+    info_med = np.partition(encoded_train_X, leng_med)[leng_med]
+    info_90p = np.partition(encoded_train_X, leng_90p)[leng_90p]
+
+    # return the info
+    return np.array([math.log(info_min),
+                     math.log(info_10p),
+                     math.log(info_med),
+                     math.log(info_90p),
+                     math.log(info_max),
+                     math.log(info_avg)])
+
+# find info : number of sentences, average sentence length (in words), and total length (in words)
+def getSentenceInfo(sentence):
+
+    numberOfSentences = len(sentence.split('.'))
+    totalLength       = len(sentence.split(' '))
+    avgLength         = totalLength / numberOfSentences
+
+    # return the info
+    return np.array([numberOfSentences, totalLength, avgLength])
+
+# find additional info
+def getAdditionalInfo(pad_encoded_X, leng, X, encoded_X):
+
+    additionalInfo = np.zeros((leng, 9))
+
+    for i in range(leng):
+
+        # add { distribution of vocab index (min, 10%, median, 90%, max and average) } with applying log2
+        # to encoded train_X
+        vocabDist = getVocabIndexDistribution(encoded_X[i], t)
+
+        # add { number of sentences, average sentence length (in words), total length (in words) }
+        # to encoded train_X
+        sentenceInfo = getSentenceInfo(X[i])
+
+        additionalInfo[i] = np.concatenate((vocabDist, sentenceInfo), axis=0)
+
+    # normalize additional info
+    for col in range(9):
+        (additionalInfo[:, col], avg, stddev) = normalize(additionalInfo[:, col])
+    
+    pad_encoded_X = np.concatenate((pad_encoded_X, additionalInfo), axis=1)
+
+    return pad_encoded_X
+
 if __name__ == '__main__':
 
     # read data
     (train_X, train_Y, test_X, ids) = loadData()
+
+    trainLen = len(train_X)
+    testLen = len(test_X)
+    totalLen = trainLen + testLen
+    all_X = np.concatenate((train_X, test_X), axis=0)
 
     # normalize output data
     (train_Y, avg, stddev) = normalize(train_Y)
@@ -166,7 +250,7 @@ if __name__ == '__main__':
     print('stddev=' + str(round(stddev, 6)))
     
     # tokenize input data
-    t = tokenizeInput(train_X, test_X)
+    t = tokenizeInput(all_X)
     vocab_size = len(t.word_index) + 1
 
     # encode input data
@@ -174,23 +258,31 @@ if __name__ == '__main__':
     encoded_test_X = encodeX(test_X, t)
 
     # add padding to input data
-    (encoded_train_X, encoded_test_X, max_len) = addPadding(encoded_train_X, encoded_test_X)
+    (pad_encoded_train_X, pad_encoded_test_X, max_len) = addPadding(encoded_train_X, encoded_test_X)
     print('max_len=' + str(max_len))
+
+    # find additional info
+    pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
+    pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
     
     # train using GPU
     try:
         # for local with GPU
         with tf.device('/gpu:0'):
-            model = defineAndTrainModel(vocab_size, max_len, encoded_train_X, train_Y)
+            model = defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y)
             
     except:
         # for kaggle notebook or local with no GPU
         print('cannot find GPU')
-        model = defineAndTrainModel(vocab_size, max_len, encoded_train_X, train_Y)
+        model = defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y)
     
     # predict using model
-    prediction = model.predict(encoded_test_X).flatten()
+    prediction = model.predict(pad_encoded_test_X).flatten()
     prediction = np.clip(prediction, 0.0001, 0.9999)
+
+    print('\noriginal prediction:')
+    print(prediction)
+    print('')
 
     # y -> denormalize(invSigmoid(y))
     for i in range(len(prediction)):
@@ -199,7 +291,7 @@ if __name__ == '__main__':
     prediction = prediction * stddev + avg
 
     # write final submission
-    print('prediction:')
+    print('\nconverted FINAL prediction:')
     print(prediction)
     
     final_submission = pd.DataFrame(
