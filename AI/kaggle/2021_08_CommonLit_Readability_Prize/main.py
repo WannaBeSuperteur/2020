@@ -19,7 +19,7 @@ warnings.filterwarnings('always')
 
 class TEXT_MODEL_LSTM(tf.keras.Model):
     
-    def __init__(self, vocab_size, max_length, embed_dim, dropout_rate=0.25, training=False, name='text_model'):
+    def __init__(self, vocab_size, max_length, embed_dim, cnn_filters, dropout_rate=0.25, training=False, name='text_model'):
         
         super(TEXT_MODEL_LSTM, self).__init__(name=name)
 
@@ -31,6 +31,11 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
         self.flat    = tf.keras.layers.Flatten()
         L2           = tf.keras.regularizers.l2(0.001)
+
+        # use CNN (CNN2, CNN3, CNN4) + original input
+        self.CNN2    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='CNN2_text')
+        self.CNN3    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='CNN3_text')
+        self.CNN4    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='CNN4_text')
 
         # layers for inputs_text
         self.embedding   = tf.keras.layers.Embedding(vocab_size, embed_dim, name='embedding_text')
@@ -49,11 +54,32 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         # split inputs
         max_len = self.maxLength
         inputs_text, unused, inputs_info = tf.split(inputs, [max_len-1, 1, 9], axis=1)
-        
-        # Embedding, LSTM and dense for inputs_text
+
+        # CNN layers
+        inputs_text = tf.reshape(inputs_text, (-1, max_len-1))
+
+        # Embedding, LSTM, CNN and dense for inputs_text
         inputs_text = self.embedding(inputs_text)
+        inputs_text = self.dropout(inputs_text, training)
+        
         inputs_text = self.LSTM(inputs_text)
         inputs_text = self.dropout(inputs_text, training)
+
+        # use CNN
+        inputs_text = tf.reshape(inputs_text, (-1, 64, 1))
+        
+        inputs_text_CNN2 = self.CNN2(inputs_text)
+        inputs_text_CNN3 = self.CNN3(inputs_text)
+        inputs_text_CNN4 = self.CNN4(inputs_text)
+
+        inputs_text_CNN2 = self.flat(inputs_text_CNN2)
+        inputs_text_CNN3 = self.flat(inputs_text_CNN3)
+        inputs_text_CNN4 = self.flat(inputs_text_CNN4)
+        
+        inputs_text = tf.concat([inputs_text_CNN2, inputs_text_CNN3, inputs_text_CNN4], axis=-1)
+        inputs_text = self.dropout(inputs_text, training)
+
+        # dense after CNN
         inputs_text = self.dense_text(inputs_text)
         inputs_text = self.dropout(inputs_text, training)
         
@@ -70,10 +96,11 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         
         return model_output
 
-def defineModel(vocab_size, max_length, embed_dim, dropout_rate):
+def defineModel(vocab_size, max_length, embed_dim, cnn_filters, dropout_rate):
     return TEXT_MODEL_LSTM(vocab_size=vocab_size,
                            max_length=max_length,
                            embed_dim=embed_dim,
+                           cnn_filters=cnn_filters,
                            dropout_rate=dropout_rate)
 
 def loadData():
@@ -146,7 +173,11 @@ def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced
 def defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y):
     
     # create model
-    model = defineModel(vocab_size, max_len, 64, 0.25)
+    embed_dim    = 64
+    cnn_filters  = 64
+    dropout_rate = 0.25
+    
+    model = defineModel(vocab_size, max_len, embed_dim, cnn_filters, dropout_rate)
 
     # model configuration
     val_split           = 0.1
