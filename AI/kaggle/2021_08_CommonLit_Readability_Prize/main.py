@@ -33,8 +33,8 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         L2           = tf.keras.regularizers.l2(0.001)
 
         # layers for inputs_text
-        self.embedding   = tf.keras.layers.Embedding(vocab_size, embed_dim)
-        self.LSTM        = tf.keras.layers.LSTM(64, name='LSTM')
+        self.embedding   = tf.keras.layers.Embedding(vocab_size, embed_dim, name='embedding_text')
+        self.LSTM        = tf.keras.layers.LSTM(64, name='LSTM_text')
         self.dense_text  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text')
 
         # layers for inputs_info
@@ -48,21 +48,23 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
 
         # split inputs
         max_len = self.maxLength
-        inputs_text, inputs_info = tf.split(inputs, [max_len - 1, 9])
-
+        inputs_text, unused, inputs_info = tf.split(inputs, [max_len-1, 1, 9], axis=1)
+        
         # Embedding, LSTM and dense for inputs_text
         inputs_text = self.embedding(inputs_text)
         inputs_text = self.LSTM(inputs_text)
         inputs_text = self.dropout(inputs_text, training)
         inputs_text = self.dense_text(inputs_text)
         inputs_text = self.dropout(inputs_text, training)
-
+        
         # DNN for inputs_info
         inputs_info = self.dense_info(inputs_info)
         inputs_info = self.dropout(inputs_info, training)
+        
+        # concatenate inputs_text and inputs_info
+        concatenated = tf.concat([inputs_text, inputs_info], axis=-1)
 
-        # output
-        concatenated = tf.concat([inputs_text, inputs_info], axis=1)
+        # final output
         model_merged = self.merged(concatenated)
         model_output = self.dense_final(model_merged)
         
@@ -139,18 +141,27 @@ def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced
         
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
     model.fit(X, Y, validation_split=validation_split, callbacks=[early, lr_reduced], epochs=epochs)
+    model.summary()
 
 def defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y):
+    
     # create model
     model = defineModel(vocab_size, max_len, 64, 0.25)
+
+    # model configuration
+    val_split           = 0.1
+    epochs              = 100
+    early_patience      = 10
+    lr_reduced_factor   = 0.1
+    lr_reduced_patience = 5
         
     # train/valid using model
     trainModel(model, pad_encoded_train_X, train_Y,
-               validation_split=0.1,
-               epochs=10,
-               early_patience=5,
-               lr_reduced_factor=0.1,
-               lr_reduced_patience=3)
+               validation_split=val_split,
+               epochs=epochs,
+               early_patience=early_patience,
+               lr_reduced_factor=lr_reduced_factor,
+               lr_reduced_patience=lr_reduced_patience)
 
     return model
 
