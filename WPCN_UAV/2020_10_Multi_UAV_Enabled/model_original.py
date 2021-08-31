@@ -199,7 +199,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         h_UAV = h(UAVs)[n][i]
         
         PLoS_i = f.getPLoS(False, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
-        PNLoS_i = f.getPLoS(True, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
+        PNLoS_i = 1.0 - PLoS_i
             
         # update Q value
         currentTime = getTimeDif(None, '(updateDRlist) before g_nlkl')
@@ -559,7 +559,7 @@ def algorithm1(M, T, L, devices, width, height,
                     h_UAV = h(UAVs)[t][i]
         
                     PLoS_i = f.getPLoS(False, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
-                    PNLoS_i = f.getPLoS(True, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
+                    PNLoS_i = 1.0 - PLoS_i
 
                     # update g (g[n][l][k_l]) : the channel's power gain between UAV l and device k_l
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
