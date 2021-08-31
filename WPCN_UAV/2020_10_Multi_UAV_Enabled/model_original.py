@@ -125,7 +125,7 @@ def isMinThroughputOfAllDevicesDoesNotInc(L, T, N, l, k, a, B, n, PU, g, o2):
         # else, update them
         else:
             if thrputBefore < minThroughputBefore: minThroughputBefore = thrputBefore
-            if thrputAfter > minThroughputAfter: minThroughputAfter = thrputAfter
+            if thrputAfter < minThroughputAfter: minThroughputAfter = thrputAfter
 
     # compare minThroughputBefore and minThroughputAfter, and return
     if minThroughputBefore < minThroughputAfter: return True
@@ -396,7 +396,7 @@ def algorithm1(M, T, L, devices, width, height,
             newS_list = [] # new states (for each UAV)
             
             for i in range(L): # for each UAV = each cluster
-                print('UAV ' + str(i) + ' / ' + str(L))
+                print('[1] UAV ' + str(i) + ' / ' + str(L))
 
                 currentTime = getTimeDif(currentTime, '0')
                 
@@ -411,6 +411,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # if UAV i files beyond the border
                 if beyondBorder(UAVs[i], t, width, height) == True:
+                    print('beyond border')
                     
                     # UAV i stays at the border
                     if UAVs[i][0][t] < 0: UAVs[i][0][t] = 0 # x value < 0
@@ -427,7 +428,7 @@ def algorithm1(M, T, L, devices, width, height,
                     currentTime = getTimeDif(currentTime, '0 after updateDRlist')
 
             for i in range(L): # each UAV i
-                print('UAV ' + str(i) + ' / ' + str(L))
+                print('[2] UAV ' + str(i) + ' / ' + str(L))
 
                 currentTime = getTimeDif(currentTime, '1')
                 
@@ -435,6 +436,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                     # UAV i and j's trajectory exists cross
                     if IsTrajectoryCrossed(UAVs[i], UAVs[j], t) == True:
+                        print('trajectory crossed')
 
                         # UAV i and UAV j stays at the previous position
                         UAVs[i][0][t] = UAVs[i][0][t-1]
@@ -501,6 +503,7 @@ def algorithm1(M, T, L, devices, width, height,
                 # assumption: device t is the device communicated with when the time slot is t
                 # [temporary] assume that the index of the device is t
                 if afterThroughput <= beforeThroughput:
+                    print('throughput not increased')
                     
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, R)
@@ -525,6 +528,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc(L, t, N, l, k, a, B, n, PU, g, o2) == True:
+                    print('min throughput of all device not increased')
 
                     # All UAVs get a penalty of -1
                     index = 0
@@ -542,7 +546,7 @@ def algorithm1(M, T, L, devices, width, height,
 
             # store (s,a,r,s') into replay buffer
             for i in range(L): # each UAV i
-                print('UAV ' + str(i) + ' / ' + str(L))
+                print('[3] UAV ' + str(i) + ' / ' + str(L))
                 currentTime = getTimeDif(currentTime, '4')
 
                 # for each device k,
