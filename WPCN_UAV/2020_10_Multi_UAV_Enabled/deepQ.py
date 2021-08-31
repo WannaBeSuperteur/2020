@@ -100,11 +100,12 @@ def getActionIndex(action):
 # a           : list of a[n][l][k_l] (a part of s)
 # R           : list of R[n][k_l]    (a part of s)
 def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
-            useDL, trainedModel, optimizer):
+            useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     # get Q values for the action space of next state s'
     if useDL == True:
-        (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L)
+        (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
+                                      b1, b2, S_, u1, u2, fc, alpha)
         
         # try testing
         try:
@@ -374,15 +375,16 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
 def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, o2, L,
-                 trainedModel, optimizer):
+                 trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
-    (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L)
+    (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
+                                                    b1, b2, S_, u1, u2, fc, alpha)
 
     if useDL == True:
         (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
-                                  True, trainedModel, optimizer)
+                                  True, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
         
         # if error for deep Q learning test
         try:
@@ -392,7 +394,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
 
     else:
         (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
-                            False, trainedModel, optimizer)
+                            False, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
 
     # update {a[n][l][k_l]} (array of communication times)
     # where k is the index for the device to communicate
@@ -552,7 +554,8 @@ def getNextLocation(s, action, n, UAVs, l, a, R):
 ## clusters: [c0_deviceList, c1_deviceList, ...]
 # cK_deviceList: device list of cluster k,
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
-def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L):
+def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
+                 b1, b2, S_, u1, u2, fc, alpha):
 
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, R)
@@ -566,16 +569,36 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L):
     # in its cluster for uplink communication.
 
     # find the device with best channel condition (WITHIN CURRENT CLUSTER)
-    # NO NEED TO WRITE CODE FOR IT because RANDOMLY SELECT the device
+    # note below:
+    # n, l, k  : for time, cluster No. and device No.
+    # clusters : the location(x and y) of devices for each cluster, shape = (#clusters, #devices_for_each_cluster, 2)
+    # nextX    : x axis value of the UAV
+    # nextY    : y axis value of the UAV
+    # nextH    : h (height), z axis value of the UAV
+    
+    # additional variables:
+    # b1, b2, S_, u1, u2, fc and alpha
+
+    # assumption: select the device to communicate with BEST g[n][l][k_l] value (power gain),
+    #             according to page 9126 of the paper
 
     # init next a[n][l]
     next_a = []
+    condition = []
     
-    # assumption: randomly select the device to communicate with
-    # so, the probability for increasing next_a is 1/len(clusters[l])
-    deviceToCommunicate = random.randint(0, len(clusters[l])-1)
+    # compute g[n][l][k_l] for each device in the cluster
+    for k in range(len(clusters[l])):
+        PLoS = f.getPLoS(False, n, l, k, clusters, nextX, nextY, nextH, b1, b2, S_)
+        PNLoS = 1.0 - PLoS
+        g[n][l][k][l] = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, clusters, nextX, nextY, nextH, alpha)
 
-    for i in range(len(s[1])): next_a.append(0) # init to satisfy (5) of the paper
+        condition.append(g[n][l][k][l])
+    
+    # so, the probability for increasing next_a is 1/len(clusters[l])
+    deviceToCommunicate = np.argmax(condition)
+
+    # init to satisfy (5) of the paper
+    for i in range(len(s[1])): next_a.append(0)
     next_a[deviceToCommunicate] += 1
 
     # derive next R[n][k_l]
@@ -599,7 +622,7 @@ def yt(r, r_, s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l
        useDL, trainedModel, optimizer):
     
     (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, l_, o2, L,
-                        useDL, trainedModel, optimizer)
+                        useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
     return r + r_ * maxQ
     
 # Q^pi(s, a) = E[Sum(k=0, inf)(r_^k * r_(t+k)) | st, at, pi]

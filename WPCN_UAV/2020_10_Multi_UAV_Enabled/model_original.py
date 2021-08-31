@@ -194,8 +194,12 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
     for k in range(len(clusters[i])):
 
         # get PLoS and PNLoS
-        PLoS_i = f.getPLoS(False, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
-        PNLoS_i = f.getPLoS(True, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+        x_UAV = x(UAVs)[n][i]
+        y_UAV = y(UAVs)[n][i]
+        h_UAV = h(UAVs)[n][i]
+        
+        PLoS_i = f.getPLoS(False, n, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
+        PNLoS_i = f.getPLoS(True, n, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
             
         # update Q value
         currentTime = getTimeDif(None, '(updateDRlist) before g_nlkl')
@@ -203,7 +207,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl')
         dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, o2, L,
-                        trainedModel, optimizer)
+                        trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue')
         
@@ -472,7 +476,9 @@ def algorithm1(M, T, L, devices, width, height,
                 s = dq.getS(UAVs[i], t, i, a, R) # current state                
                 oldS = copy.deepcopy(s) # save old state
 
-                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, o2, L)
+                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, R, clusters, B, PU, g, o2, L,
+                                                 b1, b2, S_, u1, u2, fc, alpha)
+                
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
                 R_next = copy.deepcopy(nextState[2])
@@ -557,7 +563,8 @@ def algorithm1(M, T, L, devices, width, height,
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' before getMaxQ')
 
                     (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
-                                           useDL, trainedModel, optimizer)
+                                           useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
+                    
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' after getMaxQ')
                     
                     maxQs.append(maxQ)

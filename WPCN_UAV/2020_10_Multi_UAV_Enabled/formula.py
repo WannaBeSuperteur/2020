@@ -66,30 +66,40 @@ def eucNorm(array):
 # d[n][l][k][j] = sqrt((x[n][l] - x[k_j])^2 + (y[n][l] - y[k_j])^2 + h[n][l]^2)
 # k, l        : device k_l
 # k, j        : device k_j
-# x, y, and h : for each UAV (cluster) (moving, h>0)
+# x, y, and h : for each UAV (cluster) (moving, h>0), the value of x[n][l], y[n][l] and h[n][l]
 # xd and yd   : for each device (not moving, h=0)
 # clusters    : in the form of [list([[x of device 0, y of device 0], ...]), ...]
+# n           : will be omitted because x, y and h denotes x[n][l], y[n][l] and h[n][l], respectively
 def d_nlkl(n, l, k, clusters, x, y, h):
 
     thisDevice = clusters[l][k] # each device : [x of device 0, y of device 0]
-
     xd = thisDevice[0]
     yd = thisDevice[1]
-    
-    return math.sqrt(pow(x[n][l]-xd, 2) + pow(y[n][l]-yd, 2) + pow(h[n][l], 2))
+
+    try:
+        return math.sqrt(pow(x - xd, 2) + pow(y - yd, 2) + pow(h, 2))
+    except:
+        return math.sqrt(pow(x[n][l] - xd, 2) + pow(y[n][l] - yd, 2) + pow(h[n][l], 2))
 
 # get theta value for getPLoS function
 # theta[l][k_l][n] = sin^-1(h[n][l]/d[n][l][k_l])
+# h : the value of h[n][l]
+# n : will be omitted because h denotes h[n][l]
 def getTheta(n, l, k, clusters, x, y, h):
-    return math.asin(h[n][l]/d_nlkl(n, l, k, clusters, x, y, h))
+
+    try:
+        return math.asin(h / d_nlkl(n, l, k, clusters, x, y, h))
+    except:
+        return math.asin(h[n][l] / d_nlkl(n, l, k, clusters, x, y, h))
 
 # probability of LoS : line-of-sight (PLoS) and probability of NLoS : non-line-of-sight (PNLoS)
 # isNot              : get PLoS if False, get PNLoS if True
 # clusters           : in the form of [list([[x of device 0, y of device 0], ...]), ...]
 
 # PLoS(theta[l][k_l][n]) = b1*(180/pi * theta[l][k_l][n] - S_)^b2 ... (2)
-# NPLoS = 1 - PLoS
+# PNLoS = 1 - PLoS
 def getPLoS(isNot, n, l, k, clusters, x, y, h, b1, b2, S_):
+
     thetaVal = getTheta(n, l, k, clusters, x, y, h) # theta[l][k_l][n]
     PLoS = b1 * pow(180 * math.pi * thetaVal - S_, b2)
 
@@ -104,7 +114,11 @@ def g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, clusters, x, y, h, alpha):
     c = 300000000 # speed of light
     K0 = 4 * math.pi * fc / c
     result0 = 1 / (PLoS * u1 + PNLoS * u2)
-    result1 = pow(K0 * d_nlkl(n, l, k, clusters, x, y, h), -alpha)
+
+    try:
+        result1 = pow(K0 * d_nlkl(n, l, k, clusters, x[n][l], y[n][l], h[n][l]), -alpha)
+    except:
+        result1 = pow(K0 * d_nlkl(n, l, k, clusters, x, y, h), -alpha)
 
     return result0 * result1
 
