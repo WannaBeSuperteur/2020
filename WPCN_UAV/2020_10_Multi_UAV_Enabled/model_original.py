@@ -186,9 +186,10 @@ def h(UAVs):
 # a                 : array {a[n][l][k_l]}
 # alpha             : value of alpha
 # directReward_list : direct reward list to update
+# updatingQtable    : update Q table?
 def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
                  Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                 trainedModel, optimizer):
+                 trainedModel, optimizer, updatingQtable):
     
     # for each device k
     for k in range(len(clusters[i])):
@@ -206,10 +207,12 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl')
-        dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, o2, L,
-                        trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
 
-        currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue')
+        if updatingQtable == True:
+            dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, o2, L,
+                            trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
+
+            currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue')
         
         directReward_list[i] += value
 
@@ -411,8 +414,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # if UAV i files beyond the border
                 if beyondBorder(UAVs[i], t, width, height) == True:
-                    print('beyond border')
-                    
+
                     # UAV i stays at the border
                     if UAVs[i][0][t] < 0: UAVs[i][0][t] = 0 # x value < 0
                     elif UAVs[i][0][t] > width: UAVs[i][0][t] = width # x value > width
@@ -424,7 +426,7 @@ def algorithm1(M, T, L, devices, width, height,
                     currentTime = getTimeDif(currentTime, '0 before updateDRlist')
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                 trainedModel, optimizer)
+                                 trainedModel, optimizer, False)
                     currentTime = getTimeDif(currentTime, '0 after updateDRlist')
 
             for i in range(L): # each UAV i
@@ -436,8 +438,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                     # UAV i and j's trajectory exists cross
                     if IsTrajectoryCrossed(UAVs[i], UAVs[j], t) == True:
-                        print('trajectory crossed')
-
+                        
                         # UAV i and UAV j stays at the previous position
                         UAVs[i][0][t] = UAVs[i][0][t-1]
                         UAVs[i][1][t] = UAVs[i][1][t-1]
@@ -450,14 +451,14 @@ def algorithm1(M, T, L, devices, width, height,
                         currentTime = getTimeDif(currentTime, '1-0 before updateDRlist')
                         updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                      Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                     trainedModel, optimizer)
+                                     trainedModel, optimizer, False)
 
                         s_j = dq.getS(UAVs[j], t, j, a, R)
 
                         currentTime = getTimeDif(currentTime, '1-1 before updateDRlist')
                         updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                      Q, QTable, s_j, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                     trainedModel, optimizer)
+                                     trainedModel, optimizer, False)
                         currentTime = getTimeDif(currentTime, '1-1 after updateDRlist')
 
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
@@ -503,15 +504,14 @@ def algorithm1(M, T, L, devices, width, height,
                 # assumption: device t is the device communicated with when the time slot is t
                 # [temporary] assume that the index of the device is t
                 if afterThroughput <= beforeThroughput:
-                    print('throughput not increased')
-                    
+
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, R)
 
                     currentTime = getTimeDif(currentTime, '2 before updateDRlist')
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                 trainedModel, optimizer)
+                                 trainedModel, optimizer, False)
                     currentTime = getTimeDif(currentTime, '2 after updateDRlist')
 
             # if time slot is T
@@ -528,7 +528,6 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc(L, t, N, l, k, a, B, n, PU, g, o2) == True:
-                    print('min throughput of all device not increased')
 
                     # All UAVs get a penalty of -1
                     index = 0
@@ -539,12 +538,12 @@ def algorithm1(M, T, L, devices, width, height,
                         currentTime = getTimeDif(currentTime, '3 before updateDRlist')
                         updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                      Q, QTable, s_UAV, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                     trainedModel, optimizer)
+                                     trainedModel, optimizer, False)
                         currentTime = getTimeDif(currentTime, '3 after updateDRlist')
                         
                         index += 1
 
-            # store (s,a,r,s') into replay buffer
+            # update Q Table and store (s,a,r,s') into replay buffer
             for i in range(L): # each UAV i
                 print('[3] UAV ' + str(i) + ' / ' + str(L))
                 currentTime = getTimeDif(currentTime, '4')
