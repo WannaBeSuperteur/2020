@@ -189,7 +189,7 @@ def h(UAVs):
 def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
                  Q, QTable, s_i, alpha, alphaL, r_, R, useDL, clusters, B, PU, o2, L, directReward_list, g,
                  trainedModel, optimizer):
-
+    
     # for each device k
     for k in range(len(clusters[i])):
 
@@ -198,12 +198,12 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         y_UAV = y(UAVs)[n][i]
         h_UAV = h(UAVs)[n][i]
         
-        PLoS_i = f.getPLoS(False, n, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
-        PNLoS_i = f.getPLoS(True, n, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
+        PLoS_i = f.getPLoS(False, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
+        PNLoS_i = f.getPLoS(True, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
             
         # update Q value
         currentTime = getTimeDif(None, '(updateDRlist) before g_nlkl')
-        g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, n, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+        g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl')
         dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, R, useDL, clusters, B, PU, g, o2, L,
@@ -255,7 +255,7 @@ def getTimeDif(T, msg):
 def algorithm1(M, T, L, devices, width, height,
                H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
                deviceName, QTable_rate, iteration):
-
+    
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     QTable = [] # Q table
@@ -463,7 +463,7 @@ def algorithm1(M, T, L, devices, width, height,
                 try:
                     beforeThroughput = f.R_nkl(L, B, t, i, min(t, len(PU[t][i])-1), PU, g, o2)
                 except:
-                    print('cannot find throughput (before) because there are no device in cluster ' + str(i))
+                    print('cannot find throughput (before) because there are no devices in cluster ' + str(i))
                     continue
                 
                 # get and move to next state (update q, a and R)
@@ -494,7 +494,7 @@ def algorithm1(M, T, L, devices, width, height,
                 try:
                     afterThroughput = f.R_nkl(L, B, t+1, i, min(t, len(PU[t+1][i])-1), PU, g, o2)
                 except:
-                    print('cannot find throughput (after) because there are no device in cluster ' + str(i))
+                    print('cannot find throughput (after) because there are no devices in cluster ' + str(i))
                     continue
 
                 # device t's throughput does not increase
@@ -553,11 +553,16 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # for each device k
                 for k in range(len(clusters[i])):
-                    PLoS_i = f.getPLoS(False, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
-                    PNLoS_i = f.getPLoS(True, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), b1, b2, S_)
+
+                    x_UAV = x(UAVs)[t][i]
+                    y_UAV = y(UAVs)[t][i]
+                    h_UAV = h(UAVs)[t][i]
+        
+                    PLoS_i = f.getPLoS(False, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
+                    PNLoS_i = f.getPLoS(True, i, k, clusters, x_UAV, y_UAV, h_UAV, b1, b2, S_)
 
                     # update g (g[n][l][k_l]) : the channel's power gain between UAV l and device k_l
-                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, t, i, k, clusters, x(UAVs), y(UAVs), h(UAVs), alpha)
+                    g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
                     g[t][i][k][i] = g_i
 
                     currentTime = getTimeDif(currentTime, '4-' + str(k) + ' before getMaxQ')

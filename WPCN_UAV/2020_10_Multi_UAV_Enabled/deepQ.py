@@ -101,7 +101,7 @@ def getActionIndex(action):
 # R           : list of R[n][k_l]    (a part of s)
 def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
-
+    
     # get Q values for the action space of next state s'
     if useDL == True:
         (nextState, _) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
@@ -376,7 +376,7 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 #                FALSE for setting to 0
 def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
-
+    
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
     (nextState, deviceToCommunicate) = getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
@@ -447,6 +447,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
 # q_before : q[n-1][l] (in the [x, y, h] form)
 # IN RADIAN
 def getAngle(q_this, q_before, n):
+    
     if n > 0:
         locBefore = q_before
         locAfter = q_this
@@ -556,7 +557,7 @@ def getNextLocation(s, action, n, UAVs, l, a, R):
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
 def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
                  b1, b2, S_, u1, u2, fc, alpha):
-
+    
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, R)
 
@@ -588,9 +589,9 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
     
     # compute g[n][l][k_l] for each device in the cluster
     for k in range(len(clusters[l])):
-        PLoS = f.getPLoS(False, n, l, k, clusters, nextX, nextY, nextH, b1, b2, S_)
+        PLoS = f.getPLoS(False, l, k, clusters, nextX, nextY, nextH, b1, b2, S_)
         PNLoS = 1.0 - PLoS
-        g[n][l][k][l] = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, n, l, k, clusters, nextX, nextY, nextH, alpha)
+        g[n][l][k][l] = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, l, k, clusters, nextX, nextY, nextH, alpha)
 
         condition.append(g[n][l][k][l])
     
