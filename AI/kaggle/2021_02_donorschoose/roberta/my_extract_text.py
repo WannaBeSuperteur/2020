@@ -1,4 +1,4 @@
-# ref: https://huggingface.co/transformers/model_doc/roberta.html
+# ref: https://analyticsindiamag.com/python-guide-to-huggingface-distilbert-smaller-faster-cheaper-distilled-bert/
 
 import random
 import numpy as np
@@ -6,10 +6,7 @@ import pandas as pd
 import datetime
 import re
 
-# if error, refer to https://www.gitmemory.com/issue/huggingface/transformers/3442/756067404
-#           or install tensorflow (or tensorflow-gpu) 2.4.1
-from transformers import RobertaTokenizer, TFRobertaModel
-
+from transformers import DistilBertTokenizer, DistilBertModel
 import tensorflow as tf
 
 from sklearn.preprocessing import MinMaxScaler, LabelEncoder
@@ -18,10 +15,10 @@ from sklearn.preprocessing import MinMaxScaler, LabelEncoder
 # each option is:
 # -1 : except for this column
 #  0 : numeric
-#  1 : using roberta model
-#      the shape of result is ((tokens, 768)) and using the first element for each token
+#  1 : using DistilBert model
+#      the shape of result is ((tokens)) and use all these tokens
 
-def extract(fn, option, title, roberta_tokenizer, roberta_model, roberta_max_tokens):
+def extract(fn, option, title, DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens):
 
     array = np.array(pd.read_csv(fn))
     print(array)
@@ -41,7 +38,7 @@ def extract(fn, option, title, roberta_tokenizer, roberta_model, roberta_max_tok
 
         # for each column
         for j in range(cols):
-            max_tokens = roberta_max_tokens[j]
+            max_tokens = DistilBert_max_tokens[j]
 
             # -1 : except for this column
             if option[j] == -1:
@@ -53,62 +50,57 @@ def extract(fn, option, title, roberta_tokenizer, roberta_model, roberta_max_tok
 
                 if i == 0: newTitle.append(str(j) + '_val')
 
-            #  1 : using roBERTa model
+            #  1 : using DistilBert model
             elif option[j] == 1:
 
-                # get roBERTa last hidden state
+                # get DistilBert last hidden state
                 text = array[i][j]
-                roberta_lhs = getFirstRobertaLHS(text, roberta_tokenizer, roberta_model)
+                DistilBert_lhs = getDistilBertLHS(text, DistilBert_tokenizer, DistilBert_model)
 
                 # append encoded text
-                for k in range(len(roberta_lhs)):
-                    thisRow.append(roberta_lhs[k][0])
+                for k in range(len(DistilBert_lhs)):
+                    thisRow.append(DistilBert_lhs[k][0])
 
                 # fill empty places before encoded text
-                for k in range(max_tokens - len(roberta_lhs)):
+                for k in range(max_tokens - len(DistilBert_lhs)):
                     thisRow.append(0, 0)
 
                 # title
                 if i == 0:
                     for k in range(max_tokens):
-                        thisRow.append(str(j) + '_roberta_' + str(k))
+                        thisRow.append(str(j) + '_DistilBert_' + str(k))
 
         resultArray.append(thisRow)
 
     return (resultArray, newTitle, onehot)
 
-# get first element of roBERTa last hidden state
-def getFirstRobertaLHS(text, roberta_tokenizer, roberta_model):
-    roberta_input  = roberta_tokenizer(text, return_tensors='tf')
-    roberta_output = roberta_model(roberta_input)
-    roberta_lhs    = roberta_output.last_hidden_state # shape: (1, N, 768)
-    roberta_lhs    = np.array(roberta_lhs)[0] # shape: (N, 768)
+# get first element of DistilBert output
+def getDistilBertOutput(text, DistilBert_tokenizer, DistilBert_model):
+    DistilBert_output = DistilBert_tokenizer(text, return_tensors='tf')
+    DistilBert_output = np.array(DistilBert_output['input_ids'])[0] # shape: (N)
+    
+    return DistilBert_output
 
-    return roberta_lhs
-
-# encode text using roBERTa tokenizer and roBERTa model
-def encodeText(text, roberta_tokenizer, roberta_model):
+# encode text using DistilBert tokenizer and DistilBert model
+def encodeText(text, DistilBert_tokenizer, DistilBert_model):
     regex = re.compile('[^a-zA-Z0-9.,?! ]')
 
     try:
         # use first 25 characters
         text = regex.sub('', text)[:25]
-        roberta_lhs = getFirstRobertaLHS(text, roberta_tokenizer, roberta_model)
+        DistilBert_output = getDistilBertOutput(text, DistilBert_tokenizer, DistilBert_model)
     except:
-        roberta_lhs = np.zeros((1, 768))
+        DistilBert_output = np.array([0])
         
-    encoded = []
-    for i in range(len(roberta_lhs)):
-        encoded.append(roberta_lhs[i][0])
-    return encoded
+    return DistilBert_output
 
-# find the max count of the number of roBERTa tokens for each column (project_title, ..., project_resource_summary)
-def get_roberta_token_count(roberta_tokenizer, roberta_model):
+# find the max count of the number of DistilBert tokens for each column (project_title, ..., project_resource_summary)
+def get_DistilBert_token_count(DistilBert_tokenizer, DistilBert_model):
 
     # read saved max tokens count
     try:
-        roberta_max_tokens = pd.read_csv('roberta_max_tokens.csv', index_col=0)
-        return np.array(roberta_max_tokens)
+        DistilBert_max_tokens = pd.read_csv('DistilBert_max_tokens.csv', index_col=0)
+        return np.array(DistilBert_max_tokens)
 
     # new max tokens count
     except:
@@ -117,43 +109,43 @@ def get_roberta_token_count(roberta_tokenizer, roberta_model):
         
         train_data = pd.read_csv('train.csv')
         test_data = pd.read_csv('test.csv')
-        roberta_max_tokens = [0, 0, 0, 0, 0, 0]
+        DistilBert_max_tokens = [0, 0, 0, 0, 0, 0]
 
         # for training data
-        print('find roberta token count for training data ...')
+        print('find DistilBert token count for training data ...')
         for i in range(len(train_data)):
             if i % 1 == 0: print(i)
             
             for j in range(6):
-                roberta_max_tokens[j] = max(roberta_max_tokens[j],
-                                            len(encodeText(train_data.iloc[i][titles[j]],
-                                                           roberta_tokenizer, roberta_model)))
+                DistilBert_max_tokens[j] = max(DistilBert_max_tokens[j],
+                                               len(encodeText(train_data.iloc[i][titles[j]],
+                                                              DistilBert_tokenizer, DistilBert_model)))
 
         # for test data
-        print('find roberta token count for test data ...')
+        print('find DistilBert token count for test data ...')
         for i in range(len(test_data)):
             if i % 1 == 0: print(i)
             
             for j in range(6):
-                roberta_max_tokens[j] = max(roberta_max_tokens[j],
-                                            len(encodeText(test_data.iloc[i][titles[j]],
-                                                           roberta_tokenizer, roberta_model)))
+                DistilBert_max_tokens[j] = max(DistilBert_max_tokens[j],
+                                               len(encodeText(test_data.iloc[i][titles[j]],
+                                                              DistilBert_tokenizer, DistilBert_model)))
 
-        roberta_max_tokens_ = pd.DataFrame(np.array(roberta_max_tokens))
-        roberta_max_tokens_.to_csv('roberta_max_tokens.csv')
+        DistilBert_max_tokens_ = pd.DataFrame(np.array(DistilBert_max_tokens))
+        DistilBert_max_tokens_.to_csv('DistilBert_max_tokens.csv')
 
-        return np.array(roberta_max_tokens)
+        return np.array(DistilBert_max_tokens)
 
 if __name__ == '__main__':
 
     train_option = [-1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1, 0]
     test_option = [-1, -1, -1, -1, -1, -1, -1, -1, 1, 1, 1, 1, 1, 1, -1]
 
-    # GET ROBERTA TOKEN COUNT
-    roberta_tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
-    roberta_model = TFRobertaModel.from_pretrained('roberta-base')
+    # GET DISTILBERT TOKEN COUNT
+    DistilBert_tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    DistilBert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
     
-    roberta_max_tokens = get_roberta_token_count(roberta_tokenizer, roberta_model)
+    DistilBert_max_tokens = get_DistilBert_token_count(DistilBert_tokenizer, DistilBert_model)
 
     # TRAINING
     
@@ -164,7 +156,8 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
 
-    (train_extracted, train_newTitle, onehot) = extract('train.csv', train_option, train_title, roberta_tokenizer, roberta_model, roberta_max_tokens)
+    (train_extracted, train_newTitle, onehot) = extract('train.csv', train_option, train_title,
+                                                        DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens)
 
     train_newTitle_input = train_newTitle[:len(train_newTitle)-1]
     train_newTitle_output = [train_newTitle[len(train_newTitle)-1]]
@@ -195,7 +188,8 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects']
 
-    (test_extracted, test_newTitle, _) = extract('test.csv', test_option, test_title, roberta_tokenizer, roberta_model, roberta_max_tokens)
+    (test_extracted, test_newTitle, _) = extract('test.csv', test_option, test_title,
+                                                 DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens)
 
     test_toWrite = [] # [test_newTitle]
     
