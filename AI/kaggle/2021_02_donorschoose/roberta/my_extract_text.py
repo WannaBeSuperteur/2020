@@ -32,13 +32,12 @@ def extract(fn, option, title, DistilBert_tokenizer, DistilBert_model, DistilBer
     # for each row
     newTitle = []
     for i in range(rows):
-        if i % 1 == 0: print(i)
+        if i % 250 == 0: print(i)
         
         thisRow = []
 
         # for each column
         for j in range(cols):
-            max_tokens = DistilBert_max_tokens[j]
 
             # -1 : except for this column
             if option[j] == -1:
@@ -53,26 +52,33 @@ def extract(fn, option, title, DistilBert_tokenizer, DistilBert_model, DistilBer
             #  1 : using DistilBert model
             elif option[j] == 1:
 
+                currentThisRowLength = len(thisRow)
+
+                # cols: {..., 8:project_title, 9:project_essay_1, ...,
+                #        12:project_essay_4, 13:project_resource_summary, ...}
+                j_textCol = j - 8
+                j_encodedCols = DistilBert_max_tokens[j_textCol][0] # count of encoded cols for j_textCol
+                
                 # get DistilBert last hidden state
                 text = array[i][j]
-                DistilBert_lhs = getDistilBertLHS(text, DistilBert_tokenizer, DistilBert_model)
-
+                DistilBert_output = encodeText(text, DistilBert_tokenizer, DistilBert_model)
+                
                 # append encoded text
-                for k in range(len(DistilBert_lhs)):
-                    thisRow.append(DistilBert_lhs[k][0])
+                for k in range(len(DistilBert_output)):
+                    thisRow.append(DistilBert_output[k])
 
                 # fill empty places before encoded text
-                for k in range(max_tokens - len(DistilBert_lhs)):
-                    thisRow.append(0, 0)
+                for k in range(j_encodedCols - len(DistilBert_output)):
+                    thisRow.insert(currentThisRowLength, 0)
 
                 # title
                 if i == 0:
-                    for k in range(max_tokens):
-                        thisRow.append(str(j) + '_DistilBert_' + str(k))
+                    for k in range(j_encodedCols):
+                        newTitle.append(str(j_textCol) + '_DistilBert_' + str(k))
 
         resultArray.append(thisRow)
 
-    return (resultArray, newTitle, onehot)
+    return (resultArray, newTitle)
 
 # get first element of DistilBert output
 def getDistilBertOutput(text, DistilBert_tokenizer, DistilBert_model):
@@ -86,8 +92,9 @@ def encodeText(text, DistilBert_tokenizer, DistilBert_model):
     regex = re.compile('[^a-zA-Z0-9.,?! ]')
 
     try:
-        # use first 25 characters
-        text = regex.sub('', text)[:25]
+        text = text.replace(r'\r\n', ' ')
+        text = regex.sub('', text)
+        
         DistilBert_output = getDistilBertOutput(text, DistilBert_tokenizer, DistilBert_model)
     except:
         DistilBert_output = np.array([0])
@@ -114,7 +121,7 @@ def get_DistilBert_token_count(DistilBert_tokenizer, DistilBert_model):
         # for training data
         print('find DistilBert token count for training data ...')
         for i in range(len(train_data)):
-            if i % 1 == 0: print(i)
+            if i % 250 == 0: print(i)
             
             for j in range(6):
                 DistilBert_max_tokens[j] = max(DistilBert_max_tokens[j],
@@ -124,7 +131,7 @@ def get_DistilBert_token_count(DistilBert_tokenizer, DistilBert_model):
         # for test data
         print('find DistilBert token count for test data ...')
         for i in range(len(test_data)):
-            if i % 1 == 0: print(i)
+            if i % 250 == 0: print(i)
             
             for j in range(6):
                 DistilBert_max_tokens[j] = max(DistilBert_max_tokens[j],
@@ -156,8 +163,8 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects', 'project_is_approved']
 
-    (train_extracted, train_newTitle, onehot) = extract('train.csv', train_option, train_title,
-                                                        DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens)
+    (train_extracted, train_newTitle) = extract('train.csv', train_option, train_title,
+                                                DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens)
 
     train_newTitle_input = train_newTitle[:len(train_newTitle)-1]
     train_newTitle_output = [train_newTitle[len(train_newTitle)-1]]
@@ -188,8 +195,8 @@ if __name__ == '__main__':
              'project_title', 'project_essay_1', 'project_essay_2', 'project_essay_3', 'project_essay_4',
              'project_resource_summary', 'teacher_number_of_previously_posted_projects']
 
-    (test_extracted, test_newTitle, _) = extract('test.csv', test_option, test_title,
-                                                 DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens)
+    (test_extracted, test_newTitle) = extract('test.csv', test_option, test_title,
+                                              DistilBert_tokenizer, DistilBert_model, DistilBert_max_tokens)
 
     test_toWrite = [] # [test_newTitle]
     
