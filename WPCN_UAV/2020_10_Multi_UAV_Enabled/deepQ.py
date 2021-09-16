@@ -331,7 +331,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
     # input array (need to convert original array [s0])
     inputData = []
     for i in range(len(Q)):
-
+        
         # convert into 1d array (valid if not converted)
         try:
             inputData.append(stateTo1dArray(Q[i][0], Q[i][3]))
@@ -456,7 +456,6 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
 
         Q.append([[s], qs, l, k])
         QTable.append([stateTo1dArray(s, k), qs, l, k])
-        print(n, l, k, len(QTable))
 
         # update current state s just before return
         s[2] = a[n]
@@ -602,6 +601,33 @@ def getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2):
 ## clusters: [c0_deviceList, c1_deviceList, ...]
 # cK_deviceList: device list of cluster k,
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
+
+def findDeviceToCommunicate(clusters, n, l, X, Y, H, b1, b2, S_, u1, u2, fc, alpha, g, s):
+
+    actionSpaceSize = len(s[1])
+    
+    # init next a[n][l]
+    next_a = []
+    condition = []
+    
+    # compute g[n][l][k_l] for each device in the cluster
+    for k in range(len(clusters[l])):
+        PLoS = f.getPLoS(False, l, k, clusters, X, Y, H, b1, b2, S_)
+        PNLoS = 1.0 - PLoS
+        g[n][l][k][l] = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, l, k, clusters, X, Y, H, alpha)
+
+        condition.append(g[n][l][k][l])
+    
+    # so, the probability for increasing next_a is 1/len(clusters[l])
+    deviceToCommunicate = np.argmax(condition)
+
+    # init to satisfy (5) of the paper
+    for i in range(actionSpaceSize): next_a.append(0)
+    next_a[deviceToCommunicate] += 1
+
+    # return a of next state
+    return (next_a, deviceToCommunicate)
+    
 def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
                  b1, b2, S_, u1, u2, fc, alpha):
 
@@ -633,24 +659,8 @@ def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
     # assumption: select the device to communicate with BEST g[n][l][k_l] value (power gain),
     #             according to page 9126 of the paper
 
-    # init next a[n][l]
-    next_a = []
-    condition = []
-    
-    # compute g[n][l][k_l] for each device in the cluster
-    for k in range(len(clusters[l])):
-        PLoS = f.getPLoS(False, l, k, clusters, nextX, nextY, nextH, b1, b2, S_)
-        PNLoS = 1.0 - PLoS
-        g[n][l][k][l] = f.g_nlkl(PLoS, u1, PNLoS, u2, fc, l, k, clusters, nextX, nextY, nextH, alpha)
-
-        condition.append(g[n][l][k][l])
-    
-    # so, the probability for increasing next_a is 1/len(clusters[l])
-    deviceToCommunicate = np.argmax(condition)
-
-    # init to satisfy (5) of the paper
-    for i in range(len(s[1])): next_a.append(0)
-    next_a[deviceToCommunicate] += 1
+    # find the device to communicate with
+    (next_a, deviceToCommunicate) = findDeviceToCommunicate(clusters, n, l, nextX, nextY, nextH, b1, b2, S_, u1, u2, fc, alpha, g, s)
 
     # derive next R[n][k_l]
     # the average throughput of devices in l-th cluster

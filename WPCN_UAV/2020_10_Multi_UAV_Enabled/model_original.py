@@ -242,6 +242,10 @@ def getTimeDif(T, msg):
     
     return newT
 
+# to do:
+# make state transition algorithm (the best state)
+# -> find and use communication count 'a' during translation
+
 # ALGORITHM 1
 # 3D trajectory design and time resource allocation solution based on DQL
 # M                  : number of episodes
@@ -467,6 +471,8 @@ def algorithm1(M, T, L, devices, width, height,
                 except:
                     print('cannot find throughput (before) because there are no devices in cluster ' + str(i))
                     continue
+
+                #### HERE ####
                 
                 # get and move to next state (update q, a and R)
                 # s       : [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
