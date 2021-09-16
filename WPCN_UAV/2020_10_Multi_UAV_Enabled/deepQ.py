@@ -14,6 +14,21 @@ import matplotlib.pyplot as plt
 
 import time
 
+# read time check option for getMaxQ(), updateQvalue() and getNextState() in deepQ.py
+settingsFile = open('settings.txt', 'r')
+settings = settingsFile.readlines()
+settingsFile.close()
+
+for i in range(len(settings)):
+    argName = settings[i].split('=')[0]
+    argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
+
+    if argName == 'timeCheck':
+        if argValue == 'False' or argValue == 'FALSE' or argValue == 'false' or argValue == '0':
+            timeCheck = False
+        else:
+            timeCheck = True
+
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
 
@@ -101,6 +116,9 @@ def getActionIndex(action):
 # R           : list of R[n][k_l]    (a part of s)
 def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
+
+    if timeCheck == True:
+        print('[getMaxQ] [start] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -125,6 +143,9 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2,
     else: maxQ = 0
 
     # return
+    if timeCheck == True:
+        print('[getMaxQ] [ end ] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])
     else:
@@ -376,6 +397,9 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 #                FALSE for setting to 0
 def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, R, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
+
+    if timeCheck == True:
+        print('[updateQvalue] [start] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
     
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -418,6 +442,9 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
 
         # update current state s just before return
         s[2] = a[n]
+
+        if timeCheck == True:
+            print('[updateQvalue] [ end ] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
 
         return
 
@@ -559,6 +586,9 @@ def getNextLocation(s, action, n, UAVs, l, a, R):
 #                in the form of [dev0, dev1, ...] == [[X0, Y0], [X1, Y1], ...]
 def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
                  b1, b2, S_, u1, u2, fc, alpha):
+
+    if timeCheck == True:
+        print('[getNextState] [start] n=' + str(n) + ', l=' + str(l) + ', time=' + str(time.time()))
     
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, R)
@@ -617,6 +647,9 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
 
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
+    if timeCheck == True:
+        print('[getNextState] [ end ] n=' + str(n) + ', l=' + str(l) + ', time=' + str(time.time()))
+
     return ([[nextX, nextY, nextH], next_a, nextR], deviceToCommunicate)
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
