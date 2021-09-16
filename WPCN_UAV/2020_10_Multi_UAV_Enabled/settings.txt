@@ -20,4 +20,4 @@ T=30 # time (s)
 H=15 # hovering elevation (m)
 learningRate=0.0001 # learning rate of DQN
 printTimeDif=False # print time difference
-timeCheck=True # print time for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
+timeCheck=False # print time for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py

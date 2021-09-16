@@ -373,7 +373,7 @@ def algorithm1(M, T, L, devices, width, height,
 
         # use deep learning if length of Q table >= 100
         # load trained model for episode = 1, 2, ...
-        if len(Q) > 0 and M > 0:
+        if len(QTable) > 0 and episode > 0:
             useDL = True
             trainedModel = tf.keras.models.load_model('model')
             optimizer = tf.keras.optimizers.Adam(0.001)
@@ -606,7 +606,7 @@ def algorithm1(M, T, L, devices, width, height,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
 
         ### TRAIN and VALIDATION ###
-        if episode % 10 == 0:
+        if episode % 1 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode)
 
