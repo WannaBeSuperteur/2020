@@ -164,7 +164,7 @@ def kMeansClustering(L, deviceList, width, height, H, T, display, saveImg):
         UAVs.append(thisUAV)
 
     # return
-    return (UAVs, clusters)
+    return (UAVs, clusters, cluster_mem_now)
 
 if __name__ == '__main__':
 
@@ -187,7 +187,7 @@ if __name__ == '__main__':
         deviceList.append(device_i)
 
     # do K means clustering
-    (UAVs, clusters) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
+    (UAVs, clusters, clusterNOs) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
 
     # print result
     print(' << UAV location >>\n')

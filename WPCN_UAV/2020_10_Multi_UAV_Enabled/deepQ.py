@@ -118,7 +118,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True:
-        print('[getMaxQ] [start] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+        print('[getMaxQ     ] [start] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -144,7 +144,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2,
 
     # return
     if timeCheck == True:
-        print('[getMaxQ] [ end ] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+        print('[getMaxQ     ] [ end ] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
 
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])

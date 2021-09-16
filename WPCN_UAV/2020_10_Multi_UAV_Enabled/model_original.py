@@ -290,7 +290,13 @@ def algorithm1(M, T, L, devices, width, height,
 
     # cluster UAVs using K-means clustering
     # clusters (number of clusters = L, number of total devices = devices)
-    (UAVs, clusters) = algo.kMeansClustering(L, deviceList, width, height, H, T, False, True)
+    while True:
+        (UAVs, clusters, clusterNOs) = algo.kMeansClustering(L, deviceList, width, height, H, T, False, True)
+
+        # check if all cluster has at least 1 devices
+        # the value of len(list(set(clusterNOs))) is L+1 when all cluster has at least 1 devices
+        if len(list(set(clusterNOs))) - 1 == L:
+            break
 
     # no need to init target network and online network now
 
