@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 
 import time
 
-# read time check option for getMaxQ(), updateQvalue() and getNextState() in deepQ.py
+# read time check option for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
 settingsFile = open('settings.txt', 'r')
 settings = settingsFile.readlines()
 settingsFile.close()
@@ -118,7 +118,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True:
-        print('[getMaxQ     ] [start] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+        print('[getMaxQ     ] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -144,7 +144,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, R, actionSpace, clusters, B, PU, g, o2,
 
     # return
     if timeCheck == True:
-        print('[getMaxQ     ] [ end ] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+        print('[getMaxQ     ] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
 
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])
@@ -359,6 +359,9 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 
+    if timeCheck == True:
+        print('[deepQ_test  ] [start] time=' + str(time.time()) + ', k=' + str(k))
+
     # execution time = episodes * time(second) * 3 * cluster * (avg. number of devices per cluster)
     #                = episodes * time(second) * 3 * (number of devices)
 
@@ -370,6 +373,9 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
     testO = trainedModel.predict(stateArray)
 
     if verbose == True: print('test finished')
+
+    if timeCheck == True:
+        print('[deepQ_test  ] [ end ] time=' + str(time.time()) + ', k=' + str(k))
 
     # return output layer
     return testO
@@ -399,7 +405,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True:
-        print('[updateQvalue] [start] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+        print('[updateQvalue] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
     
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -444,7 +450,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         s[2] = a[n]
 
         if timeCheck == True:
-            print('[updateQvalue] [ end ] n=' + str(n) + ', l=' + str(l) + ', k=' + str(k) + ', time=' + str(time.time()))
+            print('[updateQvalue] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
 
         return
 
@@ -588,7 +594,7 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
                  b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True:
-        print('[getNextState] [start] n=' + str(n) + ', l=' + str(l) + ', time=' + str(time.time()))
+        print('[getNextState] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
     
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, R)
@@ -648,7 +654,7 @@ def getNextState(s, action, n, UAVs, l, a, R, clusters, B, PU, g, o2, L,
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
     if timeCheck == True:
-        print('[getNextState] [ end ] n=' + str(n) + ', l=' + str(l) + ', time=' + str(time.time()))
+        print('[getNextState] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
 
     return ([[nextX, nextY, nextH], next_a, nextR], deviceToCommunicate)
 
