@@ -355,6 +355,10 @@ def algorithm1(M, T, L, devices, width, height,
         a.append(temp_a)
         g.append(temp_g)
         PU.append(temp_PU)
+
+    # save states for each UAV
+    s_UAV = []
+    oldS_UAV = []
         
     # init Q Table
     # Q Table = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -480,10 +484,19 @@ def algorithm1(M, T, L, devices, width, height,
                 # action  : action ([-1, -1, -1] to [1, 1, 1])
 
                 # "Don't be confused between s = [q, a, R] and [state, action, newState]"
-                
-                s = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2) # current state                
-                oldS = copy.deepcopy(s) # save old state
 
+                # compute initial state when time=0
+                if t == 0:
+                    s = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
+
+                # load saved state when time>0
+                else:
+                    s = s_UAV[i]
+
+                # save current state before getting next state
+                oldS = copy.deepcopy(s)
+
+                # get next state
                 (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, clusters, B, PU, g, o2, L,
                                                  b1, b2, S_, u1, u2, fc, alpha)
                 
@@ -491,6 +504,12 @@ def algorithm1(M, T, L, devices, width, height,
                 a_next = copy.deepcopy(nextState[1])
                 R_next = copy.deepcopy(nextState[2][i])
                 s = [q_next, a_next, R_next] # update current state
+                
+                # save old state and next state(=current state)
+                if t == 0:
+                    s_UAV.append(s)
+                else:
+                    s_UAV[i] = s
 
                 # append to oldS_list and newS_list
                 oldS_list.append(oldS)

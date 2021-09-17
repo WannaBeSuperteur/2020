@@ -320,7 +320,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
     model = defineModel()
     epochs = 30
     
-    # Q : [state, action_reward, i (UAV/cluster index), k (device index)]
+    # Q : [state  , action_reward, i (UAV/cluster index), k (device index)]
+    #      Q[i][0]  Q[i][1]        Q[i][2]                Q[i][3]
     
     # Q Table           = [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
     # convert to input  = converted version of [[s0], [s1], ...]
