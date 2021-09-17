@@ -2,6 +2,7 @@ import sys
 import math
 import copy
 
+import helper
 import formula as f
 import random
 import numpy as np
@@ -15,19 +16,7 @@ import matplotlib.pyplot as plt
 import time
 
 # read time check option for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
-settingsFile = open('settings.txt', 'r')
-settings = settingsFile.readlines()
-settingsFile.close()
-
-for i in range(len(settings)):
-    argName = settings[i].split('=')[0]
-    argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
-
-    if argName == 'timeCheck':
-        if argValue == 'False' or argValue == 'FALSE' or argValue == 'false' or argValue == '0':
-            timeCheck = False
-        else:
-            timeCheck = True
+timeCheck = helper.loadSettings({'timeCheck':'logical'})['timeCheck']
 
 # find the maximum value of the number of devices
 def getMaxDeviceCount(clusters):
@@ -36,7 +25,9 @@ def getMaxDeviceCount(clusters):
 
     return maxDevices
 
-def fillWithConstant(state_array, times, const_to_fill):
+def fillWithConstant(state_array, times):
+    const_to_fill = helper.loadSettings({'constantToFill':'float'})['constantToFill']
+    
     for i in range(times):
         state_array[1].append(const_to_fill)
         state_array[2].append(const_to_fill)
@@ -245,16 +236,7 @@ def normalize(array, applyLog, title, printAnalysis):
 def defineModel():
 
     # load settings and find learning rate
-    settingsFile = open('settings.txt', 'r')
-    settings = settingsFile.readlines()
-    settingsFile.close()
-
-    for i in range(len(settings)):
-        argName = settings[i].split('=')[0]
-        argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
-
-        if argName == 'learningRate':
-            learningRate = float(argValue)
+    learningRate = helper.loadSettings({'learningRate':'float'})['learningRate']
 
     # L2 regularization
     L2 = tf.keras.regularizers.l2(0.001)
@@ -346,9 +328,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
     for i in range(len(Q)):
 
         # extend {a[n][l][k_l]} and {R[n][k_l]} that the number of items becomes maxDevices
-        const_to_fill = -1
         currentClusterDevices = len(Q[i][0][1])
-        fillWithConstant(Q[i][0], maxDevices - currentClusterDevices, const_to_fill)
+        fillWithConstant(Q[i][0], maxDevices - currentClusterDevices)
         
         # convert into 1d array (valid if not converted)
         try:
@@ -397,8 +378,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
     #                    where N is the number of devices in the cluster
     maxDevices = getMaxDeviceCount(clusters)
     currentClusterDevices = len(state[1])
-    const_to_fill = -1
-    fillWithConstant(state, maxDevices - currentClusterDevices, const_to_fill)
+    fillWithConstant(state, maxDevices - currentClusterDevices)
         
     stateArray = [stateTo1dArray(state)]
     stateArray = np.array(stateArray)

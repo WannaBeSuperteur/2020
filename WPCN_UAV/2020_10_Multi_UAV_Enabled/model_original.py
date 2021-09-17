@@ -1,5 +1,6 @@
 import sys
 
+import helper
 import formula as f
 import deepQ as dq
 import algorithms as algo
@@ -220,17 +221,8 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 def getTimeDif(T, msg):
 
     # load settings and finish if NOT print time difference
-    settingsFile = open('settings.txt', 'r')
-    settings = settingsFile.readlines()
-    settingsFile.close()
-
-    for i in range(len(settings)):
-        argName = settings[i].split('=')[0]
-        argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
-
-        if argName == 'printTimeDif':
-            if argValue == 'False' or argValue == 'FALSE' or argValue == 'false' or argValue == '0':
-                return
+    printTimeDif = helper.loadSettings({'printTimeDif':'logical'})['printTimeDif']
+    if printTimeDif == False: return
 
     # print time difference
     newT = time.time()
@@ -649,91 +641,39 @@ if __name__ == '__main__':
     warnings.simplefilter('ignore')
 
     # load settings
-    settingsFile = open('settings.txt', 'r')
-    settings = settingsFile.readlines()
-    settingsFile.close()
+    paperArgs = helper.loadSettings({'deviceName':'str',
+                                     'QTable_rate':'float',
+                                     'fc':'float', 'B':'float', 'o2':'float',
+                                     'b1':'float', 'b2':'float',
+                                     'alpha':'float',
+                                     'u1':'float', 'u2':'float',
+                                     'S_':'float',
+                                     'alphaL':'float',
+                                     'r_':'float',
+                                     'width':'float', 'height':'float',
+                                     'M':'int', 'L':'int', 'devices':'int', 'T':'int',
+                                     'H':'float'})
 
-    for i in range(len(settings)):
-        argName = settings[i].split('=')[0]
-        argValue = settings[i].split('\n')[0].split(' ')[0].split('=')[1]
-
-        if argName == 'deviceName':
-            deviceName = argValue
-            
-        elif argName == 'QTable_rate':
-            QTable_rate = float(argValue)
-
-        # carrier frequency
-        elif argName == 'fc':
-            fc = float(argValue)
-
-        # bandwidth
-        elif argName == 'B':
-            B = float(argValue)
-
-        # Noise power spectral
-        elif argName == 'o2':
-            o2 = float(argValue)
-
-        # environmental parameter
-        elif argName == 'b1':
-            b1 = float(argValue)
-
-        # environmental parameter
-        elif argName == 'b2':
-            b2 = float(argValue)
-
-        # path loss exponent
-        elif argName == 'alpha':
-            alpha = float(argValue)
-
-        # additional path loss for LoS
-        elif argName == 'u1':
-            u1 = float(argValue)
-
-        # additional path loss for NLoS
-        elif argName == 'u2':
-            u2 = float(argValue)
-
-        # (temp) constant value determined by both the antenna and the environment
-        elif argName == 'S_':
-            S_ = float(argValue)
-
-        # learning rate for DQN
-        elif argName == 'alphaL':
-            alphaL = float(argValue)
-
-        # discount factor
-        elif argName == 'r_':
-            r_ = float(argValue)
-
-        # width (m)
-        elif argName == 'width':
-            width = float(argValue)
-
-        # height (m)
-        elif argName == 'height':
-            height = float(argValue)
-
-        # episodes (originally 1000)
-        elif argName == 'M':
-            M = int(argValue)
-
-        # number of clusters = number of UAVs
-        elif argName == 'L':
-            L = int(argValue)
-
-        # number of devices
-        elif argName == 'devices':
-            devices = int(argValue)
-
-        # time (s, discrete)
-        elif argName == 'T':
-            T = int(argValue)
-
-        # hovering elevation (m)
-        elif argName == 'H':
-            H = float(argValue)
+    deviceName = paperArgs['deviceName']
+    QTable_rate = paperArgs['QTable_rate']
+    fc = paperArgs['fc']
+    B = paperArgs['B']
+    o2 = paperArgs['o2']
+    b1 = paperArgs['b1']
+    b2 = paperArgs['b2']
+    alpha = paperArgs['alpha']
+    u1 = paperArgs['u1']
+    u2 = paperArgs['u2']
+    S_ = paperArgs['S_']
+    alphaL = paperArgs['alphaL']
+    r_ = paperArgs['r_']
+    width = paperArgs['width']
+    height = paperArgs['height']
+    M = paperArgs['M']
+    L = paperArgs['L']
+    devices = paperArgs['devices']
+    T = paperArgs['T']
+    H = paperArgs['H']
 
     # run for 20 iterations
     iters = 20
