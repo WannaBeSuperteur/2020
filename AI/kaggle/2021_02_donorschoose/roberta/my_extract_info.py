@@ -261,7 +261,7 @@ if __name__ == '__main__':
     train_input = pd.DataFrame(np.array(train_input))
     train_output = pd.DataFrame(np.array(train_output))
     train_input.to_csv('train_input_info.csv')
-    train_output.to_csv('train_output_info.csv')
+    train_output.to_csv('train_output.csv')
 
     # TEST
     
