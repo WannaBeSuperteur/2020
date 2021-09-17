@@ -489,7 +489,7 @@ def algorithm1(M, T, L, devices, width, height,
                 
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
-                R_next = copy.deepcopy(nextState[2])
+                R_next = copy.deepcopy(nextState[2][i])
                 s = [q_next, a_next, R_next] # update current state
 
                 # append to oldS_list and newS_list
