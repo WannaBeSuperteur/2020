@@ -209,7 +209,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl')
 
         if updatingQtable == True:
-            dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, k, useDL, clusters, B, PU, g, o2, L,
+            dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, useDL, clusters, B, PU, g, o2, L,
                             trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
 
             currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue')
@@ -595,27 +595,26 @@ def algorithm1(M, T, L, devices, width, height,
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
                     g[t][i][k][i] = g_i
 
-                    currentTime = getTimeDif(currentTime, '4-' + str(k) + ' before getMaxQ')
+                currentTime = getTimeDif(currentTime, '4 before getMaxQ')
 
-                    (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, k, a, actionSpace, clusters, B, PU, g, o2, L,
+                (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
                                            useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
                     
-                    currentTime = getTimeDif(currentTime, '4-' + str(k) + ' after getMaxQ')
+                currentTime = getTimeDif(currentTime, '4 after getMaxQ')
                     
-                    maxQs.append(maxQ)
-                    rewards.append(alphaL * (directReward_list[i] + r_ * maxQs[k]))
+                reward = alphaL * (directReward_list[i] + r_ * maxQ)
 
-                    # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
-                    # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
-                    # and   Q = reward
-                    # from oldS_list, action_list and reward
-                    action_rewards = copy.deepcopy(zero_27)
-                    action_rewards[dq.getActionIndex(action_list[i])] = rewards[k]
+                # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
+                # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+                # and   Q = reward
+                # from oldS_list, action_list and reward
+                action_rewards = copy.deepcopy(zero_27)
+                action_rewards[dq.getActionIndex(action_list[i])] = reward
                     
-                    QTable.append([oldS_list[i], action_rewards, i, k])
+                QTable.append([oldS_list[i], action_rewards, i])
 
-                    # append to replay buffer
-                    replayBuffer.append([oldS_list[i], action_list[i], rewards[k], newS_list[i]])
+                # append to replay buffer
+                replayBuffer.append([oldS_list[i], action_list[i], reward, newS_list[i]])
             
             # Randomly select a minibatch of H_ samples from replay buffer
             H_ = min(30, len(replayBuffer)) # select maximum 30 samples

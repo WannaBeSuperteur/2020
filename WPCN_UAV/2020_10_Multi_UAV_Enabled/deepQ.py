@@ -126,11 +126,11 @@ def getActionIndex(action):
 # l           : UAV index
 # a           : list of a[n][l][k_l] (a part of s)
 # R           : list of R[n][k_l]    (a part of s)
-def getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, o2, L,
+def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True:
-        print('[getMaxQ     ] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
+        print('[getMaxQ     ] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -139,7 +139,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, o2, L,
         
         # try testing
         try:
-            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, k, False, trainedModel, optimizer)
+            rewardsOfActionsOfNextState = deepLearningQ_test(nextState, False, trainedModel, optimizer)
             
         except Exception as e:
             useDL = False
@@ -156,7 +156,7 @@ def getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, o2, L,
 
     # return
     if timeCheck == True:
-        print('[getMaxQ     ] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
+        print('[getMaxQ     ] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
 
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])
@@ -167,21 +167,16 @@ def getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, o2, L,
 # q[n][l] : the location of UAV l = (x[n][l], y[n][l], h[n][l])
 
 # example of state :
-# [[30.710634485123297, 45.731144554946184, 15],              ... q[n][l]
-#  [1, 1, 1, 1, 1, 0, 2],                                     ... a[n][l][k_l]
-#  [[0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0], [0, 0, 0, 0],     ... {R[n][k_l]}
-#   [0, 0, 0, 0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-#   [0, 0, 0, 0, 0], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]]
-def stateTo1dArray(state, k):
+# [[30.710634485123297, 45.731144554946184, 15], ... q[n][l]
+#  [1, 1, 1, 1, 1, 0, 2],                        ... {a[n][l]}
+#  [0, 0, 0, 0, 0, 0, 0]]                        ... {R[n][l]}
+def stateTo1dArray(state):
 
     q = state[0]
-    a = state[1][k]
-
-    R = []
-    for i in range(len(state[2])):
-        R += state[2][i]
+    a = state[1]
+    R = state[2]
     
-    return q + [a] + R # because q[n][l], a[n][l], and R[n][l] are all 1d arraies
+    return q + a + R # because q[n][l], {a[n][l]}, and {R[n][l]} are all 1d arraies
 
 # normalize by each column
 def normalize(array, applyLog, title, printAnalysis):
@@ -344,7 +339,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
         
         # convert into 1d array (valid if not converted)
         try:
-            inputData.append(stateTo1dArray(Q[i][0], Q[i][3]))
+            inputData.append(stateTo1dArray(Q[i][0]))
 
         # executed if already converted to 1d array
         except:
@@ -379,16 +374,16 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
 
 # deep Learning using Q table (test function -> return reward values for each action)
-def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
+def deepLearningQ_test(state, verbose, trainedModel, optimizer):
 
     if timeCheck == True:
-        print('[deepQ_test  ] [start] time=' + str(time.time()) + ', k=' + str(k))
+        print('[deepQ_test  ] [start] time=' + str(time.time()))
 
     # execution time = episodes * time(second) * 3 * cluster * (avg. number of devices per cluster)
     #                = episodes * time(second) * 3 * (number of devices)
 
     # convert state into 1d array
-    stateArray = np.array([stateTo1dArray(state, k)])
+    stateArray = np.array([stateTo1dArray(state)])
     
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
@@ -397,7 +392,7 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
     if verbose == True: print('test finished')
 
     if timeCheck == True:
-        print('[deepQ_test  ] [ end ] time=' + str(time.time()) + ', k=' + str(k))
+        print('[deepQ_test  ] [ end ] time=' + str(time.time()))
 
     # return output layer
     return testO
@@ -423,11 +418,11 @@ def deepLearningQ_test(state, k, verbose, trainedModel, optimizer):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, k, useDL, clusters, B, PU, g, o2, L,
+def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True:
-        print('[updateQvalue] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
+        print('[updateQvalue] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
     
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -435,7 +430,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
                                                     b1, b2, S_, u1, u2, fc, alpha)
 
     if useDL == True:
-        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, o2, L,
+        (maxQ, Qvalues) = getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
                                   True, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
         
         # if error for deep Q learning test
@@ -445,7 +440,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
             pass
 
     else:
-        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, o2, L,
+        (maxQ, _) = getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
                             False, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
 
     # update {a[n][l][k_l]} (array of communication times)
@@ -464,14 +459,14 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
             else:
                 qs.append(Qvalues[i])
 
-        Q.append([[s], qs, l, k])
-        QTable.append([stateTo1dArray(s, k), qs, l, k])
+        Q.append([[s], qs, l])
+        QTable.append([stateTo1dArray(s), qs, l])
 
         # update current state s just before return
         s[2] = a[n]
 
         if timeCheck == True:
-            print('[updateQvalue] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l) + ', k=' + str(k))
+            print('[updateQvalue] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
 
         return
 
@@ -490,10 +485,9 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
     # print(str(qs) + ' False ' + str(len(Q)))
 
     # append the state-action-reward [[s], qs] to Q table
-    # Q : [state, action_reward, l (UAV/cluster index), k (device index)]
-    Q.append([[s], qs, l, k])
-    QTable.append([stateTo1dArray(s, k), qs, l, k])
-    print(n, l, k, len(QTable))
+    # Q : [state, action_reward, l (UAV/cluster index)]
+    Q.append([[s], qs, l])
+    QTable.append([stateTo1dArray(s), qs, l])
 
     # update current state s
     s[2] = a[n]
@@ -692,10 +686,10 @@ def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
 
 # target Q value yt = r + r_*max(a')Q(s', a', w) = r + r_*max(a')Q(s', a')
 # useDL : whether to use deep learning
-def yt(r, r_, s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, l_, o2, L,
+def yt(r, r_, s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, l_, o2, L,
        useDL, trainedModel, optimizer):
     
-    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, k, a, actionSpace, clusters, B, PU, g, l_, o2, L,
+    (maxQ, _) = getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, l_, o2, L,
                         useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
     return r + r_ * maxQ
     
