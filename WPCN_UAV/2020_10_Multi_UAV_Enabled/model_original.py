@@ -302,6 +302,9 @@ def algorithm1(M, T, L, devices, width, height,
         if len(list(set(clusterNOs))) - 1 == L:
             break
 
+    deviceCount = [len(cluster) for cluster in clusters]
+    maxDevices = max(deviceCount)
+
     # no need to init target network and online network now
 
     # create action space
@@ -626,11 +629,11 @@ def algorithm1(M, T, L, devices, width, height,
         ### TRAIN and VALIDATION ###
         if episode % 1 == 0:
             QTable_use = len(QTable) * QTable_rate
-            dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode)
+            dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode, maxDevices)
 
     ### TRAIN and VALIDATION (FINAL) ###
     QTable_use = len(QTable) * QTable_rate
-    dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, M)
+    dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, M, maxDevices)
 
     ### TEST ###
     # later

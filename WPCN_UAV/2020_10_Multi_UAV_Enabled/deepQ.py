@@ -314,8 +314,9 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
         hist_entire.to_csv('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '.csv')
 
 # deep Learning using Q table (training function)
-# printed : print the detail?
-def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode):
+# printed    : print the detail?
+# maxDevices : the maximum number of devices in the cluster
+def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode, maxDevices):
 
     model = defineModel()
     epochs = 30
@@ -332,6 +333,14 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode)
     # input array (need to convert original array [s0])
     inputData = []
     for i in range(len(Q)):
+
+        # extend {a[n][l][k_l]} and {R[n][k_l]} that the number of items becomes maxDevices
+        const_to_fill = -1
+        currentClusterDevices = len(Q[i][0][1])
+        
+        for j in range(maxDevices - currentClusterDevices):
+            Q[i][0][1].append(const_to_fill)
+            Q[i][0][2].append(const_to_fill)
         
         # convert into 1d array (valid if not converted)
         try:
