@@ -118,12 +118,12 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(5, 4)  # catboost classifier
-    model1 = getCatBoostModel(10, 4) # catboost classifier
-    model2 = getCatBoostModel(20, 4) # catboost classifier
-    model3 = getCatBoostModel(5, 6)  # catboost classifier
-    model4 = getCatBoostModel(10, 6) # catboost classifier
-    model5 = getCatBoostModel(20, 6) # catboost classifier
+    model0 = getCatBoostModel(500, 4)  # catboost classifier
+    model1 = getCatBoostModel(1000, 4) # catboost classifier
+    model2 = getCatBoostModel(2000, 4) # catboost classifier
+    model3 = getCatBoostModel(500, 6)  # catboost classifier
+    model4 = getCatBoostModel(1000, 6) # catboost classifier
+    model5 = getCatBoostModel(2000, 6) # catboost classifier
     #model3 = getLGBMModel(0.12)     # lightGBM classifier
     #model4 = getLGBMModel(0.24)     # lightGBM classifier
     #model5 = getLGBMModel(0.36)     # lightGBM classifier
@@ -255,6 +255,10 @@ if __name__ == '__main__':
     wcr = 1/240 # weight change rate
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3, 'Class_5':4, 'Class_6':5, 'Class_7':6, 'Class_8':7, 'Class_9':8}
 
+    # initial weights for each model : [CatBoost0, CatBoost1, CatBoost2, CatBoost3, CatBoost4, CatBoost5]
+    w = []
+    for i in range(models): w.append(1/models)
+
     # get merged predictions first
     try:
         merged_predictions = getMergedPredictions(len(w))
@@ -263,10 +267,6 @@ if __name__ == '__main__':
                                  normalize=False, log2=True, final=False, fileID=0)
 
     print(merged_predictions)
-
-    # initial weights for each model : [CatBoost0, CatBoost1, CatBoost2, LGBM0, LGBM1, LGBM2, LDA]
-    w = []
-    for i in range(models): w.append(1/models)
 
     # log
     log = ''
@@ -283,7 +283,7 @@ if __name__ == '__main__':
                 if j == k:
                     w_neighbor.append(min(w[k] + (models-1)*wcr, 1.0))
                 else:
-                    w_neighbor.append(max(w[0] - wcr, 0.0))
+                    w_neighbor.append(max(w[k] - wcr, 0.0))
             w_neighbors.append(w_neighbor)
 
         error_neighbors = []
@@ -330,6 +330,7 @@ if __name__ == '__main__':
     f.close()
 
     # final prediction
+    print(' ==== FINAL PREDICTION ====')
     final_predictions = run(train_df, test_df, dic,
                             normalize=False, log2=True, final=True, fileID=0)
 
