@@ -1,0 +1,11 @@
+my_extract.py
+-> main.py (training/test)
+-> visualize.py
+-> XAI.py
+-> mergetxts.py (optional)
+
+other XAI algorithms:
+SHAP: algo_0_shap.py
+LIME: algo_1_lime.py
+Grad-CAM: algo_2_gradcam2.py
+XCNN: algo_3_XCNN.py
