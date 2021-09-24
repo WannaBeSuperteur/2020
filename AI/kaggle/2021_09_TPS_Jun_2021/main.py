@@ -118,12 +118,12 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(500, 4)  # catboost classifier
-    model1 = getCatBoostModel(1000, 4) # catboost classifier
-    model2 = getCatBoostModel(2000, 4) # catboost classifier
-    model3 = getCatBoostModel(500, 6)  # catboost classifier
-    model4 = getCatBoostModel(1000, 6) # catboost classifier
-    model5 = getCatBoostModel(2000, 6) # catboost classifier
+    model0 = getCatBoostModel(5, 4)  # catboost classifier
+    model1 = getCatBoostModel(10, 4) # catboost classifier
+    model2 = getCatBoostModel(20, 4) # catboost classifier
+    model3 = getCatBoostModel(5, 6)  # catboost classifier
+    model4 = getCatBoostModel(10, 6) # catboost classifier
+    model5 = getCatBoostModel(20, 6) # catboost classifier
     #model3 = getLGBMModel(0.12)     # lightGBM classifier
     #model4 = getLGBMModel(0.24)     # lightGBM classifier
     #model5 = getLGBMModel(0.36)     # lightGBM classifier
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
         # move to the neighbor with minimum loss
         # stop if no neighbor with loss less than 'error'
-        moveTo = error_neighbors.argmin()
+        moveTo = np.array(error_neighbors).argmin()
 
         if error_neighbors[moveTo] < error:
             for i in range(len(w)):
