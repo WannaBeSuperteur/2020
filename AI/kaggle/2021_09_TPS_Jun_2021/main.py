@@ -43,21 +43,23 @@ def getCatBoostModel(iterations, depth):
 def getLGBMModel(learning_rate):
 
     # LGBM classifier
-    # ref: https://www.kaggle.com/bextuychiev/lgbm-optuna-hyperparameter-tuning-w-understanding
+    # ref: https://www.kaggle.com/gomes555/tps-jun2021-lightgbm-optuna
     params = {
-        'n_estimators': 10000,
-        'learning_rate': learning_rate, # 0.2423
-        'num_leaves': 2260,
-        'max_depth': 9,
-        'min_data_in_leaf': 8600,
-        'lambda_l1': 70,
-        'lambda_l2': 35,
-        'min_gain_to_split': 0.11775,
-        'bagging_fraction': 0.6,
-        'bagging_freq': 1,
-        'feature_fraction': 0.6,
-        'random_state': 2021,
-        'verbose': 10
+        'n_estimators': 100000,
+        'learning_rate': learning_rate,
+        'metric': 'multi_logloss',
+        'max_depth': 6,
+        'num_leaves': 49,
+        'min_split_gain': 0.8,
+        'reg_alpha': 3.17,
+        'reg_lambda': 0.025,
+        'colsample_bytree': 0.35,
+        'subsample': 0.21,
+        'subsample_freq': 3,
+        'min_child_samples': 100,
+        'cat_smooth': 40,
+        'cat_l2': 12,
+        'verbose': 1
     }
     model = LGBMClassifier(**params)
 
@@ -66,7 +68,9 @@ def getLGBMModel(learning_rate):
 # predict and save the prediction
 def predict(model, train_X, train_Y, test_X, predictionFileName):
     print(' ==== predict using model : ' + str(model) + ' ====')
-                            
+
+    print('input  shape : ' + str(np.shape(train_X)))
+    print('output shape : ' + str(np.shape(train_Y)))
     model.fit(train_X, train_Y)
     
     prediction = model.predict_proba(test_X)
@@ -118,18 +122,23 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(2000, 4) # catboost classifier
-    model1 = getCatBoostModel(3000, 4) # catboost classifier
-    model2 = getCatBoostModel(4000, 4) # catboost classifier
-    model3 = getCatBoostModel(2000, 6) # catboost classifier
-    model4 = getCatBoostModel(3000, 6) # catboost classifier
-    model5 = getCatBoostModel(4000, 6) # catboost classifier
-    #model3 = getLGBMModel(0.12)     # lightGBM classifier
-    #model4 = getLGBMModel(0.24)     # lightGBM classifier
-    #model5 = getLGBMModel(0.36)     # lightGBM classifier
+    model0 = getCatBoostModel(2000, 7) # catboost classifier
+    model1 = getCatBoostModel(3000, 7) # catboost classifier
+    model2 = getCatBoostModel(4000, 7) # catboost classifier
+    model3 = getCatBoostModel(2000, 8) # catboost classifier
+    model4 = getCatBoostModel(3000, 8) # catboost classifier
+    model5 = getCatBoostModel(4000, 8) # catboost classifier
+    #model0 = getLGBMModel(0.005)      # lightGBM classifier
+    #model1 = getLGBMModel(0.01)       # lightGBM classifier
+    #model2 = getLGBMModel(0.015)      # lightGBM classifier
+    #model3 = getLGBMModel(0.02)       # lightGBM classifier
+    #model4 = getLGBMModel(0.025)      # lightGBM classifier
+    #model5 = getLGBMModel(0.03)       # lightGBM classifier
 
     # array of models
     modelNames = ['catboost0', 'catboost1', 'catboost2', 'catboost3', 'catboost4', 'catboost5']
+    #modelNames = ['lightgbm0', 'lightgbm1', 'lightgbm2', 'lightgbm3', 'lightgbm4', 'lightgbm5']
+    
     models = [model0, model1, model2, model3, model4, model5]
     predictions = []
 
@@ -264,7 +273,7 @@ if __name__ == '__main__':
         merged_predictions = getMergedPredictions(len(w))
     except:
         merged_predictions = run(train_df, test_df, dic,
-                                 normalize=False, log2=True, final=False, fileID=0)
+                                 normalize=True, log2=True, final=False, fileID=0)
 
     print(merged_predictions)
 
@@ -332,7 +341,7 @@ if __name__ == '__main__':
     # final prediction
     print(' ==== FINAL PREDICTION ====')
     final_predictions = run(train_df, test_df, dic,
-                            normalize=False, log2=True, final=True, fileID=0)
+                            normalize=True, log2=True, final=True, fileID=0)
 
     for i in range(len(w)):
         if i == 0:
