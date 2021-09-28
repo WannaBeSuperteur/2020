@@ -126,8 +126,8 @@ def mergeImgs(index, name0, name1, newName, marginLeft):
 
     # remove left white margin for each image
     # shape of image: (480, 640, 4)
-    image0 = image0.crop((marginLeft[0], 0, 580, 480))
-    image1 = image1.crop((marginLeft[1], 0, 580, 480))
+    image0 = image0.crop((marginLeft[0], 0, 620, 480))
+    image1 = image1.crop((marginLeft[1], 0, 620, 480))
 
     # save merged image
     newImage = Image.new('RGB', (image0.size[0] + image1.size[0], image0.size[1]))
@@ -258,7 +258,7 @@ def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
 
         # merge images
         mergeImgs(i, 'last_hidden', 'difs_last_hidden', 'last_hidden', [140, 390])
-        mergeImgs(i, 'output', 'argmax_output', 'output', [350, 350])
+        mergeImgs(i, 'output', 'argmax_output', 'output', [160, 160])
 
         # remove 'difs_last_hidden' and 'argmax_output' file
         os.remove(str(i).zfill(6) + '_difs_last_hidden.png')
