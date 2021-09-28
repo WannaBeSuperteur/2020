@@ -118,12 +118,12 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(500, 4)  # catboost classifier
-    model1 = getCatBoostModel(1000, 4) # catboost classifier
-    model2 = getCatBoostModel(2000, 4) # catboost classifier
-    model3 = getCatBoostModel(500, 6)  # catboost classifier
-    model4 = getCatBoostModel(1000, 6) # catboost classifier
-    model5 = getCatBoostModel(2000, 6) # catboost classifier
+    model0 = getCatBoostModel(2000, 4) # catboost classifier
+    model1 = getCatBoostModel(3000, 4) # catboost classifier
+    model2 = getCatBoostModel(4000, 4) # catboost classifier
+    model3 = getCatBoostModel(2000, 6) # catboost classifier
+    model4 = getCatBoostModel(3000, 6) # catboost classifier
+    model5 = getCatBoostModel(4000, 6) # catboost classifier
     #model3 = getLGBMModel(0.12)     # lightGBM classifier
     #model4 = getLGBMModel(0.24)     # lightGBM classifier
     #model5 = getLGBMModel(0.36)     # lightGBM classifier
@@ -164,7 +164,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
     train_rows = 200000
     numClass = 9
     numModel = 6
-    k = 10 # for k-fold
+    k = 5 # for k-fold
     
     # extract training and test data
     train_X = train_df.loc[:, 'feature_0':'feature_74']
