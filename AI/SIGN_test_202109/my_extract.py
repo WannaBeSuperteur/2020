@@ -12,6 +12,9 @@ def extractImages():
         os.mkdir('images')
     except:
         pass
+
+    train_count = 0
+    test_count = 0
     
     # extract images
     for r, _, f in os.walk('signImage'):
@@ -41,9 +44,11 @@ def extractImages():
 
             # mark as training or test data
             if file[len(file)-5] == '0' or file[len(file)-5] == '5':
-                label += '_test'
+                fileName = 'test_' + ('%05d' % test_count) + '_' + label + '.jpg'
+                test_count += 1
             else:
-                label += '_train'
+                fileName = 'train_' + ('%05d' % train_count) + '_' + label + '.jpg'
+                train_count += 1
             
             imgFile = os.path.join(r, file)
 
@@ -55,8 +60,9 @@ def extractImages():
             with Image.open(pat) as im:
                 if im.size!=(64, 64):
                     im=im.resize((64, 64), Image.LANCZOS)
-                im.save('images/' + label + ') ' + file.replace(".png",".jpg"))
 
+                im.save('images/' + fileName)
+                
 # OFEC: output for each class
 #       in the form of [class0output, class1output, ..., class42output]
 def makeCsv():
@@ -85,7 +91,7 @@ def makeCsv():
     for file in files:
 
         # for count
-        if count % 25 == 0: print(count, len(files))
+        if count % 70 == 0: print(str(count) + ' / ' + str(len(files)) + ', filename=' + str(file))
         count += 1
 
         # open each image file
@@ -94,10 +100,8 @@ def makeCsv():
 
         # add label
         # 00_train, 01_train, ..., 42_train, 00_test, 01_test, ..., 42_test
-        file_label = file.split(')')[0]
-        
-        label_num = int(file_label[:2])
-        if 'test' in file_label: label_num += 100
+        label_num = int(file.split('.')[0].split('_')[2])
+        if 'test' in file: label_num += 100
 
         thisRow = [label_num % 100] # 0, 1, ..., 42
         labelList.append([label_num]) # 0, 1, ..., 42 for train, 100, 101, ..., 142 for test
