@@ -6,7 +6,7 @@ from PIL import Image
 # imgArray : contains image array with value 0.0 (black) ~ 1.0 (white)
 # saveName : name of the image file
 # show     : whether to show the image
-def visualizeFromImgArray(imgArray, imgLabels, imgIndex, show):
+def visualizeFromImgArray(imgArray, imgLabels, imgIndex, show, optionalSaveName):
 
     width = 64
     height = 64
@@ -37,7 +37,11 @@ def visualizeFromImgArray(imgArray, imgLabels, imgIndex, show):
     if show == True: convertedImg.show()
 
     # save image
-    saveName = 'signTest_' + str(imgIndex) + '_' + str(imgLabels[imgIndex][0]) + '.png'
+    if optionalSaveName == None:
+        saveName = 'signTest_' + str(imgIndex) + '_' + str(imgLabels[imgIndex][0]) + '.png'
+    else:
+        saveName = optionalSaveName + '.png'
+        
     convertedImg.save(saveName)
     
 if __name__ == '__main__':
@@ -48,4 +52,4 @@ if __name__ == '__main__':
     imgs = len(imgArray)
 
     for i in range(imgs // 50):
-        visualizeFromImgArray(imgArray, imgLabels, i*50, False)
+        visualizeFromImgArray(imgArray, imgLabels, i*50, False, None)
