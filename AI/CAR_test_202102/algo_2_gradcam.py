@@ -8,14 +8,11 @@ from tensorflow.python.framework import ops
 import keras.backend as K
 import tensorflow as tf
 import numpy as np
-import visualize as v
 import keras
 import sys
 import cv2
-
-sys.path.insert(0, '../../AI_BASE')
-import deepLearning_GPU_helper as helper
-import deepLearning_GPU as DGPU
+import algo_readImgs as readImgs
+import math
 
 # https://github.com/jacobgil/keras-grad-cam/issues/17
 def _compute_gradients(tensor, var_list):
@@ -144,6 +141,74 @@ def gray_to_rgb(img):
 
     return newImg
 
+# modified model with Input Shape = (None, 64, 64, 1)
+#Layer (type)                 Output Shape              Param #
+#=================================================================
+#conv2d (Conv2D)              (None, 62, 62, 64)        640
+#_________________________________________________________________
+#max_pooling2d (MaxPooling2D) (None, 31, 31, 64)        0
+#_________________________________________________________________
+#conv2d_1 (Conv2D)            (None, 29, 29, 64)        36928
+#_________________________________________________________________
+#max_pooling2d_1 (MaxPooling2 (None, 14, 14, 64)        0
+#_________________________________________________________________
+#conv2d_2 (Conv2D)            (None, 12, 12, 64)        36928
+#_________________________________________________________________
+#max_pooling2d_2 (MaxPooling2 (None, 6, 6, 64)          0
+#_________________________________________________________________
+#conv2d_3 (Conv2D)            (None, 4, 4, 64)          36928
+#_________________________________________________________________
+#flatten_1 (Flatten)          (None, 1024)              0
+#_________________________________________________________________
+#dense (Dense)                (None, 40)                41000
+#_________________________________________________________________
+#dropout (Dropout)            (None, 40)                0
+#_________________________________________________________________
+#dense_1 (Dense)              (None, 40)                1640
+#_________________________________________________________________
+#dropout_1 (Dropout)          (None, 40)                0
+#_________________________________________________________________
+#dense_2 (Dense)              (None, 40)                1640
+#_________________________________________________________________
+#dense_3 (Dense)              (None, 2)                 82
+#=================================================================
+def modified_model():
+    inputs = tf.keras.Input(shape=(64, 64, 1))
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu')(inputs)
+    x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu')(x)
+    x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu')(x)
+    x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu')(x)
+    x = tf.keras.layers.Flatten()(x)
+    x = tf.keras.layers.Dense(40, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.25)(x)
+    x = tf.keras.layers.Dense(40, activation='relu')(x)
+    x = tf.keras.layers.Dropout(0.25)(x)
+    x = tf.keras.layers.Dense(40, activation='relu', name='last_hidden_layer')(x)
+    outputs = tf.keras.layers.Dense(2, activation='sigmoid', name='output_layer')(x)
+
+    return tf.keras.Model(inputs, outputs)
+
+# inverse of sigmoid
+# y = 1/(1+e^(-x))
+# x = 1/(1+e^(-y))
+# 1/x = 1+e^(-y)
+# 1/x - 1 = e^(-y)
+# ln(1/x - 1) = -y
+# ln((1-x)/x) = -y
+# ln(x/(1-x)) = y -> y = ln(x/(1-x))
+def invSigmoid(x):
+    try:
+        preResult = x / (1 - x)
+        result = math.log(preResult)
+        return result
+    except: # catch runtime warnings and math domain errors
+        print('value of x is ' + str(x))
+        if x < 0.5: return -15
+        else: return 15
+
 # main function
 def run_gradcam(start, end):
 
@@ -159,7 +224,7 @@ def run_gradcam(start, end):
     tf.compat.v1.disable_eager_execution()
 
     # load images
-    imgs = v.readImages(False, start, end)
+    imgs = readImgs.readImgs(start, end)
     print('leng of imgs = ' + str(len(imgs)))
     imgSize = 64
 
@@ -169,29 +234,34 @@ def run_gradcam(start, end):
     print('shape of imgs = ' + str(np.shape(imgs)))
 
     # load pre-trained model
-    trainI = [[0]*4096]
-    trainO = [[0]*2]
+    model = tf.keras.models.load_model('carTest_model')
 
-    f = open('car_model_config.txt', 'r')
-    modelInfo = f.readlines()
-    f.close()
+    # modify model
+    newModel = modified_model()
+    newModel.summary()
+
+    # load weights
+    temp_weights = [layer.get_weights() for layer in model.layers]
     
-    NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
-    op = helper.getOptimizer(modelInfo) # optimizer
-    loss = helper.getLoss(modelInfo) # loss
-    
-    model = DGPU.deepLearningModel('model', op, loss, True)
-    model.load_weights('model.h5')
+    for i in range(len(newModel.layers)-1):
+        newModel.layers[i+1].set_weights(temp_weights[i+2])
+
+    newModel.build((None, imgSize, imgSize, 1))
+    newModel.summary()
 
     # predict using the model
-    predictions = model.predict(imgs)
+    imgs_ = imgs.reshape((len(imgs), imgSize, imgSize, 1))
+    predictions = newModel.predict(imgs_)
 
     print('shape of predictions = ' + str(np.shape(predictions)))
 
+    print('predictions:')
+    print(np.array(predictions))
+
     for i in range(len(predictions)):
         print('image ' + str(start + i) + ' -> ' +
-              str(round(helper.invSigmoid(predictions[i][0]) * 100, 4)) + '% / ' +
-              str(round(helper.invSigmoid(predictions[i][1]) * 100, 4)) + '%')
+              str(round(invSigmoid(predictions[i][0]) * 100, 4)) + '% / ' +
+              str(round(invSigmoid(predictions[i][1]) * 100, 4)) + '%')
 
     # explanation of image
     for i in range(len(predictions)):
@@ -199,13 +269,13 @@ def run_gradcam(start, end):
         
         predicted_class = np.argmax(predictions[i])
 
-        layerNos = [2, 4, 6, 8]
+        layerNos = [1, 3, 5, 7]
         layerNames = ["conv2d", "conv2d_1", "conv2d_2", "conv2d_3"]
 
         reshaped_img = imgs[i].reshape((1, imgSize, imgSize, 1))
         
         for j in range(4):
-            cam, heatmap = grad_cam(model, reshaped_img, predicted_class, layerNos[j], layerNames[j])
+            cam, heatmap = grad_cam(newModel, reshaped_img, predicted_class, layerNos[j], layerNames[j])
 
             if gradcam_write == True:
                 cv2.imwrite("gradcam_" + str(start + i) + "_" + layerNames[j] + "_cam.jpg", cam)
@@ -224,5 +294,6 @@ def run_gradcam(start, end):
         cv2.imwrite("guided_gradcam_" + str(start + i) + ".jpg", deprocess_image(gradcam, multiple))
 
 if __name__ == '__main__':
-    run_gradcam(350, 355)
-    run_gradcam(850, 855)
+    run_gradcam(100, 105)
+    run_gradcam(400, 405)
+    run_gradcam(800, 805)

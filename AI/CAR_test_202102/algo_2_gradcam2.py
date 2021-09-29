@@ -9,12 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.cm as cm
 import tensorflow as tf
-import visualize as v
-
-import sys
-sys.path.insert(0, '../../AI_BASE')
-import deepLearning_GPU_helper as helper
-import deepLearning_GPU as DGPU
+import algo_readImgs as readImgs
 
 def gray_to_rgb(img):
     imgSize = 64
@@ -42,11 +37,11 @@ def gray_to_rgb(img):
 #_________________________________________________________________
 #max_pooling2d_2 (MaxPooling2 (None, 6, 6, 64)          0
 #_________________________________________________________________
-#conv2d_3 (Conv2D)            (None, 4, 4, 32)          18464
+#conv2d_3 (Conv2D)            (None, 4, 4, 64)          36928
 #_________________________________________________________________
-#flatten_1 (Flatten)          (None, 512)               0
+#flatten_1 (Flatten)          (None, 1024)              0
 #_________________________________________________________________
-#dense (Dense)                (None, 40)                20520
+#dense (Dense)                (None, 40)                41000
 #_________________________________________________________________
 #dropout (Dropout)            (None, 40)                0
 #_________________________________________________________________
@@ -66,7 +61,7 @@ def modified_model():
     x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
     x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu')(x)
     x = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(x)
-    x = tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), padding='valid', activation='relu')(x)
+    x = tf.keras.layers.Conv2D(filters=64, kernel_size=(3, 3), padding='valid', activation='relu')(x)
     x = tf.keras.layers.Flatten()(x)
     x = tf.keras.layers.Dense(40, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.25)(x)
@@ -92,7 +87,7 @@ def run_gradcam(start, end, input_class):
     tf.compat.v1.disable_eager_execution()
 
     # load images
-    imgs = v.readImages(False, start, end)
+    imgs = readImgs.readImgs(start, end)
     print('leng of imgs = ' + str(len(imgs)))
     imgSize = 64
 
@@ -105,17 +100,7 @@ def run_gradcam(start, end, input_class):
     trainI = [[0]*imgSize*imgSize]
     trainO = [[0]*2]
 
-    f = open('car_model_config.txt', 'r')
-    modelInfo = f.readlines()
-    f.close()
-    
-    NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
-    op = helper.getOptimizer(modelInfo) # optimizer
-    loss = helper.getLoss(modelInfo) # loss
-    
-    model = DGPU.deepLearningModel('model', op, loss, True)
-    model.load_weights('model.h5')
-    model.summary()
+    model = tf.keras.models.load_model('carTest_model')
 
     # modify model
     newModel = modified_model()
@@ -180,5 +165,6 @@ def run_gradcam(start, end, input_class):
         plt.savefig('algo_2_gradcam2_' + str(start + i) + '.png')
 
 if __name__ == '__main__':
-    run_gradcam(350, 355, [0, 0, 0, 0, 0])
-    run_gradcam(850, 855, [1, 1, 1, 1, 1])
+    run_gradcam(100, 105, [0, 0, 0, 0, 0])
+    run_gradcam(400, 405, [0, 0, 0, 0, 0])
+    run_gradcam(800, 805, [0, 0, 0, 0, 0])

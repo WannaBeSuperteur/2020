@@ -1,17 +1,13 @@
 import numpy as np
 import json
-import visualize as v
 import tensorflow as tf
 import tensorflow.keras.backend as K
-
-import sys
-sys.path.insert(0, '../../AI_BASE')
-import deepLearning_GPU_helper as helper
-import deepLearning_GPU as DGPU
 
 from lime import lime_image
 import matplotlib.pyplot as plt
 from skimage.segmentation import mark_boundaries
+
+import algo_readImgs as readImgs
 
 # https://marcotcr.github.io/lime/tutorials/Tutorial%20-%20images.html
 # https://github.com/marcotcr/lime/issues/453
@@ -42,7 +38,7 @@ def run_lime(start, end, model):
     warnings.filterwarnings('always')
 
     # load images
-    imgs = v.readImages(False, start, end)
+    imgs = readImgs.readImgs(start, end)
     print('leng of imgs = ' + str(len(imgs)))
     imgSize = 64
 
@@ -100,15 +96,7 @@ if __name__ == '__main__':
     trainI = [[0]*4096]
     trainO = [[0]*2]
 
-    f = open('car_model_config.txt', 'r')
-    modelInfo = f.readlines()
-    f.close()
-    
-    NN = helper.getNN(modelInfo, trainI, trainO) # Neural Network    
-    op = helper.getOptimizer(modelInfo) # optimizer
-    loss = helper.getLoss(modelInfo) # loss
-    model = DGPU.deepLearningModel('model', op, loss, True)
-    model.load_weights('model.h5')
-    
-    run_lime(350, 355, model)
-    run_lime(850, 855, model)
+    model = tf.keras.models.load_model('carTest_model')
+
+    run_lime(400, 405, model)
+    run_lime(800, 805, model)

@@ -16,12 +16,6 @@ from torch.autograd import Variable
 
 import algo_3_XCNN_Test as Test # added
 
-import sys
-sys.path.insert(0, '../../AI_BASE')
-import deepLearning_GPU_helper as helper
-import deepLearning_GPU as DGPU
-import readData as RD
-
 import tensorflow as tf
 import pandas as pd
 import cv2
@@ -33,7 +27,7 @@ os.environ['CUDA_DEVICE_ORDER'] = 'PCI_BUS_ID'
 os.environ['CUDA_VISIBLE_DEVICES'] = '0,1'
 
 parser = argparse.ArgumentParser()
-parser.add_argument('-epoch', type=int, default=300, help='training epoch')
+parser.add_argument('-epoch', type=int, default=5, help='training epoch') # default=300
 parser.add_argument('-lr', type=float, default=0.001, help='learning rate')
 parser.add_argument('-wd', type=float, default=0.000001,help='weight decay')
 parser.add_argument('-beta', type=float, default=0.9, help='momentum')
@@ -151,14 +145,7 @@ def vis(maps, data, start, count):
 with tf.device('/gpu:0'):
 
     # model
-    f = open('car_model_config.txt', 'r')
-    modelInfo = f.readlines()
-    f.close()
-        
-    optimizer = helper.getOptimizer(modelInfo) # optimizer
-    loss = helper.getLoss(modelInfo) # loss
-    net = DGPU.deepLearningModel('model', optimizer, loss, True)
-    net.load_weights('model.h5')
+    net = tf.keras.models.load_model('carTest_model')
 
     print('------ net info ------')
     print(net)
@@ -172,9 +159,9 @@ with tf.device('/gpu:0'):
 
     # column 0 and column 1 of 'labels' and 'prediction' means
     # 'not car' and 'car', respectively
-    inputs = np.array(RD.loadArray('car_test_input.txt')).astype(float)
-    labels = np.array(RD.loadArray('car_test_output.txt')).astype(float)
-    predictions = np.array(RD.loadArray('car_test_predict.txt'))[:, :2].astype(float)
+    inputs = (np.array(pd.read_csv('test.csv', index_col=0)).astype(float))[:, 1:] / 255.0
+    labels = np.array(pd.read_csv('carTest_groundTruth.csv', index_col=0)).astype(float)
+    predictions = np.array(pd.read_csv('carTest_prediction.csv', index_col=0)).astype(float)
 
     print(np.shape(inputs))
     print(inputs)
@@ -188,7 +175,7 @@ with tf.device('/gpu:0'):
     maps = np.reshape(inputs, (-1, 1, 64, 64))
     name = 'XAI_VehicleOrNot'
 
-    for startAndCount in [[350, 5], [850, 5]]:
+    for startAndCount in [[100, 5], [400, 5], [800, 5]]:
         
         start = startAndCount[0]
         count = startAndCount[1]
