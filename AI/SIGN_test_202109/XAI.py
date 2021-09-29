@@ -168,9 +168,10 @@ def mergeImgs(index, name0, name1, newName, marginLeft):
 # imgNo          : image index
 # imgArray       : test input image array
 # model          : XAI model
+# groundTruth    : ground truth data
 # verboseOutput  : print text and image (about model output and last hidden layer)
 # verboseXAI     : print XAI image
-def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
+def XAI(train, imgNo, imgArray, model, groundTruth, verboseOutput, verboseXAI):
 
     # XAI with sub-images
     subimgWidth = 8
@@ -311,6 +312,7 @@ def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
             columns.append('maxO_' + str(j))
         columns.append('')
         columns.append('original argmax')
+        columns.append('original gt')
         
         if i == 0: columns_extended = ['imgNo', 'label'] + columns
         
@@ -334,6 +336,7 @@ def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
             for k in range(output_args): resultOfThisSubImg.append(output_FB_argmax[j][k])
             resultOfThisSubImg.append('')
             resultOfThisSubImg.append(np.argmax(output_Original))
+            resultOfThisSubImg.append(np.argmax(groundTruth[i]))
 
             fileArray.append(resultOfThisSubImg)
 
@@ -388,9 +391,13 @@ if __name__ == '__main__':
     # load model
     model = tf.keras.models.load_model('signTest_model')
 
+    # load ground truth
+    groundTruth_file = 'signTest_groundTruth.csv'
+    groundTruth = np.array(pd.read_csv(groundTruth_file, index_col=0))
+
     # run XAI with test images from index (start_index) to index (end_index)  
     for i in range(testRows // 50):
     
         # with 100% probability
         if random.random() < 1.0:
-            XAI(False, i*50, test_input, model, verboseOutput=False, verboseXAI=False)
+            XAI(False, i*50, test_input, model, groundTruth, verboseOutput=False, verboseXAI=False)
