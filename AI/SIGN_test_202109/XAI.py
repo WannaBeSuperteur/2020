@@ -8,6 +8,7 @@ from PIL import Image
 import math
 import copy
 import random
+import numpy as np
 import pandas as pd
 import tensorflow as tf
 from keras import backend as K
@@ -18,26 +19,51 @@ import gc
 # crop a rectangular image (object) into m * n rectangular sub-images with same size
 # and then fill (m_, n_)-th subimage with colors, and return the final image
 # assumption: np.shape(imgArray) == (height, width, 3)
-# pattern : pattern to fill     (0   = BLACK       ,  1   = CHECK PATTERN)
-# opacity : opacity for filling (0.0 = transparent to 1.0                )
-def cropAndFill(imgArray, m, n, m_, n_, pattern, opacity):
-
-    # copy the original array
-    imgArrayCopy = copy.deepcopy(imgArray)
+# pattern   : pattern to fill     (0   = BLACK       ,  1   = CHECK PATTERN)
+# opacity   : opacity for filling (0.0 = transparent to 1.0                )
+# genExplan : True for generating final explanation, False for just filling black
+def cropAndFill(imgArray, m, n, m_, n_, pattern, opacity, genExplan):
     
     # get width and height of image
     imgWidth = len(imgArray[0])
     imgHeight = len(imgArray)
 
+    if genExplan == True:
+        imgArray_ = np.zeros((imgHeight, imgWidth, 3))
+    else:
+        imgArray_ = np.zeros((imgHeight, imgWidth))
+
+    # fill as original
+    for i in range(imgHeight):
+        for j in range(imgWidth):
+            if genExplan == True:
+                for k in range(3):
+                    try: # shape of imgArray is (height, width)
+                        imgArray_[i][j][k] = imgArray[i][j]
+                    except: # shape of imgArray is (height, width, 3)
+                        imgArray_[i][j][k] = imgArray[i][j][k]
+            else:
+                imgArray_[i][j] = imgArray[i][j]
+
     # fill with black
     for i in range(int(m_ * imgHeight / m), int((m_+1) * imgHeight / m)):
         for j in range(int(n_ * imgWidth / n), int((n_+1) * imgWidth / n)):
             
-            if pattern == 0 or (i + j) % 4 <= 1: # pattern == 0 (BLACK) or (i + j) % 2 == 0 (CHECK PATTERN)
-                imgArrayCopy[i][j] = float(imgArrayCopy[i][j]) * (1.0 - opacity)
+            if pattern == 0 or (i + j) % 4 <= 1: # pattern == 0 (BLACK) or (i + j) % 2 == 0 (LINE PATTERN)
+                if genExplan == True:
+                    try:
+                        imgArray_[i][j][0] = 0.6 * opacity + float(imgArray[i][j]) * (1.0 - opacity)
+                        imgArray_[i][j][1] =                 float(imgArray[i][j]) * (1.0 - opacity)
+                        imgArray_[i][j][2] = 1.0 * opacity + float(imgArray[i][j]) * (1.0 - opacity)
+                    except:
+                        imgArray_[i][j][0] = 0.6 * opacity + float(imgArray[i][j][0]) * (1.0 - opacity)
+                        imgArray_[i][j][1] =                 float(imgArray[i][j][1]) * (1.0 - opacity)
+                        imgArray_[i][j][2] = 1.0 * opacity + float(imgArray[i][j][2]) * (1.0 - opacity)
+                else:
+                    imgArray_[i][j] = float(imgArray[i][j]) * (1.0 - opacity)
 
     # return result
-    return imgArrayCopy
+    return imgArray_
 
 # distance between two vectors
 def dist(vec0, vec1):
@@ -197,7 +223,7 @@ def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
             for k in range(subImgCountX):
                 
                 # get fill-blacked image
-                filledImg = cropAndFill(img, subImgCountY, subImgCountX, j, k, 0.0, 1.0)
+                filledImg = cropAndFill(img, subImgCountY, subImgCountX, j, k, pattern=0, opacity=1.0, genExplan=False)
                 fillBlackedImages.append(filledImg)
 
                 # last hidden layer values for input of fill-blacked image
@@ -330,18 +356,18 @@ def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
 
                 # opacity to fill each sub-image (prevent divide-by-zero error)
                 if dif_max > 0:
-                    opacity = difs[j * subImgCountX + k] / dif_max
+                    opacity = 0.75 * difs[j * subImgCountX + k] / dif_max
                 
                 if dif_max == 0: # no difference
-                    img_dif = cropAndFill(img_dif, subImgCountY, subImgCountX, j, k, 0, 0.0)
+                    img_dif = cropAndFill(img_dif, subImgCountY, subImgCountX, j, k, pattern=0, opacity=0.0, genExplan=True)
                 elif np.argmax(output_og) == np.argmax(output_fb): # max of output not changed
-                    img_dif = cropAndFill(img_dif, subImgCountY, subImgCountX, j, k, 0, opacity)
+                    img_dif = cropAndFill(img_dif, subImgCountY, subImgCountX, j, k, pattern=0, opacity=opacity, genExplan=True)
                 else: # max of output changed
-                    img_dif = cropAndFill(img_dif, subImgCountY, subImgCountX, j, k, 1, opacity)
+                    img_dif = cropAndFill(img_dif, subImgCountY, subImgCountX, j, k, pattern=1, opacity=opacity, genExplan=True)
 
         # show image
-        img_dif = np.reshape(img_dif, (1, 64*64))
-        v.visualizeFromImgArray(img_dif, 0, 0, verboseXAI, 'XAI_' + ('%05d' % i))
+        convertedImg = Image.fromarray(np.array(img_dif * 255.0).astype('uint8'), 'RGB')
+        convertedImg.save('XAI_' + ('%05d' % i) + '.png')
                 
 # main
 # visualizeImage : visualize images (including original / fill-blacked images)
