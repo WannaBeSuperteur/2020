@@ -1,4 +1,3 @@
-import helper as h
 import main as m
 import visualize as v
 import numpy as np
