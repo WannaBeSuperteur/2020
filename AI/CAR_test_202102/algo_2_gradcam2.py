@@ -68,7 +68,7 @@ def modified_model():
     x = tf.keras.layers.Dense(40, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.25)(x)
     x = tf.keras.layers.Dense(40, activation='relu', name='last_hidden_layer')(x)
-    outputs = tf.keras.layers.Dense(2, activation='sigmoid', name='output_layer')(x)
+    outputs = tf.keras.layers.Dense(2, activation='softmax', name='output_layer')(x)
 
     return tf.keras.Model(inputs, outputs)
 
@@ -167,4 +167,4 @@ def run_gradcam(start, end, input_class):
 if __name__ == '__main__':
     run_gradcam(100, 105, [0, 0, 0, 0, 0])
     run_gradcam(400, 405, [0, 0, 0, 0, 0])
-    run_gradcam(800, 805, [0, 0, 0, 0, 0])
+    run_gradcam(800, 805, [1, 1, 1, 1, 1])

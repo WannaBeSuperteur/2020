@@ -187,27 +187,9 @@ def modified_model():
     x = tf.keras.layers.Dense(40, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.25)(x)
     x = tf.keras.layers.Dense(40, activation='relu', name='last_hidden_layer')(x)
-    outputs = tf.keras.layers.Dense(2, activation='sigmoid', name='output_layer')(x)
+    outputs = tf.keras.layers.Dense(2, activation='softmax', name='output_layer')(x)
 
     return tf.keras.Model(inputs, outputs)
-
-# inverse of sigmoid
-# y = 1/(1+e^(-x))
-# x = 1/(1+e^(-y))
-# 1/x = 1+e^(-y)
-# 1/x - 1 = e^(-y)
-# ln(1/x - 1) = -y
-# ln((1-x)/x) = -y
-# ln(x/(1-x)) = y -> y = ln(x/(1-x))
-def invSigmoid(x):
-    try:
-        preResult = x / (1 - x)
-        result = math.log(preResult)
-        return result
-    except: # catch runtime warnings and math domain errors
-        print('value of x is ' + str(x))
-        if x < 0.5: return -15
-        else: return 15
 
 # main function
 def run_gradcam(start, end):
@@ -255,13 +237,10 @@ def run_gradcam(start, end):
 
     print('shape of predictions = ' + str(np.shape(predictions)))
 
-    print('predictions:')
-    print(np.array(predictions))
-
     for i in range(len(predictions)):
         print('image ' + str(start + i) + ' -> ' +
-              str(round(invSigmoid(predictions[i][0]) * 100, 4)) + '% / ' +
-              str(round(invSigmoid(predictions[i][1]) * 100, 4)) + '%')
+              str(round(predictions[i][0] * 100, 4)) + '% / ' +
+              str(round(predictions[i][1] * 100, 4)) + '%')
 
     # explanation of image
     for i in range(len(predictions)):
