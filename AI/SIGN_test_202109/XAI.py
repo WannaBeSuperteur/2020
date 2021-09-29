@@ -2,6 +2,7 @@ import helper as h
 import main as m
 import visualize as v
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from PIL import Image
 import math
@@ -349,6 +350,7 @@ def XAI(train, imgNo, imgArray, model, verboseOutput, verboseXAI):
 if __name__ == '__main__':
 
     testRows = 7841
+    matplotlib.use('Agg')
 
     # numpy print setting
     np.set_printoptions(edgeitems=30, linewidth=120)
