@@ -2,7 +2,7 @@ my_extract.py
 -> main.py (training/test)
 -> visualize.py
 -> XAI.py
--> mergetxts.py (optional)
+-> mergetxts.py (to merge 000000_info.txt, ...)
 
 other XAI algorithms:
 SHAP: algo_0_shap.py

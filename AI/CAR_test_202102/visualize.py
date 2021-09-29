@@ -1,74 +1,55 @@
-import main as m
 import numpy as np
+import pandas as pd
 from PIL import Image
-
-# read images
-def readImages(train, start, end):
-
-    # decide file name
-    if train == True:
-        fn = 'car_train_input.txt'
-    else:
-        fn = 'car_test_input.txt'
-
-    # read image as numpy array
-    return m.readCSV(fn, [0, 64*64], [start, end], '\t')
 
 # visualize images from imgArray
 # imgArray : contains image array with value 0.0 (black) ~ 1.0 (white)
 # saveName : name of the image file
 # show     : whether to show the image
-def visualizeFromImgArray(imgArray, saveName, show):
+def visualizeFromImgArray(imgArray, imgLabels, imgIndex, show, optionalSaveName):
+
+    width = 64
+    height = 64
 
     # for each image
-    for i in range(len(imgArray)):
-        if show == True: print('showing image ' + str(i) + '...')
+    if show == True:
+        print('showing image ' + str(imgIndex) + '...')
+    else:
+        print('image ' + str(imgIndex) + '...')
 
-        img = imgArray[i]
+    img = imgArray[imgIndex]
 
-        # convert into [height][width][3] = [64][64][3] image
-        converted = []
-        for i in range(64):
+    # convert into [height][width][3] = [64][64][3] image
+    converted = []
+    for i in range(height):
             
-            row = [] # each row of the image
-            for j in range(64):
+        row = [] # each row of the image
+        for j in range(width):
 
-                pixel = [] # each pixel of the image
-                for k in range(3): pixel.append(int(float(img[i * 64 + j]) * 255))
-                row.append(pixel)
+            pixel = [] # each pixel of the image
+            for k in range(3): pixel.append(int(float(img[i * 64 + j]) * 255))
+            row.append(pixel)
 
-            converted.append(row)
+        converted.append(row)
 
-        # visualize image
-        convertedImg = Image.fromarray(np.array(converted).astype('uint8'), 'RGB')
-        if show == True: convertedImg.show()
+    # visualize image
+    convertedImg = Image.fromarray(np.array(converted).astype('uint8'), 'RGB')
+    if show == True: convertedImg.show()
 
-        # save image
-        if saveName != None:
-            convertedImg.save(saveName)
-
-# visualize images
-# need: car_train_input.txt / car_train_output.txt / car_test_input.txt / car_test_output.txt
-# train    : from training data (True or False)
-#            from test data when False
-# start    : starting index
-# end      : ending index
-def visualizeImages(train, start, end):
-
-    # read image as numpy array
-    imgArray = readImages(train, start, end)
-
-    # visualize images
-    visualizeFromImgArray(imgArray, None, True)
+    # save image
+    if optionalSaveName == None:
+        saveName = 'signTest_' + str(imgIndex) + '_' + str(imgLabels[imgIndex][0]) + '.png'
+    else:
+        saveName = optionalSaveName + '.png'
+        
+    convertedImg.save(saveName)
     
 if __name__ == '__main__':
 
-    # save grayscaled images for 350~354th and 850~854th test images
+    # save grayscaled every 50th test images
+    imgArray = np.round_(np.array(pd.read_csv('test.csv', index_col=0)) / 255.0, 3)
+    imgLabels = np.array(pd.read_csv('testLabels.csv', index_col=0))
+    imgs = len(imgArray)
 
-    for i in range(350, 355):
-        imgArray = readImages(False, i, i+1)
-        visualizeFromImgArray(imgArray, 'grayscale_' + str(i) + '.png', True)
-
-    for i in range(850, 855):
-        imgArray = readImages(False, i, i+1)
-        visualizeFromImgArray(imgArray, 'grayscale_' + str(i) + '.png', True)
+    for i in range(imgs // 10):
+        visualizeFromImgArray(imgArray, imgLabels, i*10, False, None)

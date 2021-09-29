@@ -5,10 +5,11 @@ def mergeTextFiles(idList):
     result = ''
     
     for i in range(len(idList)):
+        if i % 10 == 0: print(i)
 
         # open each info file
         try:
-            f = open(str(idList[i]) + '-' + str(idList[i] + 1) + '_info.txt', 'r')
+            f = open(('%06d' % idList[i]) + '_info.txt', 'r')
             fr = f.readlines()
             f.close()
         except:

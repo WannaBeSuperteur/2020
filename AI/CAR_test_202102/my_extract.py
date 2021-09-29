@@ -1,11 +1,10 @@
 from PIL import Image
 import os
-import sys
-sys.path.insert(0, '../../AI_BASE')
-import readData as RD
+import numpy as np
+import pandas as pd
 import random
 
-# extract images from 'myData' directory
+# extract images from 'VehicleImage' directory
 def extractImages():
 
     # try to create 'images' directory
@@ -13,6 +12,9 @@ def extractImages():
         os.mkdir('images')
     except:
         pass
+
+    train_count = 0
+    test_count = 0
     
     # extract images
     for r, _, f in os.walk('VehicleImage'):
@@ -23,25 +25,25 @@ def extractImages():
         for file in f:
 
             # set the label for each image
-            label0 = r.split('\\')[1]
-            label1 = r.split('\\')[2]
+            label0 = r.split('\\')[1] # 'Train' or 'Test'
+            label1 = r.split('\\')[2] # 0, 1, ..., 42
 
             if label0 == 'non-vehicles' and label1 == 'Far':
-                label = 'NF'
+                label = '00'
             elif label0 == 'non-vehicles' and label1 == 'Left':
-                label = 'NL'
+                label = '01'
             elif label0 == 'non-vehicles' and label1 == 'MiddleClose':
-                label = 'NM'
+                label = '02'
             elif label0 == 'non-vehicles' and label1 == 'Right':
-                label = 'NR'
+                label = '03'
             elif label0 == 'vehicles' and label1 == 'Far':
-                label = 'VF'
+                label = '10'
             elif label0 == 'vehicles' and label1 == 'Left':
-                label = 'VL'
+                label = '11'
             elif label0 == 'vehicles' and label1 == 'MiddleClose':
-                label = 'VM'
+                label = '12'
             elif label0 == 'vehicles' and label1 == 'Right':
-                label = 'VR'
+                label = '13'
             else:
                 continue
 
@@ -51,9 +53,11 @@ def extractImages():
 
             # mark as training or test data
             if file[len(file)-5] == '0' or file[len(file)-5] == '5':
-                label += '_test'
+                fileName = 'test_' + ('%05d' % test_count) + '_' + label[0] + '.jpg'
+                test_count += 1
             else:
-                label += '_train'
+                fileName = 'train_' + ('%05d' % train_count) + '_' + label[0] + '.jpg'
+                train_count += 1
             
             imgFile = os.path.join(r, file)
 
@@ -65,8 +69,9 @@ def extractImages():
             with Image.open(pat) as im:
                 if im.size!=(64, 64):
                     im=im.resize((64, 64), Image.LANCZOS)
-                im.save('images/' + label + ') ' + file.replace(".png",".jpg"))
 
+                im.save('images/' + fileName)
+                
 # OFEC: output for each class
 #       in the form of [class0output, class1output, ..., class42output]
 def makeCsv():
@@ -84,17 +89,8 @@ def makeCsv():
 
     # initialize array
     csvArray = []
-
-    # write first row
-    firstRow = ['label']
-    
     imgWidth = 64
     imgHeight = 64
-    for i in range(imgHeight):
-        for j in range(imgWidth):
-            firstRow.append(str(i) + '_' + str(j))
-
-    csvArray.append(firstRow)
 
     # convert each image into a row for the CSV file
     files = os.listdir('images')
@@ -104,7 +100,7 @@ def makeCsv():
     for file in files:
 
         # for count
-        if count % 25 == 0: print(count, len(files))
+        if count % 70 == 0: print(str(count) + ' / ' + str(len(files)) + ', filename=' + str(file))
         count += 1
 
         # open each image file
@@ -112,15 +108,12 @@ def makeCsv():
         pixel = img.load()
 
         # add label
-        OFEC_list = {'NF_train':100, 'NL_train':101, 'NM_train':102, 'NR_train':103,
-                     'VF_train':110, 'VL_train':111, 'VM_train':112, 'VR_train':113,
-                     'NF_test':120, 'NL_test':121, 'NM_test':122, 'NR_test':123,
-                     'VF_test':130, 'VL_test':131, 'VM_test':132, 'VR_test':133}
+        # 0_train, 0_test, 1_train, 1_test
+        label_num = int(file.split('.')[0].split('_')[2])
+        if 'test' in file: label_num += 100
 
-        label = OFEC_list[file.split(')')[0]]
-        if label % 20 >= 10: thisRow = [1] # a vehicle
-        else: thisRow = [0] # not a vehicle
-        labelList.append([label])
+        thisRow = [label_num % 100] # 0, 1
+        labelList.append([label_num]) # 0 or 1 for train, 100 or 101 for test
 
         # add each pixel
         for i in range(imgHeight):
@@ -129,44 +122,42 @@ def makeCsv():
 
         csvArray.append(thisRow)
 
+    csvArray = np.array(csvArray)
+    labelList = np.array(labelList)
+    
+    csvArray = pd.DataFrame(csvArray)
+    labelList = pd.DataFrame(labelList)
+
     # save into file
-    RD.saveArray('train_test.csv', csvArray, splitter=',', saveSize=50)
-    RD.saveArray('label_list.csv', labelList)
+    csvArray.to_csv('train_test.csv')
+    labelList.to_csv('label_list.csv')
 
 # extract training data and test data
 def extractTrainAndTest():
 
-    # load the csv file including all the data (except for the first row)
-    csvArray = RD.loadArray('train_test.csv', splitter=',')
-    csvArray = csvArray[1:]
+    # load the csv file including all the data
+    csvArray = pd.read_csv('train_test.csv', index_col=0)
+    csvArray = np.array(csvArray)
     numOfRows = len(csvArray)
 
     # load label list
-    labelList = RD.loadArray('label_list.csv')
+    labelList = pd.read_csv('label_list.csv', index_col=0)
+    labelList = np.array(labelList)
 
-    # write first row
-    firstRow = ['label']
-    
     imgWidth = 64
     imgHeight = 64
-    for i in range(imgHeight):
-        for j in range(imgWidth):
-            firstRow.append(str(i) + '_' + str(j))
 
     # designate training data and test data
-    trainingData = [firstRow]
-    testData = [firstRow]
+    trainingData = []
+    testData = []
     trainingLabel = []
     testLabel = []
 
     for i in range(numOfRows):
 
         # train or test
-        if int(labelList[i][0]) >= 120: train = False
+        if int(labelList[i][0]) >= 100: train = False
         else: train = True
-
-        # car: 0, bus: 1
-        csvArray[i][0] = str(int(csvArray[i][0]) % 2)
 
         # append to training/test data
         if train == True:
@@ -177,10 +168,15 @@ def extractTrainAndTest():
             testLabel.append(labelList[i])
 
     # save file (trainingData and testData)
-    RD.saveArray('train.csv', trainingData, splitter=',', saveSize=500)
-    RD.saveArray('test.csv', testData, splitter=',', saveSize=500)
-    RD.saveArray('trainLabels.csv', trainingLabel)
-    RD.saveArray('testLabels.csv', testLabel)
+    trainingData = pd.DataFrame(np.array(trainingData))
+    testData = pd.DataFrame(np.array(testData))
+    trainingLabel = pd.DataFrame(np.array(trainingLabel))
+    testLabel = pd.DataFrame(np.array(testLabel))
+
+    trainingData.to_csv('train.csv')
+    testData.to_csv('test.csv')
+    trainingLabel.to_csv('trainLabels.csv')
+    testLabel.to_csv('testLabels.csv')
 
 if __name__ == '__main__':
 
