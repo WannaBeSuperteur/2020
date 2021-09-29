@@ -94,7 +94,7 @@ def grad_cam(input_model, image, category_index, layer_no, layer_name):
     model = Sequential()
     model.add(input_model)
 
-    nb_classes = 2 # 1000
+    nb_classes = 43 # 1000
     target_layer = lambda x: target_category_loss(x, category_index, nb_classes)
     model.add(Lambda(target_layer,
                      output_shape = target_category_loss_output_shape))
@@ -170,7 +170,7 @@ def gray_to_rgb(img):
 #_________________________________________________________________
 #dense_2 (Dense)              (None, 40)                1640
 #_________________________________________________________________
-#dense_3 (Dense)              (None, 2)                 82
+#dense_3 (Dense)              (None, 43)                1763
 #=================================================================
 def modified_model():
     inputs = tf.keras.Input(shape=(64, 64, 1))
@@ -187,7 +187,7 @@ def modified_model():
     x = tf.keras.layers.Dense(40, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.25)(x)
     x = tf.keras.layers.Dense(40, activation='relu', name='last_hidden_layer')(x)
-    outputs = tf.keras.layers.Dense(2, activation='softmax', name='output_layer')(x)
+    outputs = tf.keras.layers.Dense(43, activation='softmax', name='output_layer')(x)
 
     return tf.keras.Model(inputs, outputs)
 
@@ -216,7 +216,7 @@ def run_gradcam(start, end):
     print('shape of imgs = ' + str(np.shape(imgs)))
 
     # load pre-trained model
-    model = tf.keras.models.load_model('carTest_model')
+    model = tf.keras.models.load_model('signTest_model')
 
     # modify model
     newModel = modified_model()
@@ -273,6 +273,6 @@ def run_gradcam(start, end):
         cv2.imwrite("guided_gradcam_" + str(start + i) + ".jpg", deprocess_image(gradcam, multiple))
 
 if __name__ == '__main__':
-    run_gradcam(100, 105)
-    run_gradcam(400, 405)
-    run_gradcam(800, 805)
+    run_gradcam(200, 205)
+    run_gradcam(500, 505)
+    run_gradcam(1200, 1205)

@@ -33,9 +33,9 @@ def run_shap(start, end):
 
     # load pre-trained model
     trainI = [[0]*4096]
-    trainO = [[0]*2]
+    trainO = [[0]*43]
 
-    model = tf.keras.models.load_model('carTest_model')
+    model = tf.keras.models.load_model('signTest_model')
 
     for i in range(int((end - start) / interval)):
 
@@ -47,7 +47,7 @@ def run_shap(start, end):
         shap_values = e.shap_values(imgs_sub)
 
         # reshape shap_values and imgs
-        shap_values = np.reshape(shap_values, (2, interval, imgSize, imgSize))
+        shap_values = np.reshape(shap_values, (43, interval, imgSize, imgSize)) # 43 classes
         imgs_sub = np.reshape(imgs_sub, (interval, imgSize, imgSize, 1))
 
         # plot the feature attributions
@@ -58,6 +58,6 @@ def run_shap(start, end):
         plt.savefig('algo_0_shap_' + str(start + i * interval) + '_1.png')
 
 if __name__ == '__main__':
-    run_shap(100, 105)
-    run_shap(400, 405)
-    run_shap(800, 805)
+    run_shap(200, 205)
+    run_shap(500, 505)
+    run_shap(1200, 1205)

@@ -67,7 +67,15 @@ print(opt)
 #testloader = torch.utils.data.DataLoader(
 #    testset, batch_size=opt.batch//2, shuffle=False, num_workers=0)
 
-classes = ('not_car', 'car')
+classes = ('class00', 'class01', 'class02', 'class03', 'class04',
+           'class05', 'class06', 'class07', 'class08', 'class09',
+           'class10', 'class11', 'class12', 'class13', 'class14',
+           'class15', 'class16', 'class17', 'class18', 'class19',
+           'class20', 'class21', 'class22', 'class23', 'class24',
+           'class25', 'class26', 'class27', 'class28', 'class29',
+           'class30', 'class31', 'class32', 'class33', 'class34',
+           'class35', 'class36', 'class37', 'class38', 'class39',
+           'class40', 'class41', 'class42')
 
 # for XAI, from ExplainableCNN/Code/Test.py of ref
 def visualize(ims, heatmaps, thrmaps, name):
@@ -145,7 +153,7 @@ def vis(maps, data, start, count):
 with tf.device('/gpu:0'):
 
     # model
-    net = tf.keras.models.load_model('carTest_model')
+    net = tf.keras.models.load_model('signTest_model')
 
     print('------ net info ------')
     print(net)
@@ -160,8 +168,8 @@ with tf.device('/gpu:0'):
     # column 0 and column 1 of 'labels' and 'prediction' means
     # 'not car' and 'car', respectively
     inputs = (np.array(pd.read_csv('test.csv', index_col=0)).astype(float))[:, 1:] / 255.0
-    labels = np.array(pd.read_csv('carTest_groundTruth.csv', index_col=0)).astype(float)
-    predictions = np.array(pd.read_csv('carTest_prediction.csv', index_col=0)).astype(float)
+    labels = np.array(pd.read_csv('signTest_groundTruth.csv', index_col=0)).astype(float)
+    predictions = np.array(pd.read_csv('signTest_prediction.csv', index_col=0)).astype(float)
 
     print(np.shape(inputs))
     print(inputs)
@@ -173,9 +181,9 @@ with tf.device('/gpu:0'):
     # for XAI
     #maps = net.maps.cpu()
     maps = np.reshape(inputs, (-1, 1, 64, 64))
-    name = 'XAI_VehicleOrNot'
+    name = 'XAI_Sign'
 
-    for startAndCount in [[100, 5], [400, 5], [800, 5]]:
+    for startAndCount in [[200, 5], [500, 5], [1200, 5]]:
         
         start = startAndCount[0]
         count = startAndCount[1]

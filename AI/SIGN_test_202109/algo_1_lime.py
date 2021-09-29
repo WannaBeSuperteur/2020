@@ -94,9 +94,10 @@ if __name__ == '__main__':
     
     # load pre-trained model and choose two images to explain
     trainI = [[0]*4096]
-    trainO = [[0]*2]
+    trainO = [[0]*43]
 
-    model = tf.keras.models.load_model('carTest_model')
+    model = tf.keras.models.load_model('signTest_model')
 
-    run_lime(400, 405, model)
-    run_lime(800, 805, model)
+    run_lime(200, 205, model)
+    run_lime(500, 505, model)
+    run_lime(1200, 1205, model)

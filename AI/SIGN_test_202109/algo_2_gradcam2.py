@@ -51,7 +51,7 @@ def gray_to_rgb(img):
 #_________________________________________________________________
 #dense_2 (Dense)              (None, 40)                1640
 #_________________________________________________________________
-#dense_3 (Dense)              (None, 2)                 82
+#dense_3 (Dense)              (None, 43)                1763
 #=================================================================
 def modified_model():
     inputs = tf.keras.Input(shape=(64, 64, 1))
@@ -68,7 +68,7 @@ def modified_model():
     x = tf.keras.layers.Dense(40, activation='relu')(x)
     x = tf.keras.layers.Dropout(0.25)(x)
     x = tf.keras.layers.Dense(40, activation='relu', name='last_hidden_layer')(x)
-    outputs = tf.keras.layers.Dense(2, activation='softmax', name='output_layer')(x)
+    outputs = tf.keras.layers.Dense(43, activation='softmax', name='output_layer')(x)
 
     return tf.keras.Model(inputs, outputs)
 
@@ -98,9 +98,9 @@ def run_gradcam(start, end, input_class):
 
     # load pre-trained model
     trainI = [[0]*imgSize*imgSize]
-    trainO = [[0]*2]
+    trainO = [[0]*43]
 
-    model = tf.keras.models.load_model('carTest_model')
+    model = tf.keras.models.load_model('signTest_model')
 
     # modify model
     newModel = modified_model()
@@ -165,6 +165,6 @@ def run_gradcam(start, end, input_class):
         plt.savefig('algo_2_gradcam2_' + str(start + i) + '.png')
 
 if __name__ == '__main__':
-    run_gradcam(100, 105, [0, 0, 0, 0, 0])
-    run_gradcam(400, 405, [0, 0, 0, 0, 0])
-    run_gradcam(800, 805, [1, 1, 1, 1, 1])
+    run_gradcam(200, 205, [1, 1, 1, 1, 1])
+    run_gradcam(500, 505, [10, 10, 10, 10, 10])
+    run_gradcam(1200, 1205, [12, 12, 12, 12, 12])
