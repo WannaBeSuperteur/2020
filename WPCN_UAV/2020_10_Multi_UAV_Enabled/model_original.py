@@ -35,10 +35,24 @@ def beyondBorder(UAVi, t, width, height):
     yi = UAVi[1] # y axis for UAVi
     hi = UAVi[2] # height for UAVi
 
-    if xi[t-1] < 0 or xi[t-1] > width: return True
-    elif xi[t] < 0 or xi[t] > width: return True
-    elif yi[t-1] < 0 or yi[t-1] > height: return True
-    elif yi[t] < 0 or yi[t] > height: return True
+    #for i in range(len(xi)):
+    #    print('time', i, xi[i], yi[i], hi[i])
+
+    if xi[t-1] < 0 or xi[t-1] > width:
+        #print('beyond border:', xi, yi, hi, t)
+        return True
+    
+    elif xi[t] < 0 or xi[t] > width:
+        #print('beyond border:', xi, yi, hi, t)
+        return True
+    
+    elif yi[t-1] < 0 or yi[t-1] > height:
+        #print('beyond border:', xi, yi, hi, t)
+        return True
+    
+    elif yi[t] < 0 or yi[t] > height:
+        #print('beyond border:', xi, yi, hi, t)
+        return True
 
     return False
 
@@ -96,30 +110,30 @@ def getXYH_ofUAV(UAVs, element, T):
 
 # check if minimum throughput of all devices in a cluster == 0
 # ASSUMPTION: 'a cluster' means the cluster with index l
-def isMinThroughputOfAllDevicesInCluster0(clusters, L, T, N, l, k, a, B, n, PU, g, o2):
+def isMinThroughputOfAllDevicesInCluster0(cluster, L, T, l, k, a, B, n, PU, g, o2):
 
     # minimum throughput == 0 <=> there are some devices with throughput == 0
     # clusters[l] = cluster l, and k[l] = a device in K[l] (cluster l)
-    for k in range(len(clusters[l])):
-        thrput = R_kl(L, T, N, l, k, a, B, n, PU, g, o2)
+    for k in range(len(cluster)):
+        thrput = f.R_kl(L, T, l, k, a, B, n, PU, g, o2)
         if thrput == 0: return True # return True if the throughput is 0
 
     return False
 
 # check if minimum throughput of all devices does not increase
 # ASSUMPTION: between time n-1(= t-1), time n(= t)
-def isMinThroughputOfAllDevicesDoesNotInc(L, T, N, l, k, a, B, n, PU, g, o2):
+def isMinThroughputOfAllDevicesDoesNotInc(cluster, L, T, l, k, a, B, n, PU, g, o2):
 
     # clusters[l] = cluster l (total L clusters), and k[l] = a device in K[l] (cluster l)
     for l in range(L):
 
         # get throughput for (cluster l, device k)
-        for k in range(len(clusters[l])):
-            thrputBefore = R_kl(L, T, N, l, k, a, B, n-1, PU, g, o2) # throughput at time n-1 = t-1
-            thrputAfter = R_kl(L, T, N, l, k, a, B, n, PU, g, o2) # throughput at time n = t
+        for k in range(len(cluster)):
+            thrputBefore = f.R_kl(L, T, l, k, a, B, n-1, PU, g, o2) # throughput at time n-1 = t-1
+            thrputAfter = f.R_kl(L, T, l, k, a, B, n, PU, g, o2) # throughput at time n = t
 
         # initialize minThroughputBefore and minThroughputAfter as that of (cluster l=0, device k=0)
-        if l == 0 and k == 0:
+        if l <= 1 and k == 0:
             minThroughputBefore = thrputBefore
             minThroughputAfter = thrputAfter
             
@@ -384,8 +398,8 @@ def algorithm1(M, T, L, devices, width, height,
 
         # rows to be created: (for training data) when QTable_rate = 1.0 :
         # [T = time slots (second)] * [devices = number of devices] * 3     
-        for t in range(T): # each time slot t
-            print('time slot ' + str(t) + ' / ' + str(T) + ' time=' + str(time.time()))
+        for t in range(1, T+1): # each time slot t
+            print('time slot ' + str(t - 1) + ' / ' + str(T) + ' time=' + str(time.time()))
 
             currentTime = getTimeDif(currentTime, 'start of time slot')
 
@@ -410,6 +424,16 @@ def algorithm1(M, T, L, devices, width, height,
                 #print('current UAV location:', [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
                 nextLocation = dq.getNextLocation(s_i, action, t, UAVs, l, a, L, B, PU, g, o2)
 
+                # update UAV location for the next time t+1
+                nextX = nextLocation[0]
+                nextY = nextLocation[1]
+                nextH = nextLocation[2]
+
+                for tt in range(t, T+1):
+                    UAVs[i][0][tt] = nextX
+                    UAVs[i][1][tt] = nextY
+                    UAVs[i][2][tt] = nextH
+
                 # if UAV i files beyond the border
                 #print('nextLocation:', nextLocation, [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
                 
@@ -418,11 +442,13 @@ def algorithm1(M, T, L, devices, width, height,
                     #print('beyond border')
 
                     # UAV i stays at the border
-                    if UAVs[i][0][t] < 0: UAVs[i][0][t] = 0 # x value < 0
+                    if UAVs[i][0][t] < 0.0: UAVs[i][0][t] = 0.0 # x value < 0
                     elif UAVs[i][0][t] > width: UAVs[i][0][t] = width # x value > width
                     
-                    if UAVs[i][1][t] < 0: UAVs[i][1][t] = 0 # y value < 0
+                    if UAVs[i][1][t] < 0.0: UAVs[i][1][t] = 0.0 # y value < 0
                     elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
+
+                    if UAVs[i][2][t] < 0.0: UAVs[i][2][t] = 0.0 # h value < 0
                     
                     # UAV i gets a penalty of -1
                     currentTime = getTimeDif(currentTime, '0 before updateDRlist')
@@ -479,7 +505,7 @@ def algorithm1(M, T, L, devices, width, height,
                 # "Don't be confused between s = [q, a, R] and [state, action, newState]"
 
                 # compute initial state when time=0
-                if t == 0:
+                if t == 1:
                     s = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
 
                 # load saved state when time>0
@@ -499,7 +525,7 @@ def algorithm1(M, T, L, devices, width, height,
                 s = [q_next, a_next, R_next] # update current state
                 
                 # save old state and next state(=current state)
-                if t == 0:
+                if t == 1:
                     s_UAV.append(s)
                 else:
                     s_UAV[i] = s
@@ -538,13 +564,13 @@ def algorithm1(M, T, L, devices, width, height,
                 for i in range(L):
                     
                     # if minimum throughput of all devices in a cluster == 0
-                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], L, t, N, l, k, a, B, n, PU, g, o2) == True:
+                    if isMinThroughputOfAllDevicesInCluster0(clusters[i], L, T, l, k, a, B, t, PU, g, o2) == True:
 
                         # The UAV get a penalty of -2
                         directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
-                if isMinThroughputOfAllDevicesDoesNotInc(L, t, N, l, k, a, B, n, PU, g, o2) == True:
+                if isMinThroughputOfAllDevicesDoesNotInc(clusters[i], L, T, l, k, a, B, t, PU, g, o2) == True:
 
                     # All UAVs get a penalty of -1
                     index = 0

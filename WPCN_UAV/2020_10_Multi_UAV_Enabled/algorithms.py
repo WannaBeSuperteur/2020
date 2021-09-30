@@ -157,7 +157,7 @@ def kMeansClustering(L, deviceList, width, height, H, T, display, saveImg):
         # append x, y and h to the UAV
         for j in range(3): # for each (x, y or h)
             temp = []
-            for t in range(T): temp.append(UAVloc[i][j])
+            for t in range(T + 1): temp.append(UAVloc[i][j])
             thisUAV.append(temp)
             
         # append to list of UAVs
