@@ -40,7 +40,7 @@ def beyondBorder(UAVi, t, width, height):
     elif yi[t-1] < 0 or yi[t-1] > height: return True
     elif yi[t] < 0 or yi[t] > height: return True
 
-    return True
+    return False
 
 # check if UAV i's trajectory and UAV j's trajectory is crossed
 def IsTrajectoryCrossed(UAVi, UAVj, t):
@@ -406,11 +406,16 @@ def algorithm1(M, T, L, devices, width, height,
                 # choose action with e-greedy while e increases
                 e_ = episode / M # example
                 action = dq.getActionWithE(Q, s_i, e_)
-                
+
+                #print('current UAV location:', [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
                 nextLocation = dq.getNextLocation(s_i, action, t, UAVs, l, a, L, B, PU, g, o2)
 
                 # if UAV i files beyond the border
+                #print('nextLocation:', nextLocation, [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
+                
                 if beyondBorder(UAVs[i], t, width, height) == True:
+                    
+                    #print('beyond border')
 
                     # UAV i stays at the border
                     if UAVs[i][0][t] < 0: UAVs[i][0][t] = 0 # x value < 0
