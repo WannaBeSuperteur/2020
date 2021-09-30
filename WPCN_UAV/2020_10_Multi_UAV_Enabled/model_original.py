@@ -398,8 +398,6 @@ def algorithm1(M, T, L, devices, width, height,
             newS_list = [] # new states (for each UAV)
             
             for i in range(L): # for each UAV = each cluster
-                print('[1] UAV ' + str(i) + ' / ' + str(L))
-
                 currentTime = getTimeDif(currentTime, '0')
                 
                 # get UAV i's next location
@@ -429,8 +427,6 @@ def algorithm1(M, T, L, devices, width, height,
                     currentTime = getTimeDif(currentTime, '0 after updateDRlist')
 
             for i in range(L): # each UAV i
-                print('[2] UAV ' + str(i) + ' / ' + str(L))
-
                 currentTime = getTimeDif(currentTime, '1')
                 
                 for j in range(i): # each UAV j
@@ -561,7 +557,6 @@ def algorithm1(M, T, L, devices, width, height,
 
             # update Q Table and store (s,a,r,s') into replay buffer
             for i in range(L): # each UAV i
-                print('[3] UAV ' + str(i) + ' / ' + str(L))
                 currentTime = getTimeDif(currentTime, '4')
 
                 # for each device k,
@@ -615,7 +610,7 @@ def algorithm1(M, T, L, devices, width, height,
                 minibatch.append(replayBuffer[rand]) # append to the buffer
 
         ### TRAIN and VALIDATION ###
-        if episode % 1 == 0:
+        if episode % 10 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode, clusters)
 
@@ -674,6 +669,33 @@ if __name__ == '__main__':
     devices = paperArgs['devices']
     T = paperArgs['T']
     H = paperArgs['H']
+
+    # write file for configuration info
+    configFile = open('config_info.txt', 'w')
+    
+    configContent = 'deviceName=' + str(deviceName) + '\n'
+    configContent += 'QTable_rate=' + str(QTable_rate) + '\n'
+    configContent += 'fc=' + str(fc) + '\n'
+    configContent += 'B=' + str(B) + '\n'
+    configContent += 'o2=' + str(o2) + '\n'
+    configContent += 'b1=' + str(b1) + '\n'
+    configContent += 'b2=' + str(b2) + '\n'
+    configContent += 'alpha=' + str(alpha) + '\n'
+    configContent += 'u1=' + str(u1) + '\n'
+    configContent += 'u2=' + str(u2) + '\n'
+    configContent += 'S_=' + str(S_) + '\n'
+    configContent += 'alphaL=' + str(alphaL) + '\n'
+    configContent += 'r_=' + str(r_) + '\n'
+    configContent += 'width=' + str(width) + '\n'
+    configContent += 'height=' + str(height) + '\n'
+    configContent += 'M=' + str(M) + '\n'
+    configContent += 'L=' + str(L) + '\n'
+    configContent += 'devices=' + str(devices) + '\n'
+    configContent += 'T=' + str(T) + '\n'
+    configContent += 'H=' + str(H)
+
+    configFile.write(configContent)
+    configFile.close()
 
     # run for 20 iterations
     iters = 20
