@@ -92,8 +92,23 @@ def getTheta(l, k, clusters, x, y, h):
 # PLoS(theta[l][k_l][n]) = b1*(180/pi * theta[l][k_l][n] - S_)^b2 ... (2)
 # PNLoS = 1 - PLoS
 def getPLoS(isNot, l, k, clusters, x, y, h, b1, b2, S_):
+    
     thetaVal = getTheta(l, k, clusters, x, y, h) # theta[l][k_l][n]
-    PLoS = b1 * pow(180 * math.pi * thetaVal - S_, b2)
+    
+    # thetaVal must not be negative because (180 / math.pi * thetaVal) should be positive
+    if thetaVal < 0.0: thetaVal += math.pi * 2
+    
+    PLoS = b1 * pow(180.0 / math.pi * thetaVal - S_, b2)
+
+    try:
+        assert(not isinstance(PLoS, complex))
+    except:
+        print('PLoS is a complex !!')
+        print(thetaVal, x, y, h)
+        print(PLoS, b1, math.pi, S_, b2)
+        print('to power:', 180 / math.pi * thetaVal - S_)
+        print('powered:', b2)
+        exit(0)
 
     if isNot == False: return PLoS # return PLoS
     else: return 1 - PLoS # return PNLoS
@@ -106,6 +121,14 @@ def g_nlkl(PLoS, u1, PNLoS, u2, fc, l, k, clusters, x, y, h, alpha):
     K0 = 4 * math.pi * fc / c
     result0 = 1 / (PLoS * u1 + PNLoS * u2)
     result1 = pow(K0 * d_nlkl(l, k, clusters, x, y, h), -alpha)
+
+    try:
+        assert(not isinstance(result0 * result1, complex))
+    except:
+        print('g_nlkl is a complex !!')
+        print(PLoS, u1, PNLoS, u2)
+        print(K0, d_nlkl(l, k, clusters, x, y, h), -alpha)
+        exit(0)
     
     return result0 * result1
 
@@ -156,7 +179,18 @@ def R_nkl(L, B, n, l, k, PU, g, o2):
     inference = I_nkl(L, PU, n, l, k, g)
     r = PU[n][l][k] * g[n][l][k][l] / (inference + o2)
 
-    return B * math.log(1+r, 2)
+    try:
+        return B * math.log(1+r, 2)
+    except:
+        print('B:', B)
+        print('r:', r)
+        print(' - PU[n][l][k]:', PU[n][l][k])
+        print(' - g[n][l][k][l]:', g[n][l][k][l])
+        print(' - inference:', inference)
+        print(' - o2:', o2)
+        print('1+r:', 1+r)
+        print('math.log(1+r, 2):', math.log(1+r, 2))
+        print('final:', B * math.log(1+r, 2))
 
 # the average throughput R[k_l] of IoT device k_l of the flight cycle T
 # R[k_l] = (1/T) * Sum(n=1,N)(a[n][l][k_l] * R_[n][k_l]) ... (11)
