@@ -377,7 +377,7 @@ def XAI(train, imgNo, imgArray, model, groundTruth, verboseOutput, verboseXAI):
 # verboseXAI     : print XAI image
 if __name__ == '__main__':
 
-    testRows = 7841
+    testRows = 7842
     matplotlib.use('Agg')
 
     # numpy print setting
@@ -400,4 +400,4 @@ if __name__ == '__main__':
     
         # with 100% probability
         if random.random() < 1.0:
-            XAI(False, i*50, test_input, model, groundTruth, verboseOutput=False, verboseXAI=False)
+            XAI(False, i*10, test_input, model, groundTruth, verboseOutput=False, verboseXAI=False)

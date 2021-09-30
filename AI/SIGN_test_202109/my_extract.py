@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import random
 
-# extract images from 'myData' directory
+# extract images from 'signImage' directory
 def extractImages():
 
     # try to create 'images' directory
@@ -21,7 +21,7 @@ def extractImages():
 
         count = 0
 
-        # for each file in /VehicleImage
+        # for each file in /signImage
         for file in f:
 
             # set the label for each image
