@@ -35,6 +35,7 @@ def beyondBorder(UAVi, t, width, height):
     yi = UAVi[1] # y axis for UAVi
     hi = UAVi[2] # height for UAVi
 
+    #print('====', t, '====')
     #for i in range(len(xi)):
     #    print('time', i, xi[i], yi[i], hi[i])
 
@@ -133,7 +134,7 @@ def isMinThroughputOfAllDevicesDoesNotInc(cluster, L, T, l, k, a, B, n, PU, g, o
             thrputAfter = f.R_kl(L, T, l, k, a, B, n, PU, g, o2) # throughput at time n = t
 
         # initialize minThroughputBefore and minThroughputAfter as that of (cluster l=0, device k=0)
-        if l <= 1 and k == 0:
+        if l == 0 and k == 0:
             minThroughputBefore = thrputBefore
             minThroughputAfter = thrputAfter
             
@@ -398,7 +399,7 @@ def algorithm1(M, T, L, devices, width, height,
 
         # rows to be created: (for training data) when QTable_rate = 1.0 :
         # [T = time slots (second)] * [devices = number of devices] * 3     
-        for t in range(1, T+1): # each time slot t
+        for t in range(1, T): # each time slot t
             print('time slot ' + str(t - 1) + ' / ' + str(T) + ' time=' + str(time.time()))
 
             currentTime = getTimeDif(currentTime, 'start of time slot')
