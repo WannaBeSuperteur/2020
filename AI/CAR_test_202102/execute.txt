@@ -9,3 +9,6 @@ SHAP: algo_0_shap.py
 LIME: algo_1_lime.py
 Grad-CAM: algo_2_gradcam2.py
 XCNN: algo_3_XCNN.py
+
+to check accuracy and MSE:
+accuracy.py
