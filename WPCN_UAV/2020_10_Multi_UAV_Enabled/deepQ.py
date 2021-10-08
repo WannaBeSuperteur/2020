@@ -50,7 +50,6 @@ def getS(UAV, n, l, a, L, B, PU, g, o2):
 
     # shape of a[n][l] : (K) (within l-th cluster)
     # shape of R       : (K) (within l-th cluster)
-    
     q = f.getqFromUAV(UAV, n)
     devices = len(a[n][l])
 
@@ -59,8 +58,6 @@ def getS(UAV, n, l, a, L, B, PU, g, o2):
         Rnkl = f.R_nkl(L, B, n, l, k, PU, g, o2)
         R.append(Rnkl)
 
-    # need to modify algorithm : a[n][l]
-    
     return [q, a[n][l], R]
 
 # get action with e-greedy while e increases

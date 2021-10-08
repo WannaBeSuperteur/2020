@@ -362,11 +362,7 @@ def algorithm1(M, T, L, devices, width, height,
         a.append(temp_a)
         g.append(temp_g)
         PU.append(temp_PU)
-
-    # save states for each UAV
-    s_UAV = []
-    oldS_UAV = []
-        
+  
     # init Q Table
     # Q Table = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
     Q = []
@@ -396,6 +392,18 @@ def algorithm1(M, T, L, devices, width, height,
             for j in range(len(a[i])):
                 for k in range(len(a[i][j])):
                     a[i][j][k] = 0
+
+        # save {a[n][l][k_l]}, {R[n][k_l]} of state = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+        # shape: (T+1, L, 2)
+        savedStates = []
+        
+        for i in range(T+1):
+            savedStates_ = []
+            
+            for j in range(L):
+                savedStates_.append([None, None])
+
+            savedStates.append(savedStates_)
 
         # rows to be created: (for training data) when QTable_rate = 1.0 :
         # [T = time slots (second)] * [devices = number of devices] * 3     
@@ -431,10 +439,12 @@ def algorithm1(M, T, L, devices, width, height,
                 nextH = nextLocation[2]
 
                 for tt in range(t, T+1):
+                    #if tt == t: print(UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t])
                     UAVs[i][0][tt] = nextX
                     UAVs[i][1][tt] = nextY
                     UAVs[i][2][tt] = nextH
-
+                    #if tt == t: print(UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t])
+                    
                 # if UAV i files beyond the border
                 #print('nextLocation:', nextLocation, [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
                 
@@ -443,13 +453,14 @@ def algorithm1(M, T, L, devices, width, height,
                     #print('beyond border')
 
                     # UAV i stays at the border
-                    if UAVs[i][0][t] < 0.0: UAVs[i][0][t] = 0.0 # x value < 0
-                    elif UAVs[i][0][t] > width: UAVs[i][0][t] = width # x value > width
-                    
-                    if UAVs[i][1][t] < 0.0: UAVs[i][1][t] = 0.0 # y value < 0
-                    elif UAVs[i][1][t] > height: UAVs[i][1][t] = height # y value > height
+                    for tt in range(t, T+1):
+                        if UAVs[i][0][tt] < 0.0: UAVs[i][0][tt] = 0.0 # x value < 0
+                        elif UAVs[i][0][tt] > width: UAVs[i][0][tt] = width # x value > width
+                        
+                        if UAVs[i][1][tt] < 0.0: UAVs[i][1][tt] = 0.0 # y value < 0
+                        elif UAVs[i][1][tt] > height: UAVs[i][1][tt] = height # y value > height
 
-                    if UAVs[i][2][t] < 0.0: UAVs[i][2][t] = 0.0 # h value < 0
+                        if UAVs[i][2][tt] < 0.0: UAVs[i][2][tt] = 0.0 # h value < 0
                     
                     # UAV i gets a penalty of -1
                     currentTime = getTimeDif(currentTime, '0 before updateDRlist')
@@ -505,17 +516,16 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # "Don't be confused between s = [q, a, R] and [state, action, newState]"
 
-                # compute initial state when time=0
-                if t == 1:
-                    s = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
-
-                # load saved state when time>0
-                else:
-                    s = s_UAV[i]
+                # compute initial state or get old state from savedStates
+                s = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
+                
+                if t > 1:
+                    s[1] = savedStates[t-1][i][0]
+                    s[2] = savedStates[t-1][i][1]
 
                 # save current state before getting next state
                 oldS = copy.deepcopy(s)
-
+                
                 # get next state
                 (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, clusters, B, PU, g, o2, L,
                                                  b1, b2, S_, u1, u2, fc, alpha)
@@ -523,14 +533,10 @@ def algorithm1(M, T, L, devices, width, height,
                 q_next = copy.deepcopy(nextState[0])
                 a_next = copy.deepcopy(nextState[1])
                 R_next = copy.deepcopy(nextState[2][i])
+                
+                savedStates[t][i] = [a_next, R_next]
                 s = [q_next, a_next, R_next] # update current state
                 
-                # save old state and next state(=current state)
-                if t == 1:
-                    s_UAV.append(s)
-                else:
-                    s_UAV[i] = s
-
                 # append to oldS_list and newS_list
                 oldS_list.append(oldS)
                 newS_list.append(s)
