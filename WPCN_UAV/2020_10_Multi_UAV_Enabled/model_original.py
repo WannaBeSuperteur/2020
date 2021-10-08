@@ -373,7 +373,7 @@ def algorithm1(M, T, L, devices, width, height,
     Q = []
 
     ### DATA COLLECT ###
-    replayBuffer = [] # REPLAY BUFFER
+    # REPLAY BUFFER: later
 
     currentTime = getTimeDif(None, 'init')
     
@@ -609,7 +609,7 @@ def algorithm1(M, T, L, devices, width, height,
                         
                         index += 1
 
-            # update Q Table and store (s,a,r,s') into replay buffer
+            # update Q Table and store (s,a,r,s') into replay buffer (later)
             for i in range(L): # each UAV i
                 currentTime = getTimeDif(currentTime, '4')
 
@@ -635,36 +635,39 @@ def algorithm1(M, T, L, devices, width, height,
 
                 currentTime = getTimeDif(currentTime, '4 before getMaxQ')
 
-                (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
-                                           useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
-                    
-                currentTime = getTimeDif(currentTime, '4 after getMaxQ')
-                    
-                reward = alphaL * (directReward_list[i] + r_ * maxQ)
-
-                # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
-                # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
-                # and   Q = reward
-                # from oldS_list, action_list and reward
                 action_rewards = copy.deepcopy(zero_27)
-                action_rewards[dq.getActionIndex(action_list[i])] = reward
+
+                # compute reward for each action (ALL 27 POSSIBLE ACTIONS)
+                for j in range(27):
                     
+                    # first iteration, trainedModel does not exist
+                    if episode == 0:
+                        (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
+                                               useDL, None, optimizer, b1, b2, S_, u1, u2, fc, alpha)
+                    
+                    # for optimal action -> execute
+                    elif dq.getAction(j) == action_list[i]:
+                        (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
+                                               useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
+
+                    # non-optimal action -> get deep-Q value
+                    else:
+                        maxQ = max(dq.deepLearningQ_test(oldS_list[i], False, trainedModel, optimizer, clusters)[0])
+                        
+                    currentTime = getTimeDif(currentTime, '4 after getMaxQ')
+                        
+                    reward = alphaL * (directReward_list[i] + r_ * maxQ)
+
+                    # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
+                    # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
+                    # and   Q = reward
+                    # from oldS_list, action_list and reward
+                    action_rewards[j] = reward
+
                 QTable.append([oldS_list[i], action_rewards, i])
 
-                # append to replay buffer
-                replayBuffer.append([oldS_list[i], action_list[i], reward, newS_list[i]])
-            
-            # Randomly select a minibatch of H_ samples from replay buffer
-            H_ = min(30, len(replayBuffer)) # select maximum 30 samples
-            
-            minibatch = [] # minibatch of H_ samples from replay buffer
-
-            while len(minibatch) < H_:
-                rand = random.randint(0, len(replayBuffer)-1) # randomly select from the replay buffer
-                minibatch.append(replayBuffer[rand]) # append to the buffer
-
         ### TRAIN and VALIDATION ###
-        if episode % 10 == 0:
+        if episode % 1 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode, clusters)
 
