@@ -375,6 +375,9 @@ def algorithm1(M, T, L, devices, width, height,
     for episode in range(M):
         print('episode ' + str(episode) + ' / ' + str(M))
 
+        # choose action with e-greedy while e increases
+        e_ = episode / M # example
+
         # use deep learning if length of Q table >= 100
         # load trained model for episode = 1, 2, ...
         if len(QTable) > 0 and episode > 0:
@@ -427,7 +430,6 @@ def algorithm1(M, T, L, devices, width, height,
                 s_i = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
 
                 # choose action with e-greedy while e increases
-                e_ = episode / M # example
                 action = dq.getActionWithE(Q, s_i, e_)
 
                 #print('current UAV location:', [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
@@ -486,15 +488,21 @@ def algorithm1(M, T, L, devices, width, height,
                         # UAV i and UAV j get a penalty of -1
                         s_i = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
 
+                        # (for i) choose action with e-greedy while e increases
+                        action_i = dq.getActionWithE(Q, s_i, e_)
+
                         currentTime = getTimeDif(currentTime, '1-0 before updateDRlist')
-                        updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                        updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action_i, a,
                                      Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                      trainedModel, optimizer, False)
 
                         s_j = dq.getS(UAVs[j], t, j, a, L, B, PU, g, o2)
 
+                        # (for j) choose action with e-greedy while e increases
+                        action_j = dq.getActionWithE(Q, s_j, e_)
+
                         currentTime = getTimeDif(currentTime, '1-1 before updateDRlist')
-                        updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                        updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action_j, a,
                                      Q, QTable, s_j, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                      trainedModel, optimizer, False)
                         currentTime = getTimeDif(currentTime, '1-1 after updateDRlist')
@@ -518,6 +526,7 @@ def algorithm1(M, T, L, devices, width, height,
 
                 # compute initial state or get old state from savedStates
                 s = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
+                action_s = dq.getActionWithE(Q, s, e_)
                 
                 if t > 1:
                     s[1] = savedStates[t-1][i][0]
@@ -527,7 +536,7 @@ def algorithm1(M, T, L, devices, width, height,
                 oldS = copy.deepcopy(s)
                 
                 # get next state
-                (nextState, _) = dq.getNextState(s, action, t, UAVs, i, a, clusters, B, PU, g, o2, L,
+                (nextState, _) = dq.getNextState(s, action_s, t, UAVs, i, a, clusters, B, PU, g, o2, L,
                                                  b1, b2, S_, u1, u2, fc, alpha)
                 
                 q_next = copy.deepcopy(nextState[0])
@@ -557,9 +566,10 @@ def algorithm1(M, T, L, devices, width, height,
 
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
+                    action_si = dq.getActionWithE(Q, s_i, e_)
 
                     currentTime = getTimeDif(currentTime, '2 before updateDRlist')
-                    updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                    updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action_si, a,
                                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                  trainedModel, optimizer, False)
                     currentTime = getTimeDif(currentTime, '2 after updateDRlist')
@@ -584,9 +594,10 @@ def algorithm1(M, T, L, devices, width, height,
                     
                     for UAV in UAVs:
                         s_UAV = dq.getS(UAV, t, index, a, L, B, PU, g, o2)
+                        action_sUAV = dq.getActionWithE(Q, s_UAV, e_)
 
                         currentTime = getTimeDif(currentTime, '3 before updateDRlist')
-                        updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
+                        updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action_sUAV, a,
                                      Q, QTable, s_UAV, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                                      trainedModel, optimizer, False)
                         currentTime = getTimeDif(currentTime, '3 after updateDRlist')
