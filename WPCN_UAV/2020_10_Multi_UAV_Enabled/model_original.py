@@ -66,19 +66,24 @@ def IsTrajectoryCrossed(UAVi, UAVj, t):
     # get position of UAVi and UAVj at time t-1 and t
     xi_before = UAVi[0][t-1]
     yi_before = UAVi[1][t-1]
+    hi_before = UAVi[2][t-1]
     xi_after = UAVi[0][t]
     yi_after = UAVi[1][t]
+    hi_after = UAVi[2][t]
 
     xj_before = UAVj[0][t-1]
     yj_before = UAVj[1][t-1]
+    hj_before = UAVj[2][t-1]
     xj_after = UAVj[0][t]
     yj_after = UAVj[1][t]
+    hj_after = UAVj[2][t]
 
     # decide there is crossing of trajectory
-    UAVi_before = (xi_before, yi_before) # location of UAVi at time t-1
-    UAVi_after = (xi_after, yi_after) # location of UAVi at time t
-    UAVj_before = (xj_before, yj_before) # location of UAVj at time t-1
-    UAVj_after = (xj_after, yj_after) # location of UAVj at time t
+    UAVi_before = (xi_before, yi_before, hi_before) # location of UAVi at time t-1
+    UAVi_after = (xi_after, yi_after, hi_after) # location of UAVi at time t
+    
+    UAVj_before = (xj_before, yj_before, hj_before) # location of UAVj at time t-1
+    UAVj_after = (xj_after, yj_after, hj_after) # location of UAVj at time t
 
     # check if the segments intersect
     UAVi_line = LineString([UAVi_before, UAVi_after])
