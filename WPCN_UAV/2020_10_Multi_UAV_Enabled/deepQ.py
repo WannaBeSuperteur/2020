@@ -230,7 +230,7 @@ def normalize(array, applyLog, title, printAnalysis):
     return arr
 
 # define model (the number of input units not needed)
-def defineModel():
+def defineModel(maxDevices):
 
     # load settings and find learning rate
     learningRate = helper.loadSettings({'learningRate':'float'})['learningRate']
@@ -240,10 +240,9 @@ def defineModel():
 
     # define the model
     model = Sequential()
-    model.add(tf.keras.layers.Dense(units=32, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dense(units=128, activation='relu', kernel_regularizer=L2))
-    model.add(tf.keras.layers.Dense(units=64, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=2*maxDevices+3, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=27, activation='tanh'))
 
     adamOpt = tf.keras.optimizers.Adam(learning_rate=learningRate)
@@ -308,7 +307,7 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode, clusters):
 
     maxDevices = getMaxDeviceCount(clusters)
-    model = defineModel()
+    model = defineModel(maxDevices)
     epochs = 30
     
     # Q : [state  , action_reward, i (UAV/cluster index), k (device index)]
