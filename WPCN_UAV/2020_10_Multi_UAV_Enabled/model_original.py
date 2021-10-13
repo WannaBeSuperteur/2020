@@ -210,7 +210,7 @@ def h(UAVs):
 # updatingQtable    : update Q table?
 def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                 trainedModel, optimizer, updatingQtable):
+                 trainedModel, optimizer, updatingQtable, printTimeDif):
     
     # for each device k
     for k in range(len(clusters[i])):
@@ -224,24 +224,22 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
         PNLoS_i = 1.0 - PLoS_i
             
         # update Q value
-        currentTime = getTimeDif(None, '(updateDRlist) before g_nlkl')
+        currentTime = getTimeDif(None, '(updateDRlist) before g_nlkl', printTimeDif)
         g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
 
-        currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl')
+        currentTime = getTimeDif(currentTime, '(updateDRlist) after g_nlkl', printTimeDif)
 
         if updatingQtable == True:
             dq.updateQvalue(Q, QTable, s_i, action, a, value, alphaL, r_, n, UAVs, i, useDL, clusters, B, PU, g, o2, L,
                             trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
 
-            currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue')
-        
-        directReward_list[i] += value
+            currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue', printTimeDif)
+
+        if k == 0: directReward_list[i] += value
 
 # print time difference
-def getTimeDif(T, msg):
+def getTimeDif(T, msg, printTimeDif):
 
-    # load settings and finish if NOT print time difference
-    printTimeDif = helper.loadSettings({'printTimeDif':'logical'})['printTimeDif']
     if printTimeDif == False: return
 
     # print time difference
@@ -253,6 +251,11 @@ def getTimeDif(T, msg):
         print('[' + msg + ']')
     
     return newT
+
+# print warning
+def getWarning(printWarning, text, value):
+
+    if printWarning == True: print('[' + str(value) + '] ' + text)
 
 # to do:
 # make state transition algorithm (the best state)
@@ -274,6 +277,10 @@ def getTimeDif(T, msg):
 def algorithm1(M, T, L, devices, width, height,
                H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
                deviceName, QTable_rate, iteration):
+
+    # load settings
+    printTimeDif = helper.loadSettings({'printTimeDif':'logical'})['printTimeDif']
+    printWarning = helper.loadSettings({'warning':'logical'})['warning']
     
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -375,7 +382,7 @@ def algorithm1(M, T, L, devices, width, height,
     ### DATA COLLECT ###
     # REPLAY BUFFER: later
 
-    currentTime = getTimeDif(None, 'init')
+    currentTime = getTimeDif(None, 'init', printTimeDif)
     
     for episode in range(M):
         print('episode ' + str(episode) + ' / ' + str(M))
@@ -418,7 +425,7 @@ def algorithm1(M, T, L, devices, width, height,
         for t in range(1, T): # each time slot t
             print('time slot ' + str(t - 1) + ' / ' + str(T) + ' time=' + str(time.time()))
 
-            currentTime = getTimeDif(currentTime, 'start of time slot')
+            currentTime = getTimeDif(currentTime, 'start of time slot', printTimeDif)
 
             # initialize direct reward
             directReward_list = [] # direct reward for action (for each UAV)
@@ -429,7 +436,7 @@ def algorithm1(M, T, L, devices, width, height,
             newS_list = [] # new states (for each UAV)
             
             for i in range(L): # for each UAV = each cluster
-                currentTime = getTimeDif(currentTime, '0')
+                currentTime = getTimeDif(currentTime, '0', printTimeDif)
                 
                 # get UAV i's next location
                 s_i = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
@@ -456,8 +463,7 @@ def algorithm1(M, T, L, devices, width, height,
                 #print('nextLocation:', nextLocation, [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
                 
                 if beyondBorder(UAVs[i], t, width, height) == True:
-                    
-                    #print('beyond border')
+                    getWarning(printWarning, 'beyond border', i)
 
                     # UAV i stays at the border
                     for tt in range(t, T+1):
@@ -470,19 +476,21 @@ def algorithm1(M, T, L, devices, width, height,
                         if UAVs[i][2][tt] < 0.0: UAVs[i][2][tt] = 0.0 # h value < 0
                     
                     # UAV i gets a penalty of -1
-                    currentTime = getTimeDif(currentTime, '0 before updateDRlist')
+                    currentTime = getTimeDif(currentTime, '0 before updateDRlist', printTimeDif)
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action, a,
                                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                 trainedModel, optimizer, False)
-                    currentTime = getTimeDif(currentTime, '0 after updateDRlist')
+                                 trainedModel, optimizer, False, printTimeDif)
+                    currentTime = getTimeDif(currentTime, '0 after updateDRlist', printTimeDif)
 
             for i in range(L): # each UAV i
-                currentTime = getTimeDif(currentTime, '1')
+                currentTime = getTimeDif(currentTime, '1', printTimeDif)
                 
                 for j in range(i): # each UAV j
 
                     # UAV i and j's trajectory exists cross
                     if IsTrajectoryCrossed(UAVs[i], UAVs[j], t) == True:
+                        getWarning(printWarning, 'trajectory crossed', i)
+                        getWarning(printWarning, 'trajectory crossed', j)
                         
                         # UAV i and UAV j stays at the previous position
                         UAVs[i][0][t] = UAVs[i][0][t-1]
@@ -496,21 +504,21 @@ def algorithm1(M, T, L, devices, width, height,
                         # (for i) choose action with e-greedy while e increases
                         action_i = dq.getActionWithE(Q, s_i, e_)
 
-                        currentTime = getTimeDif(currentTime, '1-0 before updateDRlist')
+                        currentTime = getTimeDif(currentTime, '1-0 before updateDRlist', printTimeDif)
                         updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action_i, a,
                                      Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                     trainedModel, optimizer, False)
+                                     trainedModel, optimizer, False, printTimeDif)
 
                         s_j = dq.getS(UAVs[j], t, j, a, L, B, PU, g, o2)
 
                         # (for j) choose action with e-greedy while e increases
                         action_j = dq.getActionWithE(Q, s_j, e_)
 
-                        currentTime = getTimeDif(currentTime, '1-1 before updateDRlist')
+                        currentTime = getTimeDif(currentTime, '1-1 before updateDRlist', printTimeDif)
                         updateDRlist(UAVs, -1, j, deviceList, b1, b2, S_, u1, u2, fc, t, action_j, a,
                                      Q, QTable, s_j, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                     trainedModel, optimizer, False)
-                        currentTime = getTimeDif(currentTime, '1-1 after updateDRlist')
+                                     trainedModel, optimizer, False, printTimeDif)
+                        currentTime = getTimeDif(currentTime, '1-1 after updateDRlist', printTimeDif)
 
                 # get throughput (before) (time = n) (n = t, l = i, k = t)
                 # error if (time slot value) > (devices)
@@ -568,16 +576,17 @@ def algorithm1(M, T, L, devices, width, height,
                 # assumption: device t is the device communicated with when the time slot is t
                 # [temporary] assume that the index of the device is t
                 if afterThroughput <= beforeThroughput:
+                    getWarning(printWarning, 'throughput did not increase', i)
 
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
                     action_si = dq.getActionWithE(Q, s_i, e_)
 
-                    currentTime = getTimeDif(currentTime, '2 before updateDRlist')
+                    currentTime = getTimeDif(currentTime, '2 before updateDRlist', printTimeDif)
                     updateDRlist(UAVs, -1, i, deviceList, b1, b2, S_, u1, u2, fc, t, action_si, a,
                                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                 trainedModel, optimizer, False)
-                    currentTime = getTimeDif(currentTime, '2 after updateDRlist')
+                                 trainedModel, optimizer, False, printTimeDif)
+                    currentTime = getTimeDif(currentTime, '2 after updateDRlist', printTimeDif)
 
             # if time slot is T
             if t == T:
@@ -587,12 +596,14 @@ def algorithm1(M, T, L, devices, width, height,
                     
                     # if minimum throughput of all devices in a cluster == 0
                     if isMinThroughputOfAllDevicesInCluster0(clusters[i], L, T, l, k, a, B, t, PU, g, o2) == True:
+                        getWarning(printWarning, 'min throughput == 0', i)
 
                         # The UAV get a penalty of -2
                         directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc(clusters[i], L, T, l, k, a, B, t, PU, g, o2) == True:
+                    getWarning(printWarning, 'min throughput does not increase', i)
 
                     # All UAVs get a penalty of -1
                     index = 0
@@ -601,24 +612,24 @@ def algorithm1(M, T, L, devices, width, height,
                         s_UAV = dq.getS(UAV, t, index, a, L, B, PU, g, o2)
                         action_sUAV = dq.getActionWithE(Q, s_UAV, e_)
 
-                        currentTime = getTimeDif(currentTime, '3 before updateDRlist')
+                        currentTime = getTimeDif(currentTime, '3 before updateDRlist', printTimeDif)
                         updateDRlist(UAVs, -1, index, deviceList, b1, b2, S_, u1, u2, fc, t, action_sUAV, a,
                                      Q, QTable, s_UAV, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
-                                     trainedModel, optimizer, False)
-                        currentTime = getTimeDif(currentTime, '3 after updateDRlist')
+                                     trainedModel, optimizer, False, printTimeDif)
+                        currentTime = getTimeDif(currentTime, '3 after updateDRlist', printTimeDif)
                         
                         index += 1
 
             # update Q Table and store (s,a,r,s') into replay buffer (later)
             for i in range(L): # each UAV i
-                currentTime = getTimeDif(currentTime, '4')
+                currentTime = getTimeDif(currentTime, '4', printTimeDif)
 
                 # for each device k,
-                # reward = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
+                # reward = alphaL*(Rwd(s, a) + r_*maxQ)
+                #        = alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
                 # where maxQ = max(a')Q(s', a')
                 maxQs = []
-                rewards = []
-
+                
                 # for each device k
                 for k in range(len(clusters[i])):
 
@@ -633,7 +644,7 @@ def algorithm1(M, T, L, devices, width, height,
                     g_i = f.g_nlkl(PLoS_i, u1, PNLoS_i, u2, fc, i, k, clusters, x_UAV, y_UAV, h_UAV, alpha)
                     g[t][i][k][i] = g_i
 
-                currentTime = getTimeDif(currentTime, '4 before getMaxQ')
+                currentTime = getTimeDif(currentTime, '4 before getMaxQ', printTimeDif)
 
                 action_rewards = copy.deepcopy(zero_27)
 
@@ -642,28 +653,26 @@ def algorithm1(M, T, L, devices, width, height,
                     
                     # first iteration, trainedModel does not exist
                     if episode == 0:
-                        (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
+                        (maxQ, _) = dq.getMaxQ(oldS_list[i], dq.getAction(j), t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
                                                useDL, None, optimizer, b1, b2, S_, u1, u2, fc, alpha)
                     
-                    # for optimal action -> execute
-                    elif dq.getAction(j) == action_list[i]:
-                        (maxQ, _) = dq.getMaxQ(oldS_list[i], action_list[i], t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
-                                               useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
-
-                    # non-optimal action -> get deep-Q value
+                    # trainedModel exists -> execute
                     else:
-                        maxQ = max(dq.deepLearningQ_test(oldS_list[i], False, trainedModel, optimizer, clusters)[0])
+                        (maxQ, _) = dq.getMaxQ(oldS_list[i], dq.getAction(j), t, UAVs, i, a, actionSpace, clusters, B, PU, g, o2, L,
+                                               useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
                         
-                    currentTime = getTimeDif(currentTime, '4 after getMaxQ')
+                    currentTime = getTimeDif(currentTime, '4 after getMaxQ', printTimeDif)
                         
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
-
+                    maxQs.append(maxQ)
+                    
                     # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
                     # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
                     # and   Q = reward
                     # from oldS_list, action_list and reward
                     action_rewards[j] = reward
 
+                print(oldS_list[i])
                 QTable.append([oldS_list[i], action_rewards, i])
 
         ### TRAIN and VALIDATION ###
