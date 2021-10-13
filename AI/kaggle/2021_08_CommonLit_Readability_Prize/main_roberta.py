@@ -21,6 +21,8 @@ import warnings
 warnings.filterwarnings('ignore')
 warnings.filterwarnings('always')
 
+np.set_printoptions(linewidth=180)
+
 # model
 class TEXT_MODEL_LSTM(tf.keras.Model):
     
@@ -91,7 +93,7 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         return model_output
 
 # load the dataset
-def loadData():
+def loadData(limit):
     try:
         # for local
         trainData = pd.read_csv('train.csv')
@@ -103,8 +105,8 @@ def loadData():
         trainData = pd.read_csv('/kaggle/input/commonlitreadabilityprize/train.csv')
         testData = pd.read_csv('/kaggle/input/commonlitreadabilityprize/test.csv')
 
-    train_X = np.array(trainData['excerpt'])
-    train_Y = np.array(trainData['target'])
+    train_X = np.array(trainData['excerpt'])[:min(len(trainData), limit)]
+    train_Y = np.array(trainData['target'])[:min(len(trainData), limit)]
     test_X = np.array(testData['excerpt'])
 
     return (train_X, train_Y, test_X, testData['id'])
@@ -120,7 +122,7 @@ def applyRegex(all_X):
     return all_X
 
 # encode and add padding to the text
-def encodeX(X, roberta_tokenizer, roberta_model):
+def encodeX(X, roberta_tokenizer, roberta_model, ind):
     encoded_X = []
 
     print('')
@@ -133,10 +135,11 @@ def encodeX(X, roberta_tokenizer, roberta_model):
 
         encoded = []
         for j in range(len(roberta_lhs)): # N iterations
-            encoded.append(roberta_lhs[j][0])
+            encoded.append(roberta_lhs[j][ind]) # with index in 0..767
         encoded_X.append(encoded)
 
-        print(str(i) + ' / ' + str(len(X)) + ' : len=' + str(len(encoded)))
+        if ind == 0 or i % 10 == 0:
+            print(str(i) + ' / ' + str(len(X)) + ' : len=' + str(len(encoded)))
 
     print('')
         
@@ -259,7 +262,7 @@ def getAdditionalInfo(pad_encoded_X, leng, X, encoded_X):
 if __name__ == '__main__':
 
     # read data
-    (train_X, train_Y, test_X, ids) = loadData()
+    (train_X, train_Y, test_X, ids) = loadData(100)
 
     trainLen = len(train_X)
     testLen = len(test_X)
@@ -282,76 +285,110 @@ if __name__ == '__main__':
     print(train_Y)
     
     # apply regular expression and tokenize input data
-    train_X = applyRegex(train_X)
-    test_X  = applyRegex(test_X)
+    train_X  = applyRegex(train_X)
+    test_X   = applyRegex(test_X)
+    max_lens = []
 
-    # encode input data
-    encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model)
-    encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model)
+    pad_encoded_train_Xs = []
+    pad_encoded_test_Xs  = []
 
-    print('\n[04] encoded_train_X :')
-    print(np.shape(encoded_train_X))
-    
-    print('\n[05] encoded_test_X :')
-    print(np.shape(encoded_test_X))
-    
-    # add padding to input data
-    (pad_encoded_train_X, pad_encoded_test_X, max_len) = addPadding(encoded_train_X, encoded_test_X)
-    print('\n[06] max_len=' + str(max_len))
+    count = 3
 
-    print('\n[07] pad_encoded_train_X :')
-    print(np.shape(pad_encoded_train_X))
-    print(pad_encoded_train_X)
-    
-    print('\n[08] pad_encoded_test_X :')
-    print(np.shape(pad_encoded_test_X))
-    print(pad_encoded_test_X)
-    
-    # find additional info
-    pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
-    pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
+    # encode input data 3 times with indices=0,1,...,19 in 0..767
+    for i in range(count):
+        print(str(i) + ' / ' + str(count))
+        
+        encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model, i)
+        encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model, i)
 
-    print('\n[09] pad_encoded_train_X with additional info :')
-    print(np.shape(pad_encoded_train_X))
-    print(pad_encoded_train_X)
+        if i == 0:
+            print('\n[04] encoded_train_X :')
+            print(np.shape(encoded_train_X))
+            
+            print('\n[05] encoded_test_X :')
+            print(np.shape(encoded_test_X))
+        
+        # add padding to input data
+        (pad_encoded_train_X, pad_encoded_test_X, max_len) = addPadding(encoded_train_X, encoded_test_X)
+        max_lens.append(max_len)
 
-    print('\n[10] pad_encoded_test_X with additional info :')
-    print(np.shape(pad_encoded_test_X))
-    print(pad_encoded_test_X)
+        if i == 0:
+            print('\n[06] max_len=' + str(max_len))
+
+            print('\n[07] pad_encoded_train_X :')
+            print(np.shape(pad_encoded_train_X))
+            print(pad_encoded_train_X)
+            
+            print('\n[08] pad_encoded_test_X :')
+            print(np.shape(pad_encoded_test_X))
+            print(pad_encoded_test_X)
+        
+        # find additional info
+        pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
+        pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
+
+        pad_encoded_train_Xs.append(pad_encoded_train_X)
+        pad_encoded_test_Xs.append(pad_encoded_test_X)
+
+        if i == 0:
+            print('\n[09] pad_encoded_train_X with additional info :')
+            print(np.shape(pad_encoded_train_X))
+            print(pad_encoded_train_X)
+
+            print('\n[10] pad_encoded_test_X with additional info :')
+            print(np.shape(pad_encoded_test_X))
+            print(pad_encoded_test_X)
+
+    print('\n[11] max_len\'s :')
+    print(max_lens)
     
     # train using GPU
-    try:
-        # for local with GPU
-        with tf.device('/gpu:0'):
-            model = defineAndTrainModel(max_len, pad_encoded_train_X, train_Y)
-            
-    except:
-        # for kaggle notebook or local with no GPU
-        print('cannot find GPU')
-        model = defineAndTrainModel(max_len, pad_encoded_train_X, train_Y)
-    
-    # predict using model
-    prediction = model.predict(pad_encoded_test_X).flatten()
-    prediction = np.clip(prediction, 0.0001, 0.9999)
-
-    print('\n[11] original (normalized and then SIGMOID-ed) prediction:')
-    print(np.shape(prediction))
-    print(prediction)
-
-    # y -> denormalize(invSigmoid(y))
-    for i in range(len(prediction)):
-        prediction[i] = invSigmoid(prediction[i])
+    for i in range(count):
+        try:
+            # for local with GPU
+            with tf.device('/gpu:0'):
+                model = defineAndTrainModel(max_lens[i], pad_encoded_train_Xs[i], train_Y)
+                
+        except:
+            # for kaggle notebook or local with no GPU
+            print('cannot find GPU')
+            model = defineAndTrainModel(max_lens[i], pad_encoded_train_Xs[i], train_Y)
         
-    prediction = prediction * stddev + avg
+        # predict using model
+        prediction = model.predict(pad_encoded_test_Xs[i]).flatten()
+        prediction = np.clip(prediction, 0.0001, 0.9999)
 
-    # write final submission
-    print('\n[12] converted FINAL prediction:')
-    print(np.shape(prediction))
-    print(prediction)
+        print('\n[11] original (normalized and then SIGMOID-ed) prediction:')
+        print(np.shape(prediction))
+        print(prediction)
+
+        # y -> denormalize(invSigmoid(y))
+        for i in range(len(prediction)):
+            prediction[i] = invSigmoid(prediction[i])
+            
+        prediction = prediction * stddev + avg
+
+        # write final submission
+        print('\n[12] converted prediction:')
+        print(np.shape(prediction))
+        print(prediction)
+
+        try:
+            final_prediction += prediction
+        except:
+            final_prediction = prediction
+
+    # print final prediction
+    final_prediction /= float(count)
     
+    print('\n[13] FINAL prediction:')
+    print(np.shape(final_prediction))
+    print(final_prediction)
+
+    # final submission
     final_submission = pd.DataFrame(
     {
         'id': ids,
-        'target': prediction
+        'target': final_prediction
     })
     final_submission.to_csv('submission.csv', index=False)
