@@ -21,4 +21,5 @@ H=15 # hovering elevation (m)
 learningRate=0.0001 # learning rate of DQN
 printTimeDif=False # print time difference
 timeCheck=False # print time for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
+warning=True # print warning for Q-value penalties
 constantToFill=-1.0 # constant to fill the state arrays (because of difference among the number of devices among clusters)

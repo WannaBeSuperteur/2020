@@ -672,11 +672,10 @@ def algorithm1(M, T, L, devices, width, height,
                     # from oldS_list, action_list and reward
                     action_rewards[j] = reward
 
-                print(oldS_list[i])
                 QTable.append([oldS_list[i], action_rewards, i])
 
         ### TRAIN and VALIDATION ###
-        if episode % 1 == 0:
+        if episode % 10 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode, clusters)
 

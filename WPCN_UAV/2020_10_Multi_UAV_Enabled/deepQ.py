@@ -382,7 +382,9 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
     
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
-    testO = trainedModel.predict(stateArray)
+    #print(time.time())
+    testO = trainedModel.predict(stateArray) # (LARGEST time consumption)
+    #print(time.time())
 
     if verbose == True: print('test finished')
 
