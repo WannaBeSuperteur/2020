@@ -9,19 +9,21 @@ if __name__ == '__main__':
     # val_acc    for last epoch, last 3 epochs, and last 5 epochs
     analyze_result = []
     iteration = 0
-    episodes = 30
-    dirname = '21080300'
+    episodes = 191
+    dirname = None
 
     for e in range(episodes):
-        
-        print(e)
 
         # load *.csv file about episode e
-        if dirname == None:
-            episode_data = pd.read_csv('train_result_iter_' + str(iteration) + '_episode_' + str(e) + '.csv')
-        else:
-            episode_data = pd.read_csv(dirname + '/train_result_iter_' + str(iteration) + '_episode_' + str(e) + '.csv')
+        try:
+            if dirname == None:
+                episode_data = pd.read_csv('train_result_iter_' + str(iteration) + '_episode_' + str(e) + '.csv')
+            else:
+                episode_data = pd.read_csv(dirname + '/train_result_iter_' + str(iteration) + '_episode_' + str(e) + '.csv')
+        except:
+            continue
 
+        print(e)
         epochs = episode_data.shape[0]
 
         # train loss
