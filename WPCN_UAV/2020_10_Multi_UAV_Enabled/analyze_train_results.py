@@ -9,7 +9,7 @@ if __name__ == '__main__':
     # val_acc    for last epoch, last 3 epochs, and last 5 epochs
     analyze_result = []
     iteration = 0
-    episodes = 191
+    episodes = 901
     dirname = None
 
     for e in range(episodes):

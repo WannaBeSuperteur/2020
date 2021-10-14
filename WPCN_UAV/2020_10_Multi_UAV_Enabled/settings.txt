@@ -1,5 +1,5 @@
 deviceName=gpu:0
-QTable_rate=1.0
+QTable_rate=0.5
 fc=800000000 # carrier frequency
 B=1000000 # bandwidth
 o2=-110 # Noise power spectral
@@ -15,7 +15,7 @@ width=50 # width (m)
 height=50 # height (m)
 M=1000 # episodes
 L=1 # number of clusters = number of UAVs # 5
-devices=10 # number of devices # 20
+devices=20 # number of devices
 T=30 # time (in seconds)
 H=15 # hovering elevation (m)
 learningRate=0.0001 # learning rate of DQN
