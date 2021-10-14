@@ -1,20 +1,11 @@
-# ref: https://wikidocs.net/45101
-#      https://huggingface.co/transformers/model_doc/roberta.html
+# https://analyticsindiamag.com/python-guide-to-huggingface-distilbert-smaller-faster-cheaper-distilled-bert/
 
 import math
 import numpy as np
 import pandas as pd
 import re
 
-import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras.preprocessing.text import Tokenizer
-from tensorflow.keras.preprocessing.sequence import pad_sequences
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.utils import to_categorical
-from tensorflow.keras import optimizers
-
-from transformers import RobertaTokenizer, TFRobertaModel
+from transformers import DistilBertModel, DistilBertConfig, DistilBertTokenizer
 import tensorflow as tf
 
 import warnings
@@ -122,20 +113,19 @@ def applyRegex(all_X):
     return all_X
 
 # encode and add padding to the text
-def encodeX(X, roberta_tokenizer, roberta_model, ind):
+def encodeX(X, distilbert_tokenizer, distilbert_model, ind):
     encoded_X = []
 
     print('')
     
     for i in range(len(X)):
-        roberta_input  = roberta_tokenizer(X[i], return_tensors="tf")
-        roberta_output = roberta_model(roberta_input)
-        roberta_lhs    = roberta_output.last_hidden_state # shape: (1, N, 768)
-        roberta_lhs    = np.array(roberta_lhs)[0] # shape: (N, 768)
+        distilbert_input  = distilbert_tokenizer(X[i], return_tensors="pt")
+        distilbert_output = distilbert_model(**distilbert_input)
+        distilbert_out = distilbert_output[0].detach().numpy()[0]
 
         encoded = []
-        for j in range(len(roberta_lhs)): # N iterations
-            encoded.append(roberta_lhs[j][ind]) # with index in 0..767
+        for j in range(len(distilbert_out)): # N iterations
+            encoded.append(distilbert_out[j][ind]) # with index in 0..767
         encoded_X.append(encoded)
 
         if ind == 0 or i % 10 == 0:
@@ -271,9 +261,9 @@ if __name__ == '__main__':
     print(np.shape(train_Y))
     print(train_Y)
 
-    # roBERTa tokenizer and model
-    roberta_tokenizer = RobertaTokenizer.from_pretrained('roberta-base')
-    roberta_model = TFRobertaModel.from_pretrained('roberta-base')
+    # DistilBert tokenizer and model
+    distilbert_tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
+    distilbert_model     = DistilBertModel.from_pretrained('distilbert-base-uncased')
     
     # normalize output data : y -> sigmoid(normalize(y))
     (train_Y, avg, stddev) = normalize(train_Y)
@@ -298,16 +288,16 @@ if __name__ == '__main__':
     for i in range(count):
         print(str(i) + ' / ' + str(count))
         
-        encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model, i)
-        encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model, i)
+        encoded_train_X = encodeX(train_X, distilbert_tokenizer, distilbert_model, i)
+        encoded_test_X  = encodeX(test_X , distilbert_tokenizer, distilbert_model, i)
 
         if i == 0:
             print('\n[04] encoded_train_X :')
             print(np.shape(encoded_train_X))
-            
+                    
             print('\n[05] encoded_test_X :')
             print(np.shape(encoded_test_X))
-        
+            
         # add padding to input data
         (pad_encoded_train_X, pad_encoded_test_X, max_len) = addPadding(encoded_train_X, encoded_test_X)
         max_lens.append(max_len)
@@ -318,11 +308,11 @@ if __name__ == '__main__':
             print('\n[07] pad_encoded_train_X :')
             print(np.shape(pad_encoded_train_X))
             print(pad_encoded_train_X)
-            
+                    
             print('\n[08] pad_encoded_test_X :')
             print(np.shape(pad_encoded_test_X))
             print(pad_encoded_test_X)
-        
+            
         # find additional info
         pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
         pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
@@ -334,28 +324,28 @@ if __name__ == '__main__':
             print('\n[09] pad_encoded_train_X with additional info :')
             print(np.shape(pad_encoded_train_X))
             print(pad_encoded_train_X)
-
+                    
             print('\n[10] pad_encoded_test_X with additional info :')
             print(np.shape(pad_encoded_test_X))
             print(pad_encoded_test_X)
 
     print('\n[11] max_len\'s :')
     print(max_lens)
-    
+        
     # train using GPU
     for i in range(count):
         try:
             # for local with GPU
             with tf.device('/gpu:0'):
-                model = defineAndTrainModel(max_lens[i], pad_encoded_train_Xs[i], train_Y)
-                
+                model = defineAndTrainModel(max_len, pad_encoded_train_X, train_Y)
+                    
         except:
             # for kaggle notebook or local with no GPU
             print('cannot find GPU')
-            model = defineAndTrainModel(max_lens[i], pad_encoded_train_Xs[i], train_Y)
-        
+            model = defineAndTrainModel(max_len, pad_encoded_train_X, train_Y)
+            
         # predict using model
-        prediction = model.predict(pad_encoded_test_Xs[i]).flatten()
+        prediction = model.predict(pad_encoded_test_X).flatten()
         prediction = np.clip(prediction, 0.0001, 0.9999)
 
         print('\n[12] original (normalized and then SIGMOID-ed) prediction:')
@@ -365,7 +355,7 @@ if __name__ == '__main__':
         # y -> denormalize(invSigmoid(y))
         for i in range(len(prediction)):
             prediction[i] = invSigmoid(prediction[i])
-            
+                
         prediction = prediction * stddev + avg
 
         # write final submission
@@ -391,4 +381,4 @@ if __name__ == '__main__':
         'id': ids,
         'target': final_prediction
     })
-    final_submission.to_csv('submission_roberta.csv', index=False)
+    final_submission.to_csv('submission_distilbert.csv', index=False)
