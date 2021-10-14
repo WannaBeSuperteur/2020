@@ -22,10 +22,10 @@ import warnings
 warnings.filterwarnings('ignore')
 warnings.filterwarnings('always')
 
-np.set_printoptions(linewidth=180)
+np.set_printoptions(linewidth=180, edgeitems=5)
 
 # encode and add padding to the text
-def encodeX(X, roberta_tokenizer, roberta_model, ind):
+def encodeX(X, roberta_tokenizer, roberta_model):
     encoded_X = []
 
     print('')
@@ -36,13 +36,9 @@ def encodeX(X, roberta_tokenizer, roberta_model, ind):
         roberta_lhs    = roberta_output.last_hidden_state # shape: (1, N, 768)
         roberta_lhs    = np.array(roberta_lhs)[0] # shape: (N, 768)
 
-        encoded = []
-        for j in range(len(roberta_lhs)): # N iterations
-            encoded.append(roberta_lhs[j][ind]) # with index in 0..767
-        encoded_X.append(encoded)
+        encoded_X.append(roberta_lhs) # shape: (N, 768) x rows for different N's
 
-        if ind == 0 or i % 10 == 0:
-            print(str(i) + ' / ' + str(len(X)) + ' : len=' + str(len(encoded)))
+        print(str(i) + ' / ' + str(len(X)) + ' : len=' + str(len(roberta_lhs)))
 
     print('')
         
@@ -84,51 +80,77 @@ if __name__ == '__main__':
     count = 4
 
     # encode input data 4 times with indices=0,1,...,19 in 0..767
+    encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model)
+    encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model)
+
+    print('\n[04] encoded_train_X :')
+    print(np.shape(encoded_train_X))
+            
+    print('\n[05] encoded_test_X :')
+    print(np.shape(encoded_test_X))
+        
     for i in range(count):
         print(str(i) + ' / ' + str(count))
+
+        # extract i-th index (i = 0..767) from encoded data
+        # (N, 768) x rows for different N's ---> (N) x rows for different N's
+        encoded_train_X_i = []
+        encoded_test_X_i  = []
         
-        encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model, i)
-        encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model, i)
+        for j in range(trainLen):
+            encoded_train_X_ij = []
+            for k in range(len(encoded_train_X[j])): encoded_train_X_ij.append(encoded_train_X[j][k][i])
+            encoded_train_X_i.append(encoded_train_X_ij)
+
+        for j in range(testLen):
+            encoded_test_X_ij = []
+            for k in range(len(encoded_test_X[j])): encoded_test_X_ij.append(encoded_test_X[j][k][i])
+            encoded_test_X_i.append(encoded_test_X_ij)
 
         if i == 0:
-            print('\n[04] encoded_train_X :')
-            print(np.shape(encoded_train_X))
-            
-            print('\n[05] encoded_test_X :')
-            print(np.shape(encoded_test_X))
+            print('\n[06] encoded_train_X for i==0 :')
+            print(np.shape(encoded_train_X_i))
+
+            print('\n[07] encoded_test_X for i==0 :')
+            print(np.shape(encoded_test_X_i))
         
         # add padding to input data
-        (pad_encoded_train_X, pad_encoded_test_X, max_len) = h.addPadding(encoded_train_X, encoded_test_X)
+        (pad_encoded_train_X, pad_encoded_test_X, max_len) = h.addPadding(encoded_train_X_i, encoded_test_X_i)
+
+        pad_encoded_train_X = pad_encoded_train_X * 3.0
+        pad_encoded_test_X  = pad_encoded_test_X  * 3.0
+
         max_lens.append(max_len)
 
         if i == 0:
-            print('\n[06] max_len=' + str(max_len))
+            print('\n[08] max_len=' + str(max_len))
 
-            print('\n[07] pad_encoded_train_X :')
+        if i < 10:
+            print('\n[09] pad_encoded_train_X (' + str(i) + ') :')
             print(np.shape(pad_encoded_train_X))
             print(pad_encoded_train_X)
             
-            print('\n[08] pad_encoded_test_X :')
+            print('\n[10] pad_encoded_test_X  (' + str(i) + ') :')
             print(np.shape(pad_encoded_test_X))
             print(pad_encoded_test_X)
         
         # find additional info
-        pad_encoded_train_X = h.getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
-        pad_encoded_test_X = h.getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
+        pad_encoded_train_X = h.getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X_i)
+        pad_encoded_test_X = h.getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X_i)
 
         pad_encoded_train_Xs.append(pad_encoded_train_X)
         pad_encoded_test_Xs.append(pad_encoded_test_X)
 
         if i == 0:
-            print('\n[09] pad_encoded_train_X with additional info :')
+            print('\n[11] pad_encoded_train_X with additional info :')
             print(np.shape(pad_encoded_train_X))
             print(pad_encoded_train_X)
 
-            print('\n[10] pad_encoded_test_X with additional info :')
+            print('\n[12] pad_encoded_test_X with additional info :')
             print(np.shape(pad_encoded_test_X))
             print(pad_encoded_test_X)
 
-    print('\n[11] max_len\'s :')
+    print('\n[13] max_len\'s :')
     print(max_lens)
     
     # train using GPU
@@ -147,7 +169,7 @@ if __name__ == '__main__':
         prediction = model.predict(pad_encoded_test_Xs[i]).flatten()
         prediction = np.clip(prediction, 0.0001, 0.9999)
 
-        print('\n[12] original (normalized and then SIGMOID-ed) prediction:')
+        print('\n[14] original (normalized and then SIGMOID-ed) prediction:')
         print(np.shape(prediction))
         print(prediction)
 
@@ -158,7 +180,7 @@ if __name__ == '__main__':
         prediction = prediction * stddev + avg
 
         # write final submission
-        print('\n[13] converted prediction:')
+        print('\n[15] converted prediction:')
         print(np.shape(prediction))
         print(prediction)
 
@@ -170,7 +192,7 @@ if __name__ == '__main__':
     # print final prediction
     final_prediction /= float(count)
     
-    print('\n[14] FINAL prediction:')
+    print('\n[16] FINAL prediction:')
     print(np.shape(final_prediction))
     print(final_prediction)
 
