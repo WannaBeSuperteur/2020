@@ -215,3 +215,69 @@ def getAdditionalInfo(pad_encoded_X, leng, X, encoded_X):
     pad_encoded_X = np.concatenate((pad_encoded_X, additionalInfo), axis=1)
 
     return pad_encoded_X
+
+# train model using GPU
+def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, train_Y, test_Xs, count, avg, stddev):
+
+    if valid == False: valid_rate = 0.0
+    trainCount = int((1.0 - valid_rate) * trainLen)
+    
+    for i in range(count):
+        try:
+            # for local with GPU
+            with tf.device('/gpu:0'):
+                model = defineAndTrainModel(max_lens[i],
+                                            train_Xs[i][:trainCount],
+                                            train_Y[:trainCount])
+                
+        except:
+            # for kaggle notebook or local with no GPU
+            print('cannot find GPU')
+            model = defineAndTrainModel(max_lens[i],
+                                        train_Xs[i][:trainCount],
+                                        train_Y[:trainCount])
+        
+        # predict using model
+        if valid == True:
+            prediction = model.predict(train_Xs[i][trainCount:]).flatten()
+        else:
+            prediction = model.predict(test_Xs[i]).flatten()
+            
+        prediction = np.clip(prediction, 0.0001, 0.9999)
+
+        print('\n[14] original (normalized and then SIGMOID-ed) prediction:')
+        print(np.shape(prediction))
+        print(prediction)
+
+        # y -> denormalize(invSigmoid(y))
+        for j in range(len(prediction)):
+            prediction[j] = invSigmoid(prediction[j])
+            
+        prediction = prediction * stddev + avg
+
+        # write final submission
+        print('\n[15] converted prediction:')
+        print(np.shape(prediction))
+        print(prediction)
+
+        # for valid mode
+        if valid == True:
+            prediction = pd.DataFrame(np.reshape(np.array(prediction), (len(prediction), 1)))
+            prediction.to_csv('valid_' + algo_name + '_' + str(i) + '.csv')
+
+        # for test mode
+        else:
+            try:
+                final_prediction += prediction
+            except:
+                final_prediction = prediction
+
+    # print final prediction
+    if valid == False:
+        final_prediction /= float(count)
+        
+        print('\n[16] FINAL prediction:')
+        print(np.shape(final_prediction))
+        print(final_prediction)
+
+        return final_prediction

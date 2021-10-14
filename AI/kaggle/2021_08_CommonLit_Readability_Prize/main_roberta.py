@@ -153,48 +153,14 @@ if __name__ == '__main__':
     print('\n[13] max_len\'s :')
     print(max_lens)
     
-    # train using GPU
-    for i in range(count):
-        try:
-            # for local with GPU
-            with tf.device('/gpu:0'):
-                model = h.defineAndTrainModel(max_lens[i], pad_encoded_train_Xs[i], train_Y)
-                
-        except:
-            # for kaggle notebook or local with no GPU
-            print('cannot find GPU')
-            model = h.defineAndTrainModel(max_lens[i], pad_encoded_train_Xs[i], train_Y)
-        
-        # predict using model
-        prediction = model.predict(pad_encoded_test_Xs[i]).flatten()
-        prediction = np.clip(prediction, 0.0001, 0.9999)
+    # train/valid using GPU
+    valid_rate = 0.15
+    h.trainOrValid(True, 'roberta', valid_rate, trainLen, max_lens, pad_encoded_train_Xs, train_Y, pad_encoded_test_Xs,
+                   count, avg, stddev)
 
-        print('\n[14] original (normalized and then SIGMOID-ed) prediction:')
-        print(np.shape(prediction))
-        print(prediction)
-
-        # y -> denormalize(invSigmoid(y))
-        for i in range(len(prediction)):
-            prediction[i] = h.invSigmoid(prediction[i])
-            
-        prediction = prediction * stddev + avg
-
-        # write final submission
-        print('\n[15] converted prediction:')
-        print(np.shape(prediction))
-        print(prediction)
-
-        try:
-            final_prediction += prediction
-        except:
-            final_prediction = prediction
-
-    # print final prediction
-    final_prediction /= float(count)
-    
-    print('\n[16] FINAL prediction:')
-    print(np.shape(final_prediction))
-    print(final_prediction)
+    # test using GPU
+    final_prediction = h.trainOrValid(False, 'roberta', valid_rate, trainLen, max_lens, pad_encoded_train_Xs, train_Y, pad_encoded_test_Xs,
+                                      count, avg, stddev)
 
     # final submission
     final_submission = pd.DataFrame(
