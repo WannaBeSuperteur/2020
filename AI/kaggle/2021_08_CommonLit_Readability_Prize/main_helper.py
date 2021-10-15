@@ -221,6 +221,12 @@ def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, tra
 
     if valid == False: valid_rate = 0.0
     trainCount = int((1.0 - valid_rate) * trainLen)
+
+    # save original validation data
+    if valid == True:
+        train_Y_reshaped = np.reshape(train_Y[trainCount:], (trainLen - trainCount, 1))
+        for j in range(len(train_Y_reshaped)): train_Y_reshaped[j] = invSigmoid(train_Y_reshaped[j])
+        pd.DataFrame(train_Y_reshaped).to_csv('valid_original.csv')
     
     for i in range(count):
         try:
