@@ -242,6 +242,10 @@ def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, tra
             model = defineAndTrainModel(max_lens[i],
                                         train_Xs[i][:trainCount],
                                         train_Y[:trainCount])
+
+        # save model
+        if valid == True:
+            model.save('valid_' + algo_name + '_' + str(i))
         
         # predict using model
         if valid == True:
@@ -261,18 +265,20 @@ def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, tra
             
         prediction = prediction * stddev + avg
 
-        # write final submission
+        # write final submission/prediction
         print('\n[15] converted prediction:')
         print(np.shape(prediction))
         print(prediction)
 
+        prediction = pd.DataFrame(np.reshape(np.array(prediction), (len(prediction), 1)))
+
         # for valid mode
         if valid == True:
-            prediction = pd.DataFrame(np.reshape(np.array(prediction), (len(prediction), 1)))
             prediction.to_csv('valid_' + algo_name + '_' + str(i) + '.csv')
 
         # for test mode
         else:
+            prediction.to_csv('test_' + algo_name + '_' + str(i) + '.csv')
             try:
                 final_prediction += prediction
             except:
@@ -285,5 +291,5 @@ def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, tra
         print('\n[16] FINAL prediction:')
         print(np.shape(final_prediction))
         print(final_prediction)
-
+        
         return final_prediction
