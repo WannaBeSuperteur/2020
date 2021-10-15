@@ -182,9 +182,9 @@ def defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y):
     # model configuration
     val_split           = 0.1
     epochs              = 100
-    early_patience      = 10
+    early_patience      = 6
     lr_reduced_factor   = 0.1
-    lr_reduced_patience = 5
+    lr_reduced_patience = 2
         
     # train/valid using model
     trainModel(model, pad_encoded_train_X, train_Y,
@@ -307,34 +307,14 @@ if __name__ == '__main__':
     pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
     pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
     
-    # train using GPU
-    try:
-        # for local with GPU
-        with tf.device('/gpu:0'):
-            model = defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y)
-            
-    except:
-        # for kaggle notebook or local with no GPU
-        print('cannot find GPU')
-        model = defineAndTrainModel(vocab_size, max_len, pad_encoded_train_X, train_Y)
-    
-    # predict using model
-    prediction = model.predict(pad_encoded_test_X).flatten()
-    prediction = np.clip(prediction, 0.0001, 0.9999)
+    # train/valid using GPU
+    valid_rate = 0.15
+    h.trainOrValid(True, 'main', valid_rate, trainLen, max_lens, [pad_encoded_train_X], train_Y, [pad_encoded_test_X],
+                   count, avg, stddev)
 
-    print('\noriginal prediction:')
-    print(prediction)
-    print('')
-
-    # y -> denormalize(invSigmoid(y))
-    for i in range(len(prediction)):
-        prediction[i] = invSigmoid(prediction[i])
-        
-    prediction = prediction * stddev + avg
-
-    # write final submission
-    print('\nconverted FINAL prediction:')
-    print(prediction)
+    # test using GPU
+    final_prediction = h.trainOrValid(False, 'main', valid_rate, trainLen, max_lens, [pad_encoded_train_X], train_Y, [pad_encoded_test_X],
+                                      count, avg, stddev)
     
     final_submission = pd.DataFrame(
     {
