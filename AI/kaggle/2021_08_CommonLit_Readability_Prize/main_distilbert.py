@@ -37,7 +37,7 @@ def encodeX(X, distilbert_tokenizer, distilbert_model):
 if __name__ == '__main__':
 
     # read data
-    (train_X, train_Y, test_X, ids) = h.loadData(100)
+    (train_X, train_Y, test_X, ids) = h.loadData(999999)
 
     trainLen = len(train_X)
     testLen = len(test_X)
@@ -67,9 +67,9 @@ if __name__ == '__main__':
     pad_encoded_train_Xs = []
     pad_encoded_test_Xs  = []
 
-    count = 4
+    count = 20
 
-    # encode input data 4 times with indices=0,1,...,19 in 0..767
+    # encode input data (count) times with indices=0,1,...,(count-1) in 0..767
     encoded_train_X = encodeX(train_X, distilbert_tokenizer, distilbert_model)
     encoded_test_X  = encodeX(test_X , distilbert_tokenizer, distilbert_model)
 
