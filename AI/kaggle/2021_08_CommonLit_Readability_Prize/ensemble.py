@@ -123,13 +123,26 @@ if __name__ == '__main__':
         validData_.append(pd.read_csv(validData[i], index_col=0))
 
     # read test data
-    testData = ['valid_LSTM0_0.csv', 'valid_LSTM0_1.csv', 'valid_LSTM0_2.csv',
-                'valid_LSTM0_3.csv', 'valid_LSTM0_4.csv', 'valid_LSTM0_5.csv',
-                'valid_LSTM0_6.csv', 'valid_LSTM0_7.csv', 'valid_LSTM0_8.csv']
+    testData = ['test_LSTM0_0.csv', 'test_LSTM0_1.csv', 'test_LSTM0_2.csv',
+                'test_LSTM0_3.csv', 'test_LSTM0_4.csv', 'test_LSTM0_5.csv',
+                'test_LSTM0_6.csv', 'test_LSTM0_7.csv', 'test_LSTM0_8.csv']
 
     testData_ = []
     for i in range(models):
         testData_.append(pd.read_csv(testData[i], index_col=0))
+
+    # denormalize
+    # Z = (X-m)/s -> X = Z*s+m
+    normalizeInfo = pd.read_csv('normalization_info.csv', index_col=0)
+    average       = normalizeInfo['avg'][0]
+    stddev        = normalizeInfo['stddev'][0]
+
+    print('\nnormalization info:')
+    print(normalizeInfo, average, stddev)
+
+    validOriginal = np.array(validOriginal) * stddev + average
+    validData_    = np.array(validData_)    * stddev + average
+    testData_     = np.array(testData_)     * stddev + average
 
     # read model name
     modelName = ['main_LSTM0_0', 'main_LSTM0_1', 'main_LSTM0_2',
@@ -146,8 +159,8 @@ if __name__ == '__main__':
     # find best weights using hill-climbing
     log = findBestWeights(validData_, validOriginal, w, wcr, train_rows, models, loss, rounds)
 
-    # final prediction
-    final_prediction = getFinalPrediction(testData_, w, models)
+    # final prediction (already denormalized)
+    final_prediction = np.array(getFinalPrediction(testData_, w, models))
 
     # save the final prediction
     final_prediction = pd.DataFrame(final_prediction)
