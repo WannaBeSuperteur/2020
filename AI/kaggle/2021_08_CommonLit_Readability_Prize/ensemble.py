@@ -30,12 +30,14 @@ def computeError(validData_, validOriginal, w, loss):
 
 # find best weights using hill-climbing
 # models : the number of models
-def findBestWeights(validData_, validOriginal, w, train_rows, models, loss):
+def findBestWeights(validData_, validOriginal, w, wcr, train_rows, models, loss, rounds):
 
     # log
     log = ''
 
     for i in range(rounds):
+        if i % 5 == 0: print('round', i)
+        
         error = computeError(validData_, validOriginal, w, loss)
         log += ('\n[ round ' + str(i) + ' ]\nweights=' + str(np.round_(w, 6)) + ' error=' + str(round(error, 8)) + '\n')
 
@@ -103,30 +105,36 @@ def getFinalPrediction(testData_, w, models):
 if __name__ == '__main__':
 
     train_rows = 2834
-    models = 1
-    rounds = 2000 # run for at most 2000 rounds
-    wcr = 0.01 # weight change rate
+    models = 9
+    rounds = 500 # run for at most 500 rounds
+    wcr = 1 / 180 # weight change rate
     loss = 'RMSE'
 
     # read original validation data
     validOriginal = pd.read_csv('valid_original.csv', index_col=0)
 
     # read validation data
-    validData = ['valid_LSTM0_0.csv']
+    validData = ['valid_LSTM0_0.csv', 'valid_LSTM0_1.csv', 'valid_LSTM0_2.csv',
+                 'valid_LSTM0_3.csv', 'valid_LSTM0_4.csv', 'valid_LSTM0_5.csv',
+                 'valid_LSTM0_6.csv', 'valid_LSTM0_7.csv', 'valid_LSTM0_8.csv']
 
     validData_ = []
     for i in range(models):
         validData_.append(pd.read_csv(validData[i], index_col=0))
 
     # read test data
-    testData = ['test_LSTM0_0.csv']
+    testData = ['valid_LSTM0_0.csv', 'valid_LSTM0_1.csv', 'valid_LSTM0_2.csv',
+                'valid_LSTM0_3.csv', 'valid_LSTM0_4.csv', 'valid_LSTM0_5.csv',
+                'valid_LSTM0_6.csv', 'valid_LSTM0_7.csv', 'valid_LSTM0_8.csv']
 
     testData_ = []
     for i in range(models):
         testData_.append(pd.read_csv(testData[i], index_col=0))
 
     # read model name
-    modelName = ['main_LSTM0_0']
+    modelName = ['main_LSTM0_0', 'main_LSTM0_1', 'main_LSTM0_2',
+                 'main_LSTM0_3', 'main_LSTM0_4', 'main_LSTM0_5',
+                 'main_LSTM0_6', 'main_LSTM0_7', 'main_LSTM0_8']
 
     models_ = []
     for i in range(models):
@@ -136,7 +144,7 @@ if __name__ == '__main__':
     w = [1/models for i in range(models)]
 
     # find best weights using hill-climbing
-    log = findBestWeights(validData_, validOriginal, w, train_rows, models, loss)
+    log = findBestWeights(validData_, validOriginal, w, wcr, train_rows, models, loss, rounds)
 
     # final prediction
     final_prediction = getFinalPrediction(testData_, w, models)

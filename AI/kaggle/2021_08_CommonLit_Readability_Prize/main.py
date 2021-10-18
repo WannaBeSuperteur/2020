@@ -291,6 +291,11 @@ if __name__ == '__main__':
     (train_Y, avg, stddev) = normalize(train_Y)
     print('avg=' + str(round(avg, 6)))
     print('stddev=' + str(round(stddev, 6)))
+
+    # save normalization info
+    normalization = pd.DataFrame([[avg, stddev]])
+    normalization.columns = ['avg', 'stddev']
+    normalization.to_csv('normalization_info.csv')
     
     # tokenize input data
     t = tokenizeInput(all_X)
@@ -307,9 +312,6 @@ if __name__ == '__main__':
     # find additional info
     pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
     pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
-
-    # define model
-    model = TEXT_MODEL_LSTM(vocab_size, max_len, embed_dim=256, cnn_filters=3)
     
     # train/valid using GPU
     valid_rate = 0.15
@@ -339,20 +341,32 @@ if __name__ == '__main__':
     print('mean:', np.mean(pad_encoded_train_Y_valid))
     print(np.array(pad_encoded_train_Y_valid[:100]))
 
-    # train model using GPU
-    h.trainModel(model, pad_encoded_train_X_train, pad_encoded_train_Y_train, valid_rate,
-                 epochs=10, early_patience=4, lr_reduced_factor=0.1, lr_reduced_patience=2)
+    # DEEP LEARNING
+    embed_dims  = [64, 128, 256, 64, 128, 256, 64, 128, 256]
+    cnn_filters = [50, 50, 50, 100, 100, 100, 200, 200, 200]
 
-    # save model
-    model.save('main_LSTM0_0')
+    for i in range(9):
 
-    # valid and test using GPU
-    valid_prediction = model.predict(pad_encoded_train_X_valid)
-    test_prediction  = model.predict(pad_encoded_test_X)
+        # define and train model
+        with tf.device('/gpu:0'):
 
-    # invSigmoid
-    valid_prediction = np.log(valid_prediction / (1.0 - valid_prediction))
-    test_prediction  = np.log(test_prediction  / (1.0 - test_prediction))
+            # define model
+            model = TEXT_MODEL_LSTM(vocab_size, max_len, embed_dim=embed_dims[i], cnn_filters=cnn_filters[i])
 
-    pd.DataFrame(valid_prediction).to_csv('valid_LSTM0_0.csv')
-    pd.DataFrame(test_prediction).to_csv('test_LSTM0_0.csv')
+            # train model using GPU
+            h.trainModel(model, pad_encoded_train_X_train, pad_encoded_train_Y_train, valid_rate,
+                         epochs=10, early_patience=4, lr_reduced_factor=0.1, lr_reduced_patience=2)
+
+            # save model
+            model.save('main_LSTM0_' + str(i))
+
+        # valid and test using GPU
+        valid_prediction = model.predict(pad_encoded_train_X_valid)
+        test_prediction  = model.predict(pad_encoded_test_X)
+
+        # invSigmoid
+        valid_prediction = np.log(valid_prediction / (1.0 - valid_prediction))
+        test_prediction  = np.log(test_prediction  / (1.0 - test_prediction))
+
+        pd.DataFrame(valid_prediction).to_csv('valid_LSTM0_' + str(i) + '.csv')
+        pd.DataFrame(test_prediction).to_csv('test_LSTM0_' + str(i) + '.csv')
