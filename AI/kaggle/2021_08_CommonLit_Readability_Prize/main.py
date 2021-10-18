@@ -12,6 +12,7 @@ from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import optimizers
+import main_helper as h
 
 import warnings
 warnings.filterwarnings('ignore')
@@ -306,19 +307,52 @@ if __name__ == '__main__':
     # find additional info
     pad_encoded_train_X = getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X)
     pad_encoded_test_X = getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X)
+
+    # define model
+    model = TEXT_MODEL_LSTM(vocab_size, max_len, embed_dim=256, cnn_filters=3)
     
     # train/valid using GPU
     valid_rate = 0.15
-    h.trainOrValid(True, 'main', valid_rate, trainLen, max_lens, [pad_encoded_train_X], train_Y, [pad_encoded_test_X],
-                   count, avg, stddev)
 
-    # test using GPU
-    final_prediction = h.trainOrValid(False, 'main', valid_rate, trainLen, max_lens, [pad_encoded_train_X], train_Y, [pad_encoded_test_X],
-                                      count, avg, stddev)
+    train_rows = int(trainLen * (1.0 - valid_rate))
+    pad_encoded_train_X_train = pad_encoded_train_X[:train_rows]
+    pad_encoded_train_Y_train = train_Y[:train_rows]
+    pad_encoded_train_X_valid = pad_encoded_train_X[train_rows:]
+    pad_encoded_train_Y_valid = train_Y[train_rows:]
+
+    # print data
+    print('\n[ pad_encoded_train_X_train ]')
+    print(np.shape(pad_encoded_train_X_train))
+    print(np.array(pad_encoded_train_X_train))
     
-    final_submission = pd.DataFrame(
-    {
-        'id': ids,
-        'target': prediction
-    })
-    final_submission.to_csv('submission.csv', index=False)
+    print('\n[ pad_encoded_train_Y_train ]')
+    print(np.shape(pad_encoded_train_Y_train))
+    print('mean:', np.mean(pad_encoded_train_Y_train))
+    print(np.array(pad_encoded_train_Y_train[:100]))
+    
+    print('\n[ pad_encoded_train_X_valid ]')
+    print(np.shape(pad_encoded_train_X_valid))
+    print(np.array(pad_encoded_train_X_valid))
+
+    print('\n[ pad_encoded_train_Y_valid ]')
+    print(np.shape(pad_encoded_train_Y_valid))
+    print('mean:', np.mean(pad_encoded_train_Y_valid))
+    print(np.array(pad_encoded_train_Y_valid[:100]))
+
+    # train model using GPU
+    h.trainModel(model, pad_encoded_train_X_train, pad_encoded_train_Y_train, valid_rate,
+                 epochs=10, early_patience=4, lr_reduced_factor=0.1, lr_reduced_patience=2)
+
+    # save model
+    model.save('main_LSTM0_0')
+
+    # valid and test using GPU
+    valid_prediction = model.predict(pad_encoded_train_X_valid)
+    test_prediction  = model.predict(pad_encoded_test_X)
+
+    # invSigmoid
+    valid_prediction = np.log(valid_prediction / (1.0 - valid_prediction))
+    test_prediction  = np.log(test_prediction  / (1.0 - test_prediction))
+
+    pd.DataFrame(valid_prediction).to_csv('valid_LSTM0_0.csv')
+    pd.DataFrame(test_prediction).to_csv('test_LSTM0_0.csv')

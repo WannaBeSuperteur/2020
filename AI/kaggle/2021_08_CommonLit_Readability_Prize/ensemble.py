@@ -103,60 +103,30 @@ def getFinalPrediction(testData_, w, models):
 if __name__ == '__main__':
 
     train_rows = 2834
-    models = 40
+    models = 1
     rounds = 2000 # run for at most 2000 rounds
-    wcr = 0.001 # weight change rate
+    wcr = 0.01 # weight change rate
     loss = 'RMSE'
 
     # read original validation data
     validOriginal = pd.read_csv('valid_original.csv', index_col=0)
 
     # read validation data
-    validData = ['valid_roberta_0.csv', 'valid_roberta_1.csv', 'valid_roberta_2.csv', 'valid_roberta_3.csv',
-                 'valid_roberta_4.csv', 'valid_roberta_5.csv', 'valid_roberta_6.csv', 'valid_roberta_7.csv',
-                 'valid_roberta_8.csv', 'valid_roberta_9.csv', 'valid_roberta_10.csv', 'valid_roberta_11.csv',
-                 'valid_roberta_12.csv', 'valid_roberta_13.csv', 'valid_roberta_14.csv', 'valid_roberta_15.csv',
-                 'valid_roberta_16.csv', 'valid_roberta_17.csv', 'valid_roberta_18.csv', 'valid_roberta_19.csv',
-                 
-                 'valid_distilbert_0.csv', 'valid_distilbert_1.csv', 'valid_distilbert_2.csv', 'valid_distilbert_3.csv',
-                 'valid_distilbert_4.csv', 'valid_distilbert_5.csv', 'valid_distilbert_6.csv', 'valid_distilbert_7.csv',
-                 'valid_distilbert_8.csv', 'valid_distilbert_9.csv', 'valid_distilbert_10.csv', 'valid_distilbert_11.csv',
-                 'valid_distilbert_12.csv', 'valid_distilbert_13.csv', 'valid_distilbert_14.csv', 'valid_distilbert_15.csv',
-                 'valid_distilbert_16.csv', 'valid_distilbert_17.csv', 'valid_distilbert_18.csv', 'valid_distilbert_19.csv']
+    validData = ['valid_LSTM0_0.csv']
 
     validData_ = []
     for i in range(models):
         validData_.append(pd.read_csv(validData[i], index_col=0))
 
     # read test data
-    testData = ['test_roberta_0.csv', 'test_roberta_1.csv', 'test_roberta_2.csv', 'test_roberta_3.csv',
-                'test_roberta_4.csv', 'test_roberta_5.csv', 'test_roberta_6.csv', 'test_roberta_7.csv',
-                'test_roberta_8.csv', 'test_roberta_9.csv', 'test_roberta_10.csv', 'test_roberta_11.csv',
-                'test_roberta_12.csv', 'test_roberta_13.csv', 'test_roberta_14.csv', 'test_roberta_15.csv',
-                'test_roberta_16.csv', 'test_roberta_17.csv', 'test_roberta_18.csv', 'test_roberta_19.csv',
-                
-                'test_distilbert_0.csv', 'test_distilbert_1.csv', 'test_distilbert_2.csv', 'test_distilbert_3.csv',
-                'test_distilbert_4.csv', 'test_distilbert_5.csv', 'test_distilbert_6.csv', 'test_distilbert_7.csv',
-                'test_distilbert_8.csv', 'test_distilbert_9.csv', 'test_distilbert_10.csv', 'test_distilbert_11.csv',
-                'test_distilbert_12.csv', 'test_distilbert_13.csv', 'test_distilbert_14.csv', 'test_distilbert_15.csv',
-                'test_distilbert_16.csv', 'test_distilbert_17.csv', 'test_distilbert_18.csv', 'test_distilbert_19.csv']
+    testData = ['test_LSTM0_0.csv']
 
     testData_ = []
     for i in range(models):
         testData_.append(pd.read_csv(testData[i], index_col=0))
 
     # read model name
-    modelName = ['valid_roberta_0', 'valid_roberta_1', 'valid_roberta_2', 'valid_roberta_3',
-                 'valid_roberta_4', 'valid_roberta_5', 'valid_roberta_6', 'valid_roberta_7',
-                 'valid_roberta_8', 'valid_roberta_9', 'valid_roberta_10', 'valid_roberta_11',
-                 'valid_roberta_12', 'valid_roberta_13', 'valid_roberta_14', 'valid_roberta_15',
-                 'valid_roberta_16', 'valid_roberta_17', 'valid_roberta_18', 'valid_roberta_19',
-                 
-                 'valid_distilbert_0', 'valid_distilbert_1', 'valid_distilbert_2', 'valid_distilbert_3',
-                 'valid_distilbert_4', 'valid_distilbert_5', 'valid_distilbert_6', 'valid_distilbert_7',
-                 'valid_distilbert_8', 'valid_distilbert_9', 'valid_distilbert_10', 'valid_distilbert_11',
-                 'valid_distilbert_12', 'valid_distilbert_13', 'valid_distilbert_14', 'valid_distilbert_15',
-                 'valid_distilbert_16', 'valid_distilbert_17', 'valid_distilbert_18', 'valid_distilbert_19']
+    modelName = ['main_LSTM0_0']
 
     models_ = []
     for i in range(models):
