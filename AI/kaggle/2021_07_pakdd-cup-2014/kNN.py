@@ -299,7 +299,7 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
 #    using (1 - CORR)       for different MX and PX,
 #          0~weight         for month,
 #          abs(distance)/24 for year*12+month(repair)
-if __name__ == '__main__':
+def main(valid):
     
     repairAggregated = aggregateRepairCount()
     pd.DataFrame(repairAggregated).to_csv('kNN_aggregate.csv')
@@ -310,13 +310,12 @@ if __name__ == '__main__':
     MP_corrcoef = computeCorrCoef_PX(repairAggregated)
     pd.DataFrame(MP_corrcoef).to_csv('kNN_MP_corr.csv')
 
-    valid = True
     test_N = 1 # best valid N
     test_limit = 70 # 348 = 1700 (best valid limit) * 6.859 (test average) / 33.49283 (valid average)
     test_dm_weight = 0.3 # weight for distance_month
 
     # number of neighbors
-    Ns = [1, 1.01, 1.03, 1.05, 1.1]
+    Ns = [1] # (as test_N) # [1, 1.01, 1.03, 1.05, 1.1]
 
     # limits
     # apply test limits PROPORTIONALLY to the average of all repair_count
@@ -329,7 +328,7 @@ if __name__ == '__main__':
               2260.0, 2400.0, 2600.0, 2800.0, 3000.0, 3200.0, 3400.0, 3600.0, 3800.0, 4000.0]
 
     # weights for distance_month
-    dm_weights = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    dm_weights = [0.3] # (as test_dm_weight) # [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
 
     # validation
     if valid == True:
@@ -356,3 +355,7 @@ if __name__ == '__main__':
     # test
     else:
         kNN(repairAggregated, MX_corrcoef, MP_corrcoef, False, test_N, [test_limit], test_dm_weight)
+
+if __name__ == '__main__':
+    main(True) # valid mode
+    main(False) # test mode

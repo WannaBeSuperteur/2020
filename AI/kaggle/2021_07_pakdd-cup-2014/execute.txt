@@ -11,6 +11,7 @@ my_extract.py
 [k-NN APPROACH]
 kNN.py
 
-use: k-NN APPROACH
+use: k-NN APPROACH (kNN.py)
+submit: kNN_test_prediction_limit_N.csv
 
 for EDA: sale_eda.py, sale_repair_eda.py (after my_extract.py)
