@@ -322,6 +322,10 @@ if __name__ == '__main__':
     pad_encoded_train_X_valid = pad_encoded_train_X[train_rows:]
     pad_encoded_train_Y_valid = train_Y[train_rows:]
 
+    # save original validation data
+    pad_encoded_train_Y_valid_invSigmoid = np.log(pad_encoded_train_Y_valid / (1.0 - pad_encoded_train_Y_valid))
+    pd.DataFrame(pad_encoded_train_Y_valid_invSigmoid).to_csv('valid_original.csv')
+
     # print data
     print('\n[ pad_encoded_train_X_train ]')
     print(np.shape(pad_encoded_train_X_train))

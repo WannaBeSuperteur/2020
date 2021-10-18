@@ -77,7 +77,7 @@ if __name__ == '__main__':
     pad_encoded_train_Xs = []
     pad_encoded_test_Xs  = []
 
-    count = 20
+    count = 5
 
     # encode input data (count) times with indices=0,1,...,(count-1) in 0..767
     encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model)
