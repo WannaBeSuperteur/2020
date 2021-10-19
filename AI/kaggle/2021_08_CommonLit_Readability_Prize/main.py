@@ -18,7 +18,7 @@ import warnings
 warnings.filterwarnings('ignore')
 warnings.filterwarnings('always')
 
-INFOS = 9 # need to be changed if information extracting method changed
+INFOS = 15 # need to be changed if information extracting method changed
 
 class TEXT_MODEL_LSTM(tf.keras.Model):
     
@@ -42,7 +42,9 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
 
         # when using INFO
         if use_INFO == True:
-            self.dense_info = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
+            self.dense_info  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
+            self.dense_info1 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info1')
+            self.dense_info2 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info2')
 
         # when using LSTM
         if use_LSTM == True:
@@ -117,6 +119,11 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
             # DNN for inputs_info
             inputs_info = self.dense_info(inputs_info)
             inputs_info = self.dropout(inputs_info, training)
+            inputs_info = self.dense_info1(inputs_info)
+            inputs_info = self.dropout(inputs_info, training)
+            inputs_info = self.dense_info2(inputs_info)
+            inputs_info = self.dropout(inputs_info, training)
+            
             model_output = self.dense_final(inputs_info)
 
         # do not use INFO
@@ -251,22 +258,34 @@ def getVocabIndexDistribution(encoded_train_X, tokenizer):
     info_min = min(encoded_train_X)
     info_avg = np.mean(encoded_train_X)
 
-    # get 10%, median and 90%
-    leng_10p = int(0.1 * leng)
-    leng_med = int(0.5 * leng)
-    leng_90p = int(0.9 * leng)
-    
-    info_10p = np.partition(encoded_train_X, leng_10p)[leng_10p]
-    info_med = np.partition(encoded_train_X, leng_med)[leng_med]
-    info_90p = np.partition(encoded_train_X, leng_90p)[leng_90p]
+    # get 1%, 5%, 10%, 30%, median, 70%, 90%, 95% and 99%
+    leng_01p = int(0.01 * leng)
+    leng_05p = int(0.05 * leng)
+    leng_10p = int(0.1  * leng)
+    leng_30p = int(0.3  * leng)
+    leng_med = int(0.5  * leng)
+    leng_70p = int(0.7  * leng)
+    leng_90p = int(0.9  * leng)
+    leng_95p = int(0.95 * leng)
+    leng_99p = int(0.99 * leng)
 
+    info_01p = np.partition(encoded_train_X, leng_01p)[leng_01p]
+    info_05p = np.partition(encoded_train_X, leng_05p)[leng_05p]
+    info_10p = np.partition(encoded_train_X, leng_10p)[leng_10p]
+    info_30p = np.partition(encoded_train_X, leng_30p)[leng_30p]
+    info_med = np.partition(encoded_train_X, leng_med)[leng_med]
+    info_70p = np.partition(encoded_train_X, leng_70p)[leng_70p]
+    info_90p = np.partition(encoded_train_X, leng_90p)[leng_90p]
+    info_95p = np.partition(encoded_train_X, leng_95p)[leng_95p]
+    info_99p = np.partition(encoded_train_X, leng_99p)[leng_99p]
+    
     # return the info
     return np.array([math.log(info_min),
-                     math.log(info_10p),
-                     math.log(info_med),
-                     math.log(info_90p),
                      math.log(info_max),
-                     math.log(info_avg)])
+                     math.log(info_avg),
+                     math.log(info_01p), math.log(info_05p), math.log(info_10p),
+                     math.log(info_30p), math.log(info_med), math.log(info_70p),
+                     math.log(info_90p), math.log(info_95p), math.log(info_99p)])
 
 # find info : number of sentences, average sentence length (in words), and total length (in words)
 def getSentenceInfo(sentence):
@@ -288,11 +307,11 @@ def getAdditionalInfo(pad_encoded_X, leng, X, encoded_X):
         # add { distribution of vocab index (min, 10%, median, 90%, max and average) } with applying log2
         # to encoded train_X
         vocabDist = getVocabIndexDistribution(encoded_X[i], t)
-
+        
         # add { number of sentences, average sentence length (in words), total length (in words) }
         # to encoded train_X
         sentenceInfo = getSentenceInfo(X[i])
-
+        
         additionalInfo[i] = np.concatenate((vocabDist, sentenceInfo), axis=0)
 
     # normalize additional info
