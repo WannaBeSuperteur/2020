@@ -94,37 +94,37 @@ def computeCorrCoef_PX(aggregated):
 #       abs(distance)/24 for year*12+month(repair)
 
 # MX : M1 ~ M9
-def distance_MX(val0, val1, MX_corrcoef):
+def distance_MX(val0, val1, MX_corrcoef, weight):
 
     M_index0 = int(val0[1:]) - 1
     M_index1 = int(val1[1:]) - 1
         
-    return 1.0 - MX_corrcoef[M_index0][M_index1]
+    return weight * (1.0 - MX_corrcoef[M_index0][M_index1])
 
 # PX : P01 ~ P31
-def distance_PX(val0, val1, PX_corrcoef):
+def distance_PX(val0, val1, PX_corrcoef, weight):
 
     P_index0 = int(val0[1:]) - 1
     P_index1 = int(val1[1:]) - 1
         
-    return 1.0 - PX_corrcoef[P_index0][P_index1]
+    return weight * (1.0 - PX_corrcoef[P_index0][P_index1])
 
 # month : 1 ~ 12, using weight*sin(DIF/2) for angle DIF
-# weight = 0.3
 def distance_month(val0, val1, weight):
     angle_val0 = float(val0) * math.pi / 6.0
     angle_val1 = float(val1) * math.pi / 6.0
     DIF = abs(angle_val0 - angle_val1)
 
-    return weight * math.sin(DIF/2)
+    return weight * 0.25 * math.sin(DIF/2)
 
 # year*12 + month : abs(distance)/24
-def distance_ym(val0, val1):
+def distance_ym(val0, val1, weight):
     distance = abs(int(val0) - int(val1))
-    return distance / 24
+    return weight * distance / 24
 
 # kNN for [MX, PX, year(repair), year*12+month(repair)] and make final submission
-def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
+def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits,
+        dMX_weight, dPX_weight, dm_weight, dYM_weight):
 
     N_float = N % 1.0
     N = math.ceil(N)
@@ -168,7 +168,7 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
         
         repairYM = repairYM_train + repairYM_valid
 
-    print('\n === N:' + str(N) + ', dm_weight:' + str(dm_weight) + ' ===')
+    print('\n === N:' + str(N) + ', weights:' + str([dMX_weight, dPX_weight, dm_weight, dYM_weight]) + ' ===')
 
     prediction = []
     explanation = []
@@ -178,9 +178,10 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
     else:
         state_text = 'test'
 
+    # running
     for i in range(len(mapping)):
         
-        if i % 10 == 0:
+        if i % 100 == 0:
             print(str(i) + ' / ' + str(len(mapping)))
 
         map_i = mapping[i]
@@ -191,8 +192,8 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
         val0_ym = int(map_i[2]) * 12 + int(val0_mo)
 
         # compute distance
-        dist_aggregated = []
-
+        dist_aggregated = [None for i in range(2)]
+        
         for j in range(Ms * Ps * repairYM):
 
             agg_j = aggregated[j]
@@ -203,19 +204,32 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
             val1_ym = int(agg_j[2]) * 12 + int(val1_mo)
 
             # find distance between the set of val0 and val1
-            dist_M  = distance_MX   (val0_M , val1_M , MX_corrcoef)
-            dist_P  = distance_PX   (val0_P , val1_P , PX_corrcoef)
+            dist_M  = distance_MX   (val0_M , val1_M , MX_corrcoef, dMX_weight)
+            dist_P  = distance_PX   (val0_P , val1_P , PX_corrcoef, dPX_weight)
             dist_mo = distance_month(val0_mo, val1_mo, dm_weight)
-            dist_ym = distance_ym   (val0_ym, val1_ym)
+            dist_ym = distance_ym   (val0_ym, val1_ym, dYM_weight)
             
             dist_total = math.sqrt(dist_M*dist_M + dist_P*dist_P + dist_mo*dist_mo + dist_ym*dist_ym)
-
+            
             # save [index, distance, repair count, val1_M, val1_P, val1_year, val1_month]
-            dist_aggregated.append([j, dist_total, float(agg_j[4]),
-                                    val1_M, val1_P, agg_j[2], val1_mo])
+            # index 0 is None
+            if dist_aggregated[0] == None:
+                dist_aggregated[0] = [j, dist_total, float(agg_j[4]), val1_M, val1_P, agg_j[2], val1_mo]
 
-        # sort distance
-        dist_aggregated.sort(key=lambda x:x[1])
+            # (newDist) < dist[0]
+            elif dist_total < dist_aggregated[0][1]:
+                dist_aggregated[1] = dist_aggregated[0]
+                dist_aggregated[0] = [j, dist_total, float(agg_j[4]), val1_M, val1_P, agg_j[2], val1_mo]
+
+            # (newDist) >= dist[0] and index 1 is None
+            elif dist_total >= dist_aggregated[0][1] and dist_aggregated[1] == None:
+                dist_aggregated[1] = [j, dist_total, float(agg_j[4]), val1_M, val1_P, agg_j[2], val1_mo]
+
+            # (newDist) >= dist[0] and (newDist) < dist[1]
+            elif dist_total >= dist_aggregated[0][1] and dist_total < dist_aggregated[1][1]:
+                dist_aggregated[1] = [j, dist_total, float(agg_j[4]), val1_M, val1_P, agg_j[2], val1_mo]
+
+        # (do not need to sort distance)
         dist_aggregated = np.array(dist_aggregated)
 
         # weighted sum = repairSum / distanceSum
@@ -257,6 +271,8 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
 
     # for each limit value,
     MAEs = []
+    minMAE = 1000000.0
+    minMAE_limit = -1
     
     for limit in limits:
         
@@ -275,6 +291,11 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
             
             MAEs.append(MAE)
 
+            # update minMAE and the index of it
+            if MAE < minMAE:
+                minMAE = MAE
+                minMAE_limit = limit
+
         # write final prediction (if test)
         else:
             prediction = pd.DataFrame(prediction)
@@ -288,7 +309,7 @@ def kNN(aggregated, MX_corrcoef, PX_corrcoef, valid, N, limits, dm_weight):
             prediction_with_limit.to_csv('kNN_test_prediction_limit_' + str(limit) + '.csv')
             explanation.to_csv('kNN_test_explanation.csv')
 
-    return MAEs
+    return [MAEs, minMAE, minMAE_limit]
 
 # 0. aggregate repair count : group by (MX, PX, year(repair), month(repair))
 
@@ -312,10 +333,12 @@ def main(valid):
 
     test_N = 1 # best valid N
     test_limit = 70 # 348 = 1700 (best valid limit) * 6.859 (test average) / 33.49283 (valid average)
-    test_dm_weight = 0.3 # weight for distance_month
+
+    # weights for test: [dMX_weight, dPX_weight, dm_weight, dYM_weight]
+    test_weights = [0.25, 0.25, 0.25, 0.25]
 
     # number of neighbors
-    Ns = [1] # (as test_N) # [1, 1.01, 1.03, 1.05, 1.1]
+    N = 1
 
     # limits
     # apply test limits PROPORTIONALLY to the average of all repair_count
@@ -324,37 +347,77 @@ def main(valid):
               60.0, 70.0, 80.0, 90.0, 100.0, 115.0, 130.0, 150.0, 175.0, 200.0,
               225.0, 250.0, 275.0, 300.0, 330.0, 360.0, 400.0, 450.0, 500.0, 550.0,
               600.0, 650.0, 700.0, 750.0, 800.0, 850.0, 900.0, 950.0, 1000.0, 1100.0,
-              1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0, 1900.0, 2000.0, 2130.0,
-              2260.0, 2400.0, 2600.0, 2800.0, 3000.0, 3200.0, 3400.0, 3600.0, 3800.0, 4000.0]
+              1200.0, 1300.0, 1400.0, 1500.0, 1600.0, 1700.0, 1800.0, 1900.0, 2000.0, 2125.0,
+              2250.0, 2400.0, 2600.0, 2800.0, 3000.0, 3200.0, 3400.0, 3600.0, 3800.0, 4000.0]
 
-    # weights for distance_month
-    dm_weights = [0.3] # (as test_dm_weight) # [0.0, 0.1, 0.2, 0.3, 0.4, 0.5]
+    # initial weights: [dMX_weight, dPX_weight, dm_weight, dYM_weight]
+    weights = [0.25, 0.25, 0.25, 0.25]
+    wcr = 0.01
+    round_ = 0
+
+    # TODO: hill_climbing for weight variables (to optimize) such as dm_weights
 
     # validation
     if valid == True:
 
         # valid result array
-        # columns : [N, limit, dm_weight, MAE value]
         valid_result = []
-        
-        for N in Ns:
 
-            for dm_weight in dm_weights:
-                MAEs = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True, N, limits, dm_weight)
+        # use hill-climbing search
+        while True:
+            print('round:', round_)
 
-                for i in range(len(MAEs)):
-                    valid_result.append([N, limits[i], dm_weight, MAEs[i]])
+            # get minimum MAE
+            [MAEs, minMAE, minMAE_limit] = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True, N, limits,
+                                               weights[0], weights[1], weights[2], weights[3])
 
-        # save the valid result
-        valid_result = np.array(valid_result)
-        valid_result = pd.DataFrame(valid_result)
-        valid_result.columns = ['N', 'limit', 'dm_weight', 'MAE']
-        
-        valid_result.to_csv('kNN_valid_result.csv')
+            valid_result.append([MAEs, minMAE, minMAE_limit, weights[0], weights[1], weights[2], weights[3]])
+
+            # find neighbors (with 12 options)
+            neighbor_options = [[wcr, -wcr, 0, 0], [wcr, 0, -wcr, 0], [wcr, 0, 0, -wcr],
+                                [-wcr, wcr, 0, 0], [0, wcr, -wcr, 0], [0, wcr, 0, -wcr],
+                                [-wcr, 0, wcr, 0], [0, -wcr, wcr, 0], [0, 0, wcr, -wcr],
+                                [-wcr, 0, 0, wcr], [0, -wcr, 0, wcr], [0, 0, -wcr, wcr]]
+
+            minMAE_neighbors = []
+
+            # get minimum MAE of each neighbor
+            for i in range(12):
+                nei = list(np.array(weights) + np.array(neighbor_options[i]))
+
+                [_, minMAE_nei, _] = kNN(repairAggregated, MX_corrcoef, MP_corrcoef, True, N, limits,
+                                         nei[0], nei[1], nei[2], nei[3])
+
+                minMAE_neighbors.append(minMAE_nei)
+
+            # compare the minMAE
+            goto = -1
+            minMAE_updated = minMAE
+            
+            for i in range(12):
+                print('round:', round_, ' neighbor:', i)
+                
+                if minMAE_neighbors[i] < minMAE_updated:
+                    minMAE_updated = minMAE_neighbors[i]
+                    goto = i
+
+            # go to the neighbor
+            if goto >= 0:
+                weight = [weight[0] + neighbor_options[goto][0],
+                          weight[1] + neighbor_options[goto][1],
+                          weight[2] + neighbor_options[goto][2],
+                          weight[3] + neighbor_options[goto][3]]
+            else:
+                break
+
+        # save validation result
+        valid_result = pd.DataFrame(np.array(valid_result))
+        valid_result.to_csv('valid_result.csv')
 
     # test
     else:
-        kNN(repairAggregated, MX_corrcoef, MP_corrcoef, False, test_N, [test_limit], test_dm_weight)
+        kNN(repairAggregated, MX_corrcoef, MP_corrcoef, False, test_N, [test_limit],
+            test_weights[0], test_weights[1], test_weights[2], test_weights[3])
 
 if __name__ == '__main__':
     main(True) # valid mode
