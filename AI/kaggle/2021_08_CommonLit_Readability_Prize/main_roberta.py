@@ -1,5 +1,6 @@
 # ref: https://wikidocs.net/45101
 #      https://huggingface.co/transformers/model_doc/roberta.html
+#      https://www.kaggle.com/sourabhy/commonlit-roberta-ensemble-multichannel-cnn
 
 import math
 import numpy as np
@@ -66,101 +67,92 @@ if __name__ == '__main__':
     print('\n[02] stddev=' + str(round(stddev, 6)))
 
     print('\n[03] converted train_Y :')
-    print(np.shape(train_Y))
+    print(np.shape(train_Y)) # (train rows)
     print(train_Y)
     
     # apply regular expression and tokenize input data
     train_X  = h.applyRegex(train_X)
     test_X   = h.applyRegex(test_X)
-    max_lens = []
 
     pad_encoded_train_Xs = []
     pad_encoded_test_Xs  = []
 
-    count = 5
+    useAtOnce = 10
 
     # encode input data (count) times with indices=0,1,...,(count-1) in 0..767
     encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model)
     encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model)
 
     print('\n[04] encoded_train_X :')
-    print(np.shape(encoded_train_X))
-            
+    print('total:', np.shape(encoded_train_X)) # (train rows)
+    print('each :', np.shape(encoded_train_X[0])) # (tokens, 768)
+    print('first data:\n', np.array(encoded_train_X[0]))
+                    
     print('\n[05] encoded_test_X :')
-    print(np.shape(encoded_test_X))
+    print('total:', np.shape(encoded_test_X)) # (test rows)
+    print('each :', np.shape(encoded_test_X[0])) # (tokens, 768)
+    print('first data:\n', np.array(encoded_test_X[0]))
         
-    for i in range(count):
-        print(str(i) + ' / ' + str(count))
-
-        # extract i-th index (i = 0..767) from encoded data
-        # (N, 768) x rows for different N's ---> (N) x rows for different N's
-        encoded_train_X_i = []
-        encoded_test_X_i  = []
+    # extract from 1st index to (useAtOnce)-th index (i = 0..767) from encoded data
+    # (tokens, 768) for each row ---> (tokens, useAtOnce) for each row
+    encoded_train_Xs = []
+    encoded_test_Xs  = []
         
-        for j in range(trainLen):
-            encoded_train_X_ij = []
-            for k in range(len(encoded_train_X[j])): encoded_train_X_ij.append(encoded_train_X[j][k][i])
-            encoded_train_X_i.append(encoded_train_X_ij)
+    for i in range(trainLen):
 
-        for j in range(testLen):
-            encoded_test_X_ij = []
-            for k in range(len(encoded_test_X[j])): encoded_test_X_ij.append(encoded_test_X[j][k][i])
-            encoded_test_X_i.append(encoded_test_X_ij)
-
-        if i == 0:
-            print('\n[06] encoded_train_X for i==0 :')
-            print(np.shape(encoded_train_X_i))
-
-            print('\n[07] encoded_test_X for i==0 :')
-            print(np.shape(encoded_test_X_i))
+        # flatten of [encoded_X[0], encoded_X[1], ..., encoded_X[useAtOnce-1]] (size: useAtOnce * 768)
+        encoded_train_X_vecs = []
+        for j in range(useAtOnce): encoded_train_X_vecs.append(encoded_train_X[i][j])
+        encoded_train_X_vecs = np.array(encoded_train_X_vecs).flatten()
+        print('length:', len(encoded_train_X_vecs))
         
-        # add padding to input data
-        (pad_encoded_train_X, pad_encoded_test_X, max_len) = h.addPadding(encoded_train_X_i, encoded_test_X_i)
+        encoded_train_Xs.append(encoded_train_X_vecs)
 
-        pad_encoded_train_X = pad_encoded_train_X * 3.0
-        pad_encoded_test_X  = pad_encoded_test_X  * 3.0
-
-        max_lens.append(max_len)
-
-        if i == 0:
-            print('\n[08] max_len=' + str(max_len))
-
-        if i < 10:
-            print('\n[09] pad_encoded_train_X (' + str(i) + ') :')
-            print(np.shape(pad_encoded_train_X))
-            print(pad_encoded_train_X)
-            
-            print('\n[10] pad_encoded_test_X  (' + str(i) + ') :')
-            print(np.shape(pad_encoded_test_X))
-            print(pad_encoded_test_X)
+    for i in range(testLen):
         
-        # find additional info
-        pad_encoded_train_X = h.getAdditionalInfo(pad_encoded_train_X, trainLen, train_X, encoded_train_X_i)
-        pad_encoded_test_X = h.getAdditionalInfo(pad_encoded_test_X, testLen, test_X, encoded_test_X_i)
+        # flatten of [encoded_X[0], encoded_X[1], ..., encoded_X[useAtOnce-1]] (size: useAtOnce * 768)
+        encoded_test_X_vecs = []
+        for j in range(useAtOnce): encoded_test_X_vecs.append(encoded_test_X[i][j])
+        encoded_test_X_vecs = np.array(encoded_test_X_vecs).flatten()
+        print('length:', len(encoded_test_X_vecs))
+        
+        encoded_test_Xs.append(encoded_test_X_vecs)
 
-        pad_encoded_train_Xs.append(pad_encoded_train_X)
-        pad_encoded_test_Xs.append(pad_encoded_test_X)
+    encoded_train_Xs = np.array(encoded_train_Xs)
+    encoded_test_Xs  = np.array(encoded_test_Xs)
 
-        if i == 0:
-            print('\n[11] pad_encoded_train_X with additional info :')
-            print(np.shape(pad_encoded_train_X))
-            print(pad_encoded_train_X)
+    print('\n[06] pad_encoded_train_X :')
+    print(np.shape(encoded_train_Xs)) # (train rows, useAtOnce * 768)
+    print(encoded_train_Xs)
+                    
+    print('\n[07] pad_encoded_test_X :')
+    print(np.shape(encoded_test_Xs)) # (test rows, useAtOnce * 768)
+    print(encoded_test_Xs)
+        
+    # multiply 3.0
+    encoded_train_Xs = encoded_train_Xs * 3.0
+    encoded_test_Xs  = encoded_test_Xs  * 3.0
 
-            print('\n[12] pad_encoded_test_X with additional info :')
-            print(np.shape(pad_encoded_test_X))
-            print(pad_encoded_test_X)
+    # find additional info
+    encoded_train_Xs = h.getAdditionalInfo(encoded_train_Xs, trainLen, train_X)
+    encoded_test_Xs  = h.getAdditionalInfo(encoded_test_Xs,  testLen,  test_X)
 
-    print('\n[13] max_len\'s :')
-    print(max_lens)
+    print('\n[08] pad_encoded_train_X with additional info :')
+    print(np.shape(encoded_train_Xs)) # (train rows, useAtOnce * 768 + 3)
+    print(encoded_train_Xs)
+
+    print('\n[09] pad_encoded_test_X with additional info :')
+    print(np.shape(encoded_test_Xs)) # (test rows, useAtOnce * 768 + 3)
+    print(encoded_test_Xs)
     
     # train/valid using GPU
     valid_rate = 0.15
-    h.trainOrValid(True, 'roberta', valid_rate, trainLen, max_lens, pad_encoded_train_Xs, train_Y, pad_encoded_test_Xs,
-                   count, avg, stddev)
+    h.trainOrValid(True, 'roberta', valid_rate, trainLen, useAtOnce,
+                   encoded_train_Xs, train_Y, encoded_test_Xs, avg, stddev)
 
     # test using GPU
-    final_prediction = h.trainOrValid(False, 'roberta', valid_rate, trainLen, max_lens, pad_encoded_train_Xs, train_Y, pad_encoded_test_Xs,
-                                      count, avg, stddev)
+    final_prediction = h.trainOrValid(False, 'roberta', valid_rate, trainLen, useAtOnce,
+                                      encoded_train_Xs, train_Y, encoded_test_Xs, avg, stddev)
 
     # final submission
     final_submission = pd.DataFrame(

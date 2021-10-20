@@ -7,12 +7,12 @@ import tensorflow as tf
 # model
 class TEXT_MODEL_LSTM(tf.keras.Model):
     
-    def __init__(self, max_length, embed_dim, cnn_filters, dropout_rate=0.25, training=False, name='text_model'):
+    def __init__(self, useAtOnce, embed_dim, cnn_filters, dropout_rate=0.25, training=False, name='text_model'):
         
         super(TEXT_MODEL_LSTM, self).__init__(name=name)
 
         # constants
-        self.maxLength = max_length
+        self.use_at_once = useAtOnce
 
         # flatten layer and regularizer
         self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
@@ -37,12 +37,12 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
     def call(self, inputs, training):
 
         ### split inputs
-        max_len = self.maxLength
-        inputs_text, inputs_info = tf.split(inputs, [max_len, 3], axis=1)
+        UAO = self.use_at_once
+        inputs_text, inputs_info = tf.split(inputs, [768 * UAO, 3], axis=1)
 
         ### for text input
         # CNN layers
-        inputs_text = tf.reshape(inputs_text, (-1, max_len, 1))
+        inputs_text = tf.reshape(inputs_text, (-1, 768 * UAO, 1))
 
         inputs_text_CNN2 = self.CNN2(inputs_text)
         inputs_text_CNN3 = self.CNN3(inputs_text)
@@ -102,6 +102,7 @@ def applyRegex(all_X):
 
     return all_X
 
+"""
 def addPadding(encoded_train_X, encoded_test_X):
     max_len_train = max(len(x) for x in encoded_train_X)
     max_len_test = max(len(x) for x in encoded_test_X)
@@ -117,10 +118,11 @@ def addPadding(encoded_train_X, encoded_test_X):
         new_encoded_test_X [i][max_len - len(encoded_test_X[i]) :] = encoded_test_X [i]
 
     return (new_encoded_train_X, new_encoded_test_X, max_len)
+"""
 
 # define the model
-def defineModel(max_length, embed_dim, cnn_filters, dropout_rate):
-    return TEXT_MODEL_LSTM(max_length=max_length,
+def defineModel(useAtOnce, embed_dim, cnn_filters, dropout_rate):
+    return TEXT_MODEL_LSTM(useAtOnce=useAtOnce,
                            embed_dim=embed_dim,
                            cnn_filters=cnn_filters,
                            dropout_rate=dropout_rate)
@@ -143,14 +145,14 @@ def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced
     model.fit(X, Y, validation_split=validation_split, callbacks=[early, lr_reduced], epochs=epochs)
     model.summary()
 
-def defineAndTrainModel(max_len, pad_encoded_train_X, train_Y):
+def defineAndTrainModel(useAtOnce, pad_encoded_train_X, train_Y):
     
     # create model
     embed_dim    = 64
     cnn_filters  = 64
     dropout_rate = 0.25
     
-    model = defineModel(max_len, embed_dim, cnn_filters, dropout_rate)
+    model = defineModel(useAtOnce, embed_dim, cnn_filters, dropout_rate)
 
     # model configuration
     val_split           = 0.1
@@ -198,7 +200,7 @@ def getSentenceInfo(sentence):
     return np.array([numberOfSentences, totalLength, avgLength])
 
 # find additional info
-def getAdditionalInfo(pad_encoded_X, leng, X, encoded_X):
+def getAdditionalInfo(pad_encoded_X, leng, X):
 
     additionalInfo = np.zeros((leng, 3))
 
@@ -217,7 +219,7 @@ def getAdditionalInfo(pad_encoded_X, leng, X, encoded_X):
     return pad_encoded_X
 
 # train model using GPU
-def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, train_Y, test_Xs, count, avg, stddev):
+def trainOrValid(valid, algo_name, valid_rate, trainLen, useAtOnce, train_Xs, train_Y, test_Xs, avg, stddev):
 
     if valid == False: valid_rate = 0.0
     trainCount = int((1.0 - valid_rate) * trainLen)
@@ -225,64 +227,63 @@ def trainOrValid(valid, algo_name, valid_rate, trainLen, max_lens, train_Xs, tra
     # save original validation data
     if valid == True:
         train_Y_reshaped = np.reshape(train_Y[trainCount:], (trainLen - trainCount, 1))
-        for j in range(len(train_Y_reshaped)): train_Y_reshaped[j] = invSigmoid(train_Y_reshaped[j])
+        for i in range(len(train_Y_reshaped)): train_Y_reshaped[i] = invSigmoid(train_Y_reshaped[i])
         pd.DataFrame(train_Y_reshaped).to_csv('valid_original.csv')
     
-    for i in range(count):
-        try:
-            # for local with GPU
-            with tf.device('/gpu:0'):
-                model = defineAndTrainModel(max_lens[i],
-                                            train_Xs[i][:trainCount],
-                                            train_Y[:trainCount])
-                
-        except:
-            # for kaggle notebook or local with no GPU
-            print('cannot find GPU')
-            model = defineAndTrainModel(max_lens[i],
-                                        train_Xs[i][:trainCount],
+    try:
+        # for local with GPU
+        with tf.device('/gpu:0'):
+            model = defineAndTrainModel(useAtOnce,
+                                        train_Xs[:trainCount],
                                         train_Y[:trainCount])
+                
+    except:
+        # for kaggle notebook or local with no GPU
+        print('cannot find GPU')
+        model = defineAndTrainModel(useAtOnce,
+                                    train_Xs[:trainCount],
+                                    train_Y[:trainCount])
 
-        # save model
-        if valid == True:
-            model.save('valid_' + algo_name + '_' + str(i))
+    # save model
+    if valid == True:
+        model.save('valid_' + algo_name)
         
-        # predict using model
-        if valid == True:
-            prediction = model.predict(train_Xs[i][trainCount:]).flatten()
-        else:
-            prediction = model.predict(test_Xs[i]).flatten()
+    # predict using model
+    if valid == True:
+        prediction = model.predict(train_Xs[trainCount:]).flatten()
+    else:
+        prediction = model.predict(test_Xs).flatten()
             
-        prediction = np.clip(prediction, 0.0001, 0.9999)
+    prediction = np.clip(prediction, 0.0001, 0.9999)
 
-        print('\n[14] original (normalized and then SIGMOID-ed) prediction:')
-        print(np.shape(prediction))
-        print(prediction)
+    print('\n[14] original (normalized and then SIGMOID-ed) prediction:')
+    print(np.shape(prediction))
+    print(prediction)
 
-        # y -> denormalize(invSigmoid(y))
-        for j in range(len(prediction)):
-            prediction[j] = invSigmoid(prediction[j])
+    # y -> denormalize(invSigmoid(y))
+    for i in range(len(prediction)):
+        prediction[i] = invSigmoid(prediction[i])
             
-        prediction = prediction * stddev + avg
+    prediction = prediction * stddev + avg
 
-        # write final submission/prediction
-        print('\n[15] converted prediction:')
-        print(np.shape(prediction))
-        print(prediction)
+    # write final submission/prediction
+    print('\n[15] converted prediction:')
+    print(np.shape(prediction))
+    print(prediction)
 
-        prediction = pd.DataFrame(np.reshape(np.array(prediction), (len(prediction), 1)))
+    prediction = pd.DataFrame(np.reshape(np.array(prediction), (len(prediction), 1)))
 
-        # for valid mode
-        if valid == True:
-            prediction.to_csv('valid_' + algo_name + '_' + str(i) + '.csv')
+    # for valid mode
+    if valid == True:
+        prediction.to_csv('valid_' + algo_name + '.csv')
 
-        # for test mode
-        else:
-            prediction.to_csv('test_' + algo_name + '_' + str(i) + '.csv')
-            try:
-                final_prediction += prediction
-            except:
-                final_prediction = prediction
+    # for test mode
+    else:
+        prediction.to_csv('test_' + algo_name + '.csv')
+        try:
+            final_prediction += prediction
+        except:
+            final_prediction = prediction
 
     # print final prediction
     if valid == False:
