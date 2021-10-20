@@ -20,12 +20,18 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         L2           = tf.keras.regularizers.l2(0.001)
 
         # use CNN (CNN2, CNN3, CNN4) + original input
-        self.CNN2    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='CNN2_text')
-        self.CNN3    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='CNN3_text')
-        self.CNN4    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='CNN4_text')
+        self.CNN2 = []
+        self.CNN3 = []
+        self.CNN4 = []
+        self.dense_text = []
 
-        # layers for inputs_text
-        self.dense_text  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text')
+        for i in range(useAtOnce):
+            self.CNN2.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='CNN2_text_' + str(i)))
+            self.CNN3.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='CNN3_text_' + str(i)))
+            self.CNN4.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='CNN4_text_' + str(i)))
+
+            # layers for inputs_text
+            self.dense_text.append(tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text_' + str(i)))
 
         # layers for inputs_info
         self.dense_info  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
@@ -36,28 +42,37 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
 
     def call(self, inputs, training):
 
+        # suppose that UAO = 10
+
         ### split inputs
         UAO = self.use_at_once
-        inputs_text, inputs_info = tf.split(inputs, [768 * UAO, 3], axis=1)
+        i00, i10, i20, i30, i40, i50, i60, i70, i80, i90, inputs_info = tf.split(inputs, [768, 768, 768, 768, 768, 768, 768, 768, 768, 768, 3], axis=1)
 
         ### for text input
-        # CNN layers
-        inputs_text = tf.reshape(inputs_text, (-1, 768 * UAO, 1))
-
-        inputs_text_CNN2 = self.CNN2(inputs_text)
-        inputs_text_CNN3 = self.CNN3(inputs_text)
-        inputs_text_CNN4 = self.CNN4(inputs_text)
-
-        inputs_text_CNN2 = self.flat(inputs_text_CNN2)
-        inputs_text_CNN3 = self.flat(inputs_text_CNN3)
-        inputs_text_CNN4 = self.flat(inputs_text_CNN4)
+        inputs_text = []
+        i0s = [i00, i10, i20, i30, i40, i50, i60, i70, i80, i90]
         
-        inputs_text = tf.concat([inputs_text_CNN2, inputs_text_CNN3, inputs_text_CNN4], axis=-1)
-        inputs_text = self.dropout(inputs_text, training)
+        for i in range(UAO):
+            i_0 = i0s[i]
+            i_0 = tf.reshape(i_0, (-1, 768, 1))
 
-        # dense after CNN
-        inputs_text = self.dense_text(inputs_text)
-        inputs_text = self.dropout(inputs_text, training)
+            # CNN layers
+            i_1 = self.CNN2[i](i_0)
+            i_2 = self.CNN3[i](i_0)
+            i_3 = self.CNN4[i](i_0)
+            
+            i_1 = self.flat(i_1)
+            i_2 = self.flat(i_2)
+            i_3 = self.flat(i_3)
+            
+            i_4 = tf.concat([i_1, i_2, i_3], axis=-1)
+            i_4 = self.dropout(i_4, training)
+
+            # dense after CNN
+            i_4 = self.dense_text[i](i_4)
+            i_4 = self.dropout(i_4, training)
+
+            inputs_text.append(i_4)
 
         ### for info input
         # DNN for inputs_info
@@ -65,7 +80,10 @@ class TEXT_MODEL_LSTM(tf.keras.Model):
         inputs_info = self.dropout(inputs_info, training)
         
         ### concatenate inputs_text and inputs_info
-        concatenated = tf.concat([inputs_text, inputs_info], axis=-1)
+        concatenated = tf.concat([inputs_text[0], inputs_text[1], inputs_text[2],
+                                  inputs_text[3], inputs_text[4], inputs_text[5],
+                                  inputs_text[6], inputs_text[7], inputs_text[8],
+                                  inputs_text[9], inputs_info], axis=-1)
 
         # final output
         model_merged = self.merged(concatenated)

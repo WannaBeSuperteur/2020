@@ -94,7 +94,6 @@ if __name__ == '__main__':
         encoded_train_X_vecs = []
         for j in range(useAtOnce): encoded_train_X_vecs.append(encoded_train_X[i][j])
         encoded_train_X_vecs = np.array(encoded_train_X_vecs).flatten()
-        print('length:', len(encoded_train_X_vecs))
         
         encoded_train_Xs.append(encoded_train_X_vecs)
 
@@ -104,7 +103,6 @@ if __name__ == '__main__':
         encoded_test_X_vecs = []
         for j in range(useAtOnce): encoded_test_X_vecs.append(encoded_test_X[i][j])
         encoded_test_X_vecs = np.array(encoded_test_X_vecs).flatten()
-        print('length:', len(encoded_test_X_vecs))
         
         encoded_test_Xs.append(encoded_test_X_vecs)
 
