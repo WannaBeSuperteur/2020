@@ -210,6 +210,19 @@ def kNN(aggregated, mapping, MX_corrcoef, PX_corrcoef, valid, N, limits,
 
     N_float = N % 1.0
     N = math.ceil(N)
+
+    print('shape of mapping:')
+    print(np.shape(mapping))
+    print('shape of aggregated:')
+    print(np.shape(aggregated))
+
+    print('saving...')
+    if valid == True:
+        pd.DataFrame(mapping).to_csv('valid_getDistanceArray_mapping.csv')
+        pd.DataFrame(aggregated).to_csv('valid_getDistanceArray_aggregated.csv')
+    else:
+        pd.DataFrame(mapping).to_csv('test_getDistanceArray_mapping.csv')
+        pd.DataFrame(aggregated).to_csv('test_getDistanceArray_aggregated.csv')
     
     # read mapping data
     # train -> Output_TargetID_Mapping.csv
@@ -433,7 +446,7 @@ def main(valid):
             print('round:', round_)
 
             # get minimum MAE
-            [MAEs, minMAE, minMAE_limit] = kNN(repairAggregated, validMapping,
+            [MAEs, minMAE, minMAE_limit] = kNN(repairAggregated_valid, validMapping,
                                                MX_corrcoef, PX_corrcoef, True, N, limits,
                                                weights[0], weights[1], weights[2], weights[3],
                                                distTotal_valid)
@@ -452,7 +465,7 @@ def main(valid):
             for i in range(12):
                 nei = list(np.array(weights) + np.array(neighbor_options[i]))
 
-                [_, minMAE_nei, _] = kNN(repairAggregated, validMapping,
+                [_, minMAE_nei, _] = kNN(repairAggregated_valid, validMapping,
                                          MX_corrcoef, PX_corrcoef, True, N, limits,
                                          nei[0], nei[1], nei[2], nei[3],
                                          distTotal_valid)
