@@ -206,7 +206,7 @@ def getMapping(aggregated, valid):
                 
 # kNN for [MX, PX, year(repair), year*12+month(repair)] and make final submission
 def kNN(aggregated, mapping, MX_corrcoef, PX_corrcoef, valid, N, limits,
-        dMX_weight, dPX_weight, dm_weight, dYM_weight, distTotal):
+        dMX_weight, dPX_weight, dm_weight, dYM_weight, distTotal, neighborNo='None'):
 
     N_float = N % 1.0
     N = math.ceil(N)
@@ -264,6 +264,7 @@ def kNN(aggregated, mapping, MX_corrcoef, PX_corrcoef, valid, N, limits,
             if dist_0 == 0 and dist_1 == 0 and dist_2 == 0 and dist_3 == 0: continue
 
             dist_total = dist_0 * dist_0 + dist_1 * dist_1 + dist_2 * dist_2 + dist_3 * dist_3
+            if i % 100 == 0 and j == 0: print(i, j, 'dist:', dist_0, dist_1, dist_2, dist_3, dist_total)
 
             # val1_M, val1_P, val1_year and val1_month
             val1_M = aggregated[j][0]
@@ -308,9 +309,12 @@ def kNN(aggregated, mapping, MX_corrcoef, PX_corrcoef, valid, N, limits,
                 
             else: # (not last) integer part
                 weight = 1.0
-
+                
             repairSum += weight * float(dist_aggregated[j][2]) / float(dist_aggregated[j][1])
             distanceSum += weight / float(dist_aggregated[j][1])
+
+            if i % 100 == 0:
+                print(i, dist_aggregated[j][1], dist_aggregated[j][2], 'sums =', repairSum, distanceSum)
 
             # val0_M, val0_P, val0_year and val0_month
             val0_M = mapping[i][0]
@@ -327,13 +331,16 @@ def kNN(aggregated, mapping, MX_corrcoef, PX_corrcoef, valid, N, limits,
                                 dist_aggregated[j][4], dist_aggregated[j][5],
                                 dist_aggregated[j][6]])
 
+        if i % 100 == 0:
+            print(i, repairSum / distanceSum)
+
         prediction.append(repairSum / distanceSum)
 
         # write prediction periodically
         if (i + 1) % 500 == 0:
             print('writing prediction ...')
-            pd.DataFrame(prediction).to_csv('kNN_' + state_text + '_prediction_' + str(i) + '.csv')
-            pd.DataFrame(explanation).to_csv('kNN_' + state_text + '_explanation_' + str(i) + '.csv')
+            pd.DataFrame(prediction).to_csv('kNN_' + state_text + '_prediction_' + str(i) + '_' + str(neighborNo) + '.csv')
+            pd.DataFrame(explanation).to_csv('kNN_' + state_text + '_explanation_' + str(i) + '_' + str(neighborNo) + '.csv')
 
     # for each limit value,
     MAEs = []
@@ -468,7 +475,7 @@ def main(valid):
                 [_, minMAE_nei, _] = kNN(repairAggregated_valid, validMapping,
                                          MX_corrcoef, PX_corrcoef, True, N, limits,
                                          nei[0], nei[1], nei[2], nei[3],
-                                         distTotal_valid)
+                                         distTotal_valid, i)
 
                 minMAE_neighbors.append(minMAE_nei)
 
@@ -483,12 +490,15 @@ def main(valid):
                     minMAE_updated = minMAE_neighbors[i]
                     goto = i
 
+            print(minMAE, minMAE_neighbors, goto, weight)
+
             # go to the neighbor
             if goto >= 0:
                 weight = [weight[0] + neighbor_options[goto][0],
                           weight[1] + neighbor_options[goto][1],
                           weight[2] + neighbor_options[goto][2],
                           weight[3] + neighbor_options[goto][3]]
+                print('new weight:', weight)
             else:
                 break
 
