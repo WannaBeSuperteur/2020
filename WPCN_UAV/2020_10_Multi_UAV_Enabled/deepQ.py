@@ -252,6 +252,9 @@ def defineModel(maxDevices):
 
 # train data with model
 def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
+
+    saveResultPeriod = 50
+    saveResultPeriodMinor = 10
     
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
     lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
@@ -262,7 +265,7 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
     # save result as *.png image and *.csv file
     # https://snowdeer.github.io/machine-learning/2018/01/11/keras-use-history-function/
-    if episode >= 0: # M - 2
+    if episode % saveResultPeriod == 0 or (episode < 100 and episode % saveResultPeriodMinor == 0) or episode == M:
 
         # *.png file
         plt.clf()
@@ -381,11 +384,14 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
     
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
-    #print(time.time())
-    testO = trainedModel.predict(stateArray) # (LARGEST time consumption)
-    #print(time.time())
 
-    if verbose == True: print('test finished')
+    # (LARGEST time consumption)
+    #testO = trainedModel.predict(stateArray)
+    #testO = trainedModel(stateArray, training=False)
+    testO = trainedModel(stateArray)
+    
+    if verbose == True:
+        print('test finished')
 
     if timeCheck == True:
         print('[deepQ_test  ] [ end ] time=' + str(time.time()))

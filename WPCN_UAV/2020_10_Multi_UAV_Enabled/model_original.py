@@ -385,7 +385,7 @@ def algorithm1(M, T, L, devices, width, height,
     currentTime = getTimeDif(None, 'init', printTimeDif)
     
     for episode in range(M):
-        print('episode ' + str(episode) + ' / ' + str(M))
+        print('\nepisode ' + str(episode) + ' / ' + str(M) + ' / time=' + str(time.time()))
 
         # choose action with e-greedy while e increases
         e_ = episode / M # example
@@ -423,7 +423,7 @@ def algorithm1(M, T, L, devices, width, height,
         # rows to be created: (for training data) when QTable_rate = 1.0 :
         # [T = time slots (second)] * [devices = number of devices] * 3     
         for t in range(1, T): # each time slot t
-            print('time slot ' + str(t - 1) + ' / ' + str(T) + ' time=' + str(time.time()))
+            print('time slot ' + str(t - 1) + ' / ' + str(T))
 
             currentTime = getTimeDif(currentTime, 'start of time slot', printTimeDif)
 
