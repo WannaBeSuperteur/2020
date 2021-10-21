@@ -3,9 +3,14 @@ time_log = timelog.readlines()
 timelog.close()
 
 timeSum = {}
-lastCurrent = None
+timeCnt = {}
 
-for i in range(len(time_log)):
+lastCurrent = None
+startAt = 2000 # except before deep learning
+
+def x0(x): return x[0]
+
+for i in range(startAt, len(time_log)):
     if i % 1000 == 0: print(i)
     
     time_log_items = time_log[i].split(' ')
@@ -18,10 +23,22 @@ for i in range(len(time_log)):
     if lastCurrent != None:
         try:
             timeSum[func + ',' + inout] += current - lastCurrent
+            timeCnt[func + ',' + inout] += 1
         except:
             timeSum[func + ',' + inout] = current - lastCurrent
+            timeCnt[func + ',' + inout] = 1
 
     lastCurrent = current
 
-for key, value in timeSum.items():
-    print('before', key, '\t\t', round(value, 4))
+print('avgTime is x10,000\n')
+print('case\t\t\t time\t       count\t avgTime')
+print('---------------------------------------------------------')
+for case, time in sorted(timeSum.items(), key=x0):
+    
+    cnt     = timeCnt[case]
+    avgTime = time / cnt
+
+    print(case + ' '*(24-len(case)),
+          round(time, 4), ' '*(12-len(str(round(time, 4)))),
+          cnt, ' '*(8-len(str(cnt))),
+          round(avgTime * 10000, 4))

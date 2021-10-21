@@ -1,3 +1,5 @@
+import time
+
 def loadSettings(args):
 
     argValues = {}
@@ -32,6 +34,14 @@ def loadSettings(args):
                 break
 
     return argValues
+
+def printTime(funcName, inout):    
+    timeLog = str(time.time()) + ' [' + str(funcName) + '] [' + str(inout) + ']'
+    print(timeLog)
+
+    f = open('time_log.txt', 'a')
+    f.write(timeLog + '\n')
+    f.close()
 
 if __name__ == '__main__':
     argValues = loadSettings({'deviceName':'str',

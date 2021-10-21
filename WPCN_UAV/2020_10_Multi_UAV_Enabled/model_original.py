@@ -1,6 +1,6 @@
 import sys
 
-import helper
+import helper as h_
 import formula as f
 import deepQ as dq
 import algorithms as algo
@@ -14,7 +14,7 @@ from shapely.geometry import LineString
 import tensorflow as tf
 import time
 
-timeCheck = helper.loadSettings({'timeCheck':'logical'})['timeCheck']
+timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 
 # time consumption per time slot : 38 seconds -> 3.0 seconds (about 1/13)
 
@@ -214,7 +214,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                  trainedModel, optimizer, updatingQtable, printTimeDif):
 
-    if timeCheck == True: print(time.time(), '[updateDRlist] [IN]')
+    if timeCheck == True: h_.printTime('updateDRlist', 'IN')
     
     # for each device k
     for k in range(len(clusters[i])):
@@ -241,7 +241,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 
         if k == 0: directReward_list[i] += value
 
-    if timeCheck == True: print(time.time(), '[updateDRlist] [OUT]')
+    if timeCheck == True: h_.printTime('updateDRlist', 'OUT')
 
 # print time difference
 def getTimeDif(T, msg, printTimeDif):
@@ -285,8 +285,8 @@ def algorithm1(M, T, L, devices, width, height,
                deviceName, QTable_rate, iteration):
 
     # load settings
-    printTimeDif = helper.loadSettings({'printTimeDif':'logical'})['printTimeDif']
-    printWarning = helper.loadSettings({'warning':'logical'})['warning']
+    printTimeDif = h_.loadSettings({'printTimeDif':'logical'})['printTimeDif']
+    printWarning = h_.loadSettings({'warning':'logical'})['warning']
     
     ### INIT ###
     # Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -709,18 +709,18 @@ if __name__ == '__main__':
     warnings.simplefilter('ignore')
 
     # load settings
-    paperArgs = helper.loadSettings({'deviceName':'str',
-                                     'QTable_rate':'float',
-                                     'fc':'float', 'B':'float', 'o2':'float',
-                                     'b1':'float', 'b2':'float',
-                                     'alpha':'float',
-                                     'u1':'float', 'u2':'float',
-                                     'S_':'float',
-                                     'alphaL':'float',
-                                     'r_':'float',
-                                     'width':'float', 'height':'float',
-                                     'M':'int', 'L':'int', 'devices':'int', 'T':'int',
-                                     'H':'float'})
+    paperArgs = h_.loadSettings({'deviceName':'str',
+                                'QTable_rate':'float',
+                                'fc':'float', 'B':'float', 'o2':'float',
+                                'b1':'float', 'b2':'float',
+                                'alpha':'float',
+                                'u1':'float', 'u2':'float',
+                                'S_':'float',
+                                'alphaL':'float',
+                                'r_':'float',
+                                'width':'float', 'height':'float',
+                                'M':'int', 'L':'int', 'devices':'int', 'T':'int',
+                                'H':'float'})
 
     deviceName = paperArgs['deviceName']
     QTable_rate = paperArgs['QTable_rate']

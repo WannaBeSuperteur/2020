@@ -2,7 +2,7 @@ import sys
 import math
 import copy
 
-import helper
+import helper as h_
 import formula as f
 import random
 import numpy as np
@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import time
 
 # read time check option for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
-timeCheck = helper.loadSettings({'timeCheck':'logical'})['timeCheck']
+timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 
 # find the maximum value of the number of devices
 def getMaxDeviceCount(clusters):
@@ -26,7 +26,7 @@ def getMaxDeviceCount(clusters):
     return maxDevices
 
 def fillWithConstant(state_array, times):
-    const_to_fill = helper.loadSettings({'constantToFill':'float'})['constantToFill']
+    const_to_fill = h_.loadSettings({'constantToFill':'float'})['constantToFill']
     
     for i in range(times):
         state_array[1].append(const_to_fill)
@@ -65,11 +65,13 @@ def getS(UAV, n, l, a, L, B, PU, g, o2):
 # with probability (1-e), do the action randomly
 def getActionWithE(Q, s, e):
 
-    if timeCheck == True: print(time.time(), '[getActionWithE] [IN]')
+    if timeCheck == True: h_.printTime('getActionWithE', 'IN')
 
     # do action randomly if Q table is empty
     if len(Q) == 0:
         actionIndex = random.randint(0, 3*3*3-1) # (3*3*3) actions in total
+
+        if timeCheck == True: h_.printTime('getActionWithE', 'OUT0')
         return getAction(actionIndex)
 
     # Q Table           = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
@@ -99,7 +101,7 @@ def getActionWithE(Q, s, e):
                 actionReward = Q[stateIndex][1][i]
                 actionIndex = i
 
-    if timeCheck == True: print(time.time(), '[getActionWithE] [OUT]')
+    if timeCheck == True: h_.printTime('getActionWithE', 'OUT1')
 
     # return action with index of actionIndex
     return getAction(actionIndex)
@@ -133,7 +135,7 @@ def getActionIndex(action):
 def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True: print(time.time(), '[getMaxQ] [IN]')
+    if timeCheck == True: h_.printTime('getMaxQ', 'IN')
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -161,7 +163,7 @@ def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
     else: maxQ = 0
 
     # return
-    if timeCheck == True: print(time.time(), '[getMaxQ] [OUT]')
+    if timeCheck == True: h_.printTime('getMaxQ', 'OUT')
 
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])
@@ -235,7 +237,7 @@ def normalize(array, applyLog, title, printAnalysis):
 def defineModel(maxDevices):
 
     # load settings and find learning rate
-    learningRate = helper.loadSettings({'learningRate':'float'})['learningRate']
+    learningRate = h_.loadSettings({'learningRate':'float'})['learningRate']
 
     # L2 regularization
     L2 = tf.keras.regularizers.l2(0.001)
@@ -255,7 +257,7 @@ def defineModel(maxDevices):
 # train data with model
 def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
-    if timeCheck == True: print(time.time(), '[trainDataWithModel] [IN]')
+    if timeCheck == True: h_.printTime('trainDataWithModel', 'IN')
 
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
     lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
@@ -305,7 +307,7 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
         hist_entire.to_csv('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '.csv')
 
-    if timeCheck == True: print(time.time(), '[trainDataWithModel] [OUT]')
+    if timeCheck == True: h_.printTime('trainDataWithModel', 'OUT')
 
 # deep Learning using Q table (training function)
 # printed    : print the detail?
@@ -372,7 +374,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 
-    if timeCheck == True: print(time.time(), '[deepLearningQ_test] [IN]')
+    if timeCheck == True: h_.printTime('deepLearningQ_test', 'IN')
 
     # convert state into 1d array
     # input unit count = 3 for q + N for {a} + N for {R} = 3 + 2N
@@ -395,7 +397,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
     if verbose == True:
         print('test finished')
 
-    if timeCheck == True: print(time.time(), '[deepLearningQ_test] [OUT]')
+    if timeCheck == True: h_.printTime('deepLearningQ_test', 'OUT')
 
     # return output layer
     return testO
@@ -424,7 +426,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True: print(time.time(), '[updateQvalue] [IN]')
+    if timeCheck == True: h_.printTime('updateQvalue', 'IN')
     
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -467,7 +469,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         # update current state s just before return
         s[2] = a[n]
 
-        if timeCheck == True: print(time.time(), '[updateQvalue] [OUT]')
+        if timeCheck == True: h_.printTime('updateQvalue', 'OUT0')
 
         return
 
@@ -493,7 +495,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
     # update current state s
     s[2] = a[n]
 
-    if timeCheck == True: print(time.time(), '[updateQvalue] [IN]')
+    if timeCheck == True: h_.printTime('updateQvalue', 'OUT1')
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)
@@ -534,7 +536,7 @@ def getAngle(q_this, q_before, n):
 # R      : list of R[n][k_l]    (a part of s)
 def getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2):
 
-    if timeCheck == True: print(time.time(), '[getNextLocation] [IN]')
+    if timeCheck == True: h_.printTime('getNextLocation', 'IN')
     
     # get current location
     curX = s[0][0] # q[n][l][0]
@@ -595,7 +597,7 @@ def getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2):
     elif z == 0: nextH = curH
     elif z == 1: nextH = curH + 1
 
-    if timeCheck == True: print(time.time(), '[getNextLocation] [OUT]')
+    if timeCheck == True: h_.printTime('getNextLocation', 'OUT')
 
     # return next location
     return [nextX, nextY, nextH]
@@ -642,7 +644,7 @@ def findDeviceToCommunicate(clusters, n, l, X, Y, H, b1, b2, S_, u1, u2, fc, alp
 def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
                  b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True: print(time.time(), '[getNextState] [IN]')
+    if timeCheck == True: h_.printTime('getNextState', 'IN')
     
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2)
@@ -685,7 +687,7 @@ def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
 
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
-    if timeCheck == True: print(time.time(), '[getNextState] [OUT]')
+    if timeCheck == True: h_.printTime('getNextState', 'OUT')
 
     return ([[nextX, nextY, nextH], next_a, nextR], deviceToCommunicate)
 
