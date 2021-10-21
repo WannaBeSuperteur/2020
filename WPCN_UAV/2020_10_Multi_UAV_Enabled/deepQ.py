@@ -314,7 +314,7 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 # maxDevices : the maximum number of devices in the cluster
 def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode, clusters):
 
-    h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'IN')
+    if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'IN')
 
     maxDevices = getMaxDeviceCount(clusters)
     model = defineModel(maxDevices)
@@ -373,7 +373,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
     except:
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
 
-    h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'OUT')
+    if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'OUT')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):

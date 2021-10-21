@@ -214,7 +214,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                  trainedModel, optimizer, updatingQtable, printTimeDif):
 
-    if timeCheck == True: h_.printTime('updateDRlist', 'IN')
+    if timeCheck == True: h_.printTime('updateDRlist' + ('_DL' if useDL else '_NDL'), 'IN')
     
     # for each device k
     for k in range(len(clusters[i])):
@@ -241,7 +241,7 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
 
         if k == 0: directReward_list[i] += value
 
-    if timeCheck == True: h_.printTime('updateDRlist', 'OUT')
+    if timeCheck == True: h_.printTime('updateDRlist' + ('_DL' if useDL else '_NDL'), 'OUT')
 
 # print time difference
 def getTimeDif(T, msg, printTimeDif):
@@ -429,9 +429,6 @@ def algorithm1(M, T, L, devices, width, height,
         # rows to be created: (for training data) when QTable_rate = 1.0 :
         # [T = time slots (second)] * [devices = number of devices] * 3     
         for t in range(1, T): # each time slot t
-            print('time slot ' + str(t - 1) + ' / ' + str(T))
-            print('[00]', time.time())
-
             currentTime = getTimeDif(currentTime, 'start of time slot', printTimeDif)
 
             # initialize direct reward
@@ -471,7 +468,7 @@ def algorithm1(M, T, L, devices, width, height,
                 #print('nextLocation:', nextLocation, [UAVs[i][0][t], UAVs[i][1][t], UAVs[i][2][t]])
                 
                 if beyondBorder(UAVs[i], t, width, height) == True:
-                    getWarning(printWarning, 'beyond border', i)
+                    getWarning(printWarning, 'beyond border', str(t) + '_' + str(i))
 
                     # UAV i stays at the border
                     for tt in range(t, T+1):
@@ -497,8 +494,8 @@ def algorithm1(M, T, L, devices, width, height,
 
                     # UAV i and j's trajectory exists cross
                     if IsTrajectoryCrossed(UAVs[i], UAVs[j], t) == True:
-                        getWarning(printWarning, 'trajectory crossed', i)
-                        getWarning(printWarning, 'trajectory crossed', j)
+                        getWarning(printWarning, 'trajectory crossed', str(t) + '_' + str(i))
+                        getWarning(printWarning, 'trajectory crossed', str(t) + '_' + str(j))
                         
                         # UAV i and UAV j stays at the previous position
                         UAVs[i][0][t] = UAVs[i][0][t-1]
@@ -584,7 +581,7 @@ def algorithm1(M, T, L, devices, width, height,
                 # assumption: device t is the device communicated with when the time slot is t
                 # [temporary] assume that the index of the device is t
                 if afterThroughput <= beforeThroughput:
-                    getWarning(printWarning, 'throughput did not increase', i)
+                    getWarning(printWarning, 'throughput did not increase', str(t) + '_' + str(i))
 
                     # UAV i gets a penalty of -1
                     s_i = dq.getS(UAVs[i], t, i, a, L, B, PU, g, o2)
@@ -604,14 +601,14 @@ def algorithm1(M, T, L, devices, width, height,
                     
                     # if minimum throughput of all devices in a cluster == 0
                     if isMinThroughputOfAllDevicesInCluster0(clusters[i], L, T, l, k, a, B, t, PU, g, o2) == True:
-                        getWarning(printWarning, 'min throughput == 0', i)
+                        getWarning(printWarning, 'min throughput == 0', str(t) + '_' + str(i))
 
                         # The UAV get a penalty of -2
                         directReward_list[i] += (-2)
 
                 # if minimum throughput of all devices does not increase
                 if isMinThroughputOfAllDevicesDoesNotInc(clusters[i], L, T, l, k, a, B, t, PU, g, o2) == True:
-                    getWarning(printWarning, 'min throughput does not increase', i)
+                    getWarning(printWarning, 'min throughput does not increase', str(t) + '_' + str(i))
 
                     # All UAVs get a penalty of -1
                     index = 0
