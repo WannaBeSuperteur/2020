@@ -65,6 +65,8 @@ def getS(UAV, n, l, a, L, B, PU, g, o2):
 # with probability (1-e), do the action randomly
 def getActionWithE(Q, s, e):
 
+    if timeCheck == True: print(time.time(), '[getActionWithE] [IN]')
+
     # do action randomly if Q table is empty
     if len(Q) == 0:
         actionIndex = random.randint(0, 3*3*3-1) # (3*3*3) actions in total
@@ -96,6 +98,8 @@ def getActionWithE(Q, s, e):
             if Q[stateIndex][1][i] > actionReward:
                 actionReward = Q[stateIndex][1][i]
                 actionIndex = i
+
+    if timeCheck == True: print(time.time(), '[getActionWithE] [OUT]')
 
     # return action with index of actionIndex
     return getAction(actionIndex)
@@ -129,8 +133,7 @@ def getActionIndex(action):
 def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True:
-        print('[getMaxQ     ] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
+    if timeCheck == True: print(time.time(), '[getMaxQ] [IN]')
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -158,8 +161,7 @@ def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
     else: maxQ = 0
 
     # return
-    if timeCheck == True:
-        print('[getMaxQ     ] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
+    if timeCheck == True: print(time.time(), '[getMaxQ] [OUT]')
 
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])
@@ -253,9 +255,8 @@ def defineModel(maxDevices):
 # train data with model
 def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
-    saveResultPeriod = 50
-    saveResultPeriodMinor = 10
-    
+    if timeCheck == True: print(time.time(), '[trainDataWithModel] [IN]')
+
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
     lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
 
@@ -265,7 +266,7 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
     # save result as *.png image and *.csv file
     # https://snowdeer.github.io/machine-learning/2018/01/11/keras-use-history-function/
-    if episode % saveResultPeriod == 0 or (episode < 100 and episode % saveResultPeriodMinor == 0) or episode == M:
+    if episode >= 0:
 
         # *.png file
         plt.clf()
@@ -303,6 +304,8 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
         hist_entire.columns = ['train_loss', 'val_loss', 'train_acc', 'val_acc']
 
         hist_entire.to_csv('train_result_iter_' + str(iteration) + '_episode_' + str(episode) + '.csv')
+
+    if timeCheck == True: print(time.time(), '[trainDataWithModel] [OUT]')
 
 # deep Learning using Q table (training function)
 # printed    : print the detail?
@@ -369,8 +372,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 
-    if timeCheck == True:
-        print('[deepQ_test  ] [start] time=' + str(time.time()))
+    if timeCheck == True: print(time.time(), '[deepLearningQ_test] [IN]')
 
     # convert state into 1d array
     # input unit count = 3 for q + N for {a} + N for {R} = 3 + 2N
@@ -393,8 +395,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
     if verbose == True:
         print('test finished')
 
-    if timeCheck == True:
-        print('[deepQ_test  ] [ end ] time=' + str(time.time()))
+    if timeCheck == True: print(time.time(), '[deepLearningQ_test] [OUT]')
 
     # return output layer
     return testO
@@ -423,8 +424,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True:
-        print('[updateQvalue] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
+    if timeCheck == True: print(time.time(), '[updateQvalue] [IN]')
     
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -467,8 +467,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         # update current state s just before return
         s[2] = a[n]
 
-        if timeCheck == True:
-            print('[updateQvalue] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
+        if timeCheck == True: print(time.time(), '[updateQvalue] [OUT]')
 
         return
 
@@ -493,6 +492,8 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
 
     # update current state s
     s[2] = a[n]
+
+    if timeCheck == True: print(time.time(), '[updateQvalue] [IN]')
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)
@@ -532,6 +533,8 @@ def getAngle(q_this, q_before, n):
 # a      : list of a[n][l][k_l] (a part of s)
 # R      : list of R[n][k_l]    (a part of s)
 def getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2):
+
+    if timeCheck == True: print(time.time(), '[getNextLocation] [IN]')
     
     # get current location
     curX = s[0][0] # q[n][l][0]
@@ -592,6 +595,8 @@ def getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2):
     elif z == 0: nextH = curH
     elif z == 1: nextH = curH + 1
 
+    if timeCheck == True: print(time.time(), '[getNextLocation] [OUT]')
+
     # return next location
     return [nextX, nextY, nextH]
 
@@ -637,8 +642,7 @@ def findDeviceToCommunicate(clusters, n, l, X, Y, H, b1, b2, S_, u1, u2, fc, alp
 def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
                  b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True:
-        print('[getNextState] [start] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
+    if timeCheck == True: print(time.time(), '[getNextState] [IN]')
     
     # get next location
     [nextX, nextY, nextH] = getNextLocation(s, action, n, UAVs, l, a, L, B, PU, g, o2)
@@ -681,8 +685,7 @@ def getNextState(s, action, n, UAVs, l, a, clusters, B, PU, g, o2, L,
 
     #### return ####
     # s' = [q'[n][l], {a'[n][l][k_l]}, {R'[n][k_l]}]
-    if timeCheck == True:
-        print('[getNextState] [ end ] time=' + str(time.time()) + ', n=' + str(n) + ', l=' + str(l))
+    if timeCheck == True: print(time.time(), '[getNextState] [OUT]')
 
     return ([[nextX, nextY, nextH], next_a, nextR], deviceToCommunicate)
 

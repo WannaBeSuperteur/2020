@@ -14,6 +14,8 @@ from shapely.geometry import LineString
 import tensorflow as tf
 import time
 
+timeCheck = helper.loadSettings({'timeCheck':'logical'})['timeCheck']
+
 # time consumption per time slot : 38 seconds -> 3.0 seconds (about 1/13)
 
 # PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
@@ -211,6 +213,8 @@ def h(UAVs):
 def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, a,
                  Q, QTable, s_i, alpha, alphaL, r_, useDL, clusters, B, PU, o2, L, directReward_list, g,
                  trainedModel, optimizer, updatingQtable, printTimeDif):
+
+    if timeCheck == True: print(time.time(), '[updateDRlist] [IN]')
     
     # for each device k
     for k in range(len(clusters[i])):
@@ -236,6 +240,8 @@ def updateDRlist(UAVs, value, i, deviceList, b1, b2, S_, u1, u2, fc, n, action, 
             currentTime = getTimeDif(currentTime, '(updateDRlist) after updateQvalue', printTimeDif)
 
         if k == 0: directReward_list[i] += value
+
+    if timeCheck == True: print(time.time(), '[updateDRlist] [OUT]')
 
 # print time difference
 def getTimeDif(T, msg, printTimeDif):
@@ -424,6 +430,7 @@ def algorithm1(M, T, L, devices, width, height,
         # [T = time slots (second)] * [devices = number of devices] * 3     
         for t in range(1, T): # each time slot t
             print('time slot ' + str(t - 1) + ' / ' + str(T))
+            print('[00]', time.time())
 
             currentTime = getTimeDif(currentTime, 'start of time slot', printTimeDif)
 
@@ -436,6 +443,7 @@ def algorithm1(M, T, L, devices, width, height,
             newS_list = [] # new states (for each UAV)
             
             for i in range(L): # for each UAV = each cluster
+
                 currentTime = getTimeDif(currentTime, '0', printTimeDif)
                 
                 # get UAV i's next location
@@ -675,7 +683,7 @@ def algorithm1(M, T, L, devices, width, height,
                 QTable.append([oldS_list[i], action_rewards, i])
 
         ### TRAIN and VALIDATION ###
-        if episode % 10 == 0:
+        if episode == M or (episode < 100 and episode % 10 == 0) or episode % 50 == 0:
             QTable_use = len(QTable) * QTable_rate
             dq.deepLearningQ_training(QTable[len(QTable) - int(QTable_use):], deviceName, 10, False, iteration, M, episode, clusters)
 
