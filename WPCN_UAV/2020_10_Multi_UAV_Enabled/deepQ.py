@@ -135,7 +135,7 @@ def getActionIndex(action):
 def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
             useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True: h_.printTime('getMaxQ', 'IN')
+    if timeCheck == True: h_.printTime('getMaxQ' + ('_DL' if useDL else '_NDL'), 'IN')
     
     # get Q values for the action space of next state s'
     if useDL == True:
@@ -163,7 +163,7 @@ def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
     else: maxQ = 0
 
     # return
-    if timeCheck == True: h_.printTime('getMaxQ', 'OUT')
+    if timeCheck == True: h_.printTime('getMaxQ' + ('_DL' if useDL else '_NDL'), 'OUT')
 
     if useDL == True:
         return (maxQ, rewardsOfActionsOfNextState[0])
@@ -314,6 +314,8 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 # maxDevices : the maximum number of devices in the cluster
 def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode, clusters):
 
+    h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'IN')
+
     maxDevices = getMaxDeviceCount(clusters)
     model = defineModel(maxDevices)
     epochs = 30
@@ -371,6 +373,8 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
     except:
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
 
+    h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'OUT')
+
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 
@@ -426,7 +430,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
-    if timeCheck == True: h_.printTime('updateQvalue', 'IN')
+    if timeCheck == True: h_.printTime('updateQvalue' + ('_DL' if useDL else '_NDL'), 'IN')
     
     # obtain max(a')Q(s', a') (s' = nextState, a' = a_)
     actionSpace = getActionSpace()
@@ -469,7 +473,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         # update current state s just before return
         s[2] = a[n]
 
-        if timeCheck == True: h_.printTime('updateQvalue', 'OUT0')
+        if timeCheck == True: h_.printTime('updateQvalue' + ('_DL' if useDL else '_NDL'), 'OUT0')
 
         return
 
@@ -495,7 +499,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
     # update current state s
     s[2] = a[n]
 
-    if timeCheck == True: h_.printTime('updateQvalue', 'OUT1')
+    if timeCheck == True: h_.printTime('updateQvalue' + ('_DL' if useDL else '_NDL'), 'OUT1')
 
 # get angle for the location of UAV l q[n][l] and time slot (n-1) to (n)
 # q_this   : q[n][l]   (in the [x, y, h] form)

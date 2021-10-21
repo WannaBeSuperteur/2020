@@ -6,7 +6,7 @@ timeSum = {}
 timeCnt = {}
 
 lastCurrent = None
-startAt = 2000 # except before deep learning
+startAt = 0 # except before deep learning
 
 def x0(x): return x[0]
 
@@ -31,14 +31,14 @@ for i in range(startAt, len(time_log)):
     lastCurrent = current
 
 print('avgTime is x10,000\n')
-print('case\t\t\t time\t       count\t avgTime')
-print('---------------------------------------------------------')
+print('case\t\t\t\t time\t   count     avgTime')
+print('----------------------------------------------------------------')
 for case, time in sorted(timeSum.items(), key=x0):
     
     cnt     = timeCnt[case]
     avgTime = time / cnt
 
-    print(case + ' '*(24-len(case)),
-          round(time, 4), ' '*(12-len(str(round(time, 4)))),
+    print(case + ' '*(32-len(case)),
+          round(time, 4), ' '*(8-len(str(round(time, 4)))),
           cnt, ' '*(8-len(str(cnt))),
           round(avgTime * 10000, 4))
