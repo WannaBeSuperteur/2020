@@ -54,11 +54,11 @@ def addPadding(encoded_train_X, encoded_test_X):
 # train the model
 def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced_factor, lr_reduced_patience):
 
-    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
+    early = tf.keras.callbacks.EarlyStopping(monitor="loss",
                                              mode="min",
                                              patience=early_patience)
     
-    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='loss',
                                                       factor=lr_reduced_factor,
                                                       patience=lr_reduced_patience,
                                                       verbose=1,
@@ -117,31 +117,29 @@ def getAdditionalInfo(pad_encoded_X, leng, X):
     return pad_encoded_X
 
 # train model using GPU
-def trainOrValid(valid, algo_name, valid_rate, trainLen, useAtOnce, train_Xs, train_Y, test_Xs, avg, stddev):
+def trainOrValid(model, valid, algo_name, valid_rate, trainLen, useAtOnce, train_Xs, train_Y, test_Xs, avg, stddev):
 
-    if valid == False: valid_rate = 0.0
+    if valid == False: valid_rate = 0.0 # test
     trainCount = int((1.0 - valid_rate) * trainLen)
 
     # save original validation data
     if valid == True:
-        train_Y_reshaped = np.reshape(train_Y[trainCount:], (trainLen - trainCount, 1))
+        train_Y_reshaped = np.reshape(train_Y[trainCount:].copy(), (trainLen - trainCount, 1))
         for i in range(len(train_Y_reshaped)): train_Y_reshaped[i] = invSigmoid(train_Y_reshaped[i])
         pd.DataFrame(train_Y_reshaped).to_csv('valid_original.csv')
-    
-    try:
-        # for local with GPU
-        with tf.device('/gpu:0'):
-            model = defineAndTrainModel(useAtOnce,
-                                        train_Xs[:trainCount],
-                                        train_Y[:trainCount])
-                
-    except:
-        # for kaggle notebook or local with no GPU
-        print('cannot find GPU')
-        model = defineAndTrainModel(useAtOnce,
-                                    train_Xs[:trainCount],
-                                    train_Y[:trainCount])
 
+    # train model
+    epochs              = 3
+    early_patience      = 6
+    lr_reduced_factor   = 0.1
+    lr_reduced_patience = 2
+
+    print('train_Y (trainOrValid) :')
+    print(np.shape(train_Y))
+    print(np.array(train_Y))
+    
+    trainModel(model, train_Xs, train_Y, valid_rate, epochs, early_patience, lr_reduced_factor, lr_reduced_patience)
+    
     # save model
     if valid == True:
         model.save('valid_' + algo_name)
@@ -185,7 +183,7 @@ def trainOrValid(valid, algo_name, valid_rate, trainLen, useAtOnce, train_Xs, tr
 
     # print final prediction
     if valid == False:
-        final_prediction /= float(count)
+        # final_prediction /= float(count)
         
         print('\n[16] FINAL prediction:')
         print(np.shape(final_prediction))

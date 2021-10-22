@@ -36,10 +36,10 @@ class TEXT_MODEL_LSTM0(tf.keras.Model):
             self.CNN4.append(tf.keras.layers.Conv1D(filters=cnn_filters*4, kernel_size=5, padding='valid', activation='relu', name='CNN4_text_' + str(i)))
 
             # layers for inputs_text
-            self.dense_text.append(tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text_' + str(i)))
+            #self.dense_text.append(tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text_' + str(i)))
 
         # layers for inputs_info
-        self.dense_info  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
+        self.dense_info  = tf.keras.layers.Dense(cnn_filters*4, activation='relu', kernel_regularizer=L2, name='dense_info')
 
         # layers for final output
         self.merged      = tf.keras.layers.Dense(2, activation='relu', kernel_regularizer=L2, name='merged')
@@ -70,13 +70,15 @@ class TEXT_MODEL_LSTM0(tf.keras.Model):
             i_3 = self.MP(i_3)
             
             i_4 = self.dropout(i_3, training)
-
+            i_4 = self.flat(i_4)
+            
             inputs_text.append(i_4)
 
         ### for info input
         # DNN for inputs_info
         inputs_info = self.dense_info(inputs_info)
         inputs_info = self.dropout(inputs_info, training)
+        inputs_info = self.flat(inputs_info)
         
         ### concatenate inputs_text and inputs_info
         concatenated = tf.concat([inputs_text[0], inputs_text[1], inputs_text[2],

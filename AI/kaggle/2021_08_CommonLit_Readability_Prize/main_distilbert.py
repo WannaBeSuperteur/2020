@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import re
 import main_helper as h
+import NN_models as nns
 
 from transformers import DistilBertModel, DistilBertConfig, DistilBertTokenizer
 import tensorflow as tf
@@ -132,20 +133,23 @@ if __name__ == '__main__':
     print('\n[09] pad_encoded_test_X with x1.5 and additional info :')
     print(np.shape(encoded_test_Xs)) # (test rows, useAtOnce * 768 + 3)
     print(encoded_test_Xs)
+
+    # get model
+    model = nns.TEXT_MODEL_LSTM0(useAtOnce, None, 64)
         
     # train/valid using GPU
     valid_rate = 0.15
-    h.trainOrValid(True, 'distilbert', valid_rate, trainLen, useAtOnce,
+    h.trainOrValid(model, True, 'distilbert', valid_rate, trainLen, useAtOnce,
                    encoded_train_Xs, train_Y, encoded_test_Xs, avg, stddev)
 
     # test using GPU
-    final_prediction = h.trainOrValid(False, 'distilbert', valid_rate, trainLen, useAtOnce,
+    final_prediction = h.trainOrValid(model, False, 'distilbert', valid_rate, trainLen, useAtOnce,
                                       encoded_train_Xs, train_Y, encoded_test_Xs, avg, stddev)
 
     # final submission
     final_submission = pd.DataFrame(
     {
         'id': ids,
-        'target': final_prediction
+        'target': np.array(final_prediction).flatten()
     })
     final_submission.to_csv('submission_distilbert.csv', index=False)
