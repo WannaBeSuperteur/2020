@@ -4,93 +4,6 @@ import pandas as pd
 import re
 import tensorflow as tf
 
-# model
-class TEXT_MODEL_LSTM(tf.keras.Model):
-    
-    def __init__(self, useAtOnce, embed_dim, cnn_filters, dropout_rate=0.25, training=False, name='text_model'):
-        
-        super(TEXT_MODEL_LSTM, self).__init__(name=name)
-
-        # constants
-        self.use_at_once = useAtOnce
-
-        # flatten layer and regularizer
-        self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
-        self.flat    = tf.keras.layers.Flatten()
-        L2           = tf.keras.regularizers.l2(0.001)
-
-        # use CNN (CNN2, CNN3, CNN4) + original input
-        self.CNN2 = []
-        self.CNN3 = []
-        self.CNN4 = []
-        self.dense_text = []
-
-        for i in range(useAtOnce):
-            self.CNN2.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='CNN2_text_' + str(i)))
-            self.CNN3.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='CNN3_text_' + str(i)))
-            self.CNN4.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='CNN4_text_' + str(i)))
-
-            # layers for inputs_text
-            self.dense_text.append(tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text_' + str(i)))
-
-        # layers for inputs_info
-        self.dense_info  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
-
-        # layers for final output
-        self.merged      = tf.keras.layers.Dense(2, activation='relu', kernel_regularizer=L2, name='merged')
-        self.dense_final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
-
-    def call(self, inputs, training):
-
-        # suppose that UAO = 10
-
-        ### split inputs
-        UAO = self.use_at_once
-        i00, i10, i20, i30, i40, i50, i60, i70, i80, i90, inputs_info = tf.split(inputs, [768, 768, 768, 768, 768, 768, 768, 768, 768, 768, 3], axis=1)
-
-        ### for text input
-        inputs_text = []
-        i0s = [i00, i10, i20, i30, i40, i50, i60, i70, i80, i90]
-        
-        for i in range(UAO):
-            i_0 = i0s[i]
-            i_0 = tf.reshape(i_0, (-1, 768, 1))
-
-            # CNN layers
-            i_1 = self.CNN2[i](i_0)
-            i_2 = self.CNN3[i](i_0)
-            i_3 = self.CNN4[i](i_0)
-            
-            i_1 = self.flat(i_1)
-            i_2 = self.flat(i_2)
-            i_3 = self.flat(i_3)
-            
-            i_4 = tf.concat([i_1, i_2, i_3], axis=-1)
-            i_4 = self.dropout(i_4, training)
-
-            # dense after CNN
-            i_4 = self.dense_text[i](i_4)
-            i_4 = self.dropout(i_4, training)
-
-            inputs_text.append(i_4)
-
-        ### for info input
-        # DNN for inputs_info
-        inputs_info = self.dense_info(inputs_info)
-        inputs_info = self.dropout(inputs_info, training)
-        
-        ### concatenate inputs_text and inputs_info
-        concatenated = tf.concat([inputs_text[0], inputs_text[1], inputs_text[2],
-                                  inputs_text[3], inputs_text[4], inputs_text[5],
-                                  inputs_text[6], inputs_text[7], inputs_text[8],
-                                  inputs_text[9], inputs_info], axis=-1)
-
-        # final output
-        model_merged = self.merged(concatenated)
-        model_output = self.dense_final(model_merged)
-        
-        return model_output
-
 # load the dataset
 def loadData(limit):
     try:
@@ -138,13 +51,6 @@ def addPadding(encoded_train_X, encoded_test_X):
     return (new_encoded_train_X, new_encoded_test_X, max_len)
 """
 
-# define the model
-def defineModel(useAtOnce, embed_dim, cnn_filters, dropout_rate):
-    return TEXT_MODEL_LSTM(useAtOnce=useAtOnce,
-                           embed_dim=embed_dim,
-                           cnn_filters=cnn_filters,
-                           dropout_rate=dropout_rate)
-
 # train the model
 def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced_factor, lr_reduced_patience):
 
@@ -162,32 +68,6 @@ def trainModel(model, X, Y, validation_split, epochs, early_patience, lr_reduced
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
     model.fit(X, Y, validation_split=validation_split, callbacks=[early, lr_reduced], epochs=epochs)
     model.summary()
-
-def defineAndTrainModel(useAtOnce, pad_encoded_train_X, train_Y):
-    
-    # create model
-    embed_dim    = 64
-    cnn_filters  = 64
-    dropout_rate = 0.25
-    
-    model = defineModel(useAtOnce, embed_dim, cnn_filters, dropout_rate)
-
-    # model configuration
-    val_split           = 0.1
-    epochs              = 100
-    early_patience      = 6
-    lr_reduced_factor   = 0.1
-    lr_reduced_patience = 2
-        
-    # train/valid using model
-    trainModel(model, pad_encoded_train_X, train_Y,
-               validation_split=val_split,
-               epochs=epochs,
-               early_patience=early_patience,
-               lr_reduced_factor=lr_reduced_factor,
-               lr_reduced_patience=lr_reduced_patience)
-
-    return model
 
 def sigmoid(y):
     return 1.0 / (1.0 + math.exp(-y))

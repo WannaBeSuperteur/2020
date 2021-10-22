@@ -13,155 +13,13 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.utils import to_categorical
 from tensorflow.keras import optimizers
 import main_helper as h
+import NN_models as nns
 
 import warnings
 warnings.filterwarnings('ignore')
 warnings.filterwarnings('always')
 
 INFOS = 15 # need to be changed if information extracting method changed
-
-class TEXT_MODEL_LSTM(tf.keras.Model):
-    
-    def __init__(self, vocab_size, max_length, embed_dim, cnn_filters, dropout_rate=0.25, training=False, name='text_model', use_INFO=True, use_LSTM=True):
-        
-        super(TEXT_MODEL_LSTM, self).__init__(name=name)
-
-        # constants
-        self.vocabSize = vocab_size
-        self.maxLength = max_length
-        self.useINFO   = use_INFO
-        self.useLSTM   = use_LSTM
-
-        # flatten layer and regularizer
-        self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
-        self.flat    = tf.keras.layers.Flatten()
-        L2           = tf.keras.regularizers.l2(0.001)
-
-        # final dense layer
-        self.dense_final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
-
-        # when using INFO
-        if use_INFO == True:
-            self.dense_info  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info')
-            self.dense_info1 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info1')
-            self.dense_info2 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_info2')
-
-        # when using LSTM
-        if use_LSTM == True:
-            
-            # use CNN (CNN2, CNN3, CNN4) + original input
-            self.CNN2    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=2, padding='valid', activation='relu', name='CNN2_text')
-            self.CNN3    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=3, padding='valid', activation='relu', name='CNN3_text')
-            self.CNN4    = tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=4, padding='valid', activation='relu', name='CNN4_text')
-
-            # layers for inputs_text
-            self.embedding   = tf.keras.layers.Embedding(vocab_size, embed_dim, name='embedding_text')
-            self.LSTM        = tf.keras.layers.LSTM(64, name='LSTM_text')
-            self.dense_text  = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_text')
-
-            # layers for final output
-            self.merged      = tf.keras.layers.Dense(2, activation='relu', kernel_regularizer=L2, name='merged')
-
-    def call(self, inputs, training):
-
-        # split inputs
-        max_len = self.maxLength
-        using_info = self.useINFO
-        using_lstm = self.useLSTM
-
-        # when using LSTM
-        if using_lstm == True and using_info == True:
-            inputs_text, unused, inputs_info = tf.split(inputs, [max_len-1, 1, INFOS], axis=1)
-
-            # CNN layers
-            inputs_text = tf.reshape(inputs_text, (-1, max_len-1))
-
-            # Embedding, LSTM, CNN and dense for inputs_text
-            inputs_text = self.embedding(inputs_text)
-            inputs_text = self.dropout(inputs_text, training)
-            
-            inputs_text = self.LSTM(inputs_text)
-            inputs_text = self.dropout(inputs_text, training)
-
-            # use CNN
-            inputs_text = tf.reshape(inputs_text, (-1, 64, 1))
-            
-            inputs_text_CNN2 = self.CNN2(inputs_text)
-            inputs_text_CNN3 = self.CNN3(inputs_text)
-            inputs_text_CNN4 = self.CNN4(inputs_text)
-
-            inputs_text_CNN2 = self.flat(inputs_text_CNN2)
-            inputs_text_CNN3 = self.flat(inputs_text_CNN3)
-            inputs_text_CNN4 = self.flat(inputs_text_CNN4)
-            
-            inputs_text = tf.concat([inputs_text_CNN2, inputs_text_CNN3, inputs_text_CNN4], axis=-1)
-            inputs_text = self.dropout(inputs_text, training)
-
-            # dense after CNN
-            inputs_text = self.dense_text(inputs_text)
-            inputs_text = self.dropout(inputs_text, training)
-            
-            # DNN for inputs_info
-            inputs_info = self.dense_info(inputs_info)
-            inputs_info = self.dropout(inputs_info, training)
-            
-            # concatenate inputs_text and inputs_info
-            concatenated = tf.concat([inputs_text, inputs_info], axis=-1)
-
-            # final output
-            model_merged = self.merged(concatenated)
-            model_output = self.dense_final(model_merged)
-
-        # do not use LSTM
-        elif using_lstm == False and using_info == True:
-            unused, inputs_info = tf.split(inputs, [max_len, INFOS], axis=1)
-
-            # DNN for inputs_info
-            inputs_info = self.dense_info(inputs_info)
-            inputs_info = self.dropout(inputs_info, training)
-            inputs_info = self.dense_info1(inputs_info)
-            inputs_info = self.dropout(inputs_info, training)
-            inputs_info = self.dense_info2(inputs_info)
-            inputs_info = self.dropout(inputs_info, training)
-            
-            model_output = self.dense_final(inputs_info)
-
-        # do not use INFO
-        elif using_lstm == True and using_info == False:
-            inputs_text, unused = tf.split(inputs, [max_len-1, 1+INFOS], axis=1)
-
-            # CNN layers
-            inputs_text = tf.reshape(inputs_text, (-1, max_len-1))
-
-            # Embedding, LSTM, CNN and dense for inputs_text
-            inputs_text = self.embedding(inputs_text)
-            inputs_text = self.dropout(inputs_text, training)
-            
-            inputs_text = self.LSTM(inputs_text)
-            inputs_text = self.dropout(inputs_text, training)
-
-            # use CNN
-            inputs_text = tf.reshape(inputs_text, (-1, 64, 1))
-            
-            inputs_text_CNN2 = self.CNN2(inputs_text)
-            inputs_text_CNN3 = self.CNN3(inputs_text)
-            inputs_text_CNN4 = self.CNN4(inputs_text)
-
-            inputs_text_CNN2 = self.flat(inputs_text_CNN2)
-            inputs_text_CNN3 = self.flat(inputs_text_CNN3)
-            inputs_text_CNN4 = self.flat(inputs_text_CNN4)
-            
-            inputs_text = tf.concat([inputs_text_CNN2, inputs_text_CNN3, inputs_text_CNN4], axis=-1)
-            inputs_text = self.dropout(inputs_text, training)
-
-            # dense after CNN
-            inputs_text = self.dense_text(inputs_text)
-            inputs_text = self.dropout(inputs_text, training)
-            
-            # final output
-            model_output = self.dense_final(inputs_text)
-        
-        return model_output
 
 def loadData():
     try:
@@ -391,24 +249,36 @@ if __name__ == '__main__':
     print(np.array(pad_encoded_train_Y_valid[:100]))
 
     # DEEP LEARNING
-    embed_dims  = [64, 128, 64, 128, 64, 128, 64, 128, -1]
-    cnn_filters = [50, 50, 100, 100, 50, 50, 100, 100, -1]
-    use_info    = [True, True, True, True, False, False, False, False, True]
+    model_type  = [0, 0, 0, 0, 0, 0, 0] # TEXT_MODEL_LSTM0 only
+    embed_dims  = [-1, -1, -1, -1, -1, -1, -1] # unused
+    cnn_filters = [32, 64, 128, 32, 64, 128, -1]
+    use_info    = [True, True, True, False, False, False, True]
+    
+    max_len     = 281 # derived before
+    use_at_once = 10 # first 10 tokens with size 768 each
 
     for i in range(len(use_info)):
 
         # define and train model
         with tf.device('/gpu:0'):
 
-            print('No:', i, 'use_INFO:', use_info[i], 'use_LSTM:', (embed_dims[i] >= 0 and cnn_filters[i] >= 0))
+            print('No:', i, 'use_INFO:', use_info[i], 'use_LSTM:', cnn_filters[i] >= 0)
 
             # define model
-            if embed_dims[i] < 0 or cnn_filters[i] < 0:
-                model = TEXT_MODEL_LSTM(vocab_size, max_len,
-                                        embed_dim=embed_dims[i], cnn_filters=cnn_filters[i], use_INFO=use_info[i], use_LSTM=False)
-            else:
-                model = TEXT_MODEL_LSTM(vocab_size, max_len,
-                                        embed_dim=embed_dims[i], cnn_filters=cnn_filters[i], use_INFO=use_info[i])
+
+            # TEXT_MODEL_LSTM0
+            print(embed_dims[i])
+            
+            if model_type[i] == 0:
+                if embed_dims[i] < 0 or cnn_filters[i] < 0:
+                    model = nns.TEXT_MODEL_LSTM0(vocab_size, use_at_once, embed_dim=None, cnn_filters=None)
+                else:
+                    model = nns.TEXT_MODEL_LSTM0(vocab_size, use_at_once, embed_dim=embed_dims[i], cnn_filters=cnn_filters[i])
+
+            # TEXT_MODEL_LSTM1
+            elif model_type[i] == 1:
+                model = nns.TEXT_MODEL_LSTM1(vocab_size, max_len,
+                                             embed_dim=embed_dims[i], cnn_filters=cnn_filters[i], use_INFO=use_info[i], use_LSTM=False)
 
             # train model using GPU
             h.trainModel(model, pad_encoded_train_X_train, pad_encoded_train_Y_train, valid_rate,
