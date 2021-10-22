@@ -93,9 +93,9 @@ class TEXT_MODEL_LSTM0(tf.keras.Model):
 class TEXT_MODEL_LSTM1(tf.keras.Model):
     
     def __init__(self, vocab_size, max_length, embed_dim, cnn_filters, dropout_rate=0.25, training=False, name='text_model_LSTM1',
-                 use_INFO=True, use_LSTM=True):
+                 use_INFO=True, use_LSTM=True, INFOS=3):
         
-        super(TEXT_MODEL_LSTM, self).__init__(name=name)
+        super(TEXT_MODEL_LSTM1, self).__init__(name=name)
 
         # constants
         self.vocabSize = vocab_size

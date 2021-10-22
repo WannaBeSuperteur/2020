@@ -249,7 +249,7 @@ if __name__ == '__main__':
     print(np.array(pad_encoded_train_Y_valid[:100]))
 
     # DEEP LEARNING
-    model_type  = [0, 0, 0, 0, 0, 0, 0] # TEXT_MODEL_LSTM0 only
+    model_type  = [1, 1, 1, 1, 1, 1, 1] # TEXT_MODEL_LSTM1 only
     embed_dims  = [-1, -1, -1, -1, -1, -1, -1] # unused
     cnn_filters = [32, 64, 128, 32, 64, 128, -1]
     use_info    = [True, True, True, False, False, False, True]
@@ -264,16 +264,16 @@ if __name__ == '__main__':
 
             print('No:', i, 'use_INFO:', use_info[i], 'use_LSTM:', cnn_filters[i] >= 0)
 
-            # define model
+            # define model (error occurs now)
 
             # TEXT_MODEL_LSTM0
             print(embed_dims[i])
             
             if model_type[i] == 0:
                 if embed_dims[i] < 0 or cnn_filters[i] < 0:
-                    model = nns.TEXT_MODEL_LSTM0(vocab_size, use_at_once, embed_dim=None, cnn_filters=None)
+                    model = nns.TEXT_MODEL_LSTM0(use_at_once, embed_dim=None, cnn_filters=cnn_filters[i])
                 else:
-                    model = nns.TEXT_MODEL_LSTM0(vocab_size, use_at_once, embed_dim=embed_dims[i], cnn_filters=cnn_filters[i])
+                    model = nns.TEXT_MODEL_LSTM0(use_at_once, embed_dim=embed_dims[i], cnn_filters=cnn_filters[i])
 
             # TEXT_MODEL_LSTM1
             elif model_type[i] == 1:
