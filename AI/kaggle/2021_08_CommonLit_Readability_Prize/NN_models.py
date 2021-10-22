@@ -104,6 +104,7 @@ class TEXT_MODEL_LSTM1(tf.keras.Model):
         self.maxLength = max_length
         self.useINFO   = use_INFO
         self.useLSTM   = use_LSTM
+        self.INFOS     = INFOS
 
         # flatten layer and regularizer
         self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
@@ -138,6 +139,7 @@ class TEXT_MODEL_LSTM1(tf.keras.Model):
     def call(self, inputs, training):
 
         # split inputs
+        INFOS = self.INFOS
         max_len = self.maxLength
         using_info = self.useINFO
         using_lstm = self.useLSTM

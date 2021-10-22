@@ -250,11 +250,10 @@ if __name__ == '__main__':
 
     # DEEP LEARNING
     model_type  = [1, 1, 1, 1, 1, 1, 1] # TEXT_MODEL_LSTM1 only
-    embed_dims  = [-1, -1, -1, -1, -1, -1, -1] # unused
+    embed_dims  = [200, 200, 200, 200, 200, 200, -1]
     cnn_filters = [32, 64, 128, 32, 64, 128, -1]
     use_info    = [True, True, True, False, False, False, True]
     
-    max_len     = 281 # derived before
     use_at_once = 10 # first 10 tokens with size 768 each
 
     for i in range(len(use_info)):
@@ -266,26 +265,17 @@ if __name__ == '__main__':
 
             # define model (error occurs now)
 
-            # TEXT_MODEL_LSTM0
-            print(embed_dims[i])
-            
-            if model_type[i] == 0:
-                if embed_dims[i] < 0 or cnn_filters[i] < 0:
-                    model = nns.TEXT_MODEL_LSTM0(use_at_once, embed_dim=None, cnn_filters=cnn_filters[i])
-                else:
-                    model = nns.TEXT_MODEL_LSTM0(use_at_once, embed_dim=embed_dims[i], cnn_filters=cnn_filters[i])
-
-            # TEXT_MODEL_LSTM1
-            elif model_type[i] == 1:
-                model = nns.TEXT_MODEL_LSTM1(vocab_size, max_len,
-                                             embed_dim=embed_dims[i], cnn_filters=cnn_filters[i], use_INFO=use_info[i], use_LSTM=False)
+            # TEXT_MODEL_LSTM1          
+            model = nns.TEXT_MODEL_LSTM1(vocab_size, max_len,
+                                         embed_dim=embed_dims[i], cnn_filters=cnn_filters[i],
+                                         use_INFO=use_info[i], use_LSTM=(cnn_filters[i] >= 0), INFOS=15)
 
             # train model using GPU
             h.trainModel(model, pad_encoded_train_X_train, pad_encoded_train_Y_train, valid_rate,
                          epochs=15, early_patience=4, lr_reduced_factor=0.1, lr_reduced_patience=2)
 
             # save model
-            model.save('main_LSTM0_' + str(i))
+            model.save('main_LSTM1_' + str(i))
 
         # valid and test using GPU
         valid_prediction = model.predict(pad_encoded_train_X_valid)
@@ -295,5 +285,5 @@ if __name__ == '__main__':
         valid_prediction = np.log(valid_prediction / (1.0 - valid_prediction))
         test_prediction  = np.log(test_prediction  / (1.0 - test_prediction))
 
-        pd.DataFrame(valid_prediction).to_csv('valid_LSTM0_' + str(i) + '.csv')
-        pd.DataFrame(test_prediction).to_csv('test_LSTM0_' + str(i) + '.csv')
+        pd.DataFrame(valid_prediction).to_csv('valid_LSTM1_' + str(i) + '.csv')
+        pd.DataFrame(test_prediction).to_csv('test_LSTM1_' + str(i) + '.csv')
