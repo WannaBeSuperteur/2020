@@ -348,7 +348,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
 
     # output array (as original)
     outputData = []
-    for i in range(len(Q)): outputData.append(Q[i][1])
+    for i in range(len(Q)): outputData.append(np.array(Q[i][1]))
 
     # save input and output array as file
     if len(inputData) > 0:
