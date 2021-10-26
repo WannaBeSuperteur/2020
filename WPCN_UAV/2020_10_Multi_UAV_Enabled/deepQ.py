@@ -246,6 +246,7 @@ def defineModel(maxDevices):
     model = Sequential()
     model.add(tf.keras.layers.Dense(units=2*maxDevices+3, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=27, activation='tanh'))
 
@@ -259,8 +260,8 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 
     if timeCheck == True: h_.printTime('trainDataWithModel', 'IN')
 
-    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
-    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, min_delta=0.0001, mode='min')
+    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=5)
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.31622776, patience=2, verbose=1, min_delta=0.0001, mode='min')
 
     hist = model.fit(Q_input, Q_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
 
@@ -318,7 +319,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
 
     maxDevices = getMaxDeviceCount(clusters)
     model = defineModel(maxDevices)
-    epochs = 30
+    epochs = 50
     
     # Q : [state  , action_reward, i (UAV/cluster index), k (device index)]
     #      Q[i][0]  Q[i][1]        Q[i][2]                Q[i][3]

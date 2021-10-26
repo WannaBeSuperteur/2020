@@ -1,5 +1,5 @@
 deviceName=gpu:0
-QTable_rate=0.12
+QTable_rate=0.15
 fc=800000000 # carrier frequency
 B=1000000 # bandwidth
 o2=-110 # Noise power spectral
