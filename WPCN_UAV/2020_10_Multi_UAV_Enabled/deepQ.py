@@ -413,7 +413,10 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 # for new state-action-reward-nextState, get reward using deep learning,
 # or set to 0 when amount of data is not big enoughly
 
-# Q(s, a) <- (1 - alphaL)*Q(s, a) + alphaL*(Rwd(s, a) + r_*max(a')Q(s', a'))
+# Q-value update formula : Q(s, a) <- (1 - alphaL)*Q(s, a) + alphaL*(Rwd(s, a) + r_*max(a')Q(s', a')) ... (14)
+# target Q-value label   : y_t     <- Rwd(s, a) + r_*max(a')Q(s', a', w)                              ... (16)
+# "Rwd(s, a) + r_*max(a')Q(s', a', w)" from (16) has similar form with "Rwd(s, a) + r_*max(a')Q(s', a')" of (14)
+
 # because using deep learning, just add Q value for this state and action
 
 # when getting reward, for each UAV,
@@ -464,7 +467,7 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         # i otherwise            -> Q value
         for i in range(27):
             if i == getActionIndex(action):
-                qs.append((1-alphaL) * Qvalues[i] + alphaL * directReward)
+                qs.append((1-alphaL) * Qvalues[i] + alphaL * (directReward + r_*maxQ))
             else:
                 qs.append(Qvalues[i])
 
