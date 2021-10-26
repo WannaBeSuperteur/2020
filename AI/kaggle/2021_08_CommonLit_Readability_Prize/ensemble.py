@@ -114,22 +114,18 @@ if __name__ == '__main__':
     validOriginal = pd.read_csv('valid_original.csv', index_col=0)
 
     # read validation data
-    validData = ['valid_LSTM0_0.csv', 'valid_LSTM0_1.csv', 'valid_LSTM0_2.csv',
-                 'valid_LSTM0_3.csv', 'valid_LSTM0_4.csv', 'valid_LSTM0_5.csv',
-                 'valid_LSTM0_6.csv', 'valid_LSTM0_7.csv', 'valid_LSTM0_8.csv']
-                 #'valid_roberta_0.csv', 'valid_roberta_1.csv', 'valid_roberta_2.csv', 'valid_roberta_3.csv', 'valid_roberta_4.csv',
-                 #'valid_distilbert_0.csv', 'valid_distilbert_1.csv', 'valid_distilbert_2.csv', 'valid_distilbert_3.csv', 'valid_distilbert_4.csv']
+    validData = ['valid_LSTM1_0.csv', 'valid_LSTM1_1.csv', 'valid_LSTM1_2.csv',
+                 'valid_LSTM1_3.csv', 'valid_LSTM1_4.csv', 'valid_LSTM1_5.csv',
+                 'valid_LSTM1_6.csv', 'valid_roberta.csv', 'valid_distilbert.csv']
 
     validData_ = []
     for i in range(models):
         validData_.append(pd.read_csv(validData[i], index_col=0))
 
     # read test data
-    testData = ['test_LSTM0_0.csv', 'test_LSTM0_1.csv', 'test_LSTM0_2.csv',
-                'test_LSTM0_3.csv', 'test_LSTM0_4.csv', 'test_LSTM0_5.csv',
-                'test_LSTM0_6.csv', 'test_LSTM0_7.csv', 'test_LSTM0_8.csv']
-                #'test_roberta_0.csv', 'test_roberta_1.csv', 'test_roberta_2.csv', 'test_roberta_3.csv', 'test_roberta_4.csv',
-                #'test_distilbert_0.csv', 'test_distilbert_1.csv', 'test_distilbert_2.csv', 'test_distilbert_3.csv', 'test_distilbert_4.csv']
+    testData = ['test_LSTM1_0.csv', 'test_LSTM1_1.csv', 'test_LSTM1_2.csv',
+                'test_LSTM1_3.csv', 'test_LSTM1_4.csv', 'test_LSTM1_5.csv',
+                'test_LSTM1_6.csv', 'test_roberta.csv', 'test_distilbert.csv']
 
     testData_ = []
     for i in range(models):
@@ -149,11 +145,9 @@ if __name__ == '__main__':
     testData_     = np.array(testData_)     * stddev + average
 
     # read model name
-    modelName = ['main_LSTM0_0', 'main_LSTM0_1', 'main_LSTM0_2',
-                 'main_LSTM0_3', 'main_LSTM0_4', 'main_LSTM0_5',
-                 'main_LSTM0_6', 'main_LSTM0_7', 'main_LSTM0_8']
-                 #'valid_roberta_0', 'valid_roberta_1', 'valid_roberta_2', 'valid_roberta_3', 'valid_roberta_4',
-                 #'valid_distilbert_0', 'valid_distilbert_1', 'valid_distilbert_2', 'valid_distilbert_3', 'valid_distilbert_4']
+    modelName = ['main_LSTM1_0', 'main_LSTM1_1', 'main_LSTM1_2',
+                 'main_LSTM1_3', 'main_LSTM1_4', 'main_LSTM1_5',
+                 'main_LSTM1_6', 'valid_roberta', 'valid_distilbert']
 
     models_ = []
     for i in range(models):

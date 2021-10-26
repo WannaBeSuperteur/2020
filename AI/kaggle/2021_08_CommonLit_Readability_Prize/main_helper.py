@@ -129,7 +129,7 @@ def trainOrValid(model, valid, algo_name, valid_rate, trainLen, useAtOnce, train
         pd.DataFrame(train_Y_reshaped).to_csv('valid_original.csv')
 
     # train model
-    epochs              = 3
+    epochs              = 100
     early_patience      = 6
     lr_reduced_factor   = 0.1
     lr_reduced_patience = 2
