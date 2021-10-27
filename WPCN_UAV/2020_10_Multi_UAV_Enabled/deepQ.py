@@ -63,42 +63,42 @@ def getS(UAV, n, l, a, L, B, PU, g, o2):
 # get action with e-greedy while e increases
 # with probability e, do the best action
 # with probability (1-e), do the action randomly
-def getActionWithE(Q, s, e):
+def getActionWithE(QTable, s, e):
 
     if timeCheck == True: h_.printTime('getActionWithE', 'IN')
 
     # do action randomly if Q table is empty
-    if len(Q) == 0:
+    if len(QTable) == 0:
         actionIndex = random.randint(0, 3*3*3-1) # (3*3*3) actions in total
 
         if timeCheck == True: h_.printTime('getActionWithE', 'OUT0')
         return getAction(actionIndex)
 
-    # Q Table           = [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
-    # convert to input  = converted version of [[s0], [s1], ...]
+    # Q Table           = [[1dArray(s0), [q00, q01, ...]], [1dArray(s1), [q10, q11, ...]], ...]
+    # convert to input  = converted version of [1dArray(s0), 1dArray(s1), ...]
     #            output = original  version of [[q00, q01, ...], [q10, q11, ...], ...]
     rand = random.random()
     stateIndex = 0 # index of state from the Q Table
     actionIndex = 0 # index of action from the Q Table, from 0 (-1, -1, -1) to 26 (1, 1, 1)
 
     # find state
-    for i in range(len(Q)):
-        if s == Q[i][0][0]:
+    for i in range(len(QTable)):
+        if stateTo1dArray(s) == QTable[i][0]:
             stateIndex = i
             break
 
-    actions = len(Q[stateIndex][1]) # number of actions (len of [q00, q01, ...])
+    actions = len(QTable[stateIndex][1]) # number of actions (len of [q00, q01, ...])
 
     # find action from [q00, q01, ...]
     if rand > e: # do the action randomly
         actionIndex = random.randint(0, actions-1)
     else: # do (find) the best action
-        actionReward = Q[stateIndex][1][0] # init reward as q00
+        actionReward = QTable[stateIndex][1][0] # init reward as q00
 
         # find action from [q00, q01, ...]
         for i in range(actions):
-            if Q[stateIndex][1][i] > actionReward:
-                actionReward = Q[stateIndex][1][i]
+            if QTable[stateIndex][1][i] > actionReward:
+                actionReward = QTable[stateIndex][1][i]
                 actionIndex = i
 
     if timeCheck == True: h_.printTime('getActionWithE', 'OUT1')
@@ -175,8 +175,8 @@ def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
 
 # example of state :
 # [[30.710634485123297, 45.731144554946184, 15], ... q[n][l]
-#  [1, 1, 1, 1, 1, 0, 2],                        ... {a[n][l]}
-#  [0, 0, 0, 0, 0, 0, 0]]                        ... {R[n][l]}
+#  [0, 1, 0, 0, 0, 0, 0],                        ... {a[n][l]}
+#  [0.1, 0.3, 0.2, 0.1, 0.1, 0.2, 0.2]]          ... {R[n][l]}
 def stateTo1dArray(state):
 
     q = state[0]
@@ -313,9 +313,9 @@ def trainDataWithModel(Q_input, Q_output, model, epochs, iteration, M, episode):
 # deep Learning using Q table (training function)
 # printed    : print the detail?
 # maxDevices : the maximum number of devices in the cluster
-def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode, clusters):
+def deepLearningQ_training(QTable, deviceName, epoch, printed, iteration, M, episode, clusters):
 
-    if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'IN')
+    if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(QTable) > 0 else '_NDL'), 'IN')
 
     maxDevices = getMaxDeviceCount(clusters)
     model = defineModel(maxDevices)
@@ -324,31 +324,28 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
     # Q : [state  , action_reward, i (UAV/cluster index), k (device index)]
     #      Q[i][0]  Q[i][1]        Q[i][2]                Q[i][3]
     
-    # Q Table           = [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
-    # convert to input  = converted version of [[s0], [s1], ...]
+    # Q[i][0] = {q, a, R} with size q(3), a(n) and R(n) where n is the number of devices in the cluster
+    
+    # Q Table           = [[1dArray(s0), [Q00, Q01, ...]], [1dArray(s1), [Q10, Q11, ...]], ...]
+    # convert to input  = converted version of [1dArray(s0), 1dArray(s1), ...]
     #            output = original  version of [[Q00, Q01, ...], [Q10, Q11, ...], ...]
     # where           s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
     #        and      Q = reward
 
-    # input array (need to convert original array [s0])
+    # input array (NO NEED to convert original array [s0])
     inputData = []
-    for i in range(len(Q)):
-
-        # extend {a[n][l][k_l]} and {R[n][k_l]} that the number of items becomes maxDevices
-        currentClusterDevices = len(Q[i][0][1])
-        fillWithConstant(Q[i][0], maxDevices - currentClusterDevices)
+    for i in range(len(QTable)):
         
-        # convert into 1d array (valid if not converted)
-        try:
-            inputData.append(stateTo1dArray(Q[i][0]))
-
-        # executed if already converted to 1d array
-        except:
-            inputData.append(Q[i][0])
+        # extend {a[n][l][k_l]} and {R[n][k_l]} that the number of items becomes maxDevices
+        currentClusterDevices = (len(QTable[i][0]) - 3) // 2
+        fillWithConstant(QTable[i][0], maxDevices - currentClusterDevices)
+        
+        # already converted to 1d array
+        inputData.append(QTable[i][0])
 
     # output array (as original)
     outputData = []
-    for i in range(len(Q)): outputData.append(np.array(Q[i][1]))
+    for i in range(len(QTable)): outputData.append(np.array(QTable[i][1]))
 
     # save input and output array as file
     if len(inputData) > 0:
@@ -374,7 +371,7 @@ def deepLearningQ_training(Q, deviceName, epoch, printed, iteration, M, episode,
     except:
         print('[train] Q_input_normalized.csv or Q_output_normalized.csv does not exist.')
 
-    if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(Q) > 0 else '_NDL'), 'OUT')
+    if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(QTable) > 0 else '_NDL'), 'OUT')
 
 # deep Learning using Q table (test function -> return reward values for each action)
 def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
@@ -409,7 +406,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 
 # update Q value
 
-# Q Table: [[[s0], [q00, q01, ...]], [[s1], [q10, q11, ...]], ...]
+# Q Table: [[1dArray(s0), [q00, q01, ...]], [1dArray(s1), [q10, q11, ...]], ...]
 # for new state-action-reward-nextState, get reward using deep learning,
 # or set to 0 when amount of data is not big enoughly
 
@@ -431,7 +428,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 # r_           : discount factor
 # useDL        : TRUE for getting reward using deep learning
 #                FALSE for setting to 0
-def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, useDL, clusters, B, PU, g, o2, L,
+def updateQvalue(QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, useDL, clusters, B, PU, g, o2, L,
                  trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha):
 
     if timeCheck == True: h_.printTime('updateQvalue' + ('_DL' if useDL else '_NDL'), 'IN')
@@ -471,7 +468,6 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
             else:
                 qs.append(Qvalues[i])
 
-        Q.append([[s], qs, l])
         QTable.append([stateTo1dArray(s), qs, l])
 
         # update current state s just before return
@@ -493,11 +489,10 @@ def updateQvalue(Q, QTable, s, action, a, directReward, alphaL, r_, n, UAVs, l, 
         
     qs[actionIndex] = (1 - alphaL)*qs[actionIndex] + alphaL*(directReward + r_*maxQ)
 
-    # print(str(qs) + ' False ' + str(len(Q)))
+    # print(str(qs) + ' False ' + str(len(QTable)))
 
     # append the state-action-reward [[s], qs] to Q table
-    # Q : [state, action_reward, l (UAV/cluster index)]
-    Q.append([[s], qs, l])
+    # Q Table : [state, action_reward, l (UAV/cluster index)]
     QTable.append([stateTo1dArray(s), qs, l])
 
     # update current state s
