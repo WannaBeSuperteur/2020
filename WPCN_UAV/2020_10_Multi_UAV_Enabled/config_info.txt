@@ -1,5 +1,5 @@
 deviceName=gpu:0
-QTable_rate=0.5
+QTable_rate=0.15
 fc=800000000.0
 B=1000000.0
 o2=-110.0
@@ -14,7 +14,7 @@ r_=0.7
 width=50.0
 height=50.0
 M=10000
-L=1
+L=3
 devices=20
 T=30
 H=15.0

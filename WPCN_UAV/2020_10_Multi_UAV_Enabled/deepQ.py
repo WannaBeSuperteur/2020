@@ -18,24 +18,11 @@ import time
 # read time check option for getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
 timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 
-# find the maximum value of the number of devices
-def getMaxDeviceCount(clusters):
-    deviceCount = [len(cluster) for cluster in clusters]
-    maxDevices = max(deviceCount)
-
-    return maxDevices
-
-def fillWithConstant(state_array, times):
-    const_to_fill = h_.loadSettings({'constantToFill':'float'})['constantToFill']
-    
-    for i in range(times):
-        state_array[1].append(const_to_fill)
-        state_array[2].append(const_to_fill)
-
 # q : q[l](t) = (x[l](t), y[l](t), h[l](t))
 #     q[n][l] = (x[n][l], y[n][l], h[n][l])
 
-# state: q[n][l], {a[n][l][k_l]}, {R[n][k_l]}
+# state    : q[n][l], {a[n][l][k_l]}, {R[n][k_l]}
+# states   : set of 'state'
 # each UAV : UAV0 = [x0, y0, h0], UAV1 = [x1, y1, h1], ...
 # where x0 = [x00, x01, ..., x0t], x1 = [x10, x11, ..., x1t], ...
 #       y0 = [y00, y01, ..., y0t], ...
@@ -127,7 +114,8 @@ def getActionIndex(action):
 
 # get max(a')Q(s', a') (s' = nextState, a' = a_)
 # useDL       : whether to use deep learning
-# actionSpace : set of actions (in the form of [x, y, z])
+# actionSpace : set of actions (in the form of [x, y, z]
+
 # n           : time slot index
 # l           : UAV index
 # a           : list of a[n][l][k_l] (a part of s)
@@ -177,13 +165,16 @@ def getMaxQ(s, action, n, UAVs, l, a, actionSpace, clusters, B, PU, g, o2, L,
 # [[30.710634485123297, 45.731144554946184, 15], ... q[n][l]
 #  [0, 1, 0, 0, 0, 0, 0],                        ... {a[n][l]}
 #  [0.1, 0.3, 0.2, 0.1, 0.1, 0.2, 0.2]]          ... {R[n][l]}
-def stateTo1dArray(state):
 
-    q = state[0]
-    a = state[1]
-    R = state[2]
+# states: a SET of states (MULTIPLE states)
+def stateTo1dArray(states):
+    result = []
     
-    return q + a + R # because q[n][l], {a[n][l]}, and {R[n][l]} are all 1d arraies
+    for state in states: # [(3), (N), (N)]
+        for i in range(3): # (3) or (N)
+            result += state[i]
+
+    return result
 
 # normalize by each column
 def normalize(array, applyLog, title, printAnalysis):
@@ -234,7 +225,7 @@ def normalize(array, applyLog, title, printAnalysis):
     return arr
 
 # define model (the number of input units not needed)
-def defineModel(maxDevices):
+def defineModel(totalDevices, clusterCount):
 
     # load settings and find learning rate
     learningRate = h_.loadSettings({'learningRate':'float'})['learningRate']
@@ -244,7 +235,7 @@ def defineModel(maxDevices):
 
     # define the model
     model = Sequential()
-    model.add(tf.keras.layers.Dense(units=2*maxDevices+3, activation='relu', kernel_regularizer=L2))
+    model.add(tf.keras.layers.Dense(units=3*clusterCount+2*totalDevices, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=512, activation='relu', kernel_regularizer=L2))
     model.add(tf.keras.layers.Dense(units=256, activation='relu', kernel_regularizer=L2))
@@ -317,8 +308,10 @@ def deepLearningQ_training(QTable, deviceName, epoch, printed, iteration, M, epi
 
     if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(QTable) > 0 else '_NDL'), 'IN')
 
-    maxDevices = getMaxDeviceCount(clusters)
-    model = defineModel(maxDevices)
+    totalDevices = sum(len(cluster) for cluster in clusters)
+    clusterCount = len(clusters)
+    model = defineModel(totalDevices, clusterCount)
+    
     epochs = 50
     
     # Q : [state  , action_reward, i (UAV/cluster index), k (device index)]
@@ -334,18 +327,18 @@ def deepLearningQ_training(QTable, deviceName, epoch, printed, iteration, M, epi
 
     # input array (NO NEED to convert original array [s0])
     inputData = []
-    for i in range(len(QTable)):
-        
-        # extend {a[n][l][k_l]} and {R[n][k_l]} that the number of items becomes maxDevices
-        currentClusterDevices = (len(QTable[i][0]) - 3) // 2
-        fillWithConstant(QTable[i][0], maxDevices - currentClusterDevices)
+    for i in range(len(QTable) // clusterCount):
         
         # already converted to 1d array
-        inputData.append(QTable[i][0])
+        toAppend = []
+        for j in range(clusterCount):
+            toAppend.append(QTable[i * clusterCount + j][0])
+        inputData.append(toAppend)
 
     # output array (as original)
     outputData = []
-    for i in range(len(QTable)): outputData.append(np.array(QTable[i][1]))
+    for i in range(len(QTable) // clusterCount):
+        outputData.append(np.array(QTable[i * clusterCount][1]))
 
     # save input and output array as file
     if len(inputData) > 0:
@@ -355,6 +348,7 @@ def deepLearningQ_training(QTable, deviceName, epoch, printed, iteration, M, epi
 
     # save normalized data
     if len(inputData) > 0:
+        print('1st element of inputData:\n', inputData[0])
         normalizedInputData = normalize(inputData, False, 'input' + str(len(inputData)), False)
         normalizedOutputData = normalize(outputData, False, 'output' + str(len(inputData)), False)
         pd.DataFrame(normalizedInputData).to_csv('Q_input_normalized.csv')
@@ -374,19 +368,14 @@ def deepLearningQ_training(QTable, deviceName, epoch, printed, iteration, M, epi
     if timeCheck == True: h_.printTime('deepLearningQ_training' + ('_DL' if len(QTable) > 0 else '_NDL'), 'OUT')
 
 # deep Learning using Q table (test function -> return reward values for each action)
-def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
+def deepLearningQ_test(states, verbose, trainedModel, optimizer, clusters):
 
     if timeCheck == True: h_.printTime('deepLearningQ_test', 'IN')
 
-    # convert state into 1d array
-    # input unit count = 3 for q + N for {a} + N for {R} = 3 + 2N
-    #                    where N is the number of devices in the cluster
-    maxDevices = getMaxDeviceCount(clusters)
-    currentClusterDevices = len(state[1])
-    fillWithConstant(state, maxDevices - currentClusterDevices)
-        
-    stateArray = [stateTo1dArray(state)]
+    # convert state into 1d array 
+    stateArray = [stateTo1dArray(states)]
     stateArray = np.array(stateArray)
+    print('stateArray:', stateArray)
     
     # get reward values of the state
     # NEED TO APPLY INV-SIGMOID to test output data, because just getting model output
@@ -422,6 +411,7 @@ def deepLearningQ_test(state, verbose, trainedModel, optimizer, clusters):
 #    (for all other actions, save 0 as direct reward)
 #    2-1. if there is a state that is the same with the state, update Q values for the state
 
+# s            : list of states
 # a            : array {a[n][l][k_l]}
 # directReward : direct reward for the action
 # alphaL       : learning rate

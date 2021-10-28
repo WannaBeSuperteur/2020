@@ -664,16 +664,19 @@ def algorithm1(M, T, L, devices, width, height,
                                                useDL, trainedModel, optimizer, b1, b2, S_, u1, u2, fc, alpha)
                         
                     currentTime = getTimeDif(currentTime, '4 after getMaxQ', printTimeDif)
-                        
+
+                    print('maxQ:', maxQ)
                     reward = alphaL * (directReward_list[i] + r_ * maxQ)
+                    print('reward:', reward)
                     maxQs.append(maxQ)
                     
-                    # append to Q Table: [[[s0], [Q00, Q01, ...]], [[s1], [Q10, Q11, ...]], ...]
+                    # append to Q Table: [[1dArray(s0), [Q00, Q01, ...]], [1dArray(s1), [Q10, Q11, ...]], ...]
                     # where s = [q[n][l], {a[n][l][k_l]}, {R[n][k_l]}]
                     # and   Q = reward
                     # from oldS_list, action_list and reward
                     action_rewards[j] = reward
 
+                print(t, i, action_rewards)
                 QTable.append([dq.stateTo1dArray(oldS_list[i]), action_rewards, i])
 
         ### TRAIN and VALIDATION ###

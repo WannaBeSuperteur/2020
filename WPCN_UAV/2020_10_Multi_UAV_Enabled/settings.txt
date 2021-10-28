@@ -1,5 +1,5 @@
 deviceName=gpu:0
-QTable_rate=0.5
+QTable_rate=0.15
 fc=800000000 # carrier frequency
 B=1000000 # bandwidth
 o2=-110 # Noise power spectral
@@ -14,7 +14,7 @@ r_=0.7 # discount factor
 width=50 # width (m)
 height=50 # height (m)
 M=10000 # episodes
-L=1 # number of clusters = number of UAVs # 5
+L=3 # number of clusters = number of UAVs # 5
 devices=20 # number of devices
 T=30 # time (in seconds)
 H=15 # hovering elevation (m)
