@@ -1,0 +1,25 @@
+deviceName=gpu:0
+QTable_rate=0.15
+fc=800000000 # carrier frequency
+B=1000000 # bandwidth
+o2=-110 # Noise power spectral
+b1=0.36 # environmental parameter
+b2=0.21 # environmental parameter
+alpha=2 # path loss exponent
+u1=3 # additional path loss for LoS
+u2=23 # additional path loss for NLoS
+S_=0.0 # (temp) constant value determined by both the antenna and the environment
+alphaL=0.3 # learning rate for DQN
+r_=0.7 # discount factor
+width=50 # width (m)
+height=50 # height (m)
+M=10000 # episodes
+L=3 # number of clusters = number of UAVs # 5
+devices=20 # number of devices
+T=30 # time (in seconds)
+H=15 # hovering elevation (m)
+learningRate=0.0001 # learning rate of DQN
+printTimeDif=False # print time difference
+timeCheck=False # print time for important functions such as getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
+warning=True # print warning for Q-value penalties
+constantToFill=-1.0 # constant to fill the state arrays (because of difference among the number of devices among clusters)
