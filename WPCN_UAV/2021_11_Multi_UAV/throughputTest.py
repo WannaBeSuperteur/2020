@@ -27,6 +27,16 @@ def convertToNumeric(value):
     except:
         return float(int(value))
 
+# move UAV using direction info
+#  x       mod 3 == 0 -> turn left, 1 -> straight, 2 -> turn right
+# (x // 3) mod 3 == 0 -> forward  , 1 -> hold    , 2 -> backward
+# (x // 9) mod 3 == 0 -> h+5      , 1 -> h       , 2 -> h-5
+
+# initial direction: positive direction of x-axis (0 degree)
+# q = [[l, t, xlt, ylt, hlt], ...]
+def moveUAV(q, directionList, L):
+    pass
+
 def throughputTest(M, T, L, devices, width, height,
                    H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
                    deviceName, QTable_rate):
@@ -44,6 +54,23 @@ def throughputTest(M, T, L, devices, width, height,
     (q, w) = algo.kMeansClustering(L, deviceList, width, height, H, T, False, True)
 
     # save device info
+    print('< q >')
+    print(np.array(q))
+
+    print('\n< w >')
+    print(np.array(w))
+
+    #### TEST ####
+    
+    # make direction list using random
+
+    # move UAV from time from 0 to T, for all UAVs of all clusters
+    moveUAV(q, directionList, L)
+
+    # compute common throughput using q and directionList
+    # update alkl for each time from 0 to T
+
+    # print common throughput result
     
     return 0
 
