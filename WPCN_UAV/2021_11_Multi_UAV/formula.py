@@ -17,13 +17,19 @@ import math
 # find xkl, ykl using binary search
 def find_wkl(w, k, l):
     maxDevices = 1000
-    max_ = len(w)
+    max_ = len(w)-1
     min_ = 0
 
+    goal_lk = l * maxDevices + k
+
+    # extreme case (l is too large to find the right cluster)
+    if w[max_][0] * maxDevices + w[max_][1] <= goal_lk:
+        return len(w)
+
+    # binary search
     while True:
         mid_ = (max_ + min_) // 2
         mid_lk = w[mid_][0] * maxDevices + w[mid_][1]
-        goal_lk = l * maxDevices + k
 
         if mid_lk == goal_lk:
             return w[mid_lk][2:]
@@ -118,9 +124,24 @@ def find_alkl(alkl, l0, k, l1, n):
     maxDevices   = 100
     maxTimeSlots = 100
     
-    max_ = len(w)
+    max_ = len(w)-1
     min_ = 0
 
+    goal_lk = (l0 * (maxDevices * maxUAVs * maxTimeSlots) +
+               k  * (maxUAVs * maxTimeSlots) +
+               l1 * maxTimeSlots +
+               n)
+
+    max_alkl = (alkl[max_][0] * (maxDevices * maxUAVs * maxTimeSlots) +
+                alkl[max_][1] * (maxUAVs * maxTimeSlots) +
+                alkl[max_][2] * maxTimeSlots +
+                alkl[max_][3])
+
+    # extreme case (l0 is too large to find the right cluster)
+    if max_alkl <= goal_lk:
+        return len(w)
+
+    # binary search
     while True:
         mid_ = (max_ + min_) // 2
         
@@ -128,11 +149,6 @@ def find_alkl(alkl, l0, k, l1, n):
                     alkl[mid_][1] * (maxUAVs * maxTimeSlots) +
                     alkl[mid_][2] * maxTimeSlots +
                     alkl[mid_][3])
-        
-        goal_lk = (l0 * (maxDevices * maxUAVs * maxTimeSlots) +
-                   k  * (maxUAVs * maxTimeSlots) +
-                   l1 * maxTimeSlots +
-                   n)
 
         if mid_lk == goal_lk:
             return w[mid_lk][4]

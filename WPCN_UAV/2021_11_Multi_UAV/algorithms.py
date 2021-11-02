@@ -3,6 +3,7 @@ import random
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 import numpy as np
+import formula as f
 
 def plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height):
     plt.clf()
@@ -154,6 +155,44 @@ def kMeansClustering(L, deviceList, width, height, H, T, display, saveImg):
     # return
     return (q, w)
 
+# decide whether to transfer energy for each UAV
+
+# al[0]     : denote downlink WET node of UAV l
+#             equal 0 or 1, energy is transferred or not by the l-th UAV
+# assumption : ALWAYS transfer energy to a device
+def transferEnergy(cluster, l):
+    return 1
+
+# find the device to communicate with
+
+# a_l,kl[n] : uplink WIT allocation between UAV l and IoT device kl at n-th time slot
+#             equal 0 or 1, IoT device kl does communicate/or not with l-th UAV
+# alkl      : a_l,kl[n] for each UAV l, device k and time slot n
+#             where alkl = [[l0, k, l1, n, value], ...]
+
+# (device to communicate) = (the device with best condition, with the largest value of g[n][l][k_l])
+# within the GIVEN cluster
+# w = [[l, k, xkl, ykl, 0], ...]
+# q = [[l, t, xlt, ylt, hlt], ...]
+def findDeviceToCommunicate(q, w, l, n, k, T, s, b1, b2, mu1, mu2, fc, c, alpha):
+
+    # find the start index of w[x] = [l, 0, ...]
+    start_index = find_wkl(w, 0, l)
+    end_index   = find_wkl(w, 0, l+1)
+    
+    devicesInThisCluster = end_index - start_index
+    condition = [0 for i in range(devicesInThisCluster)]
+
+    # compute g[n][l][k_l] for each device in the cluster
+    for k in range(start_index, end_index):
+        g_value = f.formula_04(q, w, k, l, l, n, T, s, b1, b2, mu1, mu2, fc, c, alpha)
+        condition.append(g_value)
+    
+    deviceToCommunicate = np.argmax(condition)
+
+    # return the index of the device to communicate
+    return deviceToCommunicate
+
 if __name__ == '__main__':
 
     # number of clusters = number of UAVs
@@ -175,13 +214,11 @@ if __name__ == '__main__':
         deviceList.append(device_i)
 
     # do K means clustering
-    (UAVs, clusters, clusterNOs) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
+    (q, w) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
 
     # print result
-    print(' << UAV location >>\n')
-    for i in range(L): print(UAVs[i][0])
-    print('\n << clusters >>')
-    for i in range(L):
-        print('\ncluster No. ' + str(i))
-        for j in range(len(clusters[i])):
-            print(clusters[i][j])
+    print(' << q >>')
+    print(np.array(q))
+    
+    print('\n << w >>')
+    print(np.array(w))
