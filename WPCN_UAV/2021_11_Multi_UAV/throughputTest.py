@@ -34,7 +34,7 @@ def convertToNumeric(value):
 
 # initial direction: positive direction of x-axis (0 degree)
 # q = [[l, t, xlt, ylt, hlt], ...]
-def moveUAV(q, directionList, T, L):
+def moveUAV(q, directionList, T, L, width, height):
 
     for l in range(L):
         degree = 0.0
@@ -46,6 +46,7 @@ def moveUAV(q, directionList, T, L):
             turn = direction % 3 # turn left, straight or turn right
             fb   = (direction // 3) % 3 # forward, hold or backward
             ud   = (direction // 9) % 3 # h+1, h or h-1
+            print(l, t, turn, fb, ud)
 
             currentLocation = q[l * (T+1) + t][2:] # [xlt, ylt, hlt] of the UAV
 
@@ -62,17 +63,22 @@ def moveUAV(q, directionList, T, L):
 
             # forward, hold or backward
             if fb == 0:
-                new_X += 5 * math.cos(degree)
-                new_Y += 5 * math.sin(degree)
+                new_X += 5 * math.cos(degree * math.pi / 180)
+                new_Y += 5 * math.sin(degree * math.pi / 180)
             elif fb == 2:
-                new_X -= 5 * math.cos(degree)
-                new_Y -= 5 * math.sin(degree)
+                new_X -= 5 * math.cos(degree * math.pi / 180)
+                new_Y -= 5 * math.sin(degree * math.pi / 180)
+
+            new_X = np.clip(new_X, 0.0, width)
+            new_Y = np.clip(new_Y, 0.0, height)
 
             # height
             if ud == 0:
                 new_H += 1
             elif ud == 2:
                 new_H -= 1
+
+            if new_H < 0: new_H = 0.0
 
             # update new q
             q[l * (T+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
@@ -107,7 +113,10 @@ def throughputTest(M, T, L, devices, width, height, H,
         directionList.append(random.randint(0, 26))
 
     # move UAV from time from 0 to T (T+1 times, T moves), for all UAVs of all clusters
-    moveUAV(q, directionList, T, L)
+    moveUAV(q, directionList, T, L, width, height)
+
+    print('< q >')
+    print(np.round_(q, 6))
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (T+1 times, T moves)
@@ -131,6 +140,7 @@ def throughputTest(M, T, L, devices, width, height, H,
         devices     = end_index - start_index
         
         for t in range(T):
+            print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(T))
 
             # decide the device to communicate with
             deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, T, s, b1, b2,
@@ -138,15 +148,17 @@ def throughputTest(M, T, L, devices, width, height, H,
 
             # update alkl, in the form of [[l0, k, l1, n, value], ...]
             alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
-
-            if alkl_index == None:
+            
+            # DO NOT have alkl with (l, deviceToCommunicate, l, t)
+            if alkl_index == None or alkl_index == len(alkl):
                 alkl.append([l, deviceToCommunicate, l, t, 1])
 
                 # set alkl as 0 for other devices
                 for k in range(devices):
                     if k == deviceToCommunicate: continue
                     alkl.append([l, k, l, t, 0])
-                
+
+            # have alkl with (l, deviceToCommunicate, l, t)
             else:
                 alkl[alkl_index][4] = 1
 

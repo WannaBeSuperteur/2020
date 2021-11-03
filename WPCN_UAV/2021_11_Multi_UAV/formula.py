@@ -33,9 +33,11 @@ def find_wkl(w, k, l):
     while True:
         mid_ = (max_ + min_) // 2
         mid_lk = w[mid_][0] * maxDevices + w[mid_][1]
-
+        
         if mid_lk == goal_lk:
-            return mid_lk
+            return mid_
+        elif max_ < min_: # do not exist
+            return None
         elif mid_lk > goal_lk:
             max_ = mid_ - 1
         else:
@@ -128,25 +130,25 @@ def find_alkl(alkl, l0, k, l1, n):
     maxDevices   = 100
     maxTimeSlots = 3600
     
-    max_ = len(w)-1
+    max_ = len(alkl)-1
     min_ = 0
 
-    goal_lk = (l0 * (maxDevices * maxUAVs * maxTimeSlots) +
-               k  * (maxUAVs * maxTimeSlots) +
-               l1 * maxTimeSlots +
-               n)
+    # extreme case (no data)
+    if len(alkl) == 0: return None
 
+    goal_alkl = (l0 * (maxDevices * maxUAVs * maxTimeSlots) +
+                 k  * (maxUAVs * maxTimeSlots) +
+                 l1 * maxTimeSlots +
+                 n)
+    
     max_alkl = (alkl[max_][0] * (maxDevices * maxUAVs * maxTimeSlots) +
                 alkl[max_][1] * (maxUAVs * maxTimeSlots) +
                 alkl[max_][2] * maxTimeSlots +
                 alkl[max_][3])
 
-    # extreme case (no data)
-    if len(alkl) == 0: return None
-
     # extreme case (l0 is too large to find the right cluster)
-    if max_alkl <= goal_lk:
-        return len(w)
+    if max_alkl <= goal_alkl:
+        return len(alkl)
 
     # binary search
     while True:
@@ -157,9 +159,11 @@ def find_alkl(alkl, l0, k, l1, n):
                     alkl[mid_][2] * maxTimeSlots +
                     alkl[mid_][3])
 
-        if mid_lk == goal_lk:
-            return mid_lk
-        elif mid_lk > goal_lk:
+        if mid_alkl == goal_alkl:
+            return mid_
+        elif max_ < min_: # do not exist
+            return None
+        elif mid_alkl > goal_alkl:
             max_ = mid_ - 1
         else:
             min_ = mid_ + 1
