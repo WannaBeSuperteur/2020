@@ -34,21 +34,21 @@ def convertToNumeric(value):
 
 # initial direction: positive direction of x-axis (0 degree)
 # q = [[l, t, xlt, ylt, hlt], ...]
-def moveUAV(q, directionList, T, L, width, height):
+def moveUAV(q, directionList, N, L, width, height):
 
     for l in range(L):
         degree = 0.0
         
-        for t in range(T):
+        for t in range(N):
 
-            direction = directionList[l * T + t]
+            direction = directionList[l * N + t]
 
-            turn = direction % 3 # turn left, straight or turn right
+            turn =  direction       % 3 # turn left, straight or turn right
             fb   = (direction // 3) % 3 # forward, hold or backward
             ud   = (direction // 9) % 3 # h+1, h or h-1
             print(l, t, turn, fb, ud)
 
-            currentLocation = q[l * (T+1) + t][2:] # [xlt, ylt, hlt] of the UAV
+            currentLocation = q[l * (N+1) + t][2:] # [xlt, ylt, hlt] of the UAV
 
             # initialize new X, Y and H
             new_X = currentLocation[0]
@@ -81,10 +81,10 @@ def moveUAV(q, directionList, T, L, width, height):
             if new_H < 0: new_H = 0.0
 
             # update new q
-            q[l * (T+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
+            q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
-def throughputTest(M, T, L, devices, width, height, H,
-                   ng, fc, B, o2, b1, b2, alpha, mu1, mu2, s, PD):
+def throughputTest(M, T, N, L, devices, width, height, H,
+                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -96,7 +96,7 @@ def throughputTest(M, T, L, devices, width, height, H,
         deviceList.append(device_i)
 
     # clustering
-    (q, w) = algo.kMeansClustering(L, deviceList, width, height, H, T, False, True)
+    (q, w) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
 
     # save device info
     print('< q >')
@@ -109,17 +109,17 @@ def throughputTest(M, T, L, devices, width, height, H,
     
     # make direction list using random
     directionList = []
-    for i in range(T * L):
+    for i in range(N * L):
         directionList.append(random.randint(0, 26))
 
-    # move UAV from time from 0 to T (T+1 times, T moves), for all UAVs of all clusters
-    moveUAV(q, directionList, T, L, width, height)
+    # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
+    moveUAV(q, directionList, N, L, width, height)
 
     print('< q >')
     print(np.round_(q, 6))
 
     # compute common throughput using q and directionList
-    # update alkl for each time from 0 to T (T+1 times, T moves)
+    # update alkl for each time from 0 to T (N+1 times, N moves)
     alkl = []
 
     # al : al[0] for each UAV l
@@ -139,12 +139,12 @@ def throughputTest(M, T, L, devices, width, height, H,
         end_index   = f.find_wkl(w, 0, l+1)
         devices     = end_index - start_index
         
-        for t in range(T):
-            print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(T))
+        for t in range(N):
+            print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(N))
 
             # decide the device to communicate with
-            deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, T, s, b1, b2,
-                                                               mu1, mu2, fc, c, alpha)
+            deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
+                                                               mu1, mu2, fc, c, alphaL)
 
             # update alkl, in the form of [[l0, k, l1, n, value], ...]
             alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
@@ -176,7 +176,7 @@ def throughputTest(M, T, L, devices, width, height, H,
 
         # compute average throughput for each device in L
         for k in range(devices):
-            thrput = f.formula_11(q, w, l, k, N, ng, alpha, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+            thrput = f.formula_11(q, w, l, k, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
             throughputs.append(thrput)
 
         # print average throughput result for each UAV
@@ -193,11 +193,11 @@ if __name__ == '__main__':
     # load settings
     paperArgs = h_.loadSettings({'fc':'float', 'ng':'float', 'B':'float', 'o2':'float',
                                 'b1':'float', 'b2':'float',
-                                'alpha':'float',
+                                'alphaP':'float', 'alphaL':'float',
                                 'mu1':'float', 'mu2':'float',
                                 's':'float', 'PD':'float',
                                 'width':'float', 'height':'float',
-                                'M':'int', 'L':'int', 'devices':'int', 'T':'int', 'H':'float'})
+                                'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -205,7 +205,8 @@ if __name__ == '__main__':
     o2 = paperArgs['o2']
     b1 = paperArgs['b1']
     b2 = paperArgs['b2']
-    alpha = paperArgs['alpha']
+    #alphaP = paperArgs['alphaP']
+    alphaL = paperArgs['alphaL']
     mu1 = paperArgs['mu1']
     mu2 = paperArgs['mu2']
     s = paperArgs['s']
@@ -216,7 +217,16 @@ if __name__ == '__main__':
     L = paperArgs['L']
     devices = paperArgs['devices']
     T = paperArgs['T']
+    N = paperArgs['N']
     H = paperArgs['H']
+
+    # (from https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1)
+    # SN = (1 − alphaP)*T/N denotes the length of each subslot
+    # for uplink, alphaP stands for the proportion of downlink WPT in a period.
+
+    # Specifically, the 0-th time slot is assigned to the downlink
+    # WPT and the n-th time slot, n in N = {1,2,...,N} is allocated to the uplink WIT.
+    alphaP = 1/(N+1)
 
     # write file for configuration info
     configFile = open('config_info.txt', 'w')
@@ -227,7 +237,8 @@ if __name__ == '__main__':
     configContent += 'o2=' + str(o2) + '\n'
     configContent += 'b1=' + str(b1) + '\n'
     configContent += 'b2=' + str(b2) + '\n'
-    configContent += 'alpha=' + str(alpha) + '\n'
+    configContent += 'alphaP=' + str(alphaP) + '\n'
+    configContent += 'alphaL=' + str(alphaL) + '\n'
     configContent += 'mu1=' + str(mu1) + '\n'
     configContent += 'mu2=' + str(mu2) + '\n'
     configContent += 's=' + str(s) + '\n'
@@ -238,11 +249,12 @@ if __name__ == '__main__':
     configContent += 'L=' + str(L) + '\n'
     configContent += 'devices=' + str(devices) + '\n'
     configContent += 'T=' + str(T) + '\n'
+    configContent += 'N=' + str(N) + '\n'
     configContent += 'H=' + str(H)
 
     configFile.write(configContent)
     configFile.close()
 
     # run throughput test
-    throughputTest(M, T, L, devices, width, height, H,
-                   ng, fc, B, o2, b1, b2, alpha, mu1, mu2, s, PD)
+    throughputTest(M, T, N, L, devices, width, height, H,
+                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD)

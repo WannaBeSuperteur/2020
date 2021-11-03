@@ -19,7 +19,7 @@ def plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height
 ### k Means Clustering algorithm
 # L          : number of clusters = number of UAVs
 # deviceList : list of devices
-def kMeansClustering(L, deviceList, width, height, H, T, display, saveImg):
+def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg):
 
     # init clusters
     clusters = [] # clusters to return (each cluster contains corresponding devices)
@@ -142,7 +142,7 @@ def kMeansClustering(L, deviceList, width, height, H, T, display, saveImg):
 
     q = []
     for l in range(L):
-        for t in range(T+1):
+        for t in range(N+1):
             q.append([l, t, UAVloc[l][0], UAVloc[l][1], UAVloc[l][2]])
 
     # write wkl: device location info (not moving)
@@ -174,7 +174,7 @@ def transferEnergy(cluster, l):
 # within the GIVEN cluster
 # w = [[l, k, xkl, ykl, 0], ...]
 # q = [[l, t, xlt, ylt, hlt], ...]
-def findDeviceToCommunicate(q, w, l, n, T, s, b1, b2, mu1, mu2, fc, c, alpha):
+def findDeviceToCommunicate(q, w, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
 
     # find the start index of w[x] = [l, 0, ...]
     start_index = f.find_wkl(w, 0, l)
@@ -185,7 +185,7 @@ def findDeviceToCommunicate(q, w, l, n, T, s, b1, b2, mu1, mu2, fc, c, alpha):
 
     # compute g[n][l][k_l] for each device in the cluster
     for k in range(start_index, end_index):
-        g_value = f.formula_04(q, w, k, l, l, n, T, s, b1, b2, mu1, mu2, fc, c, alpha)
+        g_value = f.formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         condition.append(g_value)
     
     deviceToCommunicate = np.argmax(condition)
