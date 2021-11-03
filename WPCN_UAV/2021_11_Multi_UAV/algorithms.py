@@ -174,11 +174,11 @@ def transferEnergy(cluster, l):
 # within the GIVEN cluster
 # w = [[l, k, xkl, ykl, 0], ...]
 # q = [[l, t, xlt, ylt, hlt], ...]
-def findDeviceToCommunicate(q, w, l, n, k, T, s, b1, b2, mu1, mu2, fc, c, alpha):
+def findDeviceToCommunicate(q, w, l, n, T, s, b1, b2, mu1, mu2, fc, c, alpha):
 
     # find the start index of w[x] = [l, 0, ...]
-    start_index = find_wkl(w, 0, l)
-    end_index   = find_wkl(w, 0, l+1)
+    start_index = f.find_wkl(w, 0, l)
+    end_index   = f.find_wkl(w, 0, l+1)
     
     devicesInThisCluster = end_index - start_index
     condition = [0 for i in range(devicesInThisCluster)]

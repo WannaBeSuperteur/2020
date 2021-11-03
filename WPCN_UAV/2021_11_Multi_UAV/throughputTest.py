@@ -30,16 +30,55 @@ def convertToNumeric(value):
 # move UAV using direction info
 #  x       mod 3 == 0 -> turn left, 1 -> straight, 2 -> turn right
 # (x // 3) mod 3 == 0 -> forward  , 1 -> hold    , 2 -> backward
-# (x // 9) mod 3 == 0 -> h+5      , 1 -> h       , 2 -> h-5
+# (x // 9) mod 3 == 0 -> h+1      , 1 -> h       , 2 -> h-1
 
 # initial direction: positive direction of x-axis (0 degree)
 # q = [[l, t, xlt, ylt, hlt], ...]
-def moveUAV(q, directionList, L):
-    pass
+def moveUAV(q, directionList, T, L):
 
-def throughputTest(M, T, L, devices, width, height,
-                   H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
-                   deviceName, QTable_rate):
+    for l in range(L):
+        degree = 0.0
+        
+        for t in range(T):
+
+            direction = directionList[l * T + t]
+
+            turn = direction % 3 # turn left, straight or turn right
+            fb   = (direction // 3) % 3 # forward, hold or backward
+            ud   = (direction // 9) % 3 # h+1, h or h-1
+
+            currentLocation = q[l * (T+1) + t][2:] # [xlt, ylt, hlt] of the UAV
+
+            # initialize new X, Y and H
+            new_X = currentLocation[0]
+            new_Y = currentLocation[1]
+            new_H = currentLocation[2]
+
+            # turn left, straight or turn right
+            if turn == 0:
+                degree += 45
+            elif turn == 2:
+                degree -= 45
+
+            # forward, hold or backward
+            if fb == 0:
+                new_X += 5 * math.cos(degree)
+                new_Y += 5 * math.sin(degree)
+            elif fb == 2:
+                new_X -= 5 * math.cos(degree)
+                new_Y -= 5 * math.sin(degree)
+
+            # height
+            if ud == 0:
+                new_H += 1
+            elif ud == 2:
+                new_H -= 1
+
+            # update new q
+            q[l * (T+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
+
+def throughputTest(M, T, L, devices, width, height, H,
+                   ng, fc, B, o2, b1, b2, alpha, mu1, mu2, s, PD):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -63,16 +102,73 @@ def throughputTest(M, T, L, devices, width, height,
     #### TEST ####
     
     # make direction list using random
+    directionList = []
+    for i in range(T * L):
+        directionList.append(random.randint(0, 26))
 
-    # move UAV from time from 0 to T, for all UAVs of all clusters
-    moveUAV(q, directionList, L)
+    # move UAV from time from 0 to T (T+1 times, T moves), for all UAVs of all clusters
+    moveUAV(q, directionList, T, L)
 
     # compute common throughput using q and directionList
-    # update alkl for each time from 0 to T
+    # update alkl for each time from 0 to T (T+1 times, T moves)
+    alkl = []
 
-    # print common throughput result
+    # al : al[0] for each UAV l
+    al = []
+    for l in range(L): al.append(algo.transferEnergy(l, l))
+
+    # speed of light
+    c = 300000000
+
+    # throughput results
+    throughputs = []
     
-    return 0
+    for l in range(L):
+
+        # the number of devices in cluster l
+        start_index = f.find_wkl(w, 0, l)
+        end_index   = f.find_wkl(w, 0, l+1)
+        devices     = end_index - start_index
+        
+        for t in range(T):
+
+            # decide the device to communicate with
+            deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, T, s, b1, b2,
+                                                               mu1, mu2, fc, c, alpha)
+
+            # update alkl, in the form of [[l0, k, l1, n, value], ...]
+            alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
+
+            if alkl_index == None:
+                alkl.append([l, deviceToCommunicate, l, t, 1])
+
+                # set alkl as 0 for other devices
+                for k in range(devices):
+                    if k == deviceToCommunicate: continue
+                    alkl.append([l, k, l, t, 0])
+                
+            else:
+                alkl[alkl_index][4] = 1
+
+                # set alkl as 0 for other devices
+                for k in range(devices):
+                    if k == deviceToCommunicate: continue
+                    alkl_index_k = f.find_alkl(alkl, l, k, l, t)
+                    alkl[alkl_index_k] = [l, k, l, t, 0]
+
+            # sort alkl array
+            alkl.sort(key=lambda x:x[3])
+            alkl.sort(key=lambda x:x[2])
+            alkl.sort(key=lambda x:x[1])
+            alkl.sort(key=lambda x:x[0])
+
+        # compute average throughput for each device in L
+        for k in range(devices):
+            thrput = f.formula_11(q, w, l, k, N, ng, alpha, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+            throughputs.append(thrput)
+
+        # print average throughput result for each UAV
+        print('UAV ' + str(l) + ' thrputs: ' + str(np.round_(throughputs, 6)))
 
 if __name__ == '__main__':
 
@@ -83,32 +179,25 @@ if __name__ == '__main__':
     warnings.simplefilter('ignore')
 
     # load settings
-    paperArgs = h_.loadSettings({'deviceName':'str',
-                                'QTable_rate':'float',
-                                'fc':'float', 'B':'float', 'o2':'float',
+    paperArgs = h_.loadSettings({'fc':'float', 'ng':'float', 'B':'float', 'o2':'float',
                                 'b1':'float', 'b2':'float',
                                 'alpha':'float',
-                                'u1':'float', 'u2':'float',
-                                'S_':'float',
-                                'alphaL':'float',
-                                'r_':'float',
+                                'mu1':'float', 'mu2':'float',
+                                's':'float', 'PD':'float',
                                 'width':'float', 'height':'float',
-                                'M':'int', 'L':'int', 'devices':'int', 'T':'int',
-                                'H':'float'})
+                                'M':'int', 'L':'int', 'devices':'int', 'T':'int', 'H':'float'})
 
-    deviceName = paperArgs['deviceName']
-    QTable_rate = paperArgs['QTable_rate']
     fc = paperArgs['fc']
+    ng = paperArgs['ng']
     B = paperArgs['B']
     o2 = paperArgs['o2']
     b1 = paperArgs['b1']
     b2 = paperArgs['b2']
     alpha = paperArgs['alpha']
-    u1 = paperArgs['u1']
-    u2 = paperArgs['u2']
-    S_ = paperArgs['S_']
-    alphaL = paperArgs['alphaL']
-    r_ = paperArgs['r_']
+    mu1 = paperArgs['mu1']
+    mu2 = paperArgs['mu2']
+    s = paperArgs['s']
+    PD = paperArgs['PD']
     width = paperArgs['width']
     height = paperArgs['height']
     M = paperArgs['M']
@@ -120,19 +209,17 @@ if __name__ == '__main__':
     # write file for configuration info
     configFile = open('config_info.txt', 'w')
     
-    configContent = 'deviceName=' + str(deviceName) + '\n'
-    configContent += 'QTable_rate=' + str(QTable_rate) + '\n'
-    configContent += 'fc=' + str(fc) + '\n'
+    configContent = 'fc=' + str(fc) + '\n'
+    configContent += 'ng=' + str(ng) + '\n'
     configContent += 'B=' + str(B) + '\n'
     configContent += 'o2=' + str(o2) + '\n'
     configContent += 'b1=' + str(b1) + '\n'
     configContent += 'b2=' + str(b2) + '\n'
     configContent += 'alpha=' + str(alpha) + '\n'
-    configContent += 'u1=' + str(u1) + '\n'
-    configContent += 'u2=' + str(u2) + '\n'
-    configContent += 'S_=' + str(S_) + '\n'
-    configContent += 'alphaL=' + str(alphaL) + '\n'
-    configContent += 'r_=' + str(r_) + '\n'
+    configContent += 'mu1=' + str(mu1) + '\n'
+    configContent += 'mu2=' + str(mu2) + '\n'
+    configContent += 's=' + str(s) + '\n'
+    configContent += 'PD=' + str(PD) + '\n'
     configContent += 'width=' + str(width) + '\n'
     configContent += 'height=' + str(height) + '\n'
     configContent += 'M=' + str(M) + '\n'
@@ -145,6 +232,5 @@ if __name__ == '__main__':
     configFile.close()
 
     # run throughput test
-    throughputTest(M, T, L, devices, width, height,
-                   H, fc, B, o2, b1, b2, alpha, u1, u2, alphaL, r_, S_,
-                   deviceName, QTable_rate)
+    throughputTest(M, T, L, devices, width, height, H,
+                   ng, fc, B, o2, b1, b2, alpha, mu1, mu2, s, PD)

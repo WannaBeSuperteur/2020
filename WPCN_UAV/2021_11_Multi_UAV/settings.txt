@@ -1,16 +1,14 @@
-deviceName=gpu:0
-QTable_rate=0.15
 fc=800000000 # carrier frequency
+ng=0.1 # energy conversion efficiency of devices (= 0.1)
 B=1000000 # bandwidth
 o2=-110 # Noise power spectral
 b1=0.36 # environmental parameter
 b2=0.21 # environmental parameter
 alpha=2 # path loss exponent
-u1=3 # additional path loss for LoS
-u2=23 # additional path loss for NLoS
-S_=0.0 # (temp) constant value determined by both the antenna and the environment
-alphaL=0.3 # learning rate for DQN
-r_=0.7 # discount factor
+mu1=3 # additional path loss for LoS
+mu2=23 # additional path loss for NLoS
+s=0.0 # (temp) constant value determined by both the antenna and the environment
+PD=40.0 # transmission power for UAVs' downlink
 width=50 # width (m)
 height=50 # height (m)
 M=10000 # episodes
