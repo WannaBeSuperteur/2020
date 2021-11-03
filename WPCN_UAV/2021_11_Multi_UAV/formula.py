@@ -1,6 +1,7 @@
 # https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
 import math
+import numpy as np
 
 ### A. SYSTEM MODEL
 # L, l       : the number of clusters (l : each cluster)
@@ -187,8 +188,8 @@ def formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, 
 
 # using Sum(j=1,N) a_l,kl[j] * SN * P^U_kl[j] <= E_kl     ... (8),
 # suppose that     a_l,kl[j] * SN * P^U_kl[j] <= E_kl / N
-#                                   P^U_kl[j] <= E_kl / (N * a_l,kl[j] * SN) for j in 1..N
-# so, suppose that P^U_kl[j] = E_kl / (N * a_l,kl[j] * SN)
+#                                   P^U_kl[j] <= E_kl / (N * a_l,kl[j] * SN) for j in 1..N (only if a_l,kl[j] > 0)
+# so, suppose that P^U_kl[j] = E_kl / (N * a_l,kl[j] * SN) if a_l,kl[j] == 1, otherwise 0
 # for formula (7, 9)
 def getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
 
@@ -196,8 +197,10 @@ def getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c
 
     # for E_kl
     Ekl = formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, PD)
-    print(N, alkl[find_alkl(alkl, l, k, l, n)][4], SN)
-    return Ekl / (N * alkl[find_alkl(alkl, l, k, l, n)][4] * SN)
+    alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
+
+    if alkl_value > 0: return Ekl / (N * alkl_value * SN)
+    return 0
 
 # formula (7) : for E_kl[n], using formula (6)
 def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
