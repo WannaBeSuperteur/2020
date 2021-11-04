@@ -122,6 +122,21 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # update alkl for each time from 0 to T (N+1 times, N moves)
     alkl = []
 
+    # fill alkl first (iteration: L0 * K1 * L1 * T)
+    # if L0 = L1 = 5, K1 = 10 per cluster, T = 30,
+    # total iteration count is 5 * 10 * 5 * 30 = 7500
+    for i in range(L):
+        for j in range(L):
+
+            # the number of devices in cluster j
+            start_index = f.find_wkl(w, 0, j)
+            end_index   = f.find_wkl(w, 0, j+1)
+            devices     = end_index - start_index
+        
+            for k in range(devices):
+                for t in range(N):
+                    alkl.append([i, k, j, t, 0])
+
     # al : al[0] for each UAV l
     al = []
     for l in range(L): al.append(algo.transferEnergy(l, l))

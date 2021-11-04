@@ -66,8 +66,11 @@ def formula_01(q, l, n, Vmax, SN, N):
 # formula (2, 3, 4) : for d_l,kl[n] = d_(l0),k(l1)[n]
 def getDist(q, w, k, l0, l1, n, N):
     
-    q_ln = q[l0*(N+1) + n][2:]       # [xl[n], yl[n], hl[n]]
-    w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
+    try:
+        q_ln = q[l0*(N+1) + n][2:]       # [xl[n], yl[n], hl[n]]
+        w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
+    except:
+        print('w, k, l1:', k, l1)
 
     # d_l,kl[n]
     dist = math.sqrt(pow(q_ln[0] - w_kl[0], 2) + pow(q_ln[1] - w_kl[1], 2) + pow(q_ln[2], 2))
@@ -191,6 +194,8 @@ def formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, 
 #                                   P^U_kl[j] <= E_kl / (N * a_l,kl[j] * SN) for j in 1..N (only if a_l,kl[j] > 0)
 # so, suppose that P^U_kl[j] = E_kl / (N * a_l,kl[j] * SN) if a_l,kl[j] == 1, otherwise 0
 # for formula (7, 9)
+
+# todo: "remove this function and use P^U_max = - 20 dBm instead"
 def getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
 
     SN = (1 - alphaP)*T/N
