@@ -51,7 +51,7 @@ def encodeX(X, roberta_tokenizer, roberta_model):
 if __name__ == '__main__':
 
     # read data
-    (train_X, train_Y, test_X, ids) = h.loadData(999999)
+    (train_X, train_Y, test_X, ids) = h.loadData(100) # 999999
 
     trainLen = len(train_X)
     testLen = len(test_X)
@@ -80,55 +80,60 @@ if __name__ == '__main__':
     pad_encoded_train_Xs = []
     pad_encoded_test_Xs  = []
 
-    useAtOnce = 10
-
     # encode input data (count) times with indices=0,1,...,(count-1) in 0..767
     (encoded_train_X, max_len_train) = encodeX(train_X, roberta_tokenizer, roberta_model)
     (encoded_test_X , max_len_test ) = encodeX(test_X , roberta_tokenizer, roberta_model)
     max_len = max(max_len_train, max_len_test)
 
     print('\n[04] encoded_train_X :')
-    print('total:', np.shape(encoded_train_X)) # (train rows)
-    print('each :', np.shape(encoded_train_X[0])) # (tokens, 768)
+    print('total:', np.shape(encoded_train_X))    # shape: (train rows)
+    print('each :', np.shape(encoded_train_X[0])) # shape: (tokens, 768)
     print('first data:\n', np.array(encoded_train_X[0]))
                     
     print('\n[05] encoded_test_X :')
-    print('total:', np.shape(encoded_test_X)) # (test rows)
-    print('each :', np.shape(encoded_test_X[0])) # (tokens, 768)
+    print('total:', np.shape(encoded_test_X))    # shape: (test rows)
+    print('each :', np.shape(encoded_test_X[0])) # shape: (tokens, 768)
     print('first data:\n', np.array(encoded_test_X[0]))
         
-    # extract from 1st index to (useAtOnce)-th index (i = 0..767) from encoded data
-    # (tokens, 768) for each row ---> (tokens, useAtOnce) for each row
+    # (tokens, 768) ---> (max_len, 768) for each row (fill with ZERO for remaining cells)
     encoded_train_Xs = []
     encoded_test_Xs  = []
         
     for i in range(trainLen):
-
-        # flatten of [encoded_X[0], encoded_X[1], ..., encoded_X[useAtOnce-1]] (size: useAtOnce * 768)
         encoded_train_X_vecs = []
-        for j in range(useAtOnce): encoded_train_X_vecs.append(encoded_train_X[i][j])
-        encoded_train_X_vecs = np.array(encoded_train_X_vecs).flatten()
         
-        encoded_train_Xs.append(encoded_train_X_vecs)
+        for j in range(max_len):
+            if j < len(encoded_train_X[i]):
+                encoded_train_X_vecs.append(encoded_train_X[i][j])
+            else:
+                encoded_train_X_vecs.append([0 for k in range(768)])
+
+        # append to dataset as flatten
+        encoded_train_Xs.append(np.array(encoded_train_X_vecs).flatten())
 
     for i in range(testLen):
         
-        # flatten of [encoded_X[0], encoded_X[1], ..., encoded_X[useAtOnce-1]] (size: useAtOnce * 768)
         encoded_test_X_vecs = []
-        for j in range(useAtOnce): encoded_test_X_vecs.append(encoded_test_X[i][j])
-        encoded_test_X_vecs = np.array(encoded_test_X_vecs).flatten()
         
-        encoded_test_Xs.append(encoded_test_X_vecs)
+        for j in range(max_len):
+            if j < len(encoded_test_X[i]):
+                encoded_test_X_vecs.append(encoded_test_X[i][j])
+            else:
+                encoded_test_X_vecs.append([0 for k in range(768)])
 
+        # append to dataset as flatten
+        encoded_test_Xs.append(np.array(encoded_test_X_vecs).flatten())
+
+    # make as numpy array
     encoded_train_Xs = np.array(encoded_train_Xs)
     encoded_test_Xs  = np.array(encoded_test_Xs)
 
     print('\n[06] pad_encoded_train_X :')
-    print(np.shape(encoded_train_Xs)) # (train rows, useAtOnce * 768)
+    print(np.shape(encoded_train_Xs)) # (train rows, max_len * 768)
     print(encoded_train_Xs)
                     
     print('\n[07] pad_encoded_test_X :')
-    print(np.shape(encoded_test_Xs)) # (test rows, useAtOnce * 768)
+    print(np.shape(encoded_test_Xs)) # (test rows, max_len * 768)
     print(encoded_test_Xs)
         
     # multiply 3.0
@@ -140,23 +145,23 @@ if __name__ == '__main__':
     encoded_test_Xs  = h.getAdditionalInfo(encoded_test_Xs,  testLen,  test_X)
 
     print('\n[08] pad_encoded_train_X with additional info :')
-    print(np.shape(encoded_train_Xs)) # (train rows, useAtOnce * 768 + 3)
+    print(np.shape(encoded_train_Xs)) # (train rows, max_len * 768 + 3)
     print(encoded_train_Xs)
 
     print('\n[09] pad_encoded_test_X with additional info :')
-    print(np.shape(encoded_test_Xs)) # (test rows, useAtOnce * 768 + 3)
+    print(np.shape(encoded_test_Xs)) # (test rows, max_len * 768 + 3)
     print(encoded_test_Xs)
 
     # get model
-    model = nns.TEXT_MODEL_LSTM0_ver01(useAtOnce, None, 64, max_len)
+    model = nns.TEXT_MODEL_LSTM0_ver01(None, 64, max_len)
     
     # train/valid using GPU
     valid_rate = 0.15
-    h.trainOrValid(model, True, 'roberta', valid_rate, trainLen, useAtOnce,
+    h.trainOrValid(model, True, 'roberta', valid_rate, trainLen,
                    encoded_train_Xs, train_Y, encoded_test_Xs, avg, stddev)
 
     # test using GPU
-    final_prediction = h.trainOrValid(model, False, 'roberta', valid_rate, trainLen, useAtOnce,
+    final_prediction = h.trainOrValid(model, False, 'roberta', valid_rate, trainLen,
                                       encoded_train_Xs, train_Y, encoded_test_Xs, avg, stddev)
 
     # final submission

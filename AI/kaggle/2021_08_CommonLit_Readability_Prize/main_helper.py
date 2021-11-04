@@ -117,7 +117,7 @@ def getAdditionalInfo(pad_encoded_X, leng, X):
     return pad_encoded_X
 
 # train model using GPU
-def trainOrValid(model, valid, algo_name, valid_rate, trainLen, useAtOnce, train_Xs, train_Y, test_Xs, avg, stddev):
+def trainOrValid(model, valid, algo_name, valid_rate, trainLen, train_Xs, train_Y, test_Xs, avg, stddev):
 
     if valid == False: valid_rate = 0.0 # test
     trainCount = int((1.0 - valid_rate) * trainLen)
