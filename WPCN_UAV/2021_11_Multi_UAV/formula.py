@@ -195,63 +195,51 @@ def formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, 
 # so, suppose that P^U_kl[j] = E_kl / (N * a_l,kl[j] * SN) if a_l,kl[j] == 1, otherwise 0
 # for formula (7, 9)
 
-# todo: "remove this function and use P^U_max = - 20 dBm instead"
-def getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
-
-    SN = (1 - alphaP)*T/N
-
-    # for E_kl
-    Ekl = formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, PD)
-    alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
-
-    if alkl_value > 0: return Ekl / (N * alkl_value * SN)
-    return 0
+# "This function was removed and using P^U_max = -20dBm instead"
+#def getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
 
 # formula (7) : for E_kl[n], using formula (6)
-def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
+def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD, PU):
 
     SN = (1 - alphaP)*T/N
     Ekl = formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, PD)
     result = Ekl
 
     for j in range(1, n):
-        PU = getPUkln(q, w, l, k, j, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
         result -= alkl[j] * SN * PU
 
 # get I_kl[n] = inference received by UAV l, for formula (9)
-def getInferencekl(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
+def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU):
     result = 0
     for j in range(L):
         if j == l: continue
         
-        PU = getPUkln(q, w, j, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
         g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         result += PU * g
     return result
 
 # formula (9) : for received SINR r_kl[n], using formula (4)
-def formula_09(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
-    PU = getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
     g = formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
     
-    inference = getInferencekl(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+    inference = getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU)
     o2 = -110 # noise power spectral
     
     return PU * g / (inference + o2)
 
 # formula (10) : instantaneous throughput R_kl[n], using formula (9)
-def formula_10(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
-    SINR = formula_09(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
+    SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
     B = 1000000 # bandwidth = 1 MHz
     return B * math.log(1.0 + SINR, 2)
 
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
-def formula_11(q, w, l, k, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
+def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU):
     result = 0
 
     for n in range(N):
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
-        throughput = formula_10(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+        throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
         result += alkl_value * throughput
 
     return result / T

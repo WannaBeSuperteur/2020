@@ -84,7 +84,7 @@ def moveUAV(q, directionList, N, L, width, height):
             q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
 def throughputTest(M, T, N, L, devices, width, height, H,
-                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD):
+                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -191,7 +191,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # compute average throughput for each device in L
         for k in range(devices):
-            thrput = f.formula_11(q, w, l, k, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD)
+            thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU)
             throughputs.append(thrput)
 
         # print average throughput result for each UAV
@@ -210,7 +210,7 @@ if __name__ == '__main__':
                                 'b1':'float', 'b2':'float',
                                 'alphaP':'float', 'alphaL':'float',
                                 'mu1':'float', 'mu2':'float',
-                                's':'float', 'PD':'float',
+                                's':'float', 'PD':'float', 'PU':'float',
                                 'width':'float', 'height':'float',
                                 'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float'})
 
@@ -225,7 +225,8 @@ if __name__ == '__main__':
     mu1 = paperArgs['mu1']
     mu2 = paperArgs['mu2']
     s = paperArgs['s']
-    PD = paperArgs['PD']
+    #PD = paperArgs['PD']
+    PU = paperArgs['PU']
     width = paperArgs['width']
     height = paperArgs['height']
     M = paperArgs['M']
@@ -252,12 +253,13 @@ if __name__ == '__main__':
     configContent += 'o2=' + str(o2) + '\n'
     configContent += 'b1=' + str(b1) + '\n'
     configContent += 'b2=' + str(b2) + '\n'
-    configContent += 'alphaP=' + str(alphaP) + '\n'
+    #configContent += 'alphaP=' + str(alphaP) + '\n'
     configContent += 'alphaL=' + str(alphaL) + '\n'
     configContent += 'mu1=' + str(mu1) + '\n'
     configContent += 'mu2=' + str(mu2) + '\n'
     configContent += 's=' + str(s) + '\n'
-    configContent += 'PD=' + str(PD) + '\n'
+    #configContent += 'PD=' + str(PD) + '\n'
+    configContent += 'PU=' + str(PU) + '\n'
     configContent += 'width=' + str(width) + '\n'
     configContent += 'height=' + str(height) + '\n'
     configContent += 'M=' + str(M) + '\n'
@@ -271,5 +273,7 @@ if __name__ == '__main__':
     configFile.close()
 
     # run throughput test
+    #throughputTest(M, T, N, L, devices, width, height, H,
+    #               ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU)
     throughputTest(M, T, N, L, devices, width, height, H,
-                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD)
+                   ng, fc, B, o2, b1, b2, None, alphaL, mu1, mu2, s, None, PU)
