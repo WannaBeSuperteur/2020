@@ -29,6 +29,7 @@ np.set_printoptions(linewidth=180, edgeitems=5)
 # encode and add padding to the text
 def encodeX(X, roberta_tokenizer, roberta_model):
     encoded_X = []
+    max_len = 0
 
     print('')
     
@@ -41,10 +42,11 @@ def encodeX(X, roberta_tokenizer, roberta_model):
         encoded_X.append(roberta_lhs) # shape: (N, 768) x rows for different N's
 
         print(str(i) + ' / ' + str(len(X)) + ' : len=' + str(len(roberta_lhs)))
+        max_len = max(max_len, len(roberta_lhs))
 
     print('')
         
-    return encoded_X
+    return (encoded_X, max_len)
 
 if __name__ == '__main__':
 
@@ -81,8 +83,9 @@ if __name__ == '__main__':
     useAtOnce = 10
 
     # encode input data (count) times with indices=0,1,...,(count-1) in 0..767
-    encoded_train_X = encodeX(train_X, roberta_tokenizer, roberta_model)
-    encoded_test_X  = encodeX(test_X , roberta_tokenizer, roberta_model)
+    (encoded_train_X, max_len_train) = encodeX(train_X, roberta_tokenizer, roberta_model)
+    (encoded_test_X , max_len_test ) = encodeX(test_X , roberta_tokenizer, roberta_model)
+    max_len = max(max_len_train, max_len_test)
 
     print('\n[04] encoded_train_X :')
     print('total:', np.shape(encoded_train_X)) # (train rows)
@@ -145,7 +148,7 @@ if __name__ == '__main__':
     print(encoded_test_Xs)
 
     # get model
-    model = nns.TEXT_MODEL_LSTM0(useAtOnce, None, 64)
+    model = nns.TEXT_MODEL_LSTM0_ver01(useAtOnce, None, 64, max_len)
     
     # train/valid using GPU
     valid_rate = 0.15
