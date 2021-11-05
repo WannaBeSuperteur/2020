@@ -1,3 +1,4 @@
+import numpy as np
 import tensorflow as tf
 from tensorflow import keras
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -112,6 +113,7 @@ class TEXT_MODEL_LSTM0_ver01(tf.keras.Model):
         # constants
         self.maxLen      = max_len
         self.N           = 4
+        self.cnnFilters  = cnn_filters
 
         # flatten layer and regularizer
         self.dropout     = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
@@ -124,9 +126,9 @@ class TEXT_MODEL_LSTM0_ver01(tf.keras.Model):
         self.CNN2 = []
         
         for i in range(self.N):
-            self.CNN0.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=5, padding='valid', activation='relu', name='CNN0'))
-            self.CNN1.append(tf.keras.layers.Conv1D(filters=cnn_filters*2, kernel_size=5, padding='valid', activation='relu', name='CNN1'))
-            self.CNN2.append(tf.keras.layers.Conv1D(filters=cnn_filters*4, kernel_size=5, padding='valid', activation='relu', name='CNN2'))
+            self.CNN0.append(tf.keras.layers.Conv1D(filters=cnn_filters, kernel_size=5, padding='valid', activation='relu', name='CNN0_' + str(i)))
+            self.CNN1.append(tf.keras.layers.Conv1D(filters=cnn_filters*2, kernel_size=5, padding='valid', activation='relu', name='CNN1_' + str(i)))
+            self.CNN2.append(tf.keras.layers.Conv1D(filters=cnn_filters*4, kernel_size=5, padding='valid', activation='relu', name='CNN2_' + str(i)))
             
         self.MP          = tf.keras.layers.MaxPooling1D(pool_size=2, name='POOL') # max pooling layers
 
@@ -141,8 +143,9 @@ class TEXT_MODEL_LSTM0_ver01(tf.keras.Model):
 
     def call(self, inputs, training):
 
-        maxLength = self.maxLen
-        n = self.N
+        maxLength  = self.maxLen
+        CNNfilters = self.cnnFilters
+        n          = self.N
 
         # suppose that inputs are FILLED WITH 0 until maxLength
 
@@ -163,15 +166,16 @@ class TEXT_MODEL_LSTM0_ver01(tf.keras.Model):
         # CNN and Pooling layers
         for i in range(n):
             concat_vecOut_reshaped = tf.reshape(concat_vecOutputs, (-1, maxLength, 1))
+            #print(i)
 
             if i == 0:
-                concat_vecOut_reshaped_CNN0 = self.CNN0(concat_vecOut_reshaped)
-                concat_vecOut_reshaped_CNN1 = self.CNN1(concat_vecOut_reshaped)
-                concat_vecOut_reshaped_CNN2 = self.CNN2(concat_vecOut_reshaped)
+                concat_vecOut_reshaped_CNN0 = self.CNN0[0](concat_vecOut_reshaped)
+                concat_vecOut_reshaped_CNN1 = self.CNN1[0](concat_vecOut_reshaped)
+                concat_vecOut_reshaped_CNN2 = self.CNN2[0](concat_vecOut_reshaped)
             else:
-                concat_vecOut_reshaped_CNN0 = self.CNN0(concat_vecOut_reshaped_CNN0)
-                concat_vecOut_reshaped_CNN1 = self.CNN1(concat_vecOut_reshaped_CNN1)
-                concat_vecOut_reshaped_CNN2 = self.CNN2(concat_vecOut_reshaped_CNN2)
+                concat_vecOut_reshaped_CNN0 = self.CNN0[i](concat_vecOut_reshaped_CNN0)
+                concat_vecOut_reshaped_CNN1 = self.CNN1[i](concat_vecOut_reshaped_CNN1)
+                concat_vecOut_reshaped_CNN2 = self.CNN2[i](concat_vecOut_reshaped_CNN2)
 
             concat_vecOut_reshaped_CNN0 = self.MP(concat_vecOut_reshaped_CNN0)
             concat_vecOut_reshaped_CNN1 = self.MP(concat_vecOut_reshaped_CNN1)
@@ -180,15 +184,34 @@ class TEXT_MODEL_LSTM0_ver01(tf.keras.Model):
         ### for INFO input
         inputs_info = self.dense_info(INFO)
         inputs_info = self.dropout(inputs_info, training)
+        inputs_info = tf.reshape(inputs_info, (-1, 1, CNNfilters*4))
 
         ### final output
+        # flatten
+        #print('concat_vecOut_reshaped_CNN0:', np.shape(concat_vecOut_reshaped_CNN0))
+        #print('concat_vecOut_reshaped_CNN1:', np.shape(concat_vecOut_reshaped_CNN1))
+        #print('concat_vecOut_reshaped_CNN2:', np.shape(concat_vecOut_reshaped_CNN2))
+        #print('inputs_info:', np.shape(inputs_info))
+        
+        concat_vecOut_reshaped_CNN0 = self.flat(concat_vecOut_reshaped_CNN0)
+        concat_vecOut_reshaped_CNN1 = self.flat(concat_vecOut_reshaped_CNN1)
+        concat_vecOut_reshaped_CNN2 = self.flat(concat_vecOut_reshaped_CNN2)
+        inputs_info = self.flat(inputs_info)
+        
         # merge
+        #print('concat_vecOut_reshaped_CNN0:', np.shape(concat_vecOut_reshaped_CNN0))
+        #print('concat_vecOut_reshaped_CNN1:', np.shape(concat_vecOut_reshaped_CNN1))
+        #print('concat_vecOut_reshaped_CNN2:', np.shape(concat_vecOut_reshaped_CNN2))
+        #print('inputs_info:', np.shape(inputs_info))
+        
         concatenated = tf.concat([concat_vecOut_reshaped_CNN0,
                                   concat_vecOut_reshaped_CNN1,
                                   concat_vecOut_reshaped_CNN2, inputs_info], axis=-1)
 
+        #print('concatenated:', np.shape(concatenated))
+
         # final
-        model_merged = self.merged(concatenated)
+        model_merged = self.flat(concatenated)
         model_output = self.dense_final(model_merged)
         
         return model_output
