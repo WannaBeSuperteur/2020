@@ -105,6 +105,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     print('\n< w >')
     print(np.array(w))
 
+    # TODO: create the list of [cluster -> the number of devices] for each cluster and use it
+    # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
+    # then, it will be [3, 7, 6]
+
     #### TEST ####
     
     # make direction list using random
@@ -191,6 +195,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # compute average throughput for each device in L
         for k in range(devices):
+            print('devices:', devices, 'l:', l)
             thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU)
             throughputs.append(thrput)
 

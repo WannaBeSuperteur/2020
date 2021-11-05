@@ -26,6 +26,7 @@ def find_wkl(w, k, l):
     min_ = 0
 
     goal_lk = l * maxDevices + k
+    print(k, l)
 
     # extreme case (no data)
     if len(w) == 0: return None
@@ -38,6 +39,7 @@ def find_wkl(w, k, l):
     while True:
         mid_ = (max_ + min_) // 2
         mid_lk = w[mid_][0] * maxDevices + w[mid_][1]
+        print(mid_, max_, min_, mid_lk)
         
         if mid_lk == goal_lk:
             return mid_
@@ -71,6 +73,8 @@ def getDist(q, w, k, l0, l1, n, N):
         w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
     except:
         print('w, k, l1:', k, l1)
+        for i in range(len(w)):
+            print(w[i])
 
     # d_l,kl[n]
     dist = math.sqrt(pow(q_ln[0] - w_kl[0], 2) + pow(q_ln[1] - w_kl[1], 2) + pow(q_ln[2], 2))
