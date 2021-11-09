@@ -111,7 +111,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     print(np.array(q))
 
     print('\n< w >')
-    print(np.array(w))
+    for _ in w: print(_)
 
     print('\n< number of devices >')
     print(numOfDevs)
@@ -146,6 +146,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 for t in range(N):
                     alkl.append([i, k, j, t, 0])
 
+    # sort alkl array
+    alkl.sort(key=lambda x:x[3])
+    alkl.sort(key=lambda x:x[2])
+    alkl.sort(key=lambda x:x[1])
+    alkl.sort(key=lambda x:x[0])
+
     # al : al[0] for each UAV l
     al = []
     for l in range(L): al.append(algo.transferEnergy(l, l))
@@ -165,11 +171,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(N))
 
             # decide the device to communicate with
-            print('w, l, t:', l, t)
-            print(' ==== findDeviceToCommunicate ====')
+            #print(' ==== findDeviceToCommunicate ====')
             deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
                                                                mu1, mu2, fc, c, alphaL, numOfDevs)
-            print(' =================================')
+            #print(' =================================')
 
             # update alkl, in the form of [[l0, k, l1, n, value], ...]
             alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
@@ -191,7 +196,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 for k in range(devices):
                     if k == deviceToCommunicate: continue
                     alkl_index_k = f.find_alkl(alkl, l, k, l, t)
-                    alkl[alkl_index_k] = [l, k, l, t, 0]
+
+                    try:
+                        alkl[alkl_index_k] = [l, k, l, t, 0]
+                    except:
+                        print('error at throughputTest')
+                        print('alkl:')
+                        for _ in alkl: print(_)
+                        print('alkl_index_k, l, k, t:', alkl_index_k, l, k, t)
+                        exit(0)
 
             # sort alkl array
             alkl.sort(key=lambda x:x[3])
@@ -201,20 +214,18 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # compute average throughput for each device in L
         for k in range(devices):
-            print('devices:', devices, 'l:', l)
-            print('[w, k, l]:', k, l)
             thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
             throughputs.append(thrput)
 
         # print average throughput result for each UAV
-        print('UAV ' + str(l) + ' thrputs: ' + str(np.round_(throughputs, 6)))
+        #print('UAV ' + str(l) + ' thrputs: ' + str(np.round_(throughputs, 6)))
 
 if __name__ == '__main__':
 
     # to bugfix:
     # [solved] 1. at the end of device list w = [[l, k, xkl, ykl, 0], ...]
     # [solved] 2. no device (l, k) in device list w = [[l, k, xkl, ykl, 0], ...] (at formula_02 and getInferencekl)
-    #          3. no device (l, k) in device list w = [[l, k, xkl, ykl, 0], ...] (at findDeviceToCommunicate)
+    # [solved] 3. no device (l, k) in device list w = [[l, k, xkl, ykl, 0], ...] (at find_alkl and findDeviceToCommunicate)
 
     # ignore warnings
     import warnings
@@ -292,5 +303,8 @@ if __name__ == '__main__':
     # run throughput test
     #throughputTest(M, T, N, L, devices, width, height, H,
     #               ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU)
-    throughputTest(M, T, N, L, devices, width, height, H,
-                   ng, fc, B, o2, b1, b2, None, alphaL, mu1, mu2, s, None, PU)
+    for iterationCount in range(200):
+        print('ITER COUNT ', iterationCount)
+        
+        throughputTest(M, T, N, L, devices, width, height, H,
+                       ng, fc, B, o2, b1, b2, None, alphaL, mu1, mu2, s, None, PU)

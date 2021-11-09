@@ -72,9 +72,11 @@ def getDist(q, w, k, l0, l1, n, N):
         q_ln = q[l0*(N+1) + n][2:]       # [xl[n], yl[n], hl[n]]
         w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
     except:
+        print('error')
         print('[getDist] w, k, l1:', k, l1)
         for i in range(len(w)):
             print(w[i])
+        exit(0)
 
     # d_l,kl[n]
     dist = math.sqrt(pow(q_ln[0] - w_kl[0], 2) + pow(q_ln[1] - w_kl[1], 2) + pow(q_ln[2], 2))
@@ -82,7 +84,7 @@ def getDist(q, w, k, l0, l1, n, N):
 
 # formula (2) : for PLoS = P_LoS(theta_(l0),k(l1)) and PNLoS
 def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
-    print('[02] k, l1:', k, l1)
+    #print('[02] k, l1:', k, l1)
 
     # get distance d_l,kl[n]
     dist = getDist(q, w, k, l0, l1, n, N)
@@ -91,7 +93,7 @@ def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
     q_ln = q[l0*(N+1) + n][2:] # [xl[n], yl[n], hl[n]]
     theta = math.asin(q_ln[2] / dist)
 
-    print('[02] return')
+    #print('[02] return')
 
     if getPLoS:
         return b1 * pow(180 / math.pi * theta - s, b2)
@@ -111,7 +113,7 @@ def formula_03(q, w, k, l, n, N, mu1, mu2, fc, c, alpha, isLoS):
 
 # formula (4) : for g_l,kl[n] = g_(l0),k(l1)[n], using formula (2)
 def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
-    print('[04] k, l1:', k, l1)
+    #print('[04] k, l1:', k, l1)
 
     # (PLoS * mu1 + PNLoS * mu2)^-1
     PLoS  = formula_02(q, w, k, l0, l1, n, N, s, b1, b2, True)
@@ -125,7 +127,7 @@ def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
 
     part2 = pow(K0 * dist, -alphaL)
 
-    print('[04] return')
+    #print('[04] return')
     
     return part1 * part2
 
@@ -165,8 +167,10 @@ def find_alkl(alkl, l0, k, l1, n):
                 alkl[max_][3])
 
     # extreme case (l0 is too large to find the right cluster)
-    if max_alkl <= goal_alkl:
+    if goal_alkl > max_alkl:
         return len(alkl)
+    elif goal_alkl == max_alkl:
+        return max_
 
     # binary search
     while True:
@@ -180,6 +184,8 @@ def find_alkl(alkl, l0, k, l1, n):
         if mid_alkl == goal_alkl:
             return mid_
         elif max_ < min_: # do not exist
+            print(goal_alkl)
+            print(mid_, max_, min_)
             return None
         elif mid_alkl > goal_alkl:
             max_ = mid_ - 1
@@ -220,7 +226,7 @@ def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc,
 
 # get I_kl[n] = inference received by UAV l, for formula (9)
 def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
-    print('[getInferencekl] k, l, j, numOfDevs:', k, l, numOfDevs)
+    #print('[getInferencekl] k, l, j, numOfDevs:', k, l, numOfDevs)
     
     result = 0
     for j in range(L):
@@ -231,25 +237,25 @@ def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, 
         g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         result += PU * g
 
-    print('[getInferencekl] return')
+    #print('[getInferencekl] return')
     return result
 
 # formula (9) : for received SINR r_kl[n], using formula (4)
 def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
-    print('[09] k, l:', k, l)
+    #print('[09] k, l:', k, l)
     
     g = formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
     
     inference = getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     o2 = -110 # noise power spectral
 
-    print('[09] return')
+    #print('[09] return')
     
     return PU * g / (inference + o2)
 
 # formula (10) : instantaneous throughput R_kl[n], using formula (9)
 def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
-    print('[10] k, l:', k, l)
+    #print('[10] k, l:', k, l)
     
     SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     B = 1000000 # bandwidth = 1 MHz
@@ -258,11 +264,18 @@ def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, n
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
 def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs):
     result = 0
-    print('[11] k, l:', k, l)
+    #print('[11] k, l:', k, l)
 
     for n in range(N):
-        alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
-        throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
-        result += alkl_value * throughput
+        try:
+            alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
+            throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
+            result += alkl_value * throughput
+        except:
+            print('error at formula_11')
+            print('alkl:')
+            for _ in alkl: print(_)
+            print('l, k, n:', l, k, n)
+            exit(0)
 
     return result / T

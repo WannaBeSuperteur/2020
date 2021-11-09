@@ -183,16 +183,16 @@ def findDeviceToCommunicate(q, w, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL, n
 
     # compute g[n][l][k_l] for each device in the cluster
     for k in range(numOfDevs[l]):
-        print('[findDeviceToCommunicate] k, l:', k, l)
+        #print('[findDeviceToCommunicate] k, l:', k, l)
         
         g_value = f.formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         condition.append(g_value)
 
-    print('condition:', condition)
+    #print('condition:', condition)
     deviceToCommunicate = np.argmax(condition)
-    print('device   :', deviceToCommunicate)
+    #print('device   :', deviceToCommunicate)
 
-    print('[findDeviceToCommunicate] return')
+    #print('[findDeviceToCommunicate] return')
 
     # return the index of the device to communicate
     return deviceToCommunicate
