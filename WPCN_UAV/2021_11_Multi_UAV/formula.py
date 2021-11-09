@@ -31,8 +31,10 @@ def find_wkl(w, k, l):
     if len(w) == 0: return None
 
     # extreme case (l is too large to find the right cluster)
-    if w[max_][0] * maxDevices + w[max_][1] <= goal_lk:
+    if goal_lk > w[max_][0] * maxDevices + w[max_][1]:
         return len(w)
+    elif goal_lk == w[max_][0] * maxDevices + w[max_][1]:
+        return max_
 
     # binary search
     while True:
@@ -217,12 +219,14 @@ def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc,
         result -= alkl[j] * SN * PU
 
 # get I_kl[n] = inference received by UAV l, for formula (9)
-def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU):
-    print('[getInferencekl] k, l:', k, l)
+def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
+    print('[getInferencekl] k, l, j, numOfDevs:', k, l, numOfDevs)
     
     result = 0
     for j in range(L):
-        if j == l: continue
+        
+        # do not execute when numOfDevs[j] <= k, to prevent index error
+        if j == l or numOfDevs[j] <= k: continue
         
         g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         result += PU * g
@@ -231,12 +235,12 @@ def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU):
     return result
 
 # formula (9) : for received SINR r_kl[n], using formula (4)
-def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
+def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
     print('[09] k, l:', k, l)
     
     g = formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
     
-    inference = getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU)
+    inference = getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     o2 = -110 # noise power spectral
 
     print('[09] return')
@@ -244,21 +248,21 @@ def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
     return PU * g / (inference + o2)
 
 # formula (10) : instantaneous throughput R_kl[n], using formula (9)
-def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
+def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
     print('[10] k, l:', k, l)
     
-    SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
+    SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     B = 1000000 # bandwidth = 1 MHz
     return B * math.log(1.0 + SINR, 2)
 
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
-def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU):
+def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs):
     result = 0
     print('[11] k, l:', k, l)
 
     for n in range(N):
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
-        throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
+        throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
         result += alkl_value * throughput
 
     return result / T

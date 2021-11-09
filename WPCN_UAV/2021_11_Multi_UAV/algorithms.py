@@ -176,23 +176,21 @@ def transferEnergy(cluster, l):
 # within the GIVEN cluster
 # w = [[l, k, xkl, ykl, 0], ...]
 # q = [[l, t, xlt, ylt, hlt], ...]
-def findDeviceToCommunicate(q, w, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
+def findDeviceToCommunicate(q, w, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL, numOfDevs):
     
     # find the start index of w[x] = [l, 0, ...]
-    start_index = f.find_wkl(w, 0, l)
-    end_index   = f.find_wkl(w, 0, l+1)
-    
-    devicesInThisCluster = end_index - start_index
-    condition = [0 for i in range(devicesInThisCluster)]
+    condition = []
 
     # compute g[n][l][k_l] for each device in the cluster
-    for k in range(start_index, end_index):
+    for k in range(numOfDevs[l]):
         print('[findDeviceToCommunicate] k, l:', k, l)
         
         g_value = f.formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         condition.append(g_value)
-    
+
+    print('condition:', condition)
     deviceToCommunicate = np.argmax(condition)
+    print('device   :', deviceToCommunicate)
 
     print('[findDeviceToCommunicate] return')
 
