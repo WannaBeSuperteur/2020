@@ -165,6 +165,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(N))
 
             # decide the device to communicate with
+            print('w, l, t:', l, t)
             deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
                                                                mu1, mu2, fc, c, alphaL)
 
@@ -207,6 +208,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         print('UAV ' + str(l) + ' thrputs: ' + str(np.round_(throughputs, 6)))
 
 if __name__ == '__main__':
+
+    # to bugfix:
+    # 1. at the end of device list w = [[l, k, xkl, ykl, 0], ...]
+    # 2. no device (l, k) in device list w = [[l, k, xkl, ykl, 0], ...] (at formula_02)
+    # 3. no device (l, k) in device list w = [[l, k, xkl, ykl, 0], ...] (at findDeviceToCommunicate)
 
     # ignore warnings
     import warnings

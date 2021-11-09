@@ -70,7 +70,7 @@ def getDist(q, w, k, l0, l1, n, N):
         q_ln = q[l0*(N+1) + n][2:]       # [xl[n], yl[n], hl[n]]
         w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
     except:
-        print('w, k, l1:', k, l1)
+        print('[getDist] w, k, l1:', k, l1)
         for i in range(len(w)):
             print(w[i])
 
@@ -80,6 +80,7 @@ def getDist(q, w, k, l0, l1, n, N):
 
 # formula (2) : for PLoS = P_LoS(theta_(l0),k(l1)) and PNLoS
 def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
+    print('[02] k, l1:', k, l1)
 
     # get distance d_l,kl[n]
     dist = getDist(q, w, k, l0, l1, n, N)
@@ -87,6 +88,8 @@ def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
     # theta_l,kl[n]
     q_ln = q[l0*(N+1) + n][2:] # [xl[n], yl[n], hl[n]]
     theta = math.asin(q_ln[2] / dist)
+
+    print('[02] return')
 
     if getPLoS:
         return b1 * pow(180 / math.pi * theta - s, b2)
@@ -106,6 +109,7 @@ def formula_03(q, w, k, l, n, N, mu1, mu2, fc, c, alpha, isLoS):
 
 # formula (4) : for g_l,kl[n] = g_(l0),k(l1)[n], using formula (2)
 def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
+    print('[04] k, l1:', k, l1)
 
     # (PLoS * mu1 + PNLoS * mu2)^-1
     PLoS  = formula_02(q, w, k, l0, l1, n, N, s, b1, b2, True)
@@ -118,6 +122,8 @@ def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
     dist  = getDist(q, w, k, l0, l1, n, N)
 
     part2 = pow(K0 * dist, -alphaL)
+
+    print('[04] return')
     
     return part1 * part2
 
@@ -212,25 +218,35 @@ def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc,
 
 # get I_kl[n] = inference received by UAV l, for formula (9)
 def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU):
+    print('[getInferencekl] k, l:', k, l)
+    
     result = 0
     for j in range(L):
         if j == l: continue
         
         g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         result += PU * g
+
+    print('[getInferencekl] return')
     return result
 
 # formula (9) : for received SINR r_kl[n], using formula (4)
 def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
+    print('[09] k, l:', k, l)
+    
     g = formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
     
     inference = getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU)
     o2 = -110 # noise power spectral
+
+    print('[09] return')
     
     return PU * g / (inference + o2)
 
 # formula (10) : instantaneous throughput R_kl[n], using formula (9)
 def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
+    print('[10] k, l:', k, l)
+    
     SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
     B = 1000000 # bandwidth = 1 MHz
     return B * math.log(1.0 + SINR, 2)
@@ -238,6 +254,7 @@ def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU):
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
 def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU):
     result = 0
+    print('[11] k, l:', k, l)
 
     for n in range(N):
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
