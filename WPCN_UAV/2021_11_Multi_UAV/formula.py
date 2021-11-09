@@ -26,8 +26,7 @@ def find_wkl(w, k, l):
     min_ = 0
 
     goal_lk = l * maxDevices + k
-    print(k, l)
-
+    
     # extreme case (no data)
     if len(w) == 0: return None
 
@@ -39,7 +38,6 @@ def find_wkl(w, k, l):
     while True:
         mid_ = (max_ + min_) // 2
         mid_lk = w[mid_][0] * maxDevices + w[mid_][1]
-        print(mid_, max_, min_, mid_lk)
         
         if mid_lk == goal_lk:
             return mid_

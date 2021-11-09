@@ -153,7 +153,9 @@ def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg):
             w.append([l, k, clusters[l][k][0], clusters[l][k][1], 0])
 
     # return
-    return (q, w)
+    cluster_mem_now = cluster_mem_now.split(' ')[:-1]
+    cluster_mem_now = [int(i) for i in cluster_mem_now]
+    return (q, w, cluster_mem_now)
 
 # decide whether to transfer energy for each UAV
 
@@ -213,8 +215,10 @@ if __name__ == '__main__':
         device_i = [xVal, yVal]
         deviceList.append(device_i)
 
-    # do K means clustering
-    (q, w) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
+    # do K means clustering (at least 1 device for all clusters)
+    while True:
+        (q, w, cluster_mem) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
+        if min(cluster_mem.count(l) for l in range(L)) > 0: break
 
     # print result
     print(' << q >>')

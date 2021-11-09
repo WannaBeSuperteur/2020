@@ -96,7 +96,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         deviceList.append(device_i)
 
     # clustering
-    (q, w) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
+
+    # create the list of [cluster -> the number of devices] for each cluster and use it
+    # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
+    # then, it becomes [3, 7, 6]
+    while True:
+        (q, w, cluster_mem) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
+        print(list(cluster_mem))
+        numOfDevs = [cluster_mem.count(l) for l in range(L)]
+        if min(numOfDevs) > 0: break
 
     # save device info
     print('< q >')
@@ -105,9 +113,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     print('\n< w >')
     print(np.array(w))
 
-    # TODO: create the list of [cluster -> the number of devices] for each cluster and use it
-    # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
-    # then, it will be [3, 7, 6]
+    print('\n< number of devices >')
+    print(numOfDevs)
 
     #### TEST ####
     
@@ -133,9 +140,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         for j in range(L):
 
             # the number of devices in cluster j
-            start_index = f.find_wkl(w, 0, j)
-            end_index   = f.find_wkl(w, 0, j+1)
-            devices     = end_index - start_index
+            devices = numOfDevs[j]
         
             for k in range(devices):
                 for t in range(N):
@@ -154,9 +159,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     for l in range(L):
 
         # the number of devices in cluster l
-        start_index = f.find_wkl(w, 0, l)
-        end_index   = f.find_wkl(w, 0, l+1)
-        devices     = end_index - start_index
+        devices = numOfDevs[l]
         
         for t in range(N):
             print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(N))
@@ -196,6 +199,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # compute average throughput for each device in L
         for k in range(devices):
             print('devices:', devices, 'l:', l)
+            print('[w, k, l]:', k, l)
             thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU)
             throughputs.append(thrput)
 
