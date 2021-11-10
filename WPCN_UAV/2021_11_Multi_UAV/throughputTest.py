@@ -9,6 +9,8 @@ import random
 import copy
 import numpy as np
 from shapely.geometry import LineString
+import matplotlib.pyplot as plt
+import matplotlib.colors as clr
 
 import tensorflow as tf
 import time
@@ -83,7 +85,8 @@ def moveUAV(q, directionList, N, L, width, height):
             q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
 def throughputTest(M, T, N, L, devices, width, height, H,
-                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU):
+                   ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
+                   iterationCount):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -100,7 +103,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
     # then, it becomes [3, 7, 6]
     while True:
-        (q, w, cluster_mem) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
+        (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
         if min(numOfDevs) > 0: break
 
@@ -216,6 +219,31 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         print(str(list(np.round_(throughputs, 4))))
         print('===============\n\n')
 
+    # save trajectory graph
+    plt.clf()
+    plt.suptitle('trajectory result at iter ' + str(iterationCount))
+    plt.axis([-1, width+1, -1, height+1])
+
+    # w = [[l, k, xkl, ykl, 0], ...]
+    for di in w:
+        plt.scatter(di[2], di[3], s=30, marker='s', c=markerColors[di[0]])
+
+    # q = [[l, t, xlt, ylt, hlt], ...]
+    for l in range(L):
+        for t in range(N+1):
+            ind = l * (N+1) + t
+            lineWidth = 0.2 + 1.3 * t / (N+1)
+            
+            plt.scatter(q[ind][2], q[ind][3], s=20, marker='x', c=markerColors[l])
+
+            if t < N:
+                x = [q[ind][2], q[ind+1][2]]
+                y = [q[ind][3], q[ind+1][3]]
+                plt.plot(x, y, linewidth=lineWidth, c=markerColors[l])
+
+    # save the figure
+    plt.savefig('trajectory_iter' + ('%04d' % iterationCount))
+
 if __name__ == '__main__':
 
     # to bugfix:
@@ -306,4 +334,5 @@ if __name__ == '__main__':
         print('ITER COUNT ', iterationCount)
         
         throughputTest(M, T, N, L, devices, width, height, H,
-                       ng, fc, B, o2, b1, b2, None, alphaL, mu1, mu2, s, None, PU)
+                       ng, fc, B, o2, b1, b2, None, alphaL, mu1, mu2, s, None, PU,
+                       iterationCount)
