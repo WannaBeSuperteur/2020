@@ -156,11 +156,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # speed of light
     c = 300000000
-
-    # throughput results
-    throughputs = []
     
     for l in range(L):
+
+        # throughput results
+        throughputs = []
 
         # the number of devices in cluster l
         devices = numOfDevs[l]
@@ -208,7 +208,13 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             throughputs.append(thrput)
 
         # print average throughput result for each UAV
-        #print('UAV ' + str(l) + ' thrputs: ' + str(np.round_(throughputs, 6)))
+        print('\n\n ==== UAV ' + str(l) + ' ====')
+        print('trajectory:')
+        for t in range(N+1):
+            print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4), 'h:', q[l * (N+1) + t][4])
+        print('\nthroughputs for each device:')
+        print(str(list(np.round_(throughputs, 4))))
+        print('===============\n\n')
 
 if __name__ == '__main__':
 
