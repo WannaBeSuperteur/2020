@@ -46,8 +46,7 @@ def moveUAV(q, directionList, N, L, width, height):
             turn =  direction       % 3 # turn left, straight or turn right
             fb   = (direction // 3) % 3 # forward, hold or backward
             ud   = (direction // 9) % 3 # h+1, h or h-1
-            print(l, t, turn, fb, ud)
-
+            
             currentLocation = q[l * (N+1) + t][2:] # [xlt, ylt, hlt] of the UAV
 
             # initialize new X, Y and H
@@ -102,7 +101,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # then, it becomes [3, 7, 6]
     while True:
         (q, w, cluster_mem) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
-        print(list(cluster_mem))
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
         if min(numOfDevs) > 0: break
 
@@ -168,7 +166,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         devices = numOfDevs[l]
         
         for t in range(N):
-            print(str(l) + '/' + str(L) + ', ' + str(t) + '/' + str(N))
+            print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
 
             # decide the device to communicate with
             #print(' ==== findDeviceToCommunicate ====')
@@ -196,15 +194,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 for k in range(devices):
                     if k == deviceToCommunicate: continue
                     alkl_index_k = f.find_alkl(alkl, l, k, l, t)
-
-                    try:
-                        alkl[alkl_index_k] = [l, k, l, t, 0]
-                    except:
-                        print('error at throughputTest')
-                        print('alkl:')
-                        for _ in alkl: print(_)
-                        print('alkl_index_k, l, k, t:', alkl_index_k, l, k, t)
-                        exit(0)
+                    alkl[alkl_index_k] = [l, k, l, t, 0]
 
             # sort alkl array
             alkl.sort(key=lambda x:x[3])

@@ -68,15 +68,8 @@ def formula_01(q, l, n, Vmax, SN, N):
 # formula (2, 3, 4) : for d_l,kl[n] = d_(l0),k(l1)[n]
 def getDist(q, w, k, l0, l1, n, N):
     
-    try:
-        q_ln = q[l0*(N+1) + n][2:]       # [xl[n], yl[n], hl[n]]
-        w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
-    except:
-        print('error')
-        print('[getDist] w, k, l1:', k, l1)
-        for i in range(len(w)):
-            print(w[i])
-        exit(0)
+    q_ln = q[l0*(N+1) + n][2:]       # [xl[n], yl[n], hl[n]]
+    w_kl = w[find_wkl(w, k, l1)][2:] # [x_kl , y_kl , 0    ]
 
     # d_l,kl[n]
     dist = math.sqrt(pow(q_ln[0] - w_kl[0], 2) + pow(q_ln[1] - w_kl[1], 2) + pow(q_ln[2], 2))
@@ -184,8 +177,6 @@ def find_alkl(alkl, l0, k, l1, n):
         if mid_alkl == goal_alkl:
             return mid_
         elif max_ < min_: # do not exist
-            print(goal_alkl)
-            print(mid_, max_, min_)
             return None
         elif mid_alkl > goal_alkl:
             max_ = mid_ - 1
@@ -267,15 +258,8 @@ def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
     #print('[11] k, l:', k, l)
 
     for n in range(N):
-        try:
-            alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
-            throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
-            result += alkl_value * throughput
-        except:
-            print('error at formula_11')
-            print('alkl:')
-            for _ in alkl: print(_)
-            print('l, k, n:', l, k, n)
-            exit(0)
+        alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
+        throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
+        result += alkl_value * throughput
 
     return result / T
