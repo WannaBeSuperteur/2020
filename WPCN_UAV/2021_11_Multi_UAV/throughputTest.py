@@ -230,7 +230,8 @@ if __name__ == '__main__':
                                 'mu1':'float', 'mu2':'float',
                                 's':'float', 'PD':'float', 'PU':'float',
                                 'width':'float', 'height':'float',
-                                'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float'})
+                                'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float',
+                                'iters':'int'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -253,6 +254,7 @@ if __name__ == '__main__':
     T = paperArgs['T']
     N = paperArgs['N']
     H = paperArgs['H']
+    iters = paperArgs['iters']
 
     # (from https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1)
     # SN = (1 − alphaP)*T/N denotes the length of each subslot
@@ -285,7 +287,8 @@ if __name__ == '__main__':
     configContent += 'devices=' + str(devices) + '\n'
     configContent += 'T=' + str(T) + '\n'
     configContent += 'N=' + str(N) + '\n'
-    configContent += 'H=' + str(H)
+    configContent += 'H=' + str(H) + '\n'
+    configContent += 'iters=' + str(iters)
 
     configFile.write(configContent)
     configFile.close()
@@ -293,7 +296,7 @@ if __name__ == '__main__':
     # run throughput test
     #throughputTest(M, T, N, L, devices, width, height, H,
     #               ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU)
-    for iterationCount in range(200):
+    for iterationCount in range(iters):
         print('ITER COUNT ', iterationCount)
         
         throughputTest(M, T, N, L, devices, width, height, H,
