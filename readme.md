@@ -1,4 +1,4 @@
-Hanyang University MNI Lab
+Hanyang University MNI Lab (AI, ML & Network)
 Hong-Sik Kim
 2020165324
 
