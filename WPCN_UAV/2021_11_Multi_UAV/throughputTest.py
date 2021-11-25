@@ -206,8 +206,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             alkl.sort(key=lambda x:x[0])
 
         # compute average throughput for each device in L
+        print('ALKL:')
+        for i in range(len(alkl) // N): print(alkl[i * N])
+    
         for k in range(devices):
             thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
+            print('\n' * 30, 'l=', l, 'k=', k)
+            print(alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
+            print(thrput)
+            
             throughputs.append(thrput)
 
         # print average throughput result for each UAV
@@ -216,7 +223,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         for t in range(N+1):
             print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4), 'h:', q[l * (N+1) + t][4])
         print('\nthroughputs for each device:')
-        print(str(list(np.round_(throughputs, 4))))
+        print(str(list(np.round_(throughputs, 2))))
         print('===============\n\n')
 
     # save trajectory graph
