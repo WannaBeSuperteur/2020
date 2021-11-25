@@ -206,12 +206,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             alkl.sort(key=lambda x:x[0])
 
         # compute average throughput for each device in L
-        print('ALKL:')
-        for i in range(len(alkl) // N): print(alkl[i * N])
-    
         for k in range(devices):
             thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
-            print('\n' * 30, 'l=', l, 'k=', k)
+            print('l=', l, 'k=', k)
             print(alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
             print(thrput)
             

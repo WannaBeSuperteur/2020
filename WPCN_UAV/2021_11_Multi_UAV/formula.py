@@ -88,8 +88,8 @@ def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
 
     #print('[02] return')
 
-    print('[02] dist = ' + str(dist) + ' theta = ' + str(theta) + ' s = ' + str(s))
-    print('[02] 180 / math.pi * theta - s = ' + str(180 / math.pi * theta - s))
+    #print('[02] dist = ' + str(dist) + ' theta = ' + str(theta) + ' s = ' + str(s))
+    #print('[02] 180 / math.pi * theta - s = ' + str(180 / math.pi * theta - s))
 
     if getPLoS:
         return b1 * pow(180 / math.pi * theta - s, b2)
@@ -124,9 +124,9 @@ def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
     part2 = pow(K0 * dist, -alphaL)
 
     #print('[04] return')
-    print('[04] PLoS = ' + str(PLoS) + ' mu1 = ' + str(mu1) + ' NPLoS = ' + str(NPLoS) + ' mu2 = ' + str(mu2))
-    print('[04] part1 = ' + str(part1) + ' part2 = ' + str(part2))
-    print('[04] result = ' + str(part1 * part2))
+    #print('[04] PLoS = ' + str(PLoS) + ' mu1 = ' + str(mu1) + ' NPLoS = ' + str(NPLoS) + ' mu2 = ' + str(mu2))
+    #print('[04] part1 = ' + str(part1) + ' part2 = ' + str(part2))
+    #print('[04] result = ' + str(part1 * part2))
     
     return part1 * part2
 
@@ -234,10 +234,10 @@ def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, 
         g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         result += PU * g
 
-        print('[in] PU = ' + str(PU) + ' g = ' + str(g))
+        #print('[in] PU = ' + str(PU) + ' g = ' + str(g))
 
     #print('[getInferencekl] return')
-    print('[in] result = ' + str(result))
+    #print('[in] result = ' + str(result))
     return result
 
 # formula (9) : for received SINR r_kl[n], using formula (4)
@@ -251,7 +251,7 @@ def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, n
 
     #print('[09] return')
 
-    print('[09] PU = ' + str(PU) + ' g = ' + str(g) + ' inference = ' + str(inference) + ' final = ' + str(PU * g / (inference + o2)))
+    #print('[09] PU = ' + str(PU) + ' g = ' + str(g) + ' inference = ' + str(inference) + ' final = ' + str(PU * g / (inference + o2)))
     return PU * g / (inference + o2)
 
 # formula (10) : instantaneous throughput R_kl[n], using formula (9)
@@ -261,7 +261,7 @@ def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, n
     SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     B = 1000000 # bandwidth = 1 MHz
 
-    print('[10] B = ' + str(B) + ' SINR = ' + str(SINR) + ' final = ' + str(B * math.log(1.0 + SINR, 2)))
+    #print('[10] B = ' + str(B) + ' SINR = ' + str(SINR) + ' final = ' + str(B * math.log(1.0 + SINR, 2)))
     return B * math.log(1.0 + SINR, 2)
 
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
@@ -273,10 +273,11 @@ def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
         throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
 
-        print('[11] [n=' + str(n) + '] alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
+        if n == 0:
+            print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
         
         result += alkl_value * throughput
 
-    print('[11] result = ' + str(result))
+    print('[11] N = ' + str(N) + ' result = ' + str(result))
 
     return result / N
