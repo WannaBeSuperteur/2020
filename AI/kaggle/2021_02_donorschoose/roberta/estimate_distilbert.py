@@ -177,6 +177,14 @@ def main(model, tokenizer, isValid):
         if isValid == True: stateText = 'valid'
         else: stateText = 'test'
 
+        # valid prediction array
+        if isValid == True:
+            valid_prediction = np.array([])
+
+        # use data[start:end] as test data for validation
+        start =  k      * rows_to_train // K
+        end   = (k + 1) * rows_to_train // K
+
         for k in range(K):
 
             # load model
@@ -198,9 +206,6 @@ def main(model, tokenizer, isValid):
 
                 # for validation
                 if isValid == True:
-                    start =  k      * rows_to_train // K
-                    end   = (k + 1) * rows_to_train // K
-                    
                     text_model.fit(train_input[:start] + train_input[end:], train_output[:start] + train_output[end:],
                                    validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
                     text_model.summary()
@@ -232,6 +237,14 @@ def main(model, tokenizer, isValid):
 
             prediction = pd.DataFrame(prediction)
             prediction.to_csv('DistilBert_prediction_' + stateText + '_' + str(k) + '.csv')
+
+            # add to valid prediction result
+            if isValid == True:
+                valid_prediction = np.concatenate((valid_prediction, prediction[start:end]))
+
+        # save valid prediction
+        if isValid == True:
+            valid_prediction.to_csv('DistilBert_valid_prediction.csv')
 
 if __name__ == '__main__':
 
