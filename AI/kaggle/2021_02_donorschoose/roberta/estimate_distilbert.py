@@ -206,11 +206,11 @@ def main(model, tokenizer, isValid, option=[True, True, True, True, True, True])
         if isValid == True:
             valid_prediction = np.array([])
 
-        # use data[start:end] as test data for validation
-        start =  k      * rows_to_train // K
-        end   = (k + 1) * rows_to_train // K
-
         for k in range(K):
+
+            # use data[start:end] as test data for validation
+            start =  k      * rows_to_train // K
+            end   = (k + 1) * rows_to_train // K
 
             # load model
             try:
