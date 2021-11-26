@@ -1,3 +1,6 @@
+# help for Could not load dynamic library 'cusolver64_N.dll'; dlerror: cusolver64_11.dll not found
+# https://deep-deep-deep.tistory.com/83
+
 # remove warings
 import warnings
 warnings.filterwarnings('ignore')
@@ -8,6 +11,7 @@ import pandas as pd
 import seaborn as sns
 
 import matplotlib.pyplot as plt
+import tensorflow as tf
 
 from catboost import CatBoostClassifier
 from sklearn.metrics import classification_report
@@ -269,11 +273,12 @@ if __name__ == '__main__':
     for i in range(models): w.append(1/models)
 
     # get merged predictions first
-    try:
-        merged_predictions = getMergedPredictions(len(w))
-    except:
-        merged_predictions = run(train_df, test_df, dic,
-                                 normalize=True, log2=True, final=False, fileID=0)
+    with tf.device('/gpu:0'):
+        try:
+            merged_predictions = getMergedPredictions(len(w))
+        except:
+            merged_predictions = run(train_df, test_df, dic,
+                                     normalize=True, log2=True, final=False, fileID=0)
 
     print(merged_predictions)
 
