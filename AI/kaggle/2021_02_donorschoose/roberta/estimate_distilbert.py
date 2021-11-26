@@ -31,6 +31,7 @@ class TEXT_MODEL(tf.keras.Model):
                  embedding_dimensions=256, cnn_filters=50, dnn_units=256,
                  dropout_rate=0.25,
                  max_tokens=np.array([[1], [2], [3], [4], [5], [6]]),
+                 option=[True, True, True, True, True, True],
                  training=False, name='text_model'):
         
         super(TEXT_MODEL, self).__init__(name=name)
@@ -43,19 +44,29 @@ class TEXT_MODEL(tf.keras.Model):
         # for info 0, 1, 2, 3, 4, 5, 6, 7, 8 and i9_cont
         L2 = tf.keras.regularizers.l2(0.001)
         
-        self.emb00 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb00')
-        self.emb01 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb01')
-        self.emb02 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb02')
-        self.emb03 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb03')
-        self.emb04 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb04')
-        self.emb05 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb05')
-        
-        self.den00 = tf.keras.layers.Dense(units=self.d00, activation='relu', kernel_regularizer=L2, name='den00')
-        self.den01 = tf.keras.layers.Dense(units=self.d01, activation='relu', kernel_regularizer=L2, name='den01')
-        self.den02 = tf.keras.layers.Dense(units=self.d02, activation='relu', kernel_regularizer=L2, name='den02')
-        self.den03 = tf.keras.layers.Dense(units=self.d03, activation='relu', kernel_regularizer=L2, name='den03')
-        self.den04 = tf.keras.layers.Dense(units=self.d04, activation='relu', kernel_regularizer=L2, name='den04')
-        self.den05 = tf.keras.layers.Dense(units=self.d05, activation='relu', kernel_regularizer=L2, name='den05')
+        if option[0] == True:
+            self.emb00 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb00')
+            self.den00 = tf.keras.layers.Dense(units=self.d00, activation='relu', kernel_regularizer=L2, name='den00')
+            
+        if option[1] == True:
+            self.emb01 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb01')
+            self.den01 = tf.keras.layers.Dense(units=self.d01, activation='relu', kernel_regularizer=L2, name='den01')
+            
+        if option[2] == True:
+            self.emb02 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb02')
+            self.den02 = tf.keras.layers.Dense(units=self.d02, activation='relu', kernel_regularizer=L2, name='den02')
+            
+        if option[3] == True:
+            self.emb03 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb03')
+            self.den03 = tf.keras.layers.Dense(units=self.d03, activation='relu', kernel_regularizer=L2, name='den03')
+            
+        if option[4] == True:
+            self.emb04 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb04')
+            self.den04 = tf.keras.layers.Dense(units=self.d04, activation='relu', kernel_regularizer=L2, name='den04')
+            
+        if option[5] == True:
+            self.emb05 = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='emb05')
+            self.den05 = tf.keras.layers.Dense(units=self.d05, activation='relu', kernel_regularizer=L2, name='den05')
         
         # for BERT-tokenized text
         self.embedding = tf.keras.layers.Embedding(vocabulary_size, embedding_dimensions, trainable=True, name='BERT_embedding')
@@ -81,44 +92,58 @@ class TEXT_MODEL(tf.keras.Model):
         essay4 = tf.cast(essay4, tf.int32)
         summary = tf.cast(summary, tf.int32)
 
-        title = self.emb00(title)
-        title = self.dropout(title, training)
-        title = self.flat(title)
-        title = self.den00(title)
-        title = self.dropout(title, training)
-        
-        essay1 = self.emb01(essay1)
-        essay1 = self.dropout(essay1, training)
-        essay1 = self.flat(essay1)
-        essay1 = self.den01(essay1)
-        essay1 = self.dropout(essay1, training)
-        
-        essay2 = self.emb02(essay2)
-        essay2 = self.dropout(essay2, training)
-        essay2 = self.flat(essay2)
-        essay2 = self.den02(essay2)
-        essay2 = self.dropout(essay2, training)
-        
-        essay3 = self.emb03(essay3)
-        essay3 = self.dropout(essay3, training)
-        essay3 = self.flat(essay3)
-        essay3 = self.den03(essay3)
-        essay3 = self.dropout(essay3, training)
-        
-        essay4 = self.emb04(essay4)
-        essay4 = self.dropout(essay4, training)
-        essay4 = self.flat(essay4)
-        essay4 = self.den04(essay4)
-        essay4 = self.dropout(essay4, training)
+        if option[0] == True:
+            title = self.emb00(title)
+            title = self.dropout(title, training)
+            title = self.flat(title)
+            title = self.den00(title)
+            title = self.dropout(title, training)
 
-        summary = self.emb05(summary)
-        summary = self.dropout(summary, training)
-        summary = self.flat(summary)
-        summary = self.den05(summary)
-        summary = self.dropout(summary, training)
+        if option[1] == True:
+            essay1 = self.emb01(essay1)
+            essay1 = self.dropout(essay1, training)
+            essay1 = self.flat(essay1)
+            essay1 = self.den01(essay1)
+            essay1 = self.dropout(essay1, training)
+
+        if option[2] == True:
+            essay2 = self.emb02(essay2)
+            essay2 = self.dropout(essay2, training)
+            essay2 = self.flat(essay2)
+            essay2 = self.den02(essay2)
+            essay2 = self.dropout(essay2, training)
+
+        if option[3] == True:
+            essay3 = self.emb03(essay3)
+            essay3 = self.dropout(essay3, training)
+            essay3 = self.flat(essay3)
+            essay3 = self.den03(essay3)
+            essay3 = self.dropout(essay3, training)
+
+        if option[4] == True:
+            essay4 = self.emb04(essay4)
+            essay4 = self.dropout(essay4, training)
+            essay4 = self.flat(essay4)
+            essay4 = self.den04(essay4)
+            essay4 = self.dropout(essay4, training)
+
+        if option[5] == True:
+            summary = self.emb05(summary)
+            summary = self.dropout(summary, training)
+            summary = self.flat(summary)
+            summary = self.den05(summary)
+            summary = self.dropout(summary, training)
 
         # concatenate embedded info and concatenated BERT-tokenized text
-        concatenated = tf.concat([title, essay1, essay2, essay3, essay4, summary], axis=-1)
+        all_elements = []
+        if option[0] == True: all_elements.append(title)
+        if option[1] == True: all_elements.append(essay1)
+        if option[2] == True: all_elements.append(essay2)
+        if option[3] == True: all_elements.append(essay3)
+        if option[4] == True: all_elements.append(essay4)
+        if option[5] == True: all_elements.append(summary)
+        
+        concatenated = tf.concat(all_elements, axis=-1)
         
         concatenated = self.dense(concatenated)
         concatenated = self.dropout(concatenated, training)
@@ -126,7 +151,7 @@ class TEXT_MODEL(tf.keras.Model):
         
         return model_output
 
-def main(model, tokenizer, isValid):
+def main(model, tokenizer, isValid, option=[True, True, True, True, True, True]):
     print(len(tokenizer.vocab))
 
     # define configuration
@@ -196,7 +221,8 @@ def main(model, tokenizer, isValid):
                                         embedding_dimensions=embedding_dim,
                                         cnn_filters=cnn_filters,
                                         dnn_units=dnn_units, dropout_rate=dropout_rate,
-                                        max_tokens=max_tokens)
+                                        max_tokens=max_tokens,
+                                        option=option)
 
                 text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
 
