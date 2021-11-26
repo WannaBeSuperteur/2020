@@ -126,7 +126,7 @@ class TEXT_MODEL(tf.keras.Model):
         
         return model_output
 
-def main(model, tokenizer):
+def main(model, tokenizer, isValid):
     print(len(tokenizer.vocab))
 
     # define configuration
@@ -163,47 +163,75 @@ def main(model, tokenizer):
 
     # load max token count
     max_tokens = np.array(pd.read_csv(maxTokens, index_col=0)) # shape: (6, 1)
+
+    # use K-fold method
+    K = 5
     
     # train
     with tf.device(deviceName):
 
-        # load model
-        try:
-            loaded_model = tf.keras.models.load_model('DistilBert_based_model')
+        # test -> only 1 iteration needed
+        if isValid == False: K = 1
 
-        except:
-            text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab),
-                                    embedding_dimensions=embedding_dim,
-                                    cnn_filters=cnn_filters,
-                                    dnn_units=dnn_units, dropout_rate=dropout_rate,
-                                    max_tokens=max_tokens)
+        # state text
+        if isValid == True: stateText = 'valid'
+        else: stateText = 'test'
 
-            text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
+        for k in range(K):
 
-            # callback list for training
-            early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
-            lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
+            # load model
+            try:
+                loaded_model = tf.keras.models.load_model('DistilBert_based_model_' + stateText + '_' + str(k))
 
-            # train the model
-            text_model.fit(train_input, train_output, validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
-            text_model.summary()
+            except:
+                text_model = TEXT_MODEL(vocabulary_size=len(tokenizer.vocab),
+                                        embedding_dimensions=embedding_dim,
+                                        cnn_filters=cnn_filters,
+                                        dnn_units=dnn_units, dropout_rate=dropout_rate,
+                                        max_tokens=max_tokens)
 
-            # save the model
-            text_model.save('DistilBert_based_model')
+                text_model.compile(loss=loss, optimizer=opti, metrics=['accuracy'])
 
-            # load the model
-            loaded_model = tf.keras.models.load_model('DistilBert_based_model')
+                # callback list for training
+                early = tf.keras.callbacks.EarlyStopping(monitor="val_loss", mode="min", patience=3)
+                lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.1, patience=1, verbose=1, epsilon=0.0001, mode='min')
 
-        # validation
-        print('predicting...')
-        prediction = loaded_model.predict(valid_input)
+                # for validation
+                if isValid == True:
+                    start =  k      * rows_to_train // K
+                    end   = (k + 1) * rows_to_train // K
+                    
+                    text_model.fit(train_input[:start] + train_input[end:], train_output[:start] + train_output[end:],
+                                   validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
+                    text_model.summary()
 
-        print('\n[02] prediction')
-        print(np.shape(prediction))
-        print(np.array(prediction))
+                # for test
+                else:
+                    text_model.fit(train_input, train_output,
+                                   validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
+                    text_model.summary()
 
-        prediction = pd.DataFrame(prediction)
-        prediction.to_csv('DistilBert_prediction.csv')
+                # save the model
+                text_model.save('DistilBert_based_model_' + stateText + '_' + str(k))
+
+                # load the model
+                loaded_model = tf.keras.models.load_model('DistilBert_based_model_' + stateText + '_' + str(k))
+
+            # validation
+            if isValid == True:
+                print('[valid] predicting...')
+                prediction = loaded_model.predict(train_input[start:end])
+
+            else:
+                print('[test]  predicting...')
+                prediction = loaded_model.predict(valid_input)
+
+            print('\n[02] prediction')
+            print(np.shape(prediction))
+            print(np.array(prediction))
+
+            prediction = pd.DataFrame(prediction)
+            prediction.to_csv('DistilBert_prediction_' + stateText + '_' + str(k) + '.csv')
 
 if __name__ == '__main__':
 
@@ -211,4 +239,10 @@ if __name__ == '__main__':
     DistilBert_tokenizer = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
     DistilBert_model = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
-    main(DistilBert_model, DistilBert_tokenizer)
+    # valid
+    print('validation phase')
+    main(DistilBert_model, DistilBert_tokenizer, True)
+
+    # test
+    print('test phase')
+    main(DistilBert_model, DistilBert_tokenizer, False)
