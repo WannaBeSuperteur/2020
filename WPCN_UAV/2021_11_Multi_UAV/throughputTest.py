@@ -8,6 +8,8 @@ import math
 import random
 import copy
 import numpy as np
+import pandas as pd
+
 from shapely.geometry import LineString
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
@@ -100,7 +102,7 @@ def moveUAV(q, directionList, N, L, width, height):
 
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount):
+                   iterationCount, minThroughputList):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -173,6 +175,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # speed of light
     c = 300000000
+
+    minthroughputs = []
     
     for l in range(L):
 
@@ -236,7 +240,17 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4), 'h:', q[l * (N+1) + t][4])
         print('\nthroughputs for each device:')
         print(str(list(np.round_(throughputs, 6))))
+
+        print('min throughput = ' + str(round(min(throughputs), 6)))
+        minthroughputs.append(min(throughputs))
+        
         print('===============\n\n')
+
+    # create min throughput information
+    print('\n\nMIN THROUGHPUTS for each cluster l:')
+    print(str(list(np.round_(minthroughputs, 6))))
+
+    minThroughputList.append([iterationCount] + minthroughputs)
 
     # save trajectory graph
     plt.clf()
@@ -264,6 +278,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     plt.savefig('trajectory_iter' + ('%04d' % iterationCount))
 
 if __name__ == '__main__':
+
+    # list of min throughputs
+    minThroughputList = []
 
     # to bugfix:
     # [solved] 1. at the end of device list w = [[l, k, xkl, ykl, 0], ...]
@@ -354,4 +371,16 @@ if __name__ == '__main__':
         
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount)
+                       iterationCount, minThroughputList)
+
+    # save min throughput list as *.csv file
+    minThroughputList = pd.DataFrame(np.array(minThroughputList))
+    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_N_' + ('%04d' % N) + '.csv')
+
+    # save min throughput list as *.txt file
+    arr = np.array(minThroughputList)[:, 1:]
+    note = 'mean: ' + str(np.mean(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
+
+    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_N_' + ('%04d' % N) + '.txt', 'w')
+    noteFile.write(note)
+    noteFile.close()
