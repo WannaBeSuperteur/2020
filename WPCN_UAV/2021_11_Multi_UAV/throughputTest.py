@@ -17,6 +17,19 @@ import time
 
 timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 
+# note:
+# to ensure that MINIMUM THROUGHPUT > 0
+# --->           sum of a_l,kl[n] > 0 for all devices
+
+# because Sum(k_l in K_l) a_l,kl[n] <= 1 ... (5),
+# it means for each time, only ONE of devices in cluster L can satisfy a_l,kl[n] > 0
+# for all devices in cluster L, at least one time slot T, must satisfy a_l,kl[n] > 0
+
+# for each cluster, (N is the number of time slots)
+# if      N >  (devices), possible and at least one devices get >=2 chances to satisfy a_l,kl[n] > 0
+# else if N == (devices), all devices must get 1 chance to satisfy a_l,kl[n] > 0
+# else if N <  (devices), IMPOSSIBLE (minimum throughput is ALWAYS 0)
+
 # paper: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1
 
 # wkl, ql(t) : wkl = (xkl, ykl, 0), ql(t) = (xl(t), yl(t), hl(t)), h_min <= hl(t) <= h_max
