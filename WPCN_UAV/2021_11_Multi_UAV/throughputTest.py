@@ -375,12 +375,15 @@ if __name__ == '__main__':
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))
-    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_N_' + ('%04d' % N) + '.csv')
+    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
 
     # save min throughput list as *.txt file
     arr = np.array(minThroughputList)[:, 1:]
-    note = 'mean: ' + str(np.mean(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
+    note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
 
-    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_N_' + ('%04d' % N) + '.txt', 'w')
+    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
+    
     noteFile.write(note)
     noteFile.close()

@@ -17,9 +17,9 @@ M=10000 # episodes
 L=3 # number of clusters = number of UAVs # 5
 devices=10 # number of devices
 T=1.0 # flight period (in seconds) (1.0 for example)
-N=7 # flight period T -> into N+1 time slots
+N=10 # flight period T -> into N+1 time slots
 H=15 # hovering elevation (m)
-iters=20 # iteration count
+iters=50 # iteration count
 learningRate=0.0001 # learning rate of DQN
 printDetails=False # print detailed info
 printTimeDif=False # print time difference
