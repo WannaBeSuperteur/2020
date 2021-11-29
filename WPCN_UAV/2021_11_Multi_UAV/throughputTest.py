@@ -16,6 +16,7 @@ import tensorflow as tf
 import time
 
 timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
+printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
 
 # note:
 # to ensure that MINIMUM THROUGHPUT > 0
@@ -182,7 +183,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         devices = numOfDevs[l]
         
         for t in range(N):
-            print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
+            if printDetails == True:
+                print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
 
             # decide the device to communicate with
             #print(' ==== findDeviceToCommunicate ====')
@@ -221,8 +223,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # compute average throughput for each device in L
         for k in range(devices):
             thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
-            
-            print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
+
+            if printDetails == True:
+                print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
             
             throughputs.append(thrput)
 

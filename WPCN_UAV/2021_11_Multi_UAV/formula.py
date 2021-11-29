@@ -2,6 +2,9 @@
 
 import math
 import numpy as np
+import helper as h_
+
+printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
 
 ### A. SYSTEM MODEL
 # L, l       : the number of clusters (l : each cluster)
@@ -263,10 +266,12 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
         throughput = formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
 
-        print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
+        if printDetails == True:
+            print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
         
         result += alkl_value * throughput
 
-    print('[11] N = ' + str(N) + ' result = ' + str(result))
+    if printDetails == True:
+        print('[11] N = ' + str(N) + ' result = ' + str(result))
 
     return result / N

@@ -21,6 +21,7 @@ N=30 # flight period T -> into N+1 time slots
 H=15 # hovering elevation (m)
 iters=20 # iteration count
 learningRate=0.0001 # learning rate of DQN
+printDetails=False # print detailed info
 printTimeDif=False # print time difference
 timeCheck=False # print time for important functions such as getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
 warning=True # print warning for Q-value penalties
