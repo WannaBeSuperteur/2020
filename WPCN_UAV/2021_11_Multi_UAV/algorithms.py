@@ -187,8 +187,7 @@ def findDeviceToCommunicate(q, w, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL, n
         
         g_value = f.formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
         condition.append(g_value)
-        print('l=' + str(l) + ', k=' + str(k) + ', g=' + str(g_value))
-
+        
     #print('condition:', condition)
     deviceToCommunicate = np.argmax(condition)
     #print('device   :', deviceToCommunicate)

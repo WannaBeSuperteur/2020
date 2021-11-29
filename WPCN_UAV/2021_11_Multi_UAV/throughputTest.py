@@ -188,7 +188,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             #print(' ==== findDeviceToCommunicate ====')
             deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
                                                                mu1, mu2, fc, c, alphaP, numOfDevs)
-            print('deviceToCommunicate:', l, t, deviceToCommunicate)
             #print(' =================================')
 
             # update alkl, in the form of [[l0, k, l1, n, value], ...]
@@ -233,7 +232,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         for t in range(N+1):
             print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4), 'h:', q[l * (N+1) + t][4])
         print('\nthroughputs for each device:')
-        print(str(list(np.round_(throughputs, 2))))
+        print(str(list(np.round_(throughputs, 6))))
         print('===============\n\n')
 
     # save trajectory graph
@@ -291,7 +290,7 @@ if __name__ == '__main__':
     b1 = paperArgs['b1']
     b2 = paperArgs['b2']
     alphaP = paperArgs['alphaP']
-    #alphaL = paperArgs['alphaL']
+    alphaL = paperArgs['alphaL']
     mu1 = paperArgs['mu1']
     mu2 = paperArgs['mu2']
     s = paperArgs['s']
@@ -313,7 +312,7 @@ if __name__ == '__main__':
 
     # Specifically, the 0-th time slot is assigned to the downlink
     # WPT and the n-th time slot, n in N = {1,2,...,N} is allocated to the uplink WIT.
-    alphaP = 1/(N+1)
+    alphaL = 1/(N+1)
 
     # write file for configuration info
     configFile = open('config_info.txt', 'w')

@@ -88,7 +88,6 @@ def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
 
     #print('[02] return')
 
-    print('[02] dist = ' + str(dist))
     if getPLoS:
         return b1 * pow(180 / math.pi * theta - s, b2)
     else:
@@ -122,7 +121,6 @@ def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaP):
     part2 = pow(K0 * dist, -alphaP)
 
     #print('[04] return')
-    print('[04] K0 = ' + str(K0) + ', dist = ' + str(dist) + ', part2 = ' + str(part2) + ', alphaP = ' + str(alphaP) + ', result = ' + str(part1 * part2))
     
     return part1 * part2
 
@@ -265,10 +263,10 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
         throughput = formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
 
-        print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput) + '\n')
+        print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
         
         result += alkl_value * throughput
 
-    print('[11] N = ' + str(N) + ' result = ' + str(result) + '\n')
+    print('[11] N = ' + str(N) + ' result = ' + str(result))
 
     return result / N
