@@ -88,27 +88,25 @@ def formula_02(q, w, k, l0, l1, n, N, s, b1, b2, getPLoS):
 
     #print('[02] return')
 
-    #print('[02] dist = ' + str(dist) + ' theta = ' + str(theta) + ' s = ' + str(s))
-    #print('[02] 180 / math.pi * theta - s = ' + str(180 / math.pi * theta - s))
-
+    print('[02] dist = ' + str(dist))
     if getPLoS:
         return b1 * pow(180 / math.pi * theta - s, b2)
     else:
         return 1.0 - b1 * pow(180 / math.pi * theta - s, b2)
 
 # formula (3) : for L_l,kl
-def formula_03(q, w, k, l, n, N, mu1, mu2, fc, c, alpha, isLoS):
+def formula_03(q, w, k, l, n, N, mu1, mu2, fc, c, alphaP, isLoS):
     
     # get distance d_l,kl[n]
     dist = getDist(q, w, k, l, l, n, N)
 
     if isLoS:
-        return mu1 * pow(4 * math.pi * fc * dist / c, alpha)
+        return mu1 * pow(4 * math.pi * fc * dist / c, alphaP)
     else:
-        return mu2 * pow(4 * math.pi * fc * dist / c, alpha)
+        return mu2 * pow(4 * math.pi * fc * dist / c, alphaP)
 
 # formula (4) : for g_l,kl[n] = g_(l0),k(l1)[n], using formula (2)
-def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
+def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaP):
     #print('[04] k, l1:', k, l1)
 
     # (PLoS * mu1 + PNLoS * mu2)^-1
@@ -121,12 +119,10 @@ def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL):
     K0    = 4 * math.pi * fc / c
     dist  = getDist(q, w, k, l0, l1, n, N)
 
-    part2 = pow(K0 * dist, -alphaL)
+    part2 = pow(K0 * dist, -alphaP)
 
     #print('[04] return')
-    #print('[04] PLoS = ' + str(PLoS) + ' mu1 = ' + str(mu1) + ' NPLoS = ' + str(NPLoS) + ' mu2 = ' + str(mu2))
-    #print('[04] part1 = ' + str(part1) + ' part2 = ' + str(part2))
-    #print('[04] result = ' + str(part1 * part2))
+    print('[04] K0 = ' + str(K0) + ', dist = ' + str(dist) + ', part2 = ' + str(part2) + ', alphaP = ' + str(alphaP) + ', result = ' + str(part1 * part2))
     
     return part1 * part2
 
@@ -191,15 +187,14 @@ def find_alkl(alkl, l0, k, l1, n):
 
 # ng     : energy conversion efficiency of devices (= 0.1)
 # PD     : transmission power for UAVs' downlink   (= 40 dBm)
-# alphaL : proportion of downlink WPT in a period (temp value)
 # alphaP : path loss exponent
 
 # formula (6) : for E_kl, using formula (4)
-def formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, PD):
+def formula_06(q, w, l, k, ng, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, PD):
     Ekl = 0
     for i in range(L):
-        gikl = formula_04(q, w, k, i, l, 0, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
-        Ekl += ng * alphaL * T * al[i] * gikl * PD
+        gikl = formula_04(q, w, k, i, l, 0, N, s, b1, b2, mu1, mu2, fc, c, alphaP)
+        Ekl += ng * alphaP * T * al[i] * gikl * PD
     return Ekl
 
 # using Sum(j=1,N) a_l,kl[j] * SN * P^U_kl[j] <= E_kl     ... (8),
@@ -209,12 +204,12 @@ def formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, 
 # for formula (7, 9)
 
 # "This function was removed and using P^U_max = -20dBm instead"
-#def getPUkln(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
+#def getPUkln(q, w, l, k, n, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD):
 
 # formula (7) : for E_kl[n], using formula (6)
-def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD, PU):
+def formula_07(q, w, l, k, n, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, alkl, PD, PU):
 
-    SN = (1 - alphaP)*T/N
+    SN = (1 - alphaL)*T/N
     Ekl = formula_06(q, w, l, k, ng, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, al, PD)
     result = Ekl
 
@@ -222,7 +217,7 @@ def formula_07(q, w, l, k, n, ng, alphaP, alphaL, N, T, s, b1, b2, mu1, mu2, fc,
         result -= alkl[j] * SN * PU
 
 # get I_kl[n] = inference received by UAV l, for formula (9)
-def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
+def getInferencekl(q, w, l, k, n, alphaP, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
     #print('[getInferencekl] k, l, j, numOfDevs:', k, l, numOfDevs)
     
     result = 0
@@ -231,52 +226,49 @@ def getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, 
         # do not execute when numOfDevs[j] <= k, to prevent index error
         if j == l or numOfDevs[j] <= k: continue
         
-        g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
+        g = formula_04(q, w, k, l, j, n, N, s, b1, b2, mu1, mu2, fc, c, alphaP)
         result += PU * g
 
         #print('[in] PU = ' + str(PU) + ' g = ' + str(g))
 
     #print('[getInferencekl] return')
-    #print('[in] result = ' + str(result))
     return result
 
 # formula (9) : for received SINR r_kl[n], using formula (4)
-def formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
+def formula_09(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
     #print('[09] k, l:', k, l)
     
-    g = formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaL)
+    g = formula_04(q, w, k, l, l, n, N, s, b1, b2, mu1, mu2, fc, c, alphaP)
     
-    inference = getInferencekl(q, w, l, k, n, alphaL, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
+    inference = getInferencekl(q, w, l, k, n, alphaP, N, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     o2 = -110 # noise power spectral
 
     #print('[09] return')
 
-    #print('[09] PU = ' + str(PU) + ' g = ' + str(g) + ' inference = ' + str(inference) + ' final = ' + str(PU * g / (inference + o2)))
     return PU * g / (inference + o2)
 
 # formula (10) : instantaneous throughput R_kl[n], using formula (9)
-def formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
+def formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs):
     #print('[10] k, l:', k, l)
     
-    SINR = formula_09(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
+    SINR = formula_09(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
     B = 1000000 # bandwidth = 1 MHz
 
-    #print('[10] B = ' + str(B) + ' SINR = ' + str(SINR) + ' final = ' + str(B * math.log(1.0 + SINR, 2)))
     return B * math.log(1.0 + SINR, 2)
 
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
-def formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs):
+def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs):
     result = 0
     #print('[11] k, l:', k, l)
 
     for n in range(N):
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
-        throughput = formula_10(q, w, l, k, n, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
+        throughput = formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
 
-        print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
+        print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput) + '\n')
         
         result += alkl_value * throughput
 
-    print('[11] N = ' + str(N) + ' result = ' + str(result))
+    print('[11] N = ' + str(N) + ' result = ' + str(result) + '\n')
 
     return result / N

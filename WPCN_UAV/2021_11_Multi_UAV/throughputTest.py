@@ -187,7 +187,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # decide the device to communicate with
             #print(' ==== findDeviceToCommunicate ====')
             deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
-                                                               mu1, mu2, fc, c, alphaL, numOfDevs)
+                                                               mu1, mu2, fc, c, alphaP, numOfDevs)
+            print('deviceToCommunicate:', l, t, deviceToCommunicate)
             #print(' =================================')
 
             # update alkl, in the form of [[l0, k, l1, n, value], ...]
@@ -220,10 +221,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # compute average throughput for each device in L
         for k in range(devices):
-            thrput = f.formula_11(q, w, l, k, alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
-            print('l=', l, 'k=', k)
-            print(alphaL, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU)
-            print(thrput)
+            thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
+            
+            print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
             
             throughputs.append(thrput)
 
@@ -290,8 +290,8 @@ if __name__ == '__main__':
     o2 = paperArgs['o2']
     b1 = paperArgs['b1']
     b2 = paperArgs['b2']
-    #alphaP = paperArgs['alphaP']
-    alphaL = paperArgs['alphaL']
+    alphaP = paperArgs['alphaP']
+    #alphaL = paperArgs['alphaL']
     mu1 = paperArgs['mu1']
     mu2 = paperArgs['mu2']
     s = paperArgs['s']
@@ -324,8 +324,8 @@ if __name__ == '__main__':
     configContent += 'o2=' + str(o2) + '\n'
     configContent += 'b1=' + str(b1) + '\n'
     configContent += 'b2=' + str(b2) + '\n'
-    #configContent += 'alphaP=' + str(alphaP) + '\n'
-    configContent += 'alphaL=' + str(alphaL) + '\n'
+    configContent += 'alphaP=' + str(alphaP) + '\n'
+    #configContent += 'alphaL=' + str(alphaL) + '\n'
     configContent += 'mu1=' + str(mu1) + '\n'
     configContent += 'mu2=' + str(mu2) + '\n'
     configContent += 's=' + str(s) + '\n'
@@ -351,5 +351,5 @@ if __name__ == '__main__':
         print('ITER COUNT ', iterationCount)
         
         throughputTest(M, T, N, L, devices, width, height, H,
-                       ng, fc, B, o2, b1, b2, None, alphaL, mu1, mu2, s, None, PU,
+                       ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                        iterationCount)
