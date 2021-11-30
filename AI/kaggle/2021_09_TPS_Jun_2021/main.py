@@ -126,12 +126,12 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(2000, 7) # catboost classifier
-    model1 = getCatBoostModel(3000, 7) # catboost classifier
-    model2 = getCatBoostModel(4000, 7) # catboost classifier
-    model3 = getCatBoostModel(2000, 8) # catboost classifier
-    model4 = getCatBoostModel(3000, 8) # catboost classifier
-    model5 = getCatBoostModel(4000, 8) # catboost classifier
+    model0 = getCatBoostModel(1500, 7) # catboost classifier
+    model1 = getCatBoostModel(2000, 7) # catboost classifier
+    model2 = getCatBoostModel(2667, 7) # catboost classifier
+    model3 = getCatBoostModel(1500, 8) # catboost classifier
+    model4 = getCatBoostModel(2000, 8) # catboost classifier
+    model5 = getCatBoostModel(2667, 8) # catboost classifier
     #model0 = getLGBMModel(0.005)      # lightGBM classifier
     #model1 = getLGBMModel(0.01)       # lightGBM classifier
     #model2 = getLGBMModel(0.015)      # lightGBM classifier
