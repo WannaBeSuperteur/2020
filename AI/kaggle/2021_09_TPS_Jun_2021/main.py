@@ -52,7 +52,7 @@ def getLGBMModel(learning_rate):
         'n_estimators': 100000,
         'learning_rate': learning_rate,
         'metric': 'multi_logloss',
-        'max_depth': 6,
+        'max_depth': 8, # modified
         'num_leaves': 49,
         'min_split_gain': 0.8,
         'reg_alpha': 3.17,
