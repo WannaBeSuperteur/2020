@@ -100,6 +100,23 @@ def moveUAV(q, directionList, N, L, width, height):
             # update new q
             q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
+# change color
+def changeColor(colorCode, k):
+    r = colorCode[1:3]
+    g = colorCode[3:5]
+    b = colorCode[5:7]
+
+    result = '#'
+	
+    for x in [r, g, b]:
+        x = int(x, 16)
+        x = min(int(x * k), 255)
+        x = hex(x)
+        
+        result += '0'*(2 - len(x[2:])) + x[2:]
+        
+    return result
+
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList):
@@ -176,7 +193,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # speed of light
     c = 300000000
 
-    minthroughputs = []
+    minthroughputs  = []
+    all_throughputs = []
     
     for l in range(L):
 
@@ -246,11 +264,25 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         
         print('===============\n\n')
 
+        # save at all_throughputs
+        all_throughputs += throughputs
+
     # create min throughput information
     print('\n\nMIN THROUGHPUTS for each cluster l:')
     print(str(list(np.round_(minthroughputs, 6))))
 
     minThroughputList.append([iterationCount] + minthroughputs)
+
+    # print all_throughputs
+    all_throughputs = np.array(all_throughputs)
+
+    print('\n\nall throughputs:')
+    print(np.round_(all_throughputs, 6))
+
+    all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
+
+    print('\n\n(normalized) all throughputs:')
+    print(np.round_(all_throughputs, 6))
 
     # save trajectory graph
     plt.clf()
@@ -258,21 +290,30 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     plt.axis([-1, width+1, -1, height+1])
 
     # w = [[l, k, xkl, ykl, 0], ...]
-    for di in w:
-        plt.scatter(di[2], di[3], s=30, marker='s', c=markerColors[di[0]])
+    for i in range(len(w)):
+
+        # device throughput = 0
+        if all_throughputs[i] == 0:
+            plt.scatter(w[i][2], w[i][3], s=25,
+                        marker='o', c=markerColors[w[i][0]])
+
+        # device throughput > 0
+        else:
+            plt.scatter(w[i][2], w[i][3],
+                        s=int(pow(5.0 + all_throughputs[i] * 7.0, 2.0)),
+                        marker='o', c=changeColor(markerColors[w[i][0]], 0.6))
 
     # q = [[l, t, xlt, ylt, hlt], ...]
     for l in range(L):
         for t in range(N+1):
             ind = l * (N+1) + t
-            lineWidth = 0.2 + 1.3 * t / (N+1)
-            
-            plt.scatter(q[ind][2], q[ind][3], s=20, marker='x', c=markerColors[l])
+           
+            plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
 
             if t < N:
                 x = [q[ind][2], q[ind+1][2]]
                 y = [q[ind][3], q[ind+1][3]]
-                plt.plot(x, y, linewidth=lineWidth, c=markerColors[l])
+                plt.plot(x, y, linewidth=0.75, c=markerColors[l])
 
     # save the figure
     plt.savefig('trajectory_iter' + ('%04d' % iterationCount))
