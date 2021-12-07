@@ -117,6 +117,9 @@ def changeColor(colorCode, k):
         
     return result
 
+# make training dataset
+#def makeTrainDataset(w, ...):   
+
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList):
@@ -244,12 +247,26 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # compute average throughput for each device in L
         for k in range(devices):
-            thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
+            thrputs = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
+            thrput  = thrputs[-1]
 
             if printDetails == True:
                 print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
             
-            throughputs.append(thrput)
+            throughputs.append(thrputs)
+
+        # throughputs: shape (k, N) -> shape (N, k)
+        throughputs       = np.array(throughputs)
+        throughputs       = throughputs.T
+        final_throughputs = throughputs[-1]
+
+        # save throughputs
+        if iterationCount < 5:
+            throughputs_df = pd.DataFrame(throughputs)
+            throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '.csv')
+
+            final_throughputs_df = pd.DataFrame(final_throughputs)
+            final_throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
         # print average throughput result for each UAV
         print('\n\n ==== UAV ' + str(l) + ' ====')
@@ -257,15 +274,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         for t in range(N+1):
             print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4), 'h:', q[l * (N+1) + t][4])
         print('\nthroughputs for each device:')
-        print(str(list(np.round_(throughputs, 6))))
+        print(str(list(np.round_(final_throughputs, 6))))
 
-        print('min throughput = ' + str(round(min(throughputs), 6)))
-        minthroughputs.append(min(throughputs))
+        print('min throughput = ' + str(round(min(final_throughputs), 6)))
+        minthroughputs.append(min(final_throughputs))
         
         print('===============\n\n')
 
         # save at all_throughputs
-        all_throughputs += throughputs
+        all_throughputs += list(final_throughputs)
 
     # create min throughput information
     print('\n\nMIN THROUGHPUTS for each cluster l:')

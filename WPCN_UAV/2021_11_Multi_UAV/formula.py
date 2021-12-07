@@ -262,6 +262,8 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
     result = 0
     #print('[11] k, l:', k, l)
 
+    thrputs = []
+
     for n in range(N):
         alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
         throughput = formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
@@ -270,8 +272,9 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
             print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
         
         result += alkl_value * throughput
+        thrputs.append(result / N)
 
     if printDetails == True:
         print('[11] N = ' + str(N) + ' result = ' + str(result))
 
-    return result / N
+    return thrputs

@@ -1,0 +1,18 @@
+외판원 순회 문제와 유사하므로, 유전알고리즘 기반 방법 + 딥러닝 적용
+
+딥러닝:
+입력: device가 주어진 그림을 입력 이미지 크기에 맞춰 확대한 것
+출력: 유전알고리즘의 파라미터의 case에 따른 minimum throughput
+
+[아이디어 2]
+딥러닝:
+
+<반복학습 알고리즘 적용>
+입력: HAP를 중심으로 한 주변 n*n meter의 device의 배치
+(받은 throughput의 (-1.0 ~ 1.0 기준 min-max) 값 적용, 해당 부분의 주변으로 3x3칸만큼 적용)
+
+출력: 각 방향으로 이동했을 때의 throughput 효율성
+ = (min throughput 증가량) / (throughput 증가량의 최댓값)
+
+<선행>
+각 device별 throughput을 좌표로 나타낸 그래프로 표시
