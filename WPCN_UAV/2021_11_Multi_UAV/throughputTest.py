@@ -118,7 +118,36 @@ def changeColor(colorCode, k):
     return result
 
 # make training dataset
-#def makeTrainDataset(w, ...):   
+# input       : device location (w[:, 2], w[:, 3]) + action (one-hot)
+# output      : function of throughput change
+# action_list : directionList[l*N : l*(N + 1)]
+
+# cluster No. : w[:, 0]
+# throughputs : throughputs at time slot t = 0 ... N-1
+def makeTrainDataset(w, l, action_list, throughputs):
+
+    w = np.array(w)
+    dev_x = w[:, 2]
+    dev_y = w[:, 3]
+
+    # board configuration
+    width  = 100
+    height = 100
+
+    # find the range of the board
+
+    for i in range(len(w)):
+
+        # do not count if not the cluster l
+        if w[i][0] != l: continue
+
+        # place the device on the board
+
+        # mark action
+
+        # compute output based on throughput change
+
+    # save training dataset
 
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
@@ -254,6 +283,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
             
             throughputs.append(thrputs)
+
+        # make training dataset
+        makeTrainDataset(w, l, directionList[l * N : l * (N+1)], throughputs)
 
         # throughputs: shape (k, N) -> shape (N, k)
         throughputs       = np.array(throughputs)
