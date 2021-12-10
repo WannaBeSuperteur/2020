@@ -147,8 +147,8 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     dev_in_l = len(dev_x)
 
     # board configuration
-    width  = 100
-    height = 100
+    width  = 50
+    height = 50
 
     print('\n [l=' + str(l) + ' t=' + str(t) + '] < dev_x >')
     print(list(dev_x))
@@ -181,7 +181,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     minThrput = min(thrput)
 
     # normalized throughput
-    thrput_   = [(thrput[i] - minThrput) / (maxThrput - minThrput) for i in range(len(thrput))]
+    thrput_   = [(thrput[i] - minThrput) / (maxThrput - minThrput) * 2.0 - 1.0 for i in range(len(thrput))]
 
     for i in range(dev_in_l):
 
@@ -209,7 +209,10 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     center_x = int(q_current[0] * 2)
     center_y = int(q_current[1] * 2)
 
-    input_board = board[center_y - 10 : center_y + 11, center_x - 10 : center_x + 11]
+    window = 10
+    
+    input_board = board[max(0, center_y - window) : min(height * 2, center_y + window + 1),
+                        max(0, center_x - window) : min(width  * 2, center_x + window + 1)]
 
     # height of UAV
     height = q_current[2]
@@ -226,7 +229,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     # plot the board array using seaborn
     plt.clf()
-    ax = sns.heatmap(input_board, annot=True)
+    ax = sns.heatmap(input_board, annot=True, fmt='')
     plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
 
     # save training dataset
