@@ -9,6 +9,7 @@ import random
 import copy
 import numpy as np
 import pandas as pd
+import seaborn as sns
 
 from shapely.geometry import LineString
 import matplotlib.pyplot as plt
@@ -124,28 +125,85 @@ def changeColor(colorCode, k):
 
 # cluster No. : w[:, 0]
 # throughputs : throughputs at time slot t = 0 ... N-1
-def makeTrainDataset(w, l, action_list, throughputs):
+def modifyArr(arr, y, x, value):
+    if y >= 0 and y < len(arr) and x >= 0 and x < len(arr[0]):
+        arr[y][x] = value
+    
+def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     w = np.array(w)
-    dev_x = w[:, 2]
-    dev_y = w[:, 3]
+    throughputs = np.array(throughputs).T
+
+    # filter for cluster l
+    dev_x = []
+    dev_y = []
+    
+    for i in range(len(w)):
+        if w[i][0] == l:
+            dev_x.append(w[i][2])
+            dev_y.append(w[i][3])
+
+    # the number of devices in cluster l
+    dev_in_l = len(dev_x)
 
     # board configuration
     width  = 100
     height = 100
 
-    # find the range of the board
+    print('\n [l=' + str(l) + ' t=' + str(t) + '] < dev_x >')
+    print(list(dev_x))
+    print(' < dev_y >')
+    print(list(dev_y))
+    print(' < action_list >')
+    print(list(action_list))
 
-    for i in range(len(w)):
+    thrput = throughputs[t]
 
-        # do not count if not the cluster l
-        if w[i][0] != l: continue
+    print(' < thrput >')
+    print(list(thrput))
 
-        # place the device on the board
+    print(' < q >')
+    print(q[l * (N+1) + t][2:5])
+    print(' < q + 1 >')
+    print(q[l * (N+1) + (t+1)][2:5])
+
+    # find the range of the board (unit: width=0.5, height=0.5)
+    board = np.zeros((2*width, 2*height))
+
+    # max device and min device
+    maxThrput = max(thrput)
+    minThrput = min(thrput)
+
+    # normalized throughput
+    thrput_   = [(thrput[i] - minThrput) / (maxThrput - minThrput) for i in range(len(thrput))]
+
+    for i in range(dev_in_l):
+
+        # place the device on the board (mark as [[0.5, 1.0, 0.5], [1.0, 1.2, 1.0], [0.5, 1.0, 0.5]])
+        board_x = int(dev_x[i] * 2)
+        board_y = int(dev_y[i] * 2)
 
         # mark action
+        modifyArr(board, board_y - 1, board_x - 1, 0.5 * thrput_[i])
+        modifyArr(board, board_y - 1, board_x    , 1.0 * thrput_[i])
+        modifyArr(board, board_y - 1, board_x + 1, 0.5 * thrput_[i])
 
-        # compute output based on throughput change
+        modifyArr(board, board_y    , board_x - 1, 1.0 * thrput_[i])
+        modifyArr(board, board_y    , board_x    , 1.2 * thrput_[i])
+        modifyArr(board, board_y    , board_x + 1, 1.0 * thrput_[i])
+
+        modifyArr(board, board_y + 1, board_x - 1, 0.5 * thrput_[i])
+        modifyArr(board, board_y + 1, board_x    , 1.0 * thrput_[i])
+        modifyArr(board, board_y + 1, board_x + 1, 0.5 * thrput_[i])
+
+    # make input data based on current HAP location
+    action = [0 for i in range(27)]
+    action[action_list[t]] = 1
+
+    # compute output based on throughput change
+    
+
+    # plot the board array using seaborn
 
     # save training dataset
 
@@ -284,8 +342,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             
             throughputs.append(thrputs)
 
-        # make training dataset
-        makeTrainDataset(w, l, directionList[l * N : l * (N+1)], throughputs)
+        #### make training dataset ####
+        for t in range(N):
+            makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
 
         # throughputs: shape (k, N) -> shape (N, k)
         throughputs       = np.array(throughputs)
@@ -303,8 +362,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # print average throughput result for each UAV
         print('\n\n ==== UAV ' + str(l) + ' ====')
         print('trajectory:')
+        
         for t in range(N+1):
-            print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4), 'h:', q[l * (N+1) + t][4])
+            if t < N:
+                print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4),
+                      'h:', q[l * (N+1) + t][4], 'direction:', directionList[l * N + t])
+            else:
+                print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4),
+                      'h:', q[l * (N+1) + t][4])
+                
         print('\nthroughputs for each device:')
         print(str(list(np.round_(final_throughputs, 6))))
 
