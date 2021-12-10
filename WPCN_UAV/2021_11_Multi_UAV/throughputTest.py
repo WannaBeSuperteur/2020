@@ -119,7 +119,7 @@ def changeColor(colorCode, k):
     return result
 
 # make training dataset
-# input       : device location (w[:, 2], w[:, 3]) + action (one-hot)
+# input       : device location (w[:, 2], w[:, 3]) + (height of UAV) + action (dif of x, y, and h of UAV)
 # output      : function of throughput change
 # action_list : directionList[l*N : l*(N + 1)]
 
@@ -157,15 +157,21 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     print(' < action_list >')
     print(list(action_list))
 
-    thrput = throughputs[t]
+    thrput       = throughputs[t]
+    thrput_after = throughputs[t+1]
 
     print(' < thrput >')
     print(list(thrput))
+    print(' < thrput_after >')
+    print(list(thrput_after))
 
-    print(' < q >')
-    print(q[l * (N+1) + t][2:5])
-    print(' < q + 1 >')
-    print(q[l * (N+1) + (t+1)][2:5])
+    q_current = q[l * (N+1) + t    ][2:5]
+    q_after   = q[l * (N+1) + (t+1)][2:5]
+
+    print(' < q_current >')
+    print(q_current)
+    print(' < q_after >')
+    print(q_after)
 
     # find the range of the board (unit: width=0.5, height=0.5)
     board = np.zeros((2*width, 2*height))
@@ -197,15 +203,34 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
         modifyArr(board, board_y + 1, board_x + 1, 0.5 * thrput_[i])
 
     # make input data based on current HAP location
-    action = [0 for i in range(27)]
-    action[action_list[t]] = 1
 
-    # compute output based on throughput change
-    
+    #### INPUT
+    # board (center: x and y of UAV)
+    center_x = int(q_current[0] * 2)
+    center_y = int(q_current[1] * 2)
+
+    input_board = board[center_y - 10 : center_y + 11, center_x - 10 : center_x + 11]
+
+    # height of UAV
+    height = q_current[2]
+
+    # action (dif of x, y, and h of UAV)
+    action = np.array(q_after) - np.array(q_current)
+
+    print(' < action >')
+    print(action)
+
+    #### OUTPUT
+    # compute output (reward) based on throughput change
+    output = min(thrput_after) + 1.0 / np.std(thrput_after)
 
     # plot the board array using seaborn
+    plt.clf()
+    ax = sns.heatmap(input_board, annot=True)
+    plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
 
     # save training dataset
+    # later
 
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
@@ -343,7 +368,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             throughputs.append(thrputs)
 
         #### make training dataset ####
-        for t in range(N):
+        for t in range(N-1):
             makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
 
         # throughputs: shape (k, N) -> shape (N, k)
