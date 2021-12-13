@@ -29,12 +29,12 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.naive_bayes import GaussianNB
 
 # models : CatBoost and lightGBM
-def getCatBoostModel(iterations, depth):
+def getCatBoostModel(iterations, depth, learning_rate):
 
     # catboost classifier
     # ref: https://www.kaggle.com/tharunreddy/tps-june-catboost-tutorial
     model = CatBoostClassifier(iterations=iterations,
-                               learning_rate=0.028,
+                               learning_rate=learning_rate,
                                depth=depth, # 10
                                loss_function='MultiClass',
                                min_data_in_leaf=11,
@@ -126,12 +126,15 @@ def applyLog(df):
 def predictWithModels(train_X, train_Y, test_X, predictionFileName):
 
     # models (classifiers)
-    model0 = getCatBoostModel(1500, 7) # catboost classifier
-    model1 = getCatBoostModel(2000, 7) # catboost classifier
-    model2 = getCatBoostModel(2667, 7) # catboost classifier
-    model3 = getCatBoostModel(1500, 8) # catboost classifier
-    model4 = getCatBoostModel(2000, 8) # catboost classifier
-    model5 = getCatBoostModel(2667, 8) # catboost classifier
+    model0 = getCatBoostModel(1500, 7, 0.032) # catboost classifier
+    model1 = getCatBoostModel(2000, 7, 0.032) # catboost classifier
+    model2 = getCatBoostModel(2667, 7, 0.032) # catboost classifier
+    model3 = getCatBoostModel(1500, 8, 0.032) # catboost classifier
+    model4 = getCatBoostModel(2000, 8, 0.032) # catboost classifier
+    model5 = getCatBoostModel(2667, 8, 0.032) # catboost classifier
+    model6 = getCatBoostModel(1500, 7, 0.025) # catboost classifier
+    model7 = getCatBoostModel(2000, 7, 0.025) # catboost classifier
+    model8 = getCatBoostModel(2667, 7, 0.025) # catboost classifier
     #model0 = getLGBMModel(0.005)      # lightGBM classifier
     #model1 = getLGBMModel(0.01)       # lightGBM classifier
     #model2 = getLGBMModel(0.015)      # lightGBM classifier
@@ -140,10 +143,12 @@ def predictWithModels(train_X, train_Y, test_X, predictionFileName):
     #model5 = getLGBMModel(0.03)       # lightGBM classifier
 
     # array of models
-    modelNames = ['catboost0', 'catboost1', 'catboost2', 'catboost3', 'catboost4', 'catboost5']
+    modelNames = ['catboost0', 'catboost1', 'catboost2', 'catboost3', 'catboost4',
+                  'catboost5', 'catboost6', 'catboost7', 'catboost8']
     #modelNames = ['lightgbm0', 'lightgbm1', 'lightgbm2', 'lightgbm3', 'lightgbm4', 'lightgbm5']
     
-    models = [model0, model1, model2, model3, model4, model5]
+    models = [model0, model1, model2, model3, model4,
+              model5, model6, model7, model8]
     predictions = []
 
     # predict using these models
@@ -176,7 +181,7 @@ def run(train_df, test_df, dic, normalize, log2, final, fileID):
 
     train_rows = 200000
     numClass = 9
-    numModel = 6
+    numModel = 9
     k = 5 # for k-fold
     
     # extract training and test data
@@ -264,11 +269,11 @@ if __name__ == '__main__':
 
     # run for at most 200 rounds
     rounds = 200
-    models = 6
-    wcr = 1/240 # weight change rate
+    models = 9
+    wcr = 1/900 # weight change rate
     dic = {'Class_1':0, 'Class_2':1, 'Class_3':2, 'Class_4':3, 'Class_5':4, 'Class_6':5, 'Class_7':6, 'Class_8':7, 'Class_9':8}
 
-    # initial weights for each model : [CatBoost0, CatBoost1, CatBoost2, CatBoost3, CatBoost4, CatBoost5]
+    # initial weights for each model : [CatBoost0, CatBoost1, CatBoost2, ..., CatBoost8]
     w = []
     for i in range(models): w.append(1/models)
 
