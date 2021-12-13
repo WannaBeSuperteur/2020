@@ -127,7 +127,13 @@ def changeColor(colorCode, k):
 # throughputs : throughputs at time slot t = 0 ... N-1
 def modifyArr(arr, y, x, value, window):
     try:
-        arr[y + window][x + window] = value
+        arr[y + window][x + window] += value
+
+        # clip
+        if arr[y + window][x + window] < -1.2:
+            arr[y + window][x + window] = -1.2
+        elif arr[y + window][x + window] > 1.2:
+            arr[y + window][x + window] = 1.2
     except:
         pass
     
@@ -152,28 +158,11 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     width  = h_.loadSettings({'width':'int'})['width']
     height = h_.loadSettings({'height':'int'})['height']
 
-    print('\n [l=' + str(l) + ' t=' + str(t) + '] < dev_x >')
-    print(list(dev_x))
-    print(' < dev_y >')
-    print(list(dev_y))
-    print(' < action_list >')
-    print(list(action_list))
-
     thrput       = throughputs[t]
     thrput_after = throughputs[t+1]
 
-    print(' < thrput >')
-    print(list(thrput))
-    print(' < thrput_after >')
-    print(list(thrput_after))
-
     q_current = q[l * (N+1) + t    ][2:5]
     q_after   = q[l * (N+1) + (t+1)][2:5]
-
-    print(' < q_current >')
-    print(q_current)
-    print(' < q_after >')
-    print(q_after)
 
     # find the range of the board (unit: width=0.5, height=0.5)
     window = 10
@@ -188,22 +177,40 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     for i in range(dev_in_l):
 
-        # place the device on the board (mark as [[0.5, 1.0, 0.5], [1.0, 1.2, 1.0], [0.5, 1.0, 0.5]])
+        # place the device on the board (mark as [[     0.2, 0.5, 0.2     ],
+        #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
+        #                                         [0.5, 1.0, 1.2, 1.0, 0.5],
+        #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
+        #                                         [     0.2, 0.5, 0.2     ]])
         board_x = int(dev_x[i] * 2)
         board_y = int(dev_y[i] * 2)
 
         # mark action
-        modifyArr(board, board_y - 1, board_x - 1, 0.5 * thrput_[i], window)
+        modifyArr(board, board_y - 2, board_x - 1, 0.2 * thrput_[i], window)
+        modifyArr(board, board_y - 2, board_x    , 0.5 * thrput_[i], window)
+        modifyArr(board, board_y - 2, board_x + 1, 0.2 * thrput_[i], window)
+        
+        modifyArr(board, board_y - 1, board_x - 2, 0.2 * thrput_[i], window)
+        modifyArr(board, board_y - 1, board_x - 1, 0.6 * thrput_[i], window)
         modifyArr(board, board_y - 1, board_x    , 1.0 * thrput_[i], window)
-        modifyArr(board, board_y - 1, board_x + 1, 0.5 * thrput_[i], window)
+        modifyArr(board, board_y - 1, board_x + 1, 0.6 * thrput_[i], window)
+        modifyArr(board, board_y - 1, board_x + 2, 0.2 * thrput_[i], window)
 
+        modifyArr(board, board_y    , board_x - 2, 0.5 * thrput_[i], window)
         modifyArr(board, board_y    , board_x - 1, 1.0 * thrput_[i], window)
         modifyArr(board, board_y    , board_x    , 1.2 * thrput_[i], window)
         modifyArr(board, board_y    , board_x + 1, 1.0 * thrput_[i], window)
+        modifyArr(board, board_y    , board_x + 2, 0.5 * thrput_[i], window)
 
-        modifyArr(board, board_y + 1, board_x - 1, 0.5 * thrput_[i], window)
+        modifyArr(board, board_y + 1, board_x - 2, 0.2 * thrput_[i], window)
+        modifyArr(board, board_y + 1, board_x - 1, 0.6 * thrput_[i], window)
         modifyArr(board, board_y + 1, board_x    , 1.0 * thrput_[i], window)
-        modifyArr(board, board_y + 1, board_x + 1, 0.5 * thrput_[i], window)
+        modifyArr(board, board_y + 1, board_x + 1, 0.6 * thrput_[i], window)
+        modifyArr(board, board_y + 1, board_x + 2, 0.2 * thrput_[i], window)
+
+        modifyArr(board, board_y + 2, board_x - 1, 0.2 * thrput_[i], window)
+        modifyArr(board, board_y + 2, board_x    , 0.5 * thrput_[i], window)
+        modifyArr(board, board_y + 2, board_x + 1, 0.2 * thrput_[i], window)
 
     # make input data based on current HAP location
 
@@ -221,20 +228,17 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     # action (dif of x, y, and h of UAV)
     action = np.array(q_after) - np.array(q_current)
 
-    print(' < action >')
-    print(action)
-
     #### OUTPUT
     # compute output (reward) based on throughput change
     output = min(thrput_after) + 1.0 / np.std(thrput_after)
 
     # plot the board array using seaborn
     plt.clf()
-    ax = sns.heatmap(input_board)
+    ax = sns.heatmap(input_board, cmap=plt.cm.RdYlGn)
     plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
 
     plt.clf()
-    ax = sns.heatmap(board)
+    ax = sns.heatmap(board, cmap=plt.cm.RdYlGn)
     plt.savefig('input_board_' + str(l) + ',' + str(t) + '_original.png', bbox_inches='tight', dpi=100)
 
     # save training dataset
