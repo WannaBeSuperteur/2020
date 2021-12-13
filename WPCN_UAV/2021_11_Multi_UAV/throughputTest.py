@@ -255,10 +255,30 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     return (input_, output_)
 
+# deep learning model
+def getModel():
+
+    # model definition
+    
+    pass # later
+
+# move the UAV using learned model
+def moveUAV(board, height, q, model, l, t):
+
+    # make input data
+
+    # get output data of the model for each action
+
+    # find the best action with maximum output value
+
+    # move UAV using the best action (modify q)
+    
+    pass # later
+
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList,
-                   input_data, output_data):
+                   input_data, output_data, training):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -288,19 +308,18 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     print('\n< number of devices >')
     print(numOfDevs)
-
-    #### TEST ####
     
-    # make direction list using random
-    directionList = []
-    for i in range(N * L):
-        directionList.append(random.randint(0, 26))
+    # make direction list using random (when training)
+    if training == True:
+        directionList = []
+        for i in range(N * L):
+            directionList.append(random.randint(0, 26))
 
-    # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
-    moveUAV(q, directionList, N, L, width, height)
+        # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
+        moveUAV(q, directionList, N, L, width, height)
 
-    print('< q >')
-    print(np.round_(q, 6))
+        print('< q >')
+        print(np.round_(q, 6))
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
@@ -346,6 +365,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         for t in range(N):
             if printDetails == True:
                 print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
+
+            # move the UAV
+            # (need to add definitions for variables)
+            moveUAV(board, height, q, model, l, t)
 
             # decide the device to communicate with
             #print(' ==== findDeviceToCommunicate ====')
@@ -584,7 +607,7 @@ if __name__ == '__main__':
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                        iterationCount, minThroughputList,
-                       input_data, output_data)
+                       input_data, output_data, True)
 
     # save input and output data
     input_data  = pd.DataFrame(input_data)
