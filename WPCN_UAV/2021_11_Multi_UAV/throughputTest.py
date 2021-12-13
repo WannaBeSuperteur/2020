@@ -125,9 +125,11 @@ def changeColor(colorCode, k):
 
 # cluster No. : w[:, 0]
 # throughputs : throughputs at time slot t = 0 ... N-1
-def modifyArr(arr, y, x, value):
-    if y >= 0 and y < len(arr) and x >= 0 and x < len(arr[0]):
-        arr[y][x] = value
+def modifyArr(arr, y, x, value, window):
+    try:
+        arr[y + window][x + window] = value
+    except:
+        pass
     
 def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
@@ -147,8 +149,8 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     dev_in_l = len(dev_x)
 
     # board configuration
-    width  = 50
-    height = 50
+    width  = h_.loadSettings({'width':'int'})['width']
+    height = h_.loadSettings({'height':'int'})['height']
 
     print('\n [l=' + str(l) + ' t=' + str(t) + '] < dev_x >')
     print(list(dev_x))
@@ -174,7 +176,8 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     print(q_after)
 
     # find the range of the board (unit: width=0.5, height=0.5)
-    board = np.zeros((2*width, 2*height))
+    window = 10
+    board  = np.zeros((2*width + 2*window, 2*height + 2*window))
 
     # max device and min device
     maxThrput = max(thrput)
@@ -190,17 +193,17 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
         board_y = int(dev_y[i] * 2)
 
         # mark action
-        modifyArr(board, board_y - 1, board_x - 1, 0.5 * thrput_[i])
-        modifyArr(board, board_y - 1, board_x    , 1.0 * thrput_[i])
-        modifyArr(board, board_y - 1, board_x + 1, 0.5 * thrput_[i])
+        modifyArr(board, board_y - 1, board_x - 1, 0.5 * thrput_[i], window)
+        modifyArr(board, board_y - 1, board_x    , 1.0 * thrput_[i], window)
+        modifyArr(board, board_y - 1, board_x + 1, 0.5 * thrput_[i], window)
 
-        modifyArr(board, board_y    , board_x - 1, 1.0 * thrput_[i])
-        modifyArr(board, board_y    , board_x    , 1.2 * thrput_[i])
-        modifyArr(board, board_y    , board_x + 1, 1.0 * thrput_[i])
+        modifyArr(board, board_y    , board_x - 1, 1.0 * thrput_[i], window)
+        modifyArr(board, board_y    , board_x    , 1.2 * thrput_[i], window)
+        modifyArr(board, board_y    , board_x + 1, 1.0 * thrput_[i], window)
 
-        modifyArr(board, board_y + 1, board_x - 1, 0.5 * thrput_[i])
-        modifyArr(board, board_y + 1, board_x    , 1.0 * thrput_[i])
-        modifyArr(board, board_y + 1, board_x + 1, 0.5 * thrput_[i])
+        modifyArr(board, board_y + 1, board_x - 1, 0.5 * thrput_[i], window)
+        modifyArr(board, board_y + 1, board_x    , 1.0 * thrput_[i], window)
+        modifyArr(board, board_y + 1, board_x + 1, 0.5 * thrput_[i], window)
 
     # make input data based on current HAP location
 
@@ -208,11 +211,9 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     # board (center: x and y of UAV)
     center_x = int(q_current[0] * 2)
     center_y = int(q_current[1] * 2)
-
-    window = 10
     
-    input_board = board[max(0, center_y - window) : min(height * 2, center_y + window + 1),
-                        max(0, center_x - window) : min(width  * 2, center_x + window + 1)]
+    input_board = board[center_y : center_y + 2 * window,
+                        center_x : center_x + 2 * window]
 
     # height of UAV
     height = q_current[2]
@@ -229,8 +230,12 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     # plot the board array using seaborn
     plt.clf()
-    ax = sns.heatmap(input_board, annot=True, fmt='')
+    ax = sns.heatmap(input_board)
     plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
+
+    plt.clf()
+    ax = sns.heatmap(board)
+    plt.savefig('input_board_' + str(l) + ',' + str(t) + '_original.png', bbox_inches='tight', dpi=100)
 
     # save training dataset
     # later
