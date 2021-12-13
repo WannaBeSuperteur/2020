@@ -130,10 +130,10 @@ def modifyArr(arr, y, x, value, window):
         arr[y + window][x + window] += value
 
         # clip
-        if arr[y + window][x + window] < -1.2:
-            arr[y + window][x + window] = -1.2
-        elif arr[y + window][x + window] > 1.2:
-            arr[y + window][x + window] = 1.2
+        if arr[y + window][x + window] < -1.5:
+            arr[y + window][x + window] = -1.5
+        elif arr[y + window][x + window] > 1.5:
+            arr[y + window][x + window] = 1.5
     except:
         pass
     
@@ -230,7 +230,11 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     #### OUTPUT
     # compute output (reward) based on throughput change
-    output = min(thrput_after) + 1.0 / np.std(thrput_after)
+    output_after  = np.mean(thrput_after) / np.max(thrput_after)
+    output_before = np.mean(thrput      ) / np.max(thrput      )
+    output        = output_after - output_before
+
+    # print(l, t, height, action, output)
 
     # plot the board array using seaborn
     plt.clf()
