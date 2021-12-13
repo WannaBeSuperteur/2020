@@ -223,7 +223,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
                         center_x : center_x + 2 * window]
 
     # height of UAV
-    height = q_current[2]
+    height = np.array([q_current[2]])
 
     # action (dif of x, y, and h of UAV)
     action = np.array(q_after) - np.array(q_current)
@@ -237,6 +237,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     # print(l, t, height, action, output)
 
     # plot the board array using seaborn
+    """
     plt.clf()
     ax = sns.heatmap(input_board, cmap=plt.cm.RdYlGn)
     plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
@@ -244,13 +245,20 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     plt.clf()
     ax = sns.heatmap(board, cmap=plt.cm.RdYlGn)
     plt.savefig('input_board_' + str(l) + ',' + str(t) + '_original.png', bbox_inches='tight', dpi=100)
+    """
 
     # save training dataset
-    # later
+    # input  : board + height + action
+    # output : output
+    input_  = np.concatenate((input_board.flatten(), height, action), -1)
+    output_ = np.array([output])
+
+    return (input_, output_)
 
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount, minThroughputList):
+                   iterationCount, minThroughputList,
+                   input_data, output_data):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -385,7 +393,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         #### make training dataset ####
         for t in range(N-1):
-            makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
+            (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
+            
+            input_data .append(list(input_ ))
+            output_data.append(list(output_))
 
         # throughputs: shape (k, N) -> shape (N, k)
         throughputs       = np.array(throughputs)
@@ -560,6 +571,10 @@ if __name__ == '__main__':
     configFile.write(configContent)
     configFile.close()
 
+    # input and output data
+    input_data  = []
+    output_data = []
+
     # run throughput test
     #throughputTest(M, T, N, L, devices, width, height, H,
     #               ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU)
@@ -568,7 +583,15 @@ if __name__ == '__main__':
         
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList)
+                       iterationCount, minThroughputList,
+                       input_data, output_data)
+
+    # save input and output data
+    input_data  = pd.DataFrame(input_data)
+    output_data = pd.DataFrame(output_data)
+
+    input_data .to_csv('input_data.csv')
+    output_data.to_csv('output_data.csv')
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))
