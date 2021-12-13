@@ -258,18 +258,26 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 # deep learning model
 def getModel():
 
-    # model definition
+    # model definition (with regularizer)
+
+    # training setting (early stopping and reduce learning rate)
+
+    # train using input and output data
+
+    # return the trained model
     
     pass # later
 
 # move the UAV using learned model
 def moveUAV(board, height, q, model, l, t):
 
-    # make input data
+    # make input data using board + height
 
-    # get output data of the model for each action
+    # get output data of the model for each action (board + height + action)
 
     # find the best action with maximum output value
+
+    # find the UAV to move, using l and t
 
     # move UAV using the best action (modify q)
     
@@ -278,7 +286,7 @@ def moveUAV(board, height, q, model, l, t):
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList,
-                   input_data, output_data, training):
+                   input_data, output_data, training, model):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -366,9 +374,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             if printDetails == True:
                 print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
 
-            # move the UAV
-            # (need to add definitions for variables)
-            moveUAV(board, height, q, model, l, t)
+            # move the UAV when test mode
+            if training == False:
+
+                # move the UAV
+                # (need to add definitions for variables)
+                moveUAV(board, height, q, model, l, t)
 
             # decide the device to communicate with
             #print(' ==== findDeviceToCommunicate ====')
@@ -607,7 +618,7 @@ if __name__ == '__main__':
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                        iterationCount, minThroughputList,
-                       input_data, output_data, True)
+                       input_data, output_data, training=True, model=None)
 
     # save input and output data
     input_data  = pd.DataFrame(input_data)
