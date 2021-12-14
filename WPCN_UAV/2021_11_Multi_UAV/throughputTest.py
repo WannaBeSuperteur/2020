@@ -196,11 +196,15 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
     output_ = np.array([output])
 
     return (input_, output_)
-    
-def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
-    w = np.array(w)
-    throughputs = np.array(throughputs).T
+# thrput: common throughput value at time t
+def makeBoard(thrput, w, l, window, width, height):
+
+    board = np.zeros((2*width + 2*window, 2*height + 2*window))
+
+    # max device and min device
+    maxThrput = max(thrput)
+    minThrput = min(thrput)
 
     # filter for cluster l
     dev_x = []
@@ -213,24 +217,6 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     # the number of devices in cluster l
     dev_in_l = len(dev_x)
-
-    # board configuration
-    width  = h_.loadSettings({'width':'int'})['width']
-    height = h_.loadSettings({'height':'int'})['height']
-
-    thrput       = throughputs[t]
-    thrput_after = throughputs[t+1]
-
-    q_current = q[l * (N+1) + t    ][2:5]
-    q_after   = q[l * (N+1) + (t+1)][2:5]
-
-    # find the range of the board (unit: width=0.5, height=0.5)
-    window = 10
-    board  = np.zeros((2*width + 2*window, 2*height + 2*window))
-
-    # max device and min device
-    maxThrput = max(thrput)
-    minThrput = min(thrput)
 
     # normalized throughput
     thrput_   = [(thrput[i] - minThrput) / (maxThrput - minThrput) * 2.0 - 1.0 for i in range(len(thrput))]
@@ -247,6 +233,30 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
         # mark the position of device
         markDevicePosition(board, board_x, board_y, thrput_[i], window)
+
+    return board
+
+# make training dataset
+def makeTrainDataset(w, l, action_list, throughputs, t, q):
+
+    w = np.array(w)
+    throughputs = np.array(throughputs).T
+
+    # board configuration
+    width  = h_.loadSettings({'width':'int'})['width']
+    height = h_.loadSettings({'height':'int'})['height']
+
+    thrput       = throughputs[t]
+    thrput_after = throughputs[t+1]
+
+    q_current = q[l * (N+1) + t    ][2:5]
+    q_after   = q[l * (N+1) + (t+1)][2:5]
+
+    # find the range of the board (unit: width=0.5, height=0.5)
+    window = 10
+
+    # make the board for training
+    board = makeBoard(thrput, w, l, window, width, height)
 
     # make input data based on current HAP location
     (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window)
