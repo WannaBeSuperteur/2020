@@ -264,7 +264,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     return (input_, output_)
 
 # deep learning model
-def getModel():
+def getAndTrainModel():
 
     # model definition (with regularizer)
 
@@ -273,8 +273,7 @@ def getModel():
     # train using input and output data
 
     # return the trained model
-    
-    pass # later
+    return model
 
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, l, t):
@@ -485,11 +484,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             throughputs.append(thrputs)
 
         #### make training dataset ####
-        for t in range(N-1):
-            (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
-            
-            input_data .append(list(input_ ))
-            output_data.append(list(output_))
+        if training == True:
+            for t in range(N-1):
+                (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
+                
+                input_data .append(list(input_ ))
+                output_data.append(list(output_))
 
         # throughputs: shape (k, N) -> shape (N, k)
         throughputs       = np.array(throughputs)
@@ -513,7 +513,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     print('\n\nMIN THROUGHPUTS for each cluster l:')
     print(str(list(np.round_(minthroughputs, 6))))
 
-    minThroughputList.append([iterationCount] + minthroughputs)
+    if training == True:
+        minThroughputList.append([iterationCount] + minthroughputs)
 
     # print all_throughputs
     all_throughputs = np.array(all_throughputs)
@@ -529,10 +530,63 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # save trajectory as graph
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors)
 
-if __name__ == '__main__':
+# main TRAINING code
+def train(iters, M, T, N, L, devices, width, height, H,
+          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU):
 
     # list of min throughputs
     minThroughputList = []
+
+    # input and output data
+    input_data  = []
+    output_data = []
+
+    # main training
+    for iterationCount in range(iters):
+        print('ITER COUNT ', iterationCount)
+        
+        throughputTest(M, T, N, L, devices, width, height, H,
+                       ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                       iterationCount, minThroughputList,
+                       input_data, output_data, training=True, model=None)
+
+    # save input and output data
+    input_data  = pd.DataFrame(input_data)
+    output_data = pd.DataFrame(output_data)
+
+    input_data .to_csv('input_data.csv')
+    output_data.to_csv('output_data.csv')
+
+    # save min throughput list as *.csv file
+    minThroughputList = pd.DataFrame(np.array(minThroughputList))
+    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
+
+    # save min throughput list as *.txt file
+    arr = np.array(minThroughputList)[:, 1:]
+    note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
+
+    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
+    
+    noteFile.write(note)
+    noteFile.close()
+
+# main TEST code
+def test(iters, M, T, N, L, devices, width, height, H,
+         ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
+         model):
+
+    # main test
+    for iterationCount in range(iters):
+        print('ITER COUNT ', iterationCount)
+        
+        throughputTest(M, T, N, L, devices, width, height, H,
+                       ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                       iterationCount, minThroughputList=None,
+                       input_data=None, output_data=None, training=False, model=model)
+
+if __name__ == '__main__':
 
     # to bugfix:
     # [solved] 1. at the end of device list w = [[l, k, xkl, ykl, 0], ...]
@@ -615,39 +669,15 @@ if __name__ == '__main__':
     configFile.write(configContent)
     configFile.close()
 
-    # input and output data
-    input_data  = []
-    output_data = []
+    # run training
+    train(iters, M, T, N, L, devices, width, height, H,
+          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU)
 
-    # run throughput test
-    #throughputTest(M, T, N, L, devices, width, height, H,
-    #               ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU)
-    for iterationCount in range(iters):
-        print('ITER COUNT ', iterationCount)
-        
-        throughputTest(M, T, N, L, devices, width, height, H,
-                       ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList,
-                       input_data, output_data, training=True, model=None)
+    exit(0) # temp
 
-    # save input and output data
-    input_data  = pd.DataFrame(input_data)
-    output_data = pd.DataFrame(output_data)
+    # get and train model
+    model = getAndTrainModel()
 
-    input_data .to_csv('input_data.csv')
-    output_data.to_csv('output_data.csv')
-
-    # save min throughput list as *.csv file
-    minThroughputList = pd.DataFrame(np.array(minThroughputList))
-    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
-                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
-
-    # save min throughput list as *.txt file
-    arr = np.array(minThroughputList)[:, 1:]
-    note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
-
-    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
-                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
-    
-    noteFile.write(note)
-    noteFile.close()
+    # run test
+    test(iters, M, T, N, L, devices, width, height, H,
+         ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU, model)
