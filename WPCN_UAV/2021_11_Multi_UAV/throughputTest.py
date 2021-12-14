@@ -136,6 +136,66 @@ def modifyArr(arr, y, x, value, window):
             arr[y + window][x + window] = 1.5
     except:
         pass
+
+# mark the position of device
+def markDevicePosition(board, board_x, board_y, thrput, window):
+
+    modifyArr(board, board_y - 2, board_x - 1, 0.2 * thrput, window)
+    modifyArr(board, board_y - 2, board_x    , 0.5 * thrput, window)
+    modifyArr(board, board_y - 2, board_x + 1, 0.2 * thrput, window)
+        
+    modifyArr(board, board_y - 1, board_x - 2, 0.2 * thrput, window)
+    modifyArr(board, board_y - 1, board_x - 1, 0.6 * thrput, window)
+    modifyArr(board, board_y - 1, board_x    , 1.0 * thrput, window)
+    modifyArr(board, board_y - 1, board_x + 1, 0.6 * thrput, window)
+    modifyArr(board, board_y - 1, board_x + 2, 0.2 * thrput, window)
+
+    modifyArr(board, board_y    , board_x - 2, 0.5 * thrput, window)
+    modifyArr(board, board_y    , board_x - 1, 1.0 * thrput, window)
+    modifyArr(board, board_y    , board_x    , 1.2 * thrput, window)
+    modifyArr(board, board_y    , board_x + 1, 1.0 * thrput, window)
+    modifyArr(board, board_y    , board_x + 2, 0.5 * thrput, window)
+
+    modifyArr(board, board_y + 1, board_x - 2, 0.2 * thrput, window)
+    modifyArr(board, board_y + 1, board_x - 1, 0.6 * thrput, window)
+    modifyArr(board, board_y + 1, board_x    , 1.0 * thrput, window)
+    modifyArr(board, board_y + 1, board_x + 1, 0.6 * thrput, window)
+    modifyArr(board, board_y + 1, board_x + 2, 0.2 * thrput, window)
+
+    modifyArr(board, board_y + 2, board_x - 1, 0.2 * thrput, window)
+    modifyArr(board, board_y + 2, board_x    , 0.5 * thrput, window)
+    modifyArr(board, board_y + 2, board_x + 1, 0.2 * thrput, window)
+
+# make input and output based on current HAP location
+def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
+
+    #### INPUT
+    # board (center: x and y of UAV)
+    center_x = int(q_current[0] * 2)
+    center_y = int(q_current[1] * 2)
+    
+    input_board = board[center_y : center_y + 2 * window,
+                        center_x : center_x + 2 * window]
+
+    # height of UAV
+    height = np.array([q_current[2]])
+
+    # action (dif of x, y, and h of UAV)
+    action = np.array(q_after) - np.array(q_current)
+
+    #### OUTPUT
+    # compute output (reward) based on throughput change
+    output_after  = np.mean(thrput_after) / np.max(thrput_after)
+    output_before = np.mean(thrput      ) / np.max(thrput      )
+    output        = output_after - output_before
+
+    # save training dataset
+    # input  : board + height + action
+    # output : output
+    input_  = np.concatenate((input_board.flatten(), height, action), -1)
+    output_ = np.array([output])
+
+    return (input_, output_)
     
 def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
@@ -185,73 +245,11 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
         board_x = int(dev_x[i] * 2)
         board_y = int(dev_y[i] * 2)
 
-        # mark action
-        modifyArr(board, board_y - 2, board_x - 1, 0.2 * thrput_[i], window)
-        modifyArr(board, board_y - 2, board_x    , 0.5 * thrput_[i], window)
-        modifyArr(board, board_y - 2, board_x + 1, 0.2 * thrput_[i], window)
-        
-        modifyArr(board, board_y - 1, board_x - 2, 0.2 * thrput_[i], window)
-        modifyArr(board, board_y - 1, board_x - 1, 0.6 * thrput_[i], window)
-        modifyArr(board, board_y - 1, board_x    , 1.0 * thrput_[i], window)
-        modifyArr(board, board_y - 1, board_x + 1, 0.6 * thrput_[i], window)
-        modifyArr(board, board_y - 1, board_x + 2, 0.2 * thrput_[i], window)
-
-        modifyArr(board, board_y    , board_x - 2, 0.5 * thrput_[i], window)
-        modifyArr(board, board_y    , board_x - 1, 1.0 * thrput_[i], window)
-        modifyArr(board, board_y    , board_x    , 1.2 * thrput_[i], window)
-        modifyArr(board, board_y    , board_x + 1, 1.0 * thrput_[i], window)
-        modifyArr(board, board_y    , board_x + 2, 0.5 * thrput_[i], window)
-
-        modifyArr(board, board_y + 1, board_x - 2, 0.2 * thrput_[i], window)
-        modifyArr(board, board_y + 1, board_x - 1, 0.6 * thrput_[i], window)
-        modifyArr(board, board_y + 1, board_x    , 1.0 * thrput_[i], window)
-        modifyArr(board, board_y + 1, board_x + 1, 0.6 * thrput_[i], window)
-        modifyArr(board, board_y + 1, board_x + 2, 0.2 * thrput_[i], window)
-
-        modifyArr(board, board_y + 2, board_x - 1, 0.2 * thrput_[i], window)
-        modifyArr(board, board_y + 2, board_x    , 0.5 * thrput_[i], window)
-        modifyArr(board, board_y + 2, board_x + 1, 0.2 * thrput_[i], window)
+        # mark the position of device
+        markDevicePosition(board, board_x, board_y, thrput_[i], window)
 
     # make input data based on current HAP location
-
-    #### INPUT
-    # board (center: x and y of UAV)
-    center_x = int(q_current[0] * 2)
-    center_y = int(q_current[1] * 2)
-    
-    input_board = board[center_y : center_y + 2 * window,
-                        center_x : center_x + 2 * window]
-
-    # height of UAV
-    height = np.array([q_current[2]])
-
-    # action (dif of x, y, and h of UAV)
-    action = np.array(q_after) - np.array(q_current)
-
-    #### OUTPUT
-    # compute output (reward) based on throughput change
-    output_after  = np.mean(thrput_after) / np.max(thrput_after)
-    output_before = np.mean(thrput      ) / np.max(thrput      )
-    output        = output_after - output_before
-
-    # print(l, t, height, action, output)
-
-    # plot the board array using seaborn
-    """
-    plt.clf()
-    ax = sns.heatmap(input_board, cmap=plt.cm.RdYlGn)
-    plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
-
-    plt.clf()
-    ax = sns.heatmap(board, cmap=plt.cm.RdYlGn)
-    plt.savefig('input_board_' + str(l) + ',' + str(t) + '_original.png', bbox_inches='tight', dpi=100)
-    """
-
-    # save training dataset
-    # input  : board + height + action
-    # output : output
-    input_  = np.concatenate((input_board.flatten(), height, action), -1)
-    output_ = np.array([output])
+    (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window)
 
     return (input_, output_)
 
@@ -269,7 +267,7 @@ def getModel():
     pass # later
 
 # move the UAV using learned model
-def moveUAV(board, height, q, model, l, t):
+def moveUAV_DL(board, height, q, model, l, t):
 
     # make input data using board + height
 
@@ -282,6 +280,79 @@ def moveUAV(board, height, q, model, l, t):
     # move UAV using the best action (modify q)
     
     pass # later
+
+# save trajectory as graph
+def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors):
+
+    plt.clf()
+    plt.suptitle('trajectory result at iter ' + str(iterationCount))
+    plt.axis([-1, width+1, -1, height+1])
+
+    # w = [[l, k, xkl, ykl, 0], ...]
+    for i in range(len(w)):
+
+        # device throughput = 0
+        if all_throughputs[i] == 0:
+            plt.scatter(w[i][2], w[i][3], s=25,
+                        marker='o', c=markerColors[w[i][0]])
+
+        # device throughput > 0
+        else:
+            plt.scatter(w[i][2], w[i][3],
+                        s=int(pow(5.0 + all_throughputs[i] * 7.0, 2.0)),
+                        marker='o', c=changeColor(markerColors[w[i][0]], 0.6))
+
+    # q = [[l, t, xlt, ylt, hlt], ...]
+    for l in range(L):
+        for t in range(N+1):
+            ind = l * (N+1) + t
+           
+            plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
+
+            if t < N:
+                x = [q[ind][2], q[ind+1][2]]
+                y = [q[ind][3], q[ind+1][3]]
+                plt.plot(x, y, linewidth=0.75, c=markerColors[l])
+
+    # save the figure
+    plt.savefig('trajectory_iter' + ('%04d' % iterationCount))
+
+# update a_l,kl[n]
+# alkl      : a_l,kl[n] for each UAV l, device k and time slot n
+#             where alkl = [[l0, k, l1, n, value], ...
+def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices):
+
+    # decide the device to communicate with
+    deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
+                                                       mu1, mu2, fc, c, alphaP, numOfDevs)
+
+    # update alkl, in the form of [[l0, k, l1, n, value], ...]
+    alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
+            
+    # when DO NOT have alkl with (l, deviceToCommunicate, l, t)
+    if alkl_index == None or alkl_index == len(alkl):
+        alkl.append([l, deviceToCommunicate, l, t, 1])
+
+        # set alkl as 0 for other devices
+        for k in range(devices):
+            if k == deviceToCommunicate: continue
+            alkl.append([l, k, l, t, 0])
+
+    # when have alkl with (l, deviceToCommunicate, l, t)
+    else:
+        alkl[alkl_index][4] = 1
+
+        # set alkl as 0 for other devices
+        for k in range(devices):
+            if k == deviceToCommunicate: continue
+            alkl_index_k = f.find_alkl(alkl, l, k, l, t)
+            alkl[alkl_index_k] = [l, k, l, t, 0]
+
+    # sort alkl array
+    alkl.sort(key=lambda x:x[3])
+    alkl.sort(key=lambda x:x[2])
+    alkl.sort(key=lambda x:x[1])
+    alkl.sort(key=lambda x:x[0])
 
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
@@ -318,6 +389,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     print(numOfDevs)
     
     # make direction list using random (when training)
+    # move UAV using this direction list
     if training == True:
         directionList = []
         for i in range(N * L):
@@ -374,46 +446,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             if printDetails == True:
                 print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
 
+            # update a_l,kl[n]
+            update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
+
             # move the UAV when test mode
             if training == False:
 
                 # move the UAV
                 # (need to add definitions for variables)
-                moveUAV(board, height, q, model, l, t)
-
-            # decide the device to communicate with
-            #print(' ==== findDeviceToCommunicate ====')
-            deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
-                                                               mu1, mu2, fc, c, alphaP, numOfDevs)
-            #print(' =================================')
-
-            # update alkl, in the form of [[l0, k, l1, n, value], ...]
-            alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
-            
-            # DO NOT have alkl with (l, deviceToCommunicate, l, t)
-            if alkl_index == None or alkl_index == len(alkl):
-                alkl.append([l, deviceToCommunicate, l, t, 1])
-
-                # set alkl as 0 for other devices
-                for k in range(devices):
-                    if k == deviceToCommunicate: continue
-                    alkl.append([l, k, l, t, 0])
-
-            # have alkl with (l, deviceToCommunicate, l, t)
-            else:
-                alkl[alkl_index][4] = 1
-
-                # set alkl as 0 for other devices
-                for k in range(devices):
-                    if k == deviceToCommunicate: continue
-                    alkl_index_k = f.find_alkl(alkl, l, k, l, t)
-                    alkl[alkl_index_k] = [l, k, l, t, 0]
-
-            # sort alkl array
-            alkl.sort(key=lambda x:x[3])
-            alkl.sort(key=lambda x:x[2])
-            alkl.sort(key=lambda x:x[1])
-            alkl.sort(key=lambda x:x[0])
+                moveUAV_DL(board, height, q, model, l, t)
 
         # compute average throughput for each device in L
         for k in range(devices):
@@ -445,25 +486,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             final_throughputs_df = pd.DataFrame(final_throughputs)
             final_throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
-        # print average throughput result for each UAV
-        print('\n\n ==== UAV ' + str(l) + ' ====')
-        print('trajectory:')
-        
-        for t in range(N+1):
-            if t < N:
-                print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4),
-                      'h:', q[l * (N+1) + t][4], 'direction:', directionList[l * N + t])
-            else:
-                print('t:', t, 'x:', round(q[l * (N+1) + t][2], 4), 'y:', round(q[l * (N+1) + t][3], 4),
-                      'h:', q[l * (N+1) + t][4])
-                
-        print('\nthroughputs for each device:')
-        print(str(list(np.round_(final_throughputs, 6))))
-
-        print('min throughput = ' + str(round(min(final_throughputs), 6)))
         minthroughputs.append(min(final_throughputs))
-        
-        print('===============\n\n')
 
         # save at all_throughputs
         all_throughputs += list(final_throughputs)
@@ -485,39 +508,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     print('\n\n(normalized) all throughputs:')
     print(np.round_(all_throughputs, 6))
 
-    # save trajectory graph
-    plt.clf()
-    plt.suptitle('trajectory result at iter ' + str(iterationCount))
-    plt.axis([-1, width+1, -1, height+1])
-
-    # w = [[l, k, xkl, ykl, 0], ...]
-    for i in range(len(w)):
-
-        # device throughput = 0
-        if all_throughputs[i] == 0:
-            plt.scatter(w[i][2], w[i][3], s=25,
-                        marker='o', c=markerColors[w[i][0]])
-
-        # device throughput > 0
-        else:
-            plt.scatter(w[i][2], w[i][3],
-                        s=int(pow(5.0 + all_throughputs[i] * 7.0, 2.0)),
-                        marker='o', c=changeColor(markerColors[w[i][0]], 0.6))
-
-    # q = [[l, t, xlt, ylt, hlt], ...]
-    for l in range(L):
-        for t in range(N+1):
-            ind = l * (N+1) + t
-           
-            plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
-
-            if t < N:
-                x = [q[ind][2], q[ind+1][2]]
-                y = [q[ind][3], q[ind+1][3]]
-                plt.plot(x, y, linewidth=0.75, c=markerColors[l])
-
-    # save the figure
-    plt.savefig('trajectory_iter' + ('%04d' % iterationCount))
+    # save trajectory as graph
+    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors)
 
 if __name__ == '__main__':
 
