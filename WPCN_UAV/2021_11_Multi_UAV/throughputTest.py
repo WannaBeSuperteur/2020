@@ -16,6 +16,8 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 
 import tensorflow as tf
+from tensorflow import keras
+from tensorflow.keras import layers
 import time
 
 timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
@@ -263,14 +265,115 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 
     return (input_, output_)
 
+# deep learning model class
+class DEEP_LEARNING_MODEL(tf.keras.Model):
+
+    def __init__(self, window=10, dropout_rate=0.25, training=False, name='WPCN_model'):
+
+        super(DEEP_LEARNING_MODEL, self).__init__(name=name)
+        self.windowSize = window
+
+        # common
+        self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
+        self.flat    = tf.keras.layers.Flatten()
+        L2           = tf.keras.regularizers.l2(0.001)
+
+        # CNN layers for board (2*window)*(2*window)
+        self.CNN0    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN0')
+        self.MaxP0   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
+        self.CNN1    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN1')
+        self.CNN2    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')
+        self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
+        self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
+        
+        # Deep Neural Networks for height of UAV (1)
+        self.dense00 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense00')
+        self.dense01 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense01')
+
+        # Deep Neural Networks for action info (3)
+        self.dense10 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense10')
+        self.dense11 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense11')
+
+        # final
+        self.merged  = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_merged')
+        self.final   = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
+
+    def call(self, inputs, training):
+
+        ws = self.windowSize
+
+        # split inputs:   board         (2*window)*(2*window)
+        #               + height of UAV (1)
+        #               + action        (3)
+        board, UAV_height, actionInfo = tf.split(inputs, [(2 * ws) * (2 * ws), 1, 3], axis=1)
+
+        # CNN layers for board (2*window)*(2*window)
+        board = tf.reshape(board, (-1, (2 * ws), (2 * ws)))
+
+        board = self.CNN0(board)
+        board = self.MaxP0(board)
+        board = self.CNN1(board)
+        board = self.CNN2(board)
+        board = self.CNN3(board)
+        board = self.CNN4(board)
+
+        board = self.flat(board)
+
+        # Deep Neural Networks for height of UAV (1)
+        UAV_height = self.dense00(UAV_height)
+        UAV_height = self.dense01(UAV_height)
+
+        # Deep Neural Networks for action info (3)
+        actionInfo = self.dense10(actionInfo)
+        actionInfo = self.dense11(actionInfo)
+
+        # final
+        concatenated = tf.concat([board, UAV_height, actionInfo], axis=-1)
+        concatenated = self.merged(concatenated)
+        output = self.final(concatenated)
+
+        return output
+
+# preprocess input and output data
+def preprocessData():
+
+    # load original input and output data
+
+    # preprocess input data
+
+    # preprocess output data
+
+    # return preprocessed data
+    return (input_data, output_data)
+
 # deep learning model
 def getAndTrainModel():
 
     # model definition (with regularizer)
+    model = DEEP_LEARNING_MODEL(window=10)
 
     # training setting (early stopping and reduce learning rate)
+    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
+                                             mode="min",
+                                             patience=early_patience)
+    
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                      factor=lr_reduced_factor,
+                                                      patience=lr_reduced_patience,
+                                                      verbose=1,
+                                                      min_delta=0.0001,
+                                                      mode='min')
+
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+    # load and preprocess input and output data
+    (input_data, output_data) = preprocessData()
 
     # train using input and output data
+    model.fit(input_data, output_data,
+              validation_split=0.1, callbacks=[early, lr_reduced], epochs=10)
+    model.summary()
+    model.save('WPCN_DL_model')
 
     # return the trained model
     return model
@@ -278,7 +381,7 @@ def getAndTrainModel():
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, l, t):
 
-    # make input data using board + height of UAV
+    # make input data using (board + height of UAV + action)
 
     # get output data of the model for each action (board + height of UAV + action)
 
@@ -676,7 +779,10 @@ if __name__ == '__main__':
     exit(0) # temp
 
     # get and train model
-    model = getAndTrainModel()
+    try:
+        model = tf.keras.models.load_model('WPCN_DL_model')
+    except:
+        model = getAndTrainModel()
 
     # run test
     test(iters, M, T, N, L, devices, width, height, H,
