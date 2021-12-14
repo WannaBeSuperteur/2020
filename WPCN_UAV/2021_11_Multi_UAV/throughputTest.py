@@ -338,13 +338,35 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 def preprocessData():
 
     # load original input and output data
+    new_input_data  = pd.read_csv('input_data.csv' , index_col=0)
+    new_output_data = pd.read_csv('output_data.csv', index_col=0)
+
+    new_input_data  = np.array(new_input_data)
+    new_output_data = np.array(new_output_data)
 
     # preprocess input data
 
+    # board (2*window)*(2*window) -> x := (x + 1.5) / 3.0
+    new_input_data[:, :400] = (new_input_data[:, :400] + 1.5) / 3.0
+
+    # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
+    new_input_data[400] = (new_input_data[400] - np.mean(new_input_data[400])) / np.std(new_input_data[400])
+
+    # action info (3) -> x := x / 5.0
+    new_input_data[401:] = new_input_data[401:] / 5.0
+
     # preprocess output data
+    # DO NOTHING
+
+    # save preprocessed data
+    new_input_data_df  = pd.DataFrame(new_input_data)
+    new_output_data_df = pd.DataFrame(new_output_data)
+
+    new_input_data_df.to_csv('input_data_preprocessed.csv')
+    new_output_data_df.to_csv('output_data_preprocessed.csv')
 
     # return preprocessed data
-    return (input_data, output_data)
+    return (new_input_data, new_output_data)
 
 # deep learning model
 def getAndTrainModel():
@@ -355,11 +377,11 @@ def getAndTrainModel():
     # training setting (early stopping and reduce learning rate)
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
                                              mode="min",
-                                             patience=early_patience)
+                                             patience=5)
     
     lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
-                                                      factor=lr_reduced_factor,
-                                                      patience=lr_reduced_patience,
+                                                      factor=0.1,
+                                                      patience=2,
                                                       verbose=1,
                                                       min_delta=0.0001,
                                                       mode='min')
@@ -367,7 +389,11 @@ def getAndTrainModel():
     model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
     # load and preprocess input and output data
-    (input_data, output_data) = preprocessData()
+    try:
+        input_data  = pd.read_csv('input_data_preprocessed.csv' , index_col=0)
+        output_data = pd.read_csv('output_data_preprocessed.csv', index_col=0)
+    except:
+        (input_data, output_data) = preprocessData()
 
     # train using input and output data
     model.fit(input_data, output_data,
@@ -776,13 +802,13 @@ if __name__ == '__main__':
     train(iters, M, T, N, L, devices, width, height, H,
           ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU)
 
-    exit(0) # temp
-
     # get and train model
     try:
         model = tf.keras.models.load_model('WPCN_DL_model')
     except:
         model = getAndTrainModel()
+
+    exit(0) # temp
 
     # run test
     test(iters, M, T, N, L, devices, width, height, H,
