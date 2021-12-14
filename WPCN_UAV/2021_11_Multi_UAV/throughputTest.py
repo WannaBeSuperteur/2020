@@ -178,7 +178,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
                         center_x : center_x + 2 * window]
 
     # height of UAV
-    height = np.array([q_current[2]])
+    UAVheight = np.array([q_current[2]])
 
     # action (dif of x, y, and h of UAV)
     action = np.array(q_after) - np.array(q_current)
@@ -192,7 +192,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
     # save training dataset
     # input  : board + height + action
     # output : output
-    input_  = np.concatenate((input_board.flatten(), height, action), -1)
+    input_  = np.concatenate((input_board.flatten(), UAVheight, action), -1)
     output_ = np.array([output])
 
     return (input_, output_)
@@ -277,17 +277,17 @@ def getModel():
     pass # later
 
 # move the UAV using learned model
-def moveUAV_DL(board, height, q, model, l, t):
+def moveUAV_DL(board, UAVheight, q, model, l, t):
 
-    # make input data using board + height
+    # make input data using board + height of UAV
 
-    # get output data of the model for each action (board + height + action)
+    # get output data of the model for each action (board + height of UAV + action)
 
     # find the best action with maximum output value
 
     # find the UAV to move, using l and t
 
-    # move UAV using the best action (modify q)
+    # move UAV using the best action (update q)
     
     pass # later
 
@@ -462,9 +462,17 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # move the UAV when test mode
             if training == False:
 
-                # move the UAV
-                # (need to add definitions for variables)
-                moveUAV_DL(board, height, q, model, l, t)
+                # assert that model exists
+                assert(model != None)
+
+                # define board
+                board = makeBoard(thrput, w, l, window, width, height)
+
+                # find height of UAV
+                UAVHeight = q[l * (N+1) + t][4]
+
+                # move the UAV (update q)
+                moveUAV_DL(board, UAVheight, q, model, l, t)
 
         # compute average throughput for each device in L
         for k in range(devices):
