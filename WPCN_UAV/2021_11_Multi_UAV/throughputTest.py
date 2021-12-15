@@ -419,6 +419,15 @@ def getAndTrainModel():
     input_data  = np.array(input_data)
     output_data = np.array(output_data)
 
+    # divide into training and test data
+    toTest         = 0.1
+    testStartIndex = int(len(input_data) * (1.0 - toTest))
+    
+    train_input  = input_data[:testStartIndex]
+    train_output = output_data[:testStartIndex]
+    test_input   = input_data[testStartIndex:]
+    test_output  = output_data[testStartIndex:]
+
     # model definition (with regularizer)
     with tf.device('/gpu:0'):
 
@@ -444,11 +453,19 @@ def getAndTrainModel():
         print(np.shape(output_data))
 
         # train using input and output data
-        model.fit(input_data, output_data,
+        model.fit(train_input, train_output,
                   validation_split=0.1, callbacks=[early, lr_reduced], epochs=50)
         
         model.summary()
         model.save('WPCN_DL_model')
+
+        # test the model
+        test_prediction = model.predict(test_input)
+        test_prediction = np.reshape(test_prediction, (len(test_prediction), 1))
+        test_result     = np.concatenate((test_prediction, test_output), axis=1)
+
+        test_result     = pd.DataFrame(test_result)
+        test_result.to_csv('test_result.csv')
 
     # return the trained model
     return model
