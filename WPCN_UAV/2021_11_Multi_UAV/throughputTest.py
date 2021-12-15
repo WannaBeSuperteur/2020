@@ -31,6 +31,9 @@ gpus = tf.config.experimental.list_physical_devices('GPU')
 for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
+# window size
+WINDOWSIZE = 20
+
 # note:
 # to ensure that MINIMUM THROUGHPUT > 0
 # --->           sum of a_l,kl[n] > 0 for all devices
@@ -195,9 +198,12 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
 
     #### OUTPUT
     # compute output (reward) based on throughput change
-    output_after  = np.mean(thrput_after) / np.max(thrput_after)
-    output_before = np.mean(thrput      ) / np.max(thrput      )
-    output        = output_after - output_before
+    try:
+        thrput_increase = np.sum(thrput_after) - np.sum(thrput)
+        max_increase    = np.max(thrput_after) - np.max(thrput)
+        output          = 1.0 - max_increase / thrput_increase
+    except:
+        output          = 0.0
 
     # save training dataset
     # input  : board + height + action
@@ -266,7 +272,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     q_after   = q[l * (N+1) + (t+1)][2:5]
 
     # find the range of the board (unit: width=0.5, height=0.5)
-    window = 10
+    window = WINDOWSIZE
 
     # make the board for training
     board = makeBoard(thrput, w, l, window, width, height)
@@ -279,7 +285,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
 # deep learning model class
 class DEEP_LEARNING_MODEL(tf.keras.Model):
 
-    def __init__(self, window=10, dropout_rate=0.25, training=False, name='WPCN_model'):
+    def __init__(self, window=WINDOWSIZE, dropout_rate=0.25, training=False, name='WPCN_model'):
 
         super(DEEP_LEARNING_MODEL, self).__init__(name=name)
         self.windowSize = window
@@ -290,24 +296,27 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         L2           = tf.keras.regularizers.l2(0.001)
 
         # CNN layers for board (2*window)*(2*window)
-        self.CNN0    = tf.keras.layers.Conv2D(filters=512, kernel_size=3, padding='valid', activation='relu', name='CNN0')
+        self.CNN0    = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN0')
         self.MaxP0   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
-        self.CNN1    = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN1')
-        self.CNN2    = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN2')
+        self.CNN1    = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1')
+        self.CNN2    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')
+        self.MaxP1   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
         self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
         self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
         
         # Deep Neural Networks for height of UAV (1)
         self.dense00 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense00')
         self.dense01 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense01')
+        self.dense02 = tf.keras.layers.Dense(3, activation='relu', kernel_regularizer=L2, name='dense02')
 
         # Deep Neural Networks for action info (3)
         self.dense10 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense10')
         self.dense11 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense11')
+        self.dense12 = tf.keras.layers.Dense(3, activation='relu', kernel_regularizer=L2, name='dense12')
 
         # final
         self.merged  = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_merged')
-        self.final   = tf.keras.layers.Dense(1, activation='tanh', kernel_regularizer=L2, name='dense_final')
+        self.final   = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
 
@@ -328,7 +337,8 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board = self.CNN1(board)
         board = self.dropout(board)
         board = self.CNN2(board)
-        board = self.dropout(board)
+        board = self.MaxP1(board)
+
         board = self.CNN3(board)
         board = self.dropout(board)
         board = self.CNN4(board)
@@ -339,11 +349,15 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         UAV_height = self.dense00(UAV_height)
         UAV_height = self.dropout(UAV_height)
         UAV_height = self.dense01(UAV_height)
+        UAV_height = self.dropout(UAV_height)
+        UAV_height = self.dense02(UAV_height)
 
         # Deep Neural Networks for action info (3)
         actionInfo = self.dense10(actionInfo)
         actionInfo = self.dropout(actionInfo)
         actionInfo = self.dense11(actionInfo)
+        actionInfo = self.dropout(actionInfo)
+        actionInfo = self.dense12(actionInfo)
 
         # final
         concatenated = tf.concat([board, UAV_height, actionInfo], axis=-1)
@@ -356,6 +370,8 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 # preprocess input and output data
 def preprocessData():
 
+    BOARD_ARGS = 4 * WINDOWSIZE * WINDOWSIZE
+
     # load original input and output data
     new_input_data  = pd.read_csv('input_data.csv' , index_col=0)
     new_output_data = pd.read_csv('output_data.csv', index_col=0)
@@ -366,14 +382,14 @@ def preprocessData():
     # preprocess input data
 
     # board (2*window)*(2*window) -> x := (x + 1.5) / 3.0
-    new_input_data[:, :400] = (new_input_data[:, :400] + 1.5) / 3.0
+    new_input_data[:, :BOARD_ARGS] = (new_input_data[:, :BOARD_ARGS] + 1.5) / 3.0
 
     # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
-    new_input_data[:, 400] = (new_input_data[:, 400] - np.mean(new_input_data[:, 400])) / np.std(new_input_data[:, 400])
+    new_input_data[:, BOARD_ARGS] = (new_input_data[:, BOARD_ARGS] - np.mean(new_input_data[:, BOARD_ARGS])) / np.std(new_input_data[:, BOARD_ARGS])
 
     # action info (3) -> x := x / 5.0 for x and y
     #                    x := x       for h
-    new_input_data[:, 401:403] = new_input_data[:, 401:403] / 5.0
+    new_input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] = new_input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] / 5.0
 
     # preprocess output data
     # DO NOTHING
@@ -406,7 +422,7 @@ def getAndTrainModel():
     # model definition (with regularizer)
     with tf.device('/gpu:0'):
 
-        model = DEEP_LEARNING_MODEL(window=10)
+        model = DEEP_LEARNING_MODEL(window=WINDOWSIZE)
 
         # training setting (early stopping and reduce learning rate)
         early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
