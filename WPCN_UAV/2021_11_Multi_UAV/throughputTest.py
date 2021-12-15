@@ -1,4 +1,5 @@
 import sys
+import os
 
 import helper as h_
 import formula as f
@@ -16,12 +17,19 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 
 import tensorflow as tf
-from tensorflow import keras
-from tensorflow.keras import layers
+
 import time
 
 timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
+
+# enable GPU
+os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
+
+# allow GPU memory increase
+gpus = tf.config.experimental.list_physical_devices('GPU')
+for gpu in gpus:
+    tf.config.experimental.set_memory_growth(gpu, True)
 
 # note:
 # to ensure that MINIMUM THROUGHPUT > 0
@@ -221,7 +229,10 @@ def makeBoard(thrput, w, l, window, width, height):
     dev_in_l = len(dev_x)
 
     # normalized throughput
-    thrput_   = [(thrput[i] - minThrput) / (maxThrput - minThrput) * 2.0 - 1.0 for i in range(len(thrput))]
+    if len(thrput) >= 2:
+        thrput_ = [(thrput[i] - minThrput) / (maxThrput - minThrput) * 2.0 - 1.0 for i in range(len(thrput))]
+    else:
+        thrput_ = np.array([0])
 
     for i in range(dev_in_l):
 
@@ -308,28 +319,36 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board, UAV_height, actionInfo = tf.split(inputs, [(2 * ws) * (2 * ws), 1, 3], axis=1)
 
         # CNN layers for board (2*window)*(2*window)
-        board = tf.reshape(board, (-1, (2 * ws), (2 * ws)))
+        board = tf.reshape(board, (-1, (2 * ws), (2 * ws), 1))
 
         board = self.CNN0(board)
+        board = self.dropout(board)
         board = self.MaxP0(board)
+        
         board = self.CNN1(board)
+        board = self.dropout(board)
         board = self.CNN2(board)
+        board = self.dropout(board)
         board = self.CNN3(board)
+        board = self.dropout(board)
         board = self.CNN4(board)
 
         board = self.flat(board)
 
         # Deep Neural Networks for height of UAV (1)
         UAV_height = self.dense00(UAV_height)
+        UAV_height = self.dropout(UAV_height)
         UAV_height = self.dense01(UAV_height)
 
         # Deep Neural Networks for action info (3)
         actionInfo = self.dense10(actionInfo)
+        actionInfo = self.dropout(actionInfo)
         actionInfo = self.dense11(actionInfo)
 
         # final
         concatenated = tf.concat([board, UAV_height, actionInfo], axis=-1)
         concatenated = self.merged(concatenated)
+        concatenated = self.dropout(concatenated)
         output = self.final(concatenated)
 
         return output
@@ -350,10 +369,11 @@ def preprocessData():
     new_input_data[:, :400] = (new_input_data[:, :400] + 1.5) / 3.0
 
     # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
-    new_input_data[400] = (new_input_data[400] - np.mean(new_input_data[400])) / np.std(new_input_data[400])
+    new_input_data[:, 400] = (new_input_data[:, 400] - np.mean(new_input_data[:, 400])) / np.std(new_input_data[:, 400])
 
-    # action info (3) -> x := x / 5.0
-    new_input_data[401:] = new_input_data[401:] / 5.0
+    # action info (3) -> x := x / 5.0 for x and y
+    #                    x := x       for h
+    new_input_data[:, 401:403] = new_input_data[:, 401:403] / 5.0
 
     # preprocess output data
     # DO NOTHING
@@ -371,35 +391,48 @@ def preprocessData():
 # deep learning model
 def getAndTrainModel():
 
-    # model definition (with regularizer)
-    model = DEEP_LEARNING_MODEL(window=10)
-
-    # training setting (early stopping and reduce learning rate)
-    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
-                                             mode="min",
-                                             patience=5)
-    
-    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
-                                                      factor=0.1,
-                                                      patience=2,
-                                                      verbose=1,
-                                                      min_delta=0.0001,
-                                                      mode='min')
-
-    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-
     # load and preprocess input and output data
     try:
         input_data  = pd.read_csv('input_data_preprocessed.csv' , index_col=0)
         output_data = pd.read_csv('output_data_preprocessed.csv', index_col=0)
     except:
+        print('[ NO PREPROCESSED DATA ]')
         (input_data, output_data) = preprocessData()
 
-    # train using input and output data
-    model.fit(input_data, output_data,
-              validation_split=0.1, callbacks=[early, lr_reduced], epochs=10)
-    model.summary()
-    model.save('WPCN_DL_model')
+    # convert data into numpy array
+    input_data  = np.array(input_data)
+    output_data = np.array(output_data)
+
+    # model definition (with regularizer)
+    with tf.device('/gpu:0'):
+
+        model = DEEP_LEARNING_MODEL(window=10)
+
+        # training setting (early stopping and reduce learning rate)
+        early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
+                                                 mode="min",
+                                                 patience=5)
+
+        lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                          factor=0.1,
+                                                          patience=2,
+                                                          verbose=1,
+                                                          min_delta=0.0001,
+                                                          mode='min')
+
+        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+        print(' << input >>')
+        print(np.shape(input_data))
+        print(' << output >>')
+        print(np.shape(output_data))
+
+        # train using input and output data
+        model.fit(input_data, output_data,
+                  validation_split=0.1, callbacks=[early, lr_reduced], epochs=10)
+        
+        model.summary()
+        model.save('WPCN_DL_model')
 
     # return the trained model
     return model
@@ -625,8 +658,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         throughputs       = throughputs.T
         final_throughputs = throughputs[-1]
 
-        # save throughputs
-        if iterationCount < 5:
+        # save throughputs at first iteration
+        if iterationCount == 0:
             throughputs_df = pd.DataFrame(throughputs)
             throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '.csv')
 
@@ -799,8 +832,14 @@ if __name__ == '__main__':
     configFile.close()
 
     # run training
-    train(iters, M, T, N, L, devices, width, height, H,
-          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU)
+    try:
+        _ = pd.read_csv('input_data_preprocessed.csv' , index_col=0)
+        _ = pd.read_csv('output_data_preprocessed.csv', index_col=0)
+
+    except:
+        print('[ NO PREPROCESSED DATA ]')
+        train(iters, M, T, N, L, devices, width, height, H,
+              ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU)
 
     # get and train model
     try:
