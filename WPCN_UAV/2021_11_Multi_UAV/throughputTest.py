@@ -307,7 +307,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 
         # final
         self.merged  = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_merged')
-        self.final   = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
+        self.final   = tf.keras.layers.Dense(1, activation='tanh', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
 
