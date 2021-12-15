@@ -290,10 +290,10 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         L2           = tf.keras.regularizers.l2(0.001)
 
         # CNN layers for board (2*window)*(2*window)
-        self.CNN0    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN0')
+        self.CNN0    = tf.keras.layers.Conv2D(filters=512, kernel_size=3, padding='valid', activation='relu', name='CNN0')
         self.MaxP0   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
-        self.CNN1    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN1')
-        self.CNN2    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')
+        self.CNN1    = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN1')
+        self.CNN2    = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN2')
         self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
         self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
         
@@ -429,7 +429,7 @@ def getAndTrainModel():
 
         # train using input and output data
         model.fit(input_data, output_data,
-                  validation_split=0.1, callbacks=[early, lr_reduced], epochs=10)
+                  validation_split=0.1, callbacks=[early, lr_reduced], epochs=50)
         
         model.summary()
         model.save('WPCN_DL_model')
