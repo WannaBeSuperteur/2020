@@ -303,19 +303,21 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.MaxP1   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
         self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
         self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
+
+        self.den_CNN = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_CNN')
         
         # Deep Neural Networks for height of UAV (1)
         self.dense00 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense00')
         self.dense01 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense01')
-        self.dense02 = tf.keras.layers.Dense(3, activation='relu', kernel_regularizer=L2, name='dense02')
+        self.dense02 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense02')
 
         # Deep Neural Networks for action info (3)
         self.dense10 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense10')
         self.dense11 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense11')
-        self.dense12 = tf.keras.layers.Dense(3, activation='relu', kernel_regularizer=L2, name='dense12')
+        self.dense12 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense12')
 
         # final
-        self.merged  = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_merged')
+        self.merged  = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense_merged')
         self.final   = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
@@ -344,6 +346,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board = self.CNN4(board)
 
         board = self.flat(board)
+        board = self.den_CNN(board)
 
         # Deep Neural Networks for height of UAV (1)
         UAV_height = self.dense00(UAV_height)
