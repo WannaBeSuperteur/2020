@@ -199,9 +199,10 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
     #### OUTPUT
     # compute output (reward) based on throughput change
     try:
+        original_max    = np.max(thrput)
         thrput_increase = np.sum(thrput_after) - np.sum(thrput)
-        max_increase    = np.max(thrput_after) - np.max(thrput)
-        output          = 1.0 - max_increase / thrput_increase
+        thrput_over_max = sum(max(0.0, thrput_after[i] - original_max) for i in range(len(thrput)))
+        output          = 1.0 - thrput_over_max / thrput_increase
     except:
         output          = 0.0
 
