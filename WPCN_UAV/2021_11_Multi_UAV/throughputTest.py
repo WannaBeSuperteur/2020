@@ -180,12 +180,12 @@ def markDevicePosition(board, board_x, board_y, thrput, window):
     modifyArr(board, board_y + 2, board_x + 1, 0.2 * thrput, window)
 
 # make input and output based on current HAP location
-def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
+def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window, l, t):
 
     #### INPUT
     # board (center: x and y of UAV)
-    center_x = int(q_current[0] * 2)
-    center_y = int(q_current[1] * 2)
+    center_x = int(q_current[0])
+    center_y = int(q_current[1])
     
     input_board = board[center_y : center_y + 2 * window,
                         center_x : center_x + 2 * window]
@@ -206,6 +206,17 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
     except:
         output          = 0.0
 
+    # plot the board array using seaborn
+    """
+    plt.clf()
+    ax = sns.heatmap(input_board)
+    plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
+
+    plt.clf()
+    ax = sns.heatmap(board)
+    plt.savefig('input_board_' + str(l) + ',' + str(t) + '_original.png', bbox_inches='tight', dpi=100)
+    """
+
     # save training dataset
     # input  : board + height + action
     # output : output
@@ -218,7 +229,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
 # thrput: common throughput value at time t
 def makeBoard(thrput, w, l, window, width, height):
 
-    board = np.zeros((2*width + 2*window, 2*height + 2*window))
+    board = np.zeros((width + 2 * window, height + 2 * window))
 
     # max device and min device
     maxThrput = max(thrput)
@@ -249,8 +260,8 @@ def makeBoard(thrput, w, l, window, width, height):
         #                                         [0.5, 1.0, 1.2, 1.0, 0.5],
         #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
         #                                         [     0.2, 0.5, 0.2     ]])
-        board_x = int(dev_x[i] * 2)
-        board_y = int(dev_y[i] * 2)
+        board_x = int(dev_x[i])
+        board_y = int(dev_y[i])
 
         # mark the position of device
         markDevicePosition(board, board_x, board_y, thrput_[i], window)
@@ -273,14 +284,14 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     q_current = q[l * (N+1) + t    ][2:5]
     q_after   = q[l * (N+1) + (t+1)][2:5]
 
-    # find the range of the board (unit: width=0.5, height=0.5)
+    # find the range of the board (unit: width=1.0m, height=1.0m)
     window = WINDOWSIZE
 
     # make the board for training
     board = makeBoard(thrput, w, l, window, width, height)
 
     # make input data based on current HAP location
-    (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window)
+    (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window, l, t)
 
     return (input_, output_)
 
@@ -297,7 +308,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.flat    = tf.keras.layers.Flatten()
         L2           = tf.keras.regularizers.l2(0.001)
 
-        # CNN layers for board (2*window)*(2*window)
+        # CNN layers for board (2 * window) * (2 * window)
         self.CNN0    = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN0')
         self.MaxP0   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
         self.CNN1    = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1')
@@ -326,12 +337,12 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 
         ws = self.windowSize
 
-        # split inputs:   board         (2*window)*(2*window)
+        # split inputs:   board         (2 * window)*(2 * window)
         #               + height of UAV (1)
         #               + action        (3)
         board, UAV_height, actionInfo = tf.split(inputs, [(2 * ws) * (2 * ws), 1, 3], axis=1)
 
-        # CNN layers for board (2*window)*(2*window)
+        # CNN layers for board (2 * window)*(2 * window)
         board = tf.reshape(board, (-1, (2 * ws), (2 * ws), 1))
 
         board = self.CNN0(board)
@@ -375,7 +386,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 # preprocess input and output data
 def preprocessData():
 
-    BOARD_ARGS = 4 * WINDOWSIZE * WINDOWSIZE
+    BOARD_ARGS = 4 * WINDOWSIZE * WINDOWSIZE # (2 * WINDOWSIZE)^2
 
     # load original input and output data
     new_input_data  = pd.read_csv('input_data.csv' , index_col=0)
