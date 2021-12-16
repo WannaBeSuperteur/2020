@@ -32,7 +32,7 @@ for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 # window size
-WINDOWSIZE = 20
+WINDOWSIZE = 40
 
 # note:
 # to ensure that MINIMUM THROUGHPUT > 0
@@ -212,6 +212,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window):
     input_  = np.concatenate((input_board.flatten(), UAVheight, action), -1)
     output_ = np.array([output])
 
+    # print('test:', np.mean(input_board.flatten()), output)
     return (input_, output_)
 
 # thrput: common throughput value at time t
@@ -385,8 +386,8 @@ def preprocessData():
 
     # preprocess input data
 
-    # board (2*window)*(2*window) -> x := (x + 1.5) / 3.0
-    new_input_data[:, :BOARD_ARGS] = (new_input_data[:, :BOARD_ARGS] + 1.5) / 3.0
+    # board (2*window)*(2*window) -> x := x / 1.5
+    new_input_data[:, :BOARD_ARGS] = new_input_data[:, :BOARD_ARGS] / 1.5
 
     # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
     new_input_data[:, BOARD_ARGS] = (new_input_data[:, BOARD_ARGS] - np.mean(new_input_data[:, BOARD_ARGS])) / np.std(new_input_data[:, BOARD_ARGS])
