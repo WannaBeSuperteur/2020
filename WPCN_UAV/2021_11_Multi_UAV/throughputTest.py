@@ -199,12 +199,12 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window, 
     #### OUTPUT
     # compute output (reward) based on throughput change
     try:
-        original_max    = np.max(thrput)
-        thrput_increase = np.sum(thrput_after) - np.sum(thrput)
-        thrput_over_max = sum(max(0.0, thrput_after[i] - original_max) for i in range(len(thrput)))
-        output          = 1.0 - thrput_over_max / thrput_increase
+        communicated_device = np.argmax(thrput_after - thrput)
+        after_throughput    = thrput_after[communicated_device]
+        before_throughput   = thrput[communicated_device]
+        output              = 1.0 - before_throughput / after_throughput
     except:
-        output          = 0.0
+        output              = 0.0
 
     # plot the board array using seaborn
     """
@@ -313,9 +313,9 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.MaxP0   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
         self.CNN1    = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1')
         self.CNN2    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')
-        self.MaxP1   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
-        self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
-        self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
+        #self.MaxP1   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
+        #self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
+        #self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
 
         self.den_CNN = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_CNN')
         
@@ -345,18 +345,18 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         # CNN layers for board (2 * window)*(2 * window)
         board = tf.reshape(board, (-1, (2 * ws), (2 * ws), 1))
 
-        board = self.CNN0(board)
+        board = self.CNN0(board)    # 16 -> 14
         board = self.dropout(board)
-        board = self.MaxP0(board)
+        board = self.MaxP0(board)   # 14 ->  7
         
-        board = self.CNN1(board)
+        board = self.CNN1(board)    #  7 ->  5
         board = self.dropout(board)
-        board = self.CNN2(board)
-        board = self.MaxP1(board)
+        board = self.CNN2(board)    #  5 ->  3
+        #board = self.MaxP1(board)
 
-        board = self.CNN3(board)
-        board = self.dropout(board)
-        board = self.CNN4(board)
+        #board = self.CNN3(board)
+        #board = self.dropout(board)
+        #board = self.CNN4(board)
 
         board = self.flat(board)
         board = self.den_CNN(board)
