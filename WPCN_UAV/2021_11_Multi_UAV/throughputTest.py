@@ -584,7 +584,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     while True:
         (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
-        if min(numOfDevs) > 0: break
+        if min(numOfDevs) >= int(0.6 * devices // L): break
 
     # save device info
     print('< q >')

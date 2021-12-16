@@ -14,7 +14,7 @@ PU=-20.0 # transmission power for IoT devices' uplink
 width=50 # width (m)
 height=50 # height (m)
 M=10000 # episodes
-L=5 # number of clusters = number of UAVs # 5
+L=3 # number of clusters = number of UAVs # 5
 devices=20 # number of devices
 T=1.0 # flight period (in seconds) (1.0 for example)
 N=40 # flight period T -> into N+1 time slots

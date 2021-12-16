@@ -220,7 +220,7 @@ if __name__ == '__main__':
     # do K means clustering (at least 1 device for all clusters)
     while True:
         (q, w, cluster_mem, markerColors) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
-        if min(cluster_mem.count(l) for l in range(L)) > 0: break
+        if min(cluster_mem.count(l) for l in range(L)) >= int(0.6 * devices // L): break
 
     # print result
     print(' << q >>')
