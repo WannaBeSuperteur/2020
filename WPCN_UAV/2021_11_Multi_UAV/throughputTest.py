@@ -32,7 +32,7 @@ for gpu in gpus:
     tf.config.experimental.set_memory_growth(gpu, True)
 
 # window size
-WINDOWSIZE = 40
+WINDOWSIZE = h_.loadSettings({'windowSize':'int'})['windowSize']
 
 # note:
 # to ensure that MINIMUM THROUGHPUT > 0
@@ -864,7 +864,8 @@ if __name__ == '__main__':
     configContent += 'T=' + str(T) + '\n'
     configContent += 'N=' + str(N) + '\n'
     configContent += 'H=' + str(H) + '\n'
-    configContent += 'iters=' + str(iters)
+    configContent += 'iters=' + str(iters) + '\n'
+    configContent += 'windowSize=' + str(WINDOWSIZE)
 
     configFile.write(configContent)
     configFile.close()
