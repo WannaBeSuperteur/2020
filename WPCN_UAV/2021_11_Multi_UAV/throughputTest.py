@@ -148,6 +148,7 @@ def modifyArr(arr, y, x, value, window):
         elif arr[y + window][x + window] > 1.5:
             arr[y + window][x + window] = 1.5
     except:
+        print(y, x, value, window)
         pass
 
 # mark the position of device
@@ -174,6 +175,14 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     
     input_board = board[center_y : center_y + 2 * window,
                         center_x : center_x + 2 * window]
+
+    # mark the center
+    for y in range(-2, 2):
+        for x in range(-2, 2):
+            if (x + y) % 2 == 0:
+                input_board[window + x][window + y] = 1.5
+            else:
+                input_board[window + x][window + y] = -1.5
 
     # height of UAV
     UAVheight = np.array([q_current[2]])
