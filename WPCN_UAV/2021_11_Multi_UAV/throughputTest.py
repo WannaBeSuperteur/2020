@@ -184,12 +184,12 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     #### OUTPUT
     # compute output (reward) based on throughput change
     try:
-        communicated_device = np.argmax(thrput_after - thrput)
-        after_throughput    = thrput_after[communicated_device]
-        before_throughput   = thrput[communicated_device]
-        output              = 1.0 - before_throughput / after_throughput
+        output_after   = np.mean(thrput_after) / np.max(thrput_after)
+        output_before  = np.mean(thrput)       / np.max(thrput)
+        output_compare = (output_after - output_before) * (t + 1)
+        output         = np.clip(output_compare, -0.5, 0.5) + 0.5
     except:
-        output              = 0.0
+        output         = 0.0
 
     # plot the board array using seaborn
     if iterationCount == 0:
@@ -198,10 +198,10 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
         plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
                     bbox_inches='tight', dpi=100)
 
-        plt.clf()
-        ax = sns.heatmap(board)
-        plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '_original.png',
-                    bbox_inches='tight', dpi=100)
+        #plt.clf()
+        #ax = sns.heatmap(board)
+        #plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '_original.png',
+        #            bbox_inches='tight', dpi=100)
 
     # save training dataset
     # input  : board + height + action
