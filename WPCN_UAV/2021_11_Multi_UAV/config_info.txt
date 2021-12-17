@@ -18,4 +18,4 @@ T=1.0
 N=50
 H=15.0
 iters=160
-windowSize=30
+windowSize=15

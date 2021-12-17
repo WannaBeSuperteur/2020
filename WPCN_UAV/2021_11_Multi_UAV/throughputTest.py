@@ -198,9 +198,11 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
                         center_x : center_x + 2 * window]
 
     # mark the center
+    """
     for y in range(-2, 2):
         for x in range(-2, 2):
             input_board[window + x][window + y] = 1.5
+    """
 
     # height of UAV
     UAVheight = np.array([q_current[2]])
@@ -416,6 +418,10 @@ def preprocessData():
 
     # preprocess output data
     # DO NOTHING
+
+    # remove digits to reduce volume of the *.csv files
+    new_input_data  = np.round_(new_input_data , 4)
+    new_output_data = np.round_(new_output_data, 6)
 
     # save preprocessed data
     new_input_data_df  = pd.DataFrame(new_input_data)
@@ -772,6 +778,10 @@ def train(iters, M, T, N, L, devices, width, height, H,
     # save input and output data
     input_data  = pd.DataFrame(input_data)
     output_data = pd.DataFrame(output_data)
+
+    # remove digits to reduce volume of the *.csv files
+    input_data  = np.round_(input_data , 4)
+    output_data = np.round_(output_data, 6)
 
     input_data .to_csv('input_data.csv')
     output_data.to_csv('output_data.csv')
