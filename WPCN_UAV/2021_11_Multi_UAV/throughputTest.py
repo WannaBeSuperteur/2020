@@ -153,12 +153,13 @@ def modifyArr(arr, y, x, value, window):
 # mark the position of device
 def markDevicePosition(board, board_x, board_y, thrput, window):
 
-    distrib = [0.1, 0.25, 0.6, 0.95, 1.1, 0.95, 0.6, 0.25, 0.1]
+    distrib = [0.05, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1.0, 1.05, 1.1,
+               1.05, 1.0, 0.9, 0.75, 0.6, 0.45, 0.3, 0.15, 0.05]
 
-    for y in range(9):
-        for x in range(9):
-            yy = y + (board_y - 4)
-            xx = x + (board_x - 4)
+    for y in range(19):
+        for x in range(19):
+            yy = y + (board_y - 9)
+            xx = x + (board_x - 9)
             
             modifyArr(board, yy, xx, distrib[y] * distrib[x] * thrput, window)
 
@@ -191,7 +192,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
         output              = 0.0
 
     # plot the board array using seaborn
-    if iterationCount < 2:
+    if iterationCount == 0:
         plt.clf()
         ax = sns.heatmap(input_board)
         plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
