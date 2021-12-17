@@ -164,9 +164,30 @@ def markDevicePosition(board, board_x, board_y, thrput, window):
             
             modifyArr(board, yy, xx, distrib[y] * distrib[x] * thrput, window)
 
+# get device positions
+def getDevicePos(w, l):
+
+    # filter for cluster l
+    dev_x = []
+    dev_y = []
+    
+    for i in range(len(w)):
+        if w[i][0] == l:
+            dev_x.append(w[i][2])
+            dev_y.append(w[i][3])
+
+    return (dev_x, dev_y)
+
+# get distance between the device (with index) and UAV
+def getDistBetweenDeviceAndUAV(i, dev_x, dev_y, UAV_x, UAV_y):
+    return pow(pow(dev_x[i] - UAV_x, 2.0) + pow(dev_y[i] - UAV_y, 2.0), 0.5)
+
 # make input and output based on current HAP location
 def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
-                       iterationCount, l, t):
+                       iterationCount, w, l, t):
+
+    # get device positions
+    (dev_x, dev_y) = getDevicePos(w, l)
 
     #### INPUT
     # board (center: x and y of UAV)
@@ -179,10 +200,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     # mark the center
     for y in range(-2, 2):
         for x in range(-2, 2):
-            if (x + y) % 2 == 0:
-                input_board[window + x][window + y] = 1.5
-            else:
-                input_board[window + x][window + y] = -1.5
+            input_board[window + x][window + y] = 1.5
 
     # height of UAV
     UAVheight = np.array([q_current[2]])
@@ -193,12 +211,11 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     #### OUTPUT
     # compute output (reward) based on throughput change
     try:
-        output_after   = np.mean(thrput_after) / np.max(thrput_after)
-        output_before  = np.mean(thrput)       / np.max(thrput)
-        output_compare = (output_after - output_before) * (t + 1)
-        output         = np.clip(output_compare, -0.5, 0.5) + 0.5
+        after  = np.mean(thrput_after) / np.max(thrput_after)
+        before = np.mean(thrput)       / np.max(thrput)
+        output = 1.0 / (1.0 + math.exp(-(after - before) * 400))
     except:
-        output         = 0.0
+        output = 0.5
 
     # plot the board array using seaborn
     if iterationCount == 0:
@@ -230,14 +247,8 @@ def makeBoard(thrput, w, l, window, width, height):
     maxThrput = max(thrput)
     minThrput = min(thrput)
 
-    # filter for cluster l
-    dev_x = []
-    dev_y = []
-    
-    for i in range(len(w)):
-        if w[i][0] == l:
-            dev_x.append(w[i][2])
-            dev_y.append(w[i][3])
+    # get device positions
+    (dev_x, dev_y) = getDevicePos(w, l)
 
     # the number of devices in cluster l
     dev_in_l = len(dev_x)
@@ -287,7 +298,7 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount):
 
     # make input data based on current HAP location
     (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
-                                           iterationCount, l, t)
+                                           iterationCount, w, l, t)
 
     return (input_, output_)
 
