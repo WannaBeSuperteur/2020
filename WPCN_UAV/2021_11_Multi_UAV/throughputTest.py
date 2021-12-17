@@ -153,34 +153,18 @@ def modifyArr(arr, y, x, value, window):
 # mark the position of device
 def markDevicePosition(board, board_x, board_y, thrput, window):
 
-    modifyArr(board, board_y - 2, board_x - 1, 0.2 * thrput, window)
-    modifyArr(board, board_y - 2, board_x    , 0.5 * thrput, window)
-    modifyArr(board, board_y - 2, board_x + 1, 0.2 * thrput, window)
-        
-    modifyArr(board, board_y - 1, board_x - 2, 0.2 * thrput, window)
-    modifyArr(board, board_y - 1, board_x - 1, 0.6 * thrput, window)
-    modifyArr(board, board_y - 1, board_x    , 1.0 * thrput, window)
-    modifyArr(board, board_y - 1, board_x + 1, 0.6 * thrput, window)
-    modifyArr(board, board_y - 1, board_x + 2, 0.2 * thrput, window)
+    distrib = [0.1, 0.25, 0.6, 0.95, 1.1, 0.95, 0.6, 0.25, 0.1]
 
-    modifyArr(board, board_y    , board_x - 2, 0.5 * thrput, window)
-    modifyArr(board, board_y    , board_x - 1, 1.0 * thrput, window)
-    modifyArr(board, board_y    , board_x    , 1.2 * thrput, window)
-    modifyArr(board, board_y    , board_x + 1, 1.0 * thrput, window)
-    modifyArr(board, board_y    , board_x + 2, 0.5 * thrput, window)
-
-    modifyArr(board, board_y + 1, board_x - 2, 0.2 * thrput, window)
-    modifyArr(board, board_y + 1, board_x - 1, 0.6 * thrput, window)
-    modifyArr(board, board_y + 1, board_x    , 1.0 * thrput, window)
-    modifyArr(board, board_y + 1, board_x + 1, 0.6 * thrput, window)
-    modifyArr(board, board_y + 1, board_x + 2, 0.2 * thrput, window)
-
-    modifyArr(board, board_y + 2, board_x - 1, 0.2 * thrput, window)
-    modifyArr(board, board_y + 2, board_x    , 0.5 * thrput, window)
-    modifyArr(board, board_y + 2, board_x + 1, 0.2 * thrput, window)
+    for y in range(9):
+        for x in range(9):
+            yy = y + (board_y - 4)
+            xx = x + (board_x - 4)
+            
+            modifyArr(board, yy, xx, distrib[y] * distrib[x] * thrput, window)
 
 # make input and output based on current HAP location
-def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window, l, t):
+def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
+                       iterationCount, l, t):
 
     #### INPUT
     # board (center: x and y of UAV)
@@ -207,15 +191,16 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window, 
         output              = 0.0
 
     # plot the board array using seaborn
-    """
-    plt.clf()
-    ax = sns.heatmap(input_board)
-    plt.savefig('input_board_' + str(l) + ',' + str(t) + '.png', bbox_inches='tight', dpi=100)
+    if iterationCount < 2:
+        plt.clf()
+        ax = sns.heatmap(input_board)
+        plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
+                    bbox_inches='tight', dpi=100)
 
-    plt.clf()
-    ax = sns.heatmap(board)
-    plt.savefig('input_board_' + str(l) + ',' + str(t) + '_original.png', bbox_inches='tight', dpi=100)
-    """
+        plt.clf()
+        ax = sns.heatmap(board)
+        plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '_original.png',
+                    bbox_inches='tight', dpi=100)
 
     # save training dataset
     # input  : board + height + action
@@ -269,7 +254,7 @@ def makeBoard(thrput, w, l, window, width, height):
     return board
 
 # make training dataset
-def makeTrainDataset(w, l, action_list, throughputs, t, q):
+def makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount):
 
     w = np.array(w)
     throughputs = np.array(throughputs).T
@@ -291,7 +276,8 @@ def makeTrainDataset(w, l, action_list, throughputs, t, q):
     board = makeBoard(thrput, w, l, window, width, height)
 
     # make input data based on current HAP location
-    (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window, l, t)
+    (input_, output_) = makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
+                                           iterationCount, l, t)
 
     return (input_, output_)
 
@@ -697,7 +683,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         #### make training dataset ####
         if training == True:
             for t in range(N-1):
-                (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs, t, q)
+                (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs,
+                                                     t, q, iterationCount)
                 
                 input_data .append(list(input_ ))
                 output_data.append(list(output_))
