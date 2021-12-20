@@ -243,6 +243,15 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
 # thrput: common throughput value at time t
 def makeBoard(thrput, w, l, window, width, height):
 
+    if l == 0:
+        print(' ======== makeBoard ========')
+        print('thrput:', np.shape(thrput))
+        print('w:', np.shape(w))
+        print('l:', l)
+        print('window:', window)
+        print('width:', width)
+        print('height:', height)
+
     board = np.zeros((width + 2 * window, height + 2 * window))
 
     # max device and min device
@@ -278,6 +287,16 @@ def makeBoard(thrput, w, l, window, width, height):
 
 # make training dataset
 def makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount):
+
+    if iterationCount == 0 and l == 0:
+        print(' ======== makeTrainDataset ========')
+        print('w:', np.shape(w))
+        print('l:', l)
+        print('action_list:', np.shape(action_list))
+        print('throughputs:', np.shape(throughputs))
+        print('t:', t)
+        print('q:', np.shape(q))
+        print('iterationCount:', iterationCount)
 
     w = np.array(w)
     throughputs = np.array(throughputs).T
@@ -476,10 +495,12 @@ def getAndTrainModel():
 
         model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
+        """
         print(' << input >>')
         print(np.shape(input_data))
         print(' << output >>')
         print(np.shape(output_data))
+        """
 
         # train using input and output data
         model.fit(train_input, train_output,
@@ -500,19 +521,31 @@ def getAndTrainModel():
     return model
 
 # move the UAV using learned model
-def moveUAV_DL(board, UAVheight, q, model, l, t):
+def moveUAV_DL(board, UAVheight, q, model, w, l, t):
+
+    if l == 0 and t == 0:
+        print(' ======== moveUAV_DL ========')
+        print('board:', np.shape(board))
+        print('UAVHeight:', UAVHeight)
+        print('q:', np.shape(q))
+        print('w:', np.shape(w))
+        print('l:', l)
+        print('t:', t)
+
+    for i in range(len(board)):
+        print(board[i])
+
+    print('UAVheight:', UAVheight)
 
     # make input data using (board + height of UAV + action)
-
     # get output data of the model for each action (board + height of UAV + action)
+    """makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount)"""
 
     # find the best action with maximum output value
 
     # find the UAV to move, using l and t
 
     # move UAV using the best action (update q)
-    
-    pass # later
 
 # save trajectory as graph
 def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors):
@@ -611,6 +644,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
         if min(numOfDevs) >= int(0.6 * devices // L): break
 
+    """
     # save device info
     print('< q >')
     print(np.array(q))
@@ -620,6 +654,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     print('\n< number of devices >')
     print(numOfDevs)
+    """
     
     # make direction list using random (when training)
     # move UAV using this direction list
@@ -631,8 +666,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
         moveUAV(q, directionList, N, L, width, height)
 
+        """
         print('< q >')
         print(np.round_(q, 6))
+        """
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
@@ -682,20 +719,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # update a_l,kl[n]
             update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
 
-            # move the UAV when test mode
+            # check the model when test mode
             if training == False:
 
                 # assert that model exists
                 assert(model != None)
-
-                # define board
-                board = makeBoard(thrput, w, l, window, width, height)
-
-                # find height of UAV
-                UAVHeight = q[l * (N+1) + t][4]
-
-                # move the UAV (update q)
-                moveUAV_DL(board, UAVheight, q, model, l, t)
 
         # compute average throughput for each device in L
         for k in range(devices):
@@ -704,7 +732,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
             if printDetails == True:
                 print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
-            
+
             throughputs.append(thrputs)
 
         #### make training dataset ####
@@ -715,6 +743,24 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 
                 input_data .append(list(input_ ))
                 output_data.append(list(output_))
+
+        # move the UAV when test mode
+        else:
+            for t in range(N-1):
+            
+                # create board
+                # np.shape of throughputs should be (number_of_devices,)
+                print('throughputs:')
+                for i in range(len(throughputs)):
+                    print(throughputs[i])
+                    
+                board = makeBoard(throughputs, w, l, WINDOWSIZE, int(width), int(height))
+
+                # find height of UAV
+                UAVHeight = q[l * (N+1) + t][4]
+
+                # move the UAV (update q)
+                moveUAV_DL(board, UAVheight, q, model, l, t)
 
         # throughputs: shape (k, N) -> shape (N, k)
         throughputs       = np.array(throughputs)
@@ -914,8 +960,6 @@ if __name__ == '__main__':
         model = tf.keras.models.load_model('WPCN_DL_model')
     except:
         model = getAndTrainModel()
-
-    exit(0) # temp
 
     # run test
     test(iters, M, T, N, L, devices, width, height, H,
