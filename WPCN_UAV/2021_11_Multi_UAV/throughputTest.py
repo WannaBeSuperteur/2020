@@ -65,7 +65,7 @@ def convertToNumeric(value):
 # (x // 9) mod 3 == 0 -> h+1      , 1 -> h       , 2 -> h-1
 
 # initial direction: positive direction of x-axis (0 degree)
-# q = [[l, t, xlt, ylt, hlt], ...]
+# q = [[l, t, xlt, ylt, hlt], ...] -> update q
 def moveUAV(q, directionList, N, L, width, height):
 
     for l in range(L):
@@ -114,7 +114,7 @@ def moveUAV(q, directionList, N, L, width, height):
 
             if new_H < 0: new_H = 0.0
 
-            # update new q
+            # update corresponding q value as new q
             q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
 # change color
@@ -246,6 +246,8 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
 # thrput: common throughput value at time t
 def makeBoard(thrput, w, l, window, width, height):
 
+    #print('l, width, height:', l, width, height, 'thrput:', np.round_(np.array(thrput), 4))
+
     board = np.zeros((width + 2 * window, height + 2 * window))
 
     # max device and min device
@@ -280,7 +282,7 @@ def makeBoard(thrput, w, l, window, width, height):
     return board
 
 # make training dataset
-def makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount):
+def makeTrainDataset(w, l, throughputs, t, q, iterationCount):
 
     w = np.array(w)
     
@@ -499,11 +501,17 @@ def getAndTrainModel():
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, w, l, t):
 
-    print('UAVheight:', UAVheight)
+    """
+    print('board:')
+    print(np.array(board))
+    print('max, min, std of board')
+    print(np.max(board.flatten()), np.min(board.flatten()), np.std(board.flatten()))
+    print('l, t, UAVheight:', l, t, UAVheight)
+    """
 
     # make input data using (board + height of UAV + action)
     # get output data of the model for each action (board + height of UAV + action)
-    """makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount)"""
+    makeTrainDataset(w, l, throughputs, t, q, iterationCount)
 
     # find the best action with maximum output value
 
@@ -671,8 +679,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 #    print(i, np.round_(throughputs[i], 3)) 
 
             throughputs.append(thrputs)
-            print(l, t, np.round_(np.array(thrputs), 4))
-
+            
             # [ TRAINING ]
             # move UAV using RANDOM direction list
             if training == True:
@@ -681,6 +688,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 directionList[l * N + t] = random.randint(0, 26)
 
                 # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
+                # (update q)
                 moveUAV(q, directionList, N, L, width, height)
 
             # [ TEST ]
@@ -692,21 +700,20 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 
                 # create board
                 # np.shape of thrput should be (number_of_devices,)
-                board = makeBoard(thrput, w, l, WINDOWSIZE, int(width), int(height))
+                board = makeBoard(thrputs, w, l, WINDOWSIZE, int(width), int(height))
 
                 # find height of UAV
-                UAVHeight = q[l * (N+1) + t][4]
+                UAVheight = q[l * (N+1) + t][4]
 
                 # move the UAV using deep learning result (update q)
-                moveUAV_DL(board, UAVheight, q, model, l, t)
+                moveUAV_DL(board, UAVheight, q, model, w, l, t)
 
         # [ TRAINING ]
         # make training dataset
         if training == True:
             for t in range(N-1):
                 
-                (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs,
-                                                     t, q, iterationCount)
+                (input_, output_) = makeTrainDataset(w, l, throughputs, t, q, iterationCount)
                 
                 input_data .append(list(input_ ))
                 output_data.append(list(output_))
