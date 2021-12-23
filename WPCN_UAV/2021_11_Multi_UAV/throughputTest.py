@@ -75,6 +75,9 @@ def moveUAV(q, directionList, N, L, width, height):
 
             direction = directionList[l * N + t]
 
+            # check if None value
+            if direction == None: continue
+
             turn =  direction       % 3 # turn left, straight or turn right
             fb   = (direction // 3) % 3 # forward, hold or backward
             ud   = (direction // 9) % 3 # h+1, h or h-1
@@ -243,15 +246,6 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
 # thrput: common throughput value at time t
 def makeBoard(thrput, w, l, window, width, height):
 
-    if l == 0:
-        print(' ======== makeBoard ========')
-        print('thrput:', np.shape(thrput))
-        print('w:', np.shape(w))
-        print('l:', l)
-        print('window:', window)
-        print('width:', width)
-        print('height:', height)
-
     board = np.zeros((width + 2 * window, height + 2 * window))
 
     # max device and min device
@@ -288,19 +282,8 @@ def makeBoard(thrput, w, l, window, width, height):
 # make training dataset
 def makeTrainDataset(w, l, action_list, throughputs, t, q, iterationCount):
 
-    if iterationCount == 0 and l == 0:
-        print(' ======== makeTrainDataset ========')
-        print('w:', np.shape(w))
-        print('l:', l)
-        print('action_list:', np.shape(action_list))
-        print('throughputs:', np.shape(throughputs))
-        print('t:', t)
-        print('q:', np.shape(q))
-        print('iterationCount:', iterationCount)
-
     w = np.array(w)
-    throughputs = np.array(throughputs).T
-
+    
     # board configuration
     width  = h_.loadSettings({'width':'int'})['width']
     height = h_.loadSettings({'height':'int'})['height']
@@ -495,13 +478,6 @@ def getAndTrainModel():
 
         model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
 
-        """
-        print(' << input >>')
-        print(np.shape(input_data))
-        print(' << output >>')
-        print(np.shape(output_data))
-        """
-
         # train using input and output data
         model.fit(train_input, train_output,
                   validation_split=0.1, callbacks=[early, lr_reduced], epochs=50)
@@ -522,18 +498,6 @@ def getAndTrainModel():
 
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, w, l, t):
-
-    if l == 0 and t == 0:
-        print(' ======== moveUAV_DL ========')
-        print('board:', np.shape(board))
-        print('UAVHeight:', UAVHeight)
-        print('q:', np.shape(q))
-        print('w:', np.shape(w))
-        print('l:', l)
-        print('t:', t)
-
-    for i in range(len(board)):
-        print(board[i])
 
     print('UAVheight:', UAVheight)
 
@@ -644,33 +608,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
         if min(numOfDevs) >= int(0.6 * devices // L): break
 
-    """
-    # save device info
-    print('< q >')
-    print(np.array(q))
-
-    print('\n< w >')
-    for _ in w: print(_)
-
-    print('\n< number of devices >')
-    print(numOfDevs)
-    """
-    
-    # make direction list using random (when training)
-    # move UAV using this direction list
-    if training == True:
-        directionList = []
-        for i in range(N * L):
-            directionList.append(random.randint(0, 26))
-
-        # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
-        moveUAV(q, directionList, N, L, width, height)
-
-        """
-        print('< q >')
-        print(np.round_(q, 6))
-        """
-
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
     alkl = []
@@ -711,60 +648,71 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # the number of devices in cluster l
         devices = numOfDevs[l]
+        directionList = [None for i in range(L * N)]
         
         for t in range(N):
             if printDetails == True:
                 print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
 
-            # update a_l,kl[n]
+            # update a_l,kl[n] for this (l, t)
             update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
 
-            # check the model when test mode
-            if training == False:
+            # compute average throughput for each device in L
+            thrputs = []
+            
+            for k in range(devices):
+                thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
+                thrputs.append(thrput)
+
+                if printDetails == True:
+                    print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
+
+                #for i in range(len(throughputs)):
+                #    print(i, np.round_(throughputs[i], 3)) 
+
+            throughputs.append(thrputs)
+            print(l, t, np.round_(np.array(thrputs), 4))
+
+            # [ TRAINING ]
+            # move UAV using RANDOM direction list
+            if training == True:
+
+                # make direction list using random (when training)
+                directionList[l * N + t] = random.randint(0, 26)
+
+                # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
+                moveUAV(q, directionList, N, L, width, height)
+
+            # [ TEST ]
+            # move UAV based on the model
+            else:
 
                 # assert that model exists
                 assert(model != None)
+                
+                # create board
+                # np.shape of thrput should be (number_of_devices,)
+                board = makeBoard(thrput, w, l, WINDOWSIZE, int(width), int(height))
 
-        # compute average throughput for each device in L
-        for k in range(devices):
-            thrputs = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
-            thrput  = thrputs[-1]
+                # find height of UAV
+                UAVHeight = q[l * (N+1) + t][4]
 
-            if printDetails == True:
-                print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
+                # move the UAV using deep learning result (update q)
+                moveUAV_DL(board, UAVheight, q, model, l, t)
 
-            throughputs.append(thrputs)
-
-        #### make training dataset ####
+        # [ TRAINING ]
+        # make training dataset
         if training == True:
             for t in range(N-1):
+                
                 (input_, output_) = makeTrainDataset(w, l, directionList[l * N : (l + 1) * N], throughputs,
                                                      t, q, iterationCount)
                 
                 input_data .append(list(input_ ))
                 output_data.append(list(output_))
 
-        # move the UAV when test mode
-        else:
-            for t in range(N-1):
-            
-                # create board
-                # np.shape of throughputs should be (number_of_devices,)
-                print('throughputs:')
-                for i in range(len(throughputs)):
-                    print(throughputs[i])
-                    
-                board = makeBoard(throughputs, w, l, WINDOWSIZE, int(width), int(height))
-
-                # find height of UAV
-                UAVHeight = q[l * (N+1) + t][4]
-
-                # move the UAV (update q)
-                moveUAV_DL(board, UAVheight, q, model, l, t)
-
         # throughputs: shape (k, N) -> shape (N, k)
         throughputs       = np.array(throughputs)
-        throughputs       = throughputs.T
         final_throughputs = throughputs[-1]
 
         # save throughputs at first iteration
@@ -781,22 +729,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         all_throughputs += list(final_throughputs)
 
     # create min throughput information
-    print('\n\nMIN THROUGHPUTS for each cluster l:')
-    print(str(list(np.round_(minthroughputs, 6))))
-
     if training == True:
         minThroughputList.append([iterationCount] + minthroughputs)
 
-    # print all_throughputs
+    # all_throughputs
     all_throughputs = np.array(all_throughputs)
-
-    print('\n\nall throughputs:')
-    print(np.round_(all_throughputs, 6))
-
     all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
-
-    print('\n\n(normalized) all throughputs:')
-    print(np.round_(all_throughputs, 6))
 
     # save trajectory as graph
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors)
