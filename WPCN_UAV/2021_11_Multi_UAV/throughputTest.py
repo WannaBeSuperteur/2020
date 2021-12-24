@@ -185,6 +185,44 @@ def getDevicePos(w, l):
 def getDistBetweenDeviceAndUAV(i, dev_x, dev_y, UAV_x, UAV_y):
     return pow(pow(dev_x[i] - UAV_x, 2.0) + pow(dev_y[i] - UAV_y, 2.0), 0.5)
 
+# thrput: common throughput value at time t
+def makeBoard(thrput, w, l, window, width, height):
+
+    #print('l, width, height:', l, width, height, 'thrput:', np.round_(np.array(thrput), 4))
+
+    board = np.zeros((width + 2 * window, height + 2 * window))
+
+    # max device and min device
+    maxThrput = max(thrput)
+    minThrput = min(thrput)
+
+    # get device positions
+    (dev_x, dev_y) = getDevicePos(w, l)
+
+    # the number of devices in cluster l
+    dev_in_l = len(dev_x)
+
+    # normalized throughput
+    if len(thrput) >= 2:
+        thrput_ = [(thrput[i] - minThrput) / (maxThrput - minThrput) * 2.0 - 1.0 for i in range(len(thrput))]
+    else:
+        thrput_ = np.array([0])
+
+    for i in range(dev_in_l):
+
+        # place the device on the board (mark as [[     0.2, 0.5, 0.2     ],
+        #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
+        #                                         [0.5, 1.0, 1.2, 1.0, 0.5],
+        #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
+        #                                         [     0.2, 0.5, 0.2     ]])
+        board_x = int(dev_x[i])
+        board_y = int(dev_y[i])
+
+        # mark the position of device
+        markDevicePosition(board, board_x, board_y, thrput_[i], window)
+
+    return board
+
 # make input and output based on current HAP location
 def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
                        iterationCount, w, l, t):
@@ -243,46 +281,9 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     # print('test:', np.mean(input_board.flatten()), output)
     return (input_, output_)
 
-# thrput: common throughput value at time t
-def makeBoard(thrput, w, l, window, width, height):
-
-    #print('l, width, height:', l, width, height, 'thrput:', np.round_(np.array(thrput), 4))
-
-    board = np.zeros((width + 2 * window, height + 2 * window))
-
-    # max device and min device
-    maxThrput = max(thrput)
-    minThrput = min(thrput)
-
-    # get device positions
-    (dev_x, dev_y) = getDevicePos(w, l)
-
-    # the number of devices in cluster l
-    dev_in_l = len(dev_x)
-
-    # normalized throughput
-    if len(thrput) >= 2:
-        thrput_ = [(thrput[i] - minThrput) / (maxThrput - minThrput) * 2.0 - 1.0 for i in range(len(thrput))]
-    else:
-        thrput_ = np.array([0])
-
-    for i in range(dev_in_l):
-
-        # place the device on the board (mark as [[     0.2, 0.5, 0.2     ],
-        #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
-        #                                         [0.5, 1.0, 1.2, 1.0, 0.5],
-        #                                         [0.2, 0.6, 1.0, 0.6, 0.2],
-        #                                         [     0.2, 0.5, 0.2     ]])
-        board_x = int(dev_x[i])
-        board_y = int(dev_y[i])
-
-        # mark the position of device
-        markDevicePosition(board, board_x, board_y, thrput_[i], window)
-
-    return board
-
 # make training dataset
 def makeTrainDataset(w, l, throughputs, t, q, iterationCount):
+    print('throughputs:', throughputs)
 
     w = np.array(w)
     
@@ -307,6 +308,56 @@ def makeTrainDataset(w, l, throughputs, t, q, iterationCount):
                                            iterationCount, w, l, t)
 
     return (input_, output_)
+
+# make test input (test input data) based on current HAP location
+# with action (dif of x, y, and h of UAV)
+def makeInputForTest(q_current, thrput, board, window, w, l, t, action):
+
+    # get device positions
+    (dev_x, dev_y) = getDevicePos(w, l)
+
+    #### INPUT
+    # board (center: x and y of UAV)
+    center_x = int(q_current[0])
+    center_y = int(q_current[1])
+    
+    input_board = board[center_y : center_y + 2 * window,
+                        center_x : center_x + 2 * window]
+
+    # height of UAV
+    UAVheight = np.array([q_current[2]])
+    
+    # save training dataset
+    # input  : board + height + action
+    # output : output
+    input_  = np.concatenate((input_board.flatten(), UAVheight, action), -1)
+    
+    # print('test:', np.mean(input_board.flatten()), output)
+    return input_
+
+# make test input data
+def makeTestInput(w, l, throughputs, t, q, action):
+    print('throughputs:', throughputs)
+
+    w = np.array(w)
+    
+    # board configuration
+    width  = h_.loadSettings({'width':'int'})['width']
+    height = h_.loadSettings({'height':'int'})['height']
+
+    thrput    = throughputs[t]
+    q_current = q[l * (N+1) + t][2:5]
+    
+    # find the range of the board (unit: width=1.0m, height=1.0m)
+    window = WINDOWSIZE
+
+    # make the board for training
+    board = makeBoard(thrput, w, l, window, width, height)
+
+    # make input data based on current HAP location
+    input_ = makeInputForTest(q_current, thrput, board, window, w, l, t, action)
+
+    return input_
 
 # deep learning model class
 class DEEP_LEARNING_MODEL(tf.keras.Model):
@@ -499,28 +550,52 @@ def getAndTrainModel():
     return model
 
 # move the UAV using learned model
-def moveUAV_DL(board, UAVheight, q, model, w, l, t):
+def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs):
 
-    """
     print('board:')
     print(np.array(board))
     print('max, min, std of board')
     print(np.max(board.flatten()), np.min(board.flatten()), np.std(board.flatten()))
     print('l, t, UAVheight:', l, t, UAVheight)
-    """
 
     # make input data using (board + height of UAV + action)
     # get output data of the model for each action (board + height of UAV + action)
-    makeTrainDataset(w, l, throughputs, t, q, iterationCount)
+    # (in this way, CONSEQUENTLY SAME with the original movement set)
+    actions = []
+    dif_x         = [0, 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0, math.sqrt(12.5)]
+    dif_y         = [0, 0, math.sqrt(12.5), 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5)]
+    height_change = [1, 0, -1]
+    
+    for i in range(3 * 3):
+        for j in range(3):
+            actions.append([dif_x[i], dif_y[i], height_change[j]])
 
     # find the best action with maximum output value
+    outputs = []
+    
+    for action in actions:
+        input_  = makeTestInput(w, l, throughputs, t, q, action)
+        input_  = np.array([input_])
+        #print('input shape:', np.shape(input_))
+        #print('input:\n', list(input_))
+        output_ = model.predict(input_)
+        print('output:', output_[0][0])
+
+        outputs.append(output_[0][0])
+
+    # index of the best action
+    bestAction = np.argmax(outputs)
 
     # find the UAV to move, using l and t
-
     # move UAV using the best action (update q)
+    new_X = q[l * (N+1) + t][2] + actions[bestAction][0]
+    new_Y = q[l * (N+1) + t][3] + actions[bestAction][1]
+    new_H = q[l * (N+1) + t][4] + actions[bestAction][2]
+    
+    q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
 # save trajectory as graph
-def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors):
+def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training):
 
     plt.clf()
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
@@ -553,7 +628,10 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, ma
                 plt.plot(x, y, linewidth=0.75, c=markerColors[l])
 
     # save the figure
-    plt.savefig('trajectory_iter' + ('%04d' % iterationCount))
+    if training == True:
+        plt.savefig('train_trajectory_iter' + ('%04d' % iterationCount))
+    else:
+        plt.savefig('test_trajectory_iter' + ('%04d' % iterationCount))
 
 # update a_l,kl[n]
 # alkl      : a_l,kl[n] for each UAV l, device k and time slot n
@@ -695,6 +773,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # move UAV based on the model
             else:
 
+                print('test throughputs:', throughputs)
+
                 # assert that model exists
                 assert(model != None)
                 
@@ -706,7 +786,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 UAVheight = q[l * (N+1) + t][4]
 
                 # move the UAV using deep learning result (update q)
-                moveUAV_DL(board, UAVheight, q, model, w, l, t)
+                moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs)
 
         # [ TRAINING ]
         # make training dataset
@@ -744,7 +824,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
 
     # save trajectory as graph
-    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors)
+    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training)
 
 # main TRAINING code
 def train(iters, M, T, N, L, devices, width, height, H,
