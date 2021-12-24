@@ -264,7 +264,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     if iterationCount == 0:
         plt.clf()
         ax = sns.heatmap(input_board)
-        plt.savefig('input_board_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
+        plt.savefig('input_board_train_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
                     bbox_inches='tight', dpi=100)
 
         #plt.clf()
@@ -283,7 +283,6 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
 
 # make training dataset
 def makeTrainDataset(w, l, throughputs, t, q, iterationCount):
-    print('throughputs:', throughputs)
 
     w = np.array(w)
     
@@ -311,7 +310,7 @@ def makeTrainDataset(w, l, throughputs, t, q, iterationCount):
 
 # make test input (test input data) based on current HAP location
 # with action (dif of x, y, and h of UAV)
-def makeInputForTest(q_current, thrput, board, window, w, l, t, action):
+def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iterationCount):
 
     # get device positions
     (dev_x, dev_y) = getDevicePos(w, l)
@@ -327,6 +326,13 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action):
     # height of UAV
     UAVheight = np.array([q_current[2]])
     
+    # plot the board array using seaborn
+    if iterationCount == 0 and action == [0, 0, 0]:
+        plt.clf()
+        ax = sns.heatmap(input_board)
+        plt.savefig('input_board_test_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
+                    bbox_inches='tight', dpi=100)
+    
     # save training dataset
     # input  : board + height + action
     # output : output
@@ -336,15 +342,11 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action):
     return input_
 
 # make test input data
-def makeTestInput(w, l, throughputs, t, q, action):
-    print('throughputs:', throughputs)
+def makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount):
 
     w = np.array(w)
     
     # board configuration
-    width  = h_.loadSettings({'width':'int'})['width']
-    height = h_.loadSettings({'height':'int'})['height']
-
     thrput    = throughputs[t]
     q_current = q[l * (N+1) + t][2:5]
     
@@ -355,7 +357,7 @@ def makeTestInput(w, l, throughputs, t, q, action):
     board = makeBoard(thrput, w, l, window, width, height)
 
     # make input data based on current HAP location
-    input_ = makeInputForTest(q_current, thrput, board, window, w, l, t, action)
+    input_ = makeInputForTest(q_current, thrput, board, window, w, l, t, action, iterationCount)
 
     return input_
 
@@ -550,21 +552,23 @@ def getAndTrainModel():
     return model
 
 # move the UAV using learned model
-def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs):
+def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCount):
 
+    """
     print('board:')
     print(np.array(board))
     print('max, min, std of board')
     print(np.max(board.flatten()), np.min(board.flatten()), np.std(board.flatten()))
     print('l, t, UAVheight:', l, t, UAVheight)
+    """
 
     # make input data using (board + height of UAV + action)
     # get output data of the model for each action (board + height of UAV + action)
     # (in this way, CONSEQUENTLY SAME with the original movement set)
     actions = []
-    dif_x         = [0, 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0, math.sqrt(12.5)]
-    dif_y         = [0, 0, math.sqrt(12.5), 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5)]
-    height_change = [1, 0, -1]
+    dif_x         = [0, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0, math.sqrt(12.5), 5]
+    dif_y         = [0, math.sqrt(12.5), 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0]
+    height_change = [0, 1, -1]
     
     for i in range(3 * 3):
         for j in range(3):
@@ -572,14 +576,19 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs):
 
     # find the best action with maximum output value
     outputs = []
+
+    print('making test input:', l, t)
+
+    width  = h_.loadSettings({'width':'int'})['width']
+    height = h_.loadSettings({'height':'int'})['height']
     
     for action in actions:
-        input_  = makeTestInput(w, l, throughputs, t, q, action)
+        input_  = makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount)
         input_  = np.array([input_])
         #print('input shape:', np.shape(input_))
         #print('input:\n', list(input_))
-        output_ = model.predict(input_)
-        print('output:', output_[0][0])
+        output_ = model(input_) # faster than model.predict(input_)
+        #print('output:', output_[0][0])
 
         outputs.append(output_[0][0])
 
@@ -773,7 +782,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # move UAV based on the model
             else:
 
-                print('test throughputs:', throughputs)
+                #print('test throughputs:', throughputs)
 
                 # assert that model exists
                 assert(model != None)
@@ -786,7 +795,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 UAVheight = q[l * (N+1) + t][4]
 
                 # move the UAV using deep learning result (update q)
-                moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs)
+                moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCount)
 
         # [ TRAINING ]
         # make training dataset
