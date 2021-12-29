@@ -323,6 +323,12 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iteratio
     input_board = board[center_y : center_y + 2 * window,
                         center_x : center_x + 2 * window]
 
+    """
+    print('========')
+    print(np.shape(board), np.shape(input_board))
+    print(q_current, center_x, center_y, window)
+    """
+
     # height of UAV
     UAVheight = np.array([q_current[2]])
     
@@ -600,6 +606,11 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
     new_X = q[l * (N+1) + t][2] + actions[bestAction][0]
     new_Y = q[l * (N+1) + t][3] + actions[bestAction][1]
     new_H = q[l * (N+1) + t][4] + actions[bestAction][2]
+
+    # adjust new_X, new_Y and new_H using width and height
+    new_X = np.clip(new_X, 0.0, width)
+    new_Y = np.clip(new_Y, 0.0, height)
+    if new_H < 0.0: new_H = 0.0
     
     q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
 
@@ -825,8 +836,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         all_throughputs += list(final_throughputs)
 
     # create min throughput information
-    if training == True:
-        minThroughputList.append([iterationCount] + minthroughputs)
+    minThroughputList.append([iterationCount] + minthroughputs)
 
     # all_throughputs
     all_throughputs = np.array(all_throughputs)
@@ -834,6 +844,24 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # save trajectory as graph
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training)
+
+# save min throughput as *.csv file
+def saveMinThroughput(minThroughputList):
+
+    # save min throughput list as *.csv file
+    minThroughputList = pd.DataFrame(np.array(minThroughputList))
+    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
+
+    # save min throughput list as *.txt file
+    arr = np.array(minThroughputList)[:, 1:]
+    note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
+
+    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
+    
+    noteFile.write(note)
+    noteFile.close()
 
 # main TRAINING code
 def train(iters, M, T, N, L, devices, width, height, H,
@@ -866,25 +894,16 @@ def train(iters, M, T, N, L, devices, width, height, H,
     input_data .to_csv('input_data.csv')
     output_data.to_csv('output_data.csv')
 
-    # save min throughput list as *.csv file
-    minThroughputList = pd.DataFrame(np.array(minThroughputList))
-    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
-                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
-
-    # save min throughput list as *.txt file
-    arr = np.array(minThroughputList)[:, 1:]
-    note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
-
-    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
-                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
-    
-    noteFile.write(note)
-    noteFile.close()
+    # save min throughput as *.csv file
+    saveMinThroughput(minThroughputList)
 
 # main TEST code
 def test(iters, M, T, N, L, devices, width, height, H,
          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
          model):
+
+    # re-initialize minimum throughput list
+    minThroughputList = []
 
     # main test
     for iterationCount in range(iters):
@@ -892,8 +911,11 @@ def test(iters, M, T, N, L, devices, width, height, H,
         
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList=None,
+                       iterationCount, minThroughputList,
                        input_data=None, output_data=None, training=False, model=model)
+
+    # save min throughput as *.csv file
+    saveMinThroughput(minThroughputList)
 
 if __name__ == '__main__':
 
