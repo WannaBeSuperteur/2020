@@ -455,7 +455,20 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 
         return output
 
-# preprocess input and output data
+# preprocess input data
+def preprocessInput(input_data, BOARD_ARGS):
+
+    # board (2*window)*(2*window) -> x := x / 1.5
+    input_data[:, :BOARD_ARGS] = input_data[:, :BOARD_ARGS] / 1.5
+
+    # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
+    input_data[:, BOARD_ARGS] = (input_data[:, BOARD_ARGS] - np.mean(input_data[:, BOARD_ARGS])) / np.std(input_data[:, BOARD_ARGS])
+
+    # action info (3) -> x := x / 5.0 for x and y
+    #                    x := x       for h
+    input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] = input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] / 5.0
+
+# preprocess input and output data    
 def preprocessData():
 
     BOARD_ARGS = 4 * WINDOWSIZE * WINDOWSIZE # (2 * WINDOWSIZE)^2
@@ -468,16 +481,7 @@ def preprocessData():
     new_output_data = np.array(new_output_data)
 
     # preprocess input data
-
-    # board (2*window)*(2*window) -> x := x / 1.5
-    new_input_data[:, :BOARD_ARGS] = new_input_data[:, :BOARD_ARGS] / 1.5
-
-    # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
-    new_input_data[:, BOARD_ARGS] = (new_input_data[:, BOARD_ARGS] - np.mean(new_input_data[:, BOARD_ARGS])) / np.std(new_input_data[:, BOARD_ARGS])
-
-    # action info (3) -> x := x / 5.0 for x and y
-    #                    x := x       for h
-    new_input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] = new_input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] / 5.0
+    preprocessInput(new_input_data, BOARD_ARGS)
 
     # preprocess output data
     # DO NOTHING
@@ -546,13 +550,13 @@ def getAndTrainModel():
         model.summary()
         model.save('WPCN_DL_model')
 
-        # test the model
+        # test the model (validation)
         test_prediction = model.predict(test_input)
         test_prediction = np.reshape(test_prediction, (len(test_prediction), 1))
         test_result     = np.concatenate((test_prediction, test_output), axis=1)
 
         test_result     = pd.DataFrame(test_result)
-        test_result.to_csv('test_result.csv')
+        test_result.to_csv('train_valid_result.csv')
 
     # return the trained model
     return model
@@ -590,12 +594,12 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
     
     for action in actions:
         input_  = makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount)
+        preprocessInput(input_, 2 * WINDOWSIZE) # preprocess input first
         input_  = np.array([input_])
-        #print('input shape:', np.shape(input_))
-        #print('input:\n', list(input_))
-        output_ = model(input_) # faster than model.predict(input_)
-        #print('output:', output_[0][0])
-
+        print('input shape:', np.shape(input_))
+        print('input:\n', list(input_))
+        
+        output_ = model(input_)
         outputs.append(output_[0][0])
 
     # index of the best action
