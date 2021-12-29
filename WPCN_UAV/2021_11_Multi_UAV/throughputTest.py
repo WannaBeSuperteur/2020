@@ -460,14 +460,15 @@ def preprocessInput(input_data, BOARD_ARGS):
 
     # board (2*window)*(2*window) -> x := x / 1.5
     input_data[:, :BOARD_ARGS] = input_data[:, :BOARD_ARGS] / 1.5
-
+    
     # height of UAV (1) -> x := N(x|Mu=0, Sigma=1)
-    input_data[:, BOARD_ARGS] = (input_data[:, BOARD_ARGS] - np.mean(input_data[:, BOARD_ARGS])) / np.std(input_data[:, BOARD_ARGS])
-
+    # suppose that original Mu=15.0 and Sigma=2.5
+    input_data[:, BOARD_ARGS] = (input_data[:, BOARD_ARGS] - 15.0) / 2.5
+    
     # action info (3) -> x := x / 5.0 for x and y
     #                    x := x       for h
     input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] = input_data[:, BOARD_ARGS+1:BOARD_ARGS+3] / 5.0
-
+    
 # preprocess input and output data    
 def preprocessData():
 
@@ -594,10 +595,10 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
     
     for action in actions:
         input_  = makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount)
-        preprocessInput(input_, 2 * WINDOWSIZE) # preprocess input first
         input_  = np.array([input_])
-        print('input shape:', np.shape(input_))
-        print('input:\n', list(input_))
+        preprocessInput(input_, 4 * WINDOWSIZE * WINDOWSIZE) # preprocess input first
+        #print('input shape:', np.shape(input_))
+        #print('input:\n', list(input_))
         
         output_ = model(input_)
         outputs.append(output_[0][0])
