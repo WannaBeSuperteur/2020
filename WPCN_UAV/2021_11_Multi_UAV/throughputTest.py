@@ -572,8 +572,8 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
     # get output data of the model for each action (board + height of UAV + action)
     # (in this way, CONSEQUENTLY SAME with the original movement set)
     actions = []
-    dif_x         = [0, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0, math.sqrt(12.5), 5]
-    dif_y         = [0, math.sqrt(12.5), 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0]
+    dif_x         = [math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0, math.sqrt(12.5), 5, 0]
+    dif_y         = [math.sqrt(12.5), 5, math.sqrt(12.5), 0, -math.sqrt(12.5), -5, -math.sqrt(12.5), 0, 0]
     height_change = [0, 1, -1]
     
     for i in range(3 * 3):
@@ -846,18 +846,18 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training)
 
 # save min throughput as *.csv file
-def saveMinThroughput(minThroughputList):
+def saveMinThroughput(minThroughputList, memo):
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))
-    minThroughputList.to_csv('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+    minThroughputList.to_csv('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
                              '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
 
     # save min throughput list as *.txt file
     arr = np.array(minThroughputList)[:, 1:]
     note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
 
-    noteFile = open('minThroughputList_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
+    noteFile = open('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
                              '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
     
     noteFile.write(note)
@@ -895,7 +895,7 @@ def train(iters, M, T, N, L, devices, width, height, H,
     output_data.to_csv('output_data.csv')
 
     # save min throughput as *.csv file
-    saveMinThroughput(minThroughputList)
+    saveMinThroughput(minThroughputList, 'train')
 
 # main TEST code
 def test(iters, M, T, N, L, devices, width, height, H,
@@ -915,7 +915,7 @@ def test(iters, M, T, N, L, devices, width, height, H,
                        input_data=None, output_data=None, training=False, model=model)
 
     # save min throughput as *.csv file
-    saveMinThroughput(minThroughputList)
+    saveMinThroughput(minThroughputList, 'test')
 
 if __name__ == '__main__':
 
