@@ -14,6 +14,6 @@ how to execute (to get the result)
  * 2021_04_tabular_playground_series_mar: ```my_extract.py``` -> ```main_mixed.py``` -> ```write_answer.py```
  * 2021_05_galaxy_zoo_the_galaxy_challenge: ```my_extract.py``` -> ```train_input_augmentor.py``` -> ```main_mixed.py``` or ```main_mixed_gpu.py```
  * 2021_06_Tabular_Playground_May_2021: ```/Code/KimHongSik_tps-may-2021-eda-catboost-lightautoml.py```
- * 2021_07_pakdd-cup-2014: as from ```/ensemble/execute.txt```
+ * 2021_07_pakdd-cup-2014: as from ```execute.txt```
  * 2021_08_CommonLit_Readability_Prize: (```main.py```, ```main_roberta.py``` and ```main_distilbert.py```) -> ```ensemble.py```
  * 2021_09_TPS_Jun_2021: ```main.py```
