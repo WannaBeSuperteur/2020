@@ -223,6 +223,36 @@ def makeBoard(thrput, w, l, window, width, height):
 
     return board
 
+# compute output (reward)
+# q_current, q_after   : the location of UAV
+# thrput, thrput_after : throughput values of device
+# w                    : device location info
+def computeOutput(q_current, q_after, thrput, thrput_after, w, l):
+
+    """
+    print('q_current   :', np.shape(q_current))
+    print(np.array(q_current))
+    print('\nq_after     :', np.shape(q_after))
+    print(np.array(q_after))
+    print('\nthrput      :', np.shape(thrput))
+    print(np.array(thrput))
+    print('\nthrput_after:', np.shape(thrput_after))
+    print(np.array(thrput_after))
+    print('\nw           :', np.shape(w))
+    print(np.round_(w, 4))
+    print('\nl           :', l)
+    exit(0)
+    """
+
+    try:
+        after  = np.mean(thrput_after) / np.max(thrput_after)
+        before = np.mean(thrput)       / np.max(thrput)
+        output = 1.0 / (1.0 + math.exp(-(after - before) * 400))
+    except:
+        output = 0.5
+
+    return output
+
 # make input and output based on current HAP location
 def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
                        iterationCount, w, l, t):
@@ -253,12 +283,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
 
     #### OUTPUT
     # compute output (reward) based on throughput change
-    try:
-        after  = np.mean(thrput_after) / np.max(thrput_after)
-        before = np.mean(thrput)       / np.max(thrput)
-        output = 1.0 / (1.0 + math.exp(-(after - before) * 400))
-    except:
-        output = 0.5
+    output = computeOutput(q_current, q_after, thrput, thrput_after, w, l)
 
     # plot the board array using seaborn
     if iterationCount == 0 and l < 2 and t < 5:
@@ -1003,8 +1028,8 @@ if __name__ == '__main__':
         print('model load failed')
         model = getAndTrainModel(epochs)
 
-    # run test (using 25% iterations of training)
-    iters = iters // 4
+    # run test (using 5% (min 10) iterations of training)
+    iters = max(10, iters // 20)
     test(iters, M, T, N, L, devices, width, height, H,
          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
          clusteringAtLeast, model)
