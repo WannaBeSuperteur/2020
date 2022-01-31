@@ -261,7 +261,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
         output = 0.5
 
     # plot the board array using seaborn
-    if iterationCount == 0 and l < 5 and t < 5:
+    if iterationCount == 0 and l < 2 and t < 5:
         plt.clf()
         ax = sns.heatmap(input_board)
         plt.savefig('input_board_train_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
@@ -312,10 +312,12 @@ def makeTrainDataset(w, l, throughputs, t, q, iterationCount):
 def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iterationCount):
 
     # get device positions
+    #print('A', time.time(), len(w))
     (dev_x, dev_y) = getDevicePos(w, l)
 
     #### INPUT
     # board (center: x and y of UAV)
+    #print('B', time.time())
     center_x = int(q_current[0])
     center_y = int(q_current[1])
     
@@ -323,10 +325,12 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iteratio
                         center_x : center_x + 2 * window]
 
     # height of UAV
+    #print('C', time.time())
     UAVheight = np.array([q_current[2]])
     
     # plot the board array using seaborn
-    if iterationCount == 0 and l < 5 and t < 5:
+    #print('D', time.time(), iterationCount, l, t)
+    if iterationCount == 0 and l < 2 and t < 5:
         plt.clf()
         ax = sns.heatmap(input_board)
         plt.savefig('input_board_test_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
@@ -335,25 +339,33 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iteratio
     # save training dataset
     # input  : board + height + action
     # output : output
+    #print('E', time.time())
     input_  = np.concatenate((input_board.flatten(), UAVheight, action), -1)
+    #print('F', time.time())
     return input_
 
 # make test input data
 def makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount):
 
+    #print('a', time.time())
     w = np.array(w)
     
     # board configuration
+    #print('b', time.time())
     thrput    = throughputs[t]
+    #print('c', time.time())
     q_current = q[l * (N+1) + t][2:5]
     
     # find the range of the board (unit: width=1.0m, height=1.0m)
+    #print('d', time.time())
     window = WINDOWSIZE
 
     # make the board for training
+    #print('e', time.time())
     board = makeBoard(thrput, w, l, window, width, height)
 
     # make input data based on current HAP location
+    #print('f', time.time())
     input_ = makeInputForTest(q_current, thrput, board, window, w, l, t, action, iterationCount)
 
     return input_
@@ -558,11 +570,15 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
     height = h_.loadSettings({'height':'int'})['height']
     
     for action in actions:
+        #print(1, time.time())
         input_  = makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount)
+        #print(2, time.time())
         input_  = np.array([input_])
+        #print(3, time.time())
         preprocessInput(input_, 4 * WINDOWSIZE * WINDOWSIZE) # preprocess input first
-
-        output_ = model.predict(input_)
+        #print(4, time.time())
+        output_ = model(input_, training=False) # model.predict(input_)
+        #print(5, time.time())
         outputs.append(output_[0][0])
 
     # index of the best action
@@ -984,9 +1000,11 @@ if __name__ == '__main__':
     try:
         model = tf.keras.models.load_model('WPCN_DL_model')
     except:
+        print('model load failed')
         model = getAndTrainModel(epochs)
 
-    # run test
+    # run test (using 25% iterations of training)
+    iters = iters // 4
     test(iters, M, T, N, L, devices, width, height, H,
          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
          clusteringAtLeast, model)
