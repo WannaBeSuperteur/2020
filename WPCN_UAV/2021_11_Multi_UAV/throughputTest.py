@@ -478,7 +478,7 @@ def preprocessData():
     return (new_input_data, new_output_data)
 
 # define and train model
-def defineAndTrainModel(train_input, train_output, test_input, test_output):
+def defineAndTrainModel(train_input, train_output, test_input, test_output, epochs):
     model = DEEP_LEARNING_MODEL(window=WINDOWSIZE)
 
     # training setting (early stopping and reduce learning rate)
@@ -497,7 +497,7 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output):
 
     # train using input and output data
     model.fit(train_input, train_output,
-              validation_split=0.1, callbacks=[early, lr_reduced], epochs=3)
+              validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
         
     model.summary()
     model.save('WPCN_DL_model')
@@ -514,7 +514,7 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output):
     return model
 
 # deep learning model
-def getAndTrainModel():
+def getAndTrainModel(epochs):
 
     # load and preprocess input and output data
     try:
@@ -540,11 +540,11 @@ def getAndTrainModel():
     # model definition (with regularizer)
     try:
         with tf.device('/gpu:0'):
-            return defineAndTrainModel(train_input, train_output, test_input, test_output)
+            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs)
     except:
         print('GPU load failed -> using CPU')
         with tf.device('/cpu:0'):
-            return defineAndTrainModel(train_input, train_output, test_input, test_output)
+            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs)
 
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCount):
@@ -583,8 +583,8 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
         preprocessInput(input_, 4 * WINDOWSIZE * WINDOWSIZE) # preprocess input first
         #print('input shape:', np.shape(input_))
         #print('input:\n', list(input_))
-        
-        output_ = model(input_)
+
+        output_ = model.predict(input_)
         outputs.append(output_[0][0])
 
     # index of the best action
@@ -681,7 +681,7 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
 
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount, minThroughputList,
+                   iterationCount, minThroughputList, clusteringAtLeast,
                    input_data, output_data, training, model):
 
     # create list of devices (randomly place devices)
@@ -701,7 +701,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     while True:
         (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
-        if min(numOfDevs) >= int(0.4 * devices // L): break
+        if min(numOfDevs) >= int(clusteringAtLeast * devices // L): break
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
@@ -854,7 +854,8 @@ def saveMinThroughput(minThroughputList, memo):
 
 # main TRAINING code
 def train(iters, M, T, N, L, devices, width, height, H,
-          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU):
+          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
+          clusteringAtLeast):
 
     # list of min throughputs
     minThroughputList = []
@@ -869,7 +870,7 @@ def train(iters, M, T, N, L, devices, width, height, H,
         
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList,
+                       iterationCount, minThroughputList, clusteringAtLeast,
                        input_data, output_data, training=True, model=None)
 
     # save input and output data
@@ -889,7 +890,7 @@ def train(iters, M, T, N, L, devices, width, height, H,
 # main TEST code
 def test(iters, M, T, N, L, devices, width, height, H,
          ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
-         model):
+         clusteringAtLeast, model):
 
     # re-initialize minimum throughput list
     minThroughputList = []
@@ -900,7 +901,7 @@ def test(iters, M, T, N, L, devices, width, height, H,
         
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList,
+                       iterationCount, minThroughputList, clusteringAtLeast,
                        input_data=None, output_data=None, training=False, model=model)
 
     # save min throughput as *.csv file
@@ -927,7 +928,7 @@ if __name__ == '__main__':
                                 's':'float', 'PD':'float', 'PU':'float',
                                 'width':'float', 'height':'float',
                                 'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float',
-                                'iters':'int'})
+                                'iters':'int', 'clusteringAtLeast':'float', 'epochs':'int'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -951,6 +952,8 @@ if __name__ == '__main__':
     N = paperArgs['N']
     H = paperArgs['H']
     iters = paperArgs['iters']
+    clusteringAtLeast = paperArgs['clusteringAtLeast']
+    epochs = paperArgs['epochs']
 
     # (from https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1)
     # SN = (1 − alphaP)*T/N denotes the length of each subslot
@@ -985,7 +988,9 @@ if __name__ == '__main__':
     configContent += 'N=' + str(N) + '\n'
     configContent += 'H=' + str(H) + '\n'
     configContent += 'iters=' + str(iters) + '\n'
-    configContent += 'windowSize=' + str(WINDOWSIZE)
+    configContent += 'windowSize=' + str(WINDOWSIZE) + '\n'
+    configContent += 'clusteringAtLeast=' + str(clusteringAtLeast) + '\n'
+    configContent += 'epochs=' + str(epochs)
 
     configFile.write(configContent)
     configFile.close()
@@ -998,14 +1003,16 @@ if __name__ == '__main__':
     except:
         print('[ NO PREPROCESSED DATA ]')
         train(iters, M, T, N, L, devices, width, height, H,
-              ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU)
+              ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
+              clusteringAtLeast)
 
     # get and train model
     try:
         model = tf.keras.models.load_model('WPCN_DL_model')
     except:
-        model = getAndTrainModel()
+        model = getAndTrainModel(epochs)
 
     # run test
     test(iters, M, T, N, L, devices, width, height, H,
-         ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU, model)
+         ng, fc, B, o2, b1, b2, alphaP, mu1, mu2, s, PU,
+         clusteringAtLeast, model)
