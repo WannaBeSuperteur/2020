@@ -27,9 +27,12 @@ printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 
 # allow GPU memory increase
-gpus = tf.config.experimental.list_physical_devices('GPU')
-for gpu in gpus:
-    tf.config.experimental.set_memory_growth(gpu, True)
+try:
+    gpus = tf.config.experimental.list_physical_devices('GPU')
+    for gpu in gpus:
+        tf.config.experimental.set_memory_growth(gpu, True)
+except:
+    pass
 
 # window size
 WINDOWSIZE = h_.loadSettings({'windowSize':'int'})['windowSize']
@@ -261,7 +264,7 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
         output = 0.5
 
     # plot the board array using seaborn
-    if iterationCount == 0:
+    if iterationCount == 0 and l < 5 and t < 5:
         plt.clf()
         ax = sns.heatmap(input_board)
         plt.savefig('input_board_train_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
@@ -501,6 +504,42 @@ def preprocessData():
     # return preprocessed data
     return (new_input_data, new_output_data)
 
+# define and train model
+def defineAndTrainModel(train_input, train_output, test_input, test_output):
+    model = DEEP_LEARNING_MODEL(window=WINDOWSIZE)
+
+    # training setting (early stopping and reduce learning rate)
+    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
+                                             mode="min",
+                                             patience=5)
+
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                      factor=0.1,
+                                                      patience=2,
+                                                      verbose=1,
+                                                      min_delta=0.0001,
+                                                      mode='min')
+
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+    # train using input and output data
+    model.fit(train_input, train_output,
+              validation_split=0.1, callbacks=[early, lr_reduced], epochs=50)
+        
+    model.summary()
+    model.save('WPCN_DL_model')
+
+    # test the model (validation)
+    test_prediction = model.predict(test_input)
+    test_prediction = np.reshape(test_prediction, (len(test_prediction), 1))
+    test_result     = np.concatenate((test_prediction, test_output), axis=1)
+
+    test_result     = pd.DataFrame(test_result)
+    test_result.to_csv('train_valid_result.csv')
+
+    # return the trained model
+    return model
+
 # deep learning model
 def getAndTrainModel():
 
@@ -526,41 +565,13 @@ def getAndTrainModel():
     test_output  = output_data[testStartIndex:]
 
     # model definition (with regularizer)
-    with tf.device('/gpu:0'):
-
-        model = DEEP_LEARNING_MODEL(window=WINDOWSIZE)
-
-        # training setting (early stopping and reduce learning rate)
-        early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
-                                                 mode="min",
-                                                 patience=5)
-
-        lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
-                                                          factor=0.1,
-                                                          patience=2,
-                                                          verbose=1,
-                                                          min_delta=0.0001,
-                                                          mode='min')
-
-        model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
-
-        # train using input and output data
-        model.fit(train_input, train_output,
-                  validation_split=0.1, callbacks=[early, lr_reduced], epochs=50)
-        
-        model.summary()
-        model.save('WPCN_DL_model')
-
-        # test the model (validation)
-        test_prediction = model.predict(test_input)
-        test_prediction = np.reshape(test_prediction, (len(test_prediction), 1))
-        test_result     = np.concatenate((test_prediction, test_output), axis=1)
-
-        test_result     = pd.DataFrame(test_result)
-        test_result.to_csv('train_valid_result.csv')
-
-    # return the trained model
-    return model
+    try:
+        with tf.device('/gpu:0'):
+            return defineAndTrainModel(train_input, train_output, test_input, test_output)
+    except:
+        print('GPU load failed -> using CPU')
+        with tf.device('/cpu:0'):
+            return defineAndTrainModel(train_input, train_output, test_input, test_output)
 
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCount):
