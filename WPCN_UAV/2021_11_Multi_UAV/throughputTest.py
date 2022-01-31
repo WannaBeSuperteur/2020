@@ -154,7 +154,6 @@ def modifyArr(arr, y, x, value, window):
         elif arr[y + window][x + window] > 1.5:
             arr[y + window][x + window] = 1.5
     except:
-        print(y, x, value, window)
         pass
 
 # mark the position of device
@@ -190,8 +189,6 @@ def getDistBetweenDeviceAndUAV(i, dev_x, dev_y, UAV_x, UAV_y):
 
 # thrput: common throughput value at time t
 def makeBoard(thrput, w, l, window, width, height):
-
-    #print('l, width, height:', l, width, height, 'thrput:', np.round_(np.array(thrput), 4))
 
     board = np.zeros((width + 2 * window, height + 2 * window))
 
@@ -281,7 +278,6 @@ def makeInputAndOutput(q_current, q_after, thrput, thrput_after, board, window,
     input_  = np.concatenate((input_board.flatten(), UAVheight, action), -1)
     output_ = np.array([output])
 
-    # print('test:', np.mean(input_board.flatten()), output)
     return (input_, output_)
 
 # make training dataset
@@ -326,12 +322,6 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iteratio
     input_board = board[center_y : center_y + 2 * window,
                         center_x : center_x + 2 * window]
 
-    """
-    print('========')
-    print(np.shape(board), np.shape(input_board))
-    print(q_current, center_x, center_y, window)
-    """
-
     # height of UAV
     UAVheight = np.array([q_current[2]])
     
@@ -346,8 +336,6 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iteratio
     # input  : board + height + action
     # output : output
     input_  = np.concatenate((input_board.flatten(), UAVheight, action), -1)
-    
-    # print('test:', np.mean(input_board.flatten()), output)
     return input_
 
 # make test input data
@@ -549,14 +537,6 @@ def getAndTrainModel(epochs):
 # move the UAV using learned model
 def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCount):
 
-    """
-    print('board:')
-    print(np.array(board))
-    print('max, min, std of board')
-    print(np.max(board.flatten()), np.min(board.flatten()), np.std(board.flatten()))
-    print('l, t, UAVheight:', l, t, UAVheight)
-    """
-
     # make input data using (board + height of UAV + action)
     # get output data of the model for each action (board + height of UAV + action)
     # (in this way, CONSEQUENTLY SAME with the original movement set)
@@ -581,8 +561,6 @@ def moveUAV_DL(board, UAVheight, q, model, w, l, N, t, throughputs, iterationCou
         input_  = makeTestInput(w, l, throughputs, t, q, action, width, height, iterationCount)
         input_  = np.array([input_])
         preprocessInput(input_, 4 * WINDOWSIZE * WINDOWSIZE) # preprocess input first
-        #print('input shape:', np.shape(input_))
-        #print('input:\n', list(input_))
 
         output_ = model.predict(input_)
         outputs.append(output_[0][0])
@@ -699,7 +677,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
     # then, it becomes [3, 7, 6]
     while True:
-        (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
+        (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True, False)
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
         if min(numOfDevs) >= int(clusteringAtLeast * devices // L): break
 
@@ -766,9 +744,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 #    print(i, np.round_(throughputs[i], 3)) 
 
             throughputs.append(thrputs)
-            
-            # [ TRAINING ]
-            # move UAV using RANDOM direction list
+
             if training == True:
 
                 # make direction list using random (when training)
@@ -781,8 +757,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # [ TEST ]
             # move UAV based on the model
             else:
-
-                #print('test throughputs:', throughputs)
 
                 # assert that model exists
                 assert(model != None)
@@ -866,7 +840,7 @@ def train(iters, M, T, N, L, devices, width, height, H,
 
     # main training
     for iterationCount in range(iters):
-        print('ITER COUNT ', iterationCount)
+        print('ITER COUNT ', iterationCount, '/', iters)
         
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,

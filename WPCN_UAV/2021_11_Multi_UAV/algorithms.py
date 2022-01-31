@@ -19,7 +19,7 @@ def plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height
 ### k Means Clustering algorithm
 # L          : number of clusters = number of UAVs
 # deviceList : list of devices
-def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg):
+def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbose):
 
     # init clusters
     clusters = [] # clusters to return (each cluster contains corresponding devices)
@@ -122,9 +122,11 @@ def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg):
                 plt.savefig('clustering_result.png')
 
         # break for the same cluster
-        print('\nclustering ' + str(count))
-        print('before : ' + cluster_mem_before)
-        print('after  : ' + cluster_mem_now)
+        if verbose:
+            print('\nclustering ' + str(count))
+            print('before : ' + cluster_mem_before)
+            print('after  : ' + cluster_mem_now)
+            
         if cluster_mem_now == cluster_mem_before: break
 
         # update cluster_mem_before
