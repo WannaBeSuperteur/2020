@@ -336,7 +336,7 @@ def makeInputForTest(q_current, thrput, board, window, w, l, t, action, iteratio
     UAVheight = np.array([q_current[2]])
     
     # plot the board array using seaborn
-    if iterationCount == 0 and action == [0, 0, 0]:
+    if iterationCount == 0 and l < 5 and t < 5:
         plt.clf()
         ax = sns.heatmap(input_board)
         plt.savefig('input_board_test_' + str(iterationCount) + ',' + str(l) + ',' + str(t) + '.png',
