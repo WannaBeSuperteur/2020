@@ -229,6 +229,9 @@ def makeBoard(thrput, w, l, window, width, height):
 # w                    : device location info
 def computeOutput(q_current, q_after, thrput, thrput_after, w, l):
 
+    # 이번 테스트에서도 성능이 안 좋을 시, 유전 알고리즘의 파라미터를 딥 러닝으로 학습시키는 방법을 고려 예정
+    # 입력값: WPCN-UAV 네트워크 환경 파라미터 / 출력값: 최적의 유전 알고리즘 파라미터 (또는 그 분포)
+
     """
     print('q_current   :', np.shape(q_current))
     print(np.array(q_current))
@@ -241,13 +244,24 @@ def computeOutput(q_current, q_after, thrput, thrput_after, w, l):
     print('\nw           :', np.shape(w))
     print(np.round_(w, 4))
     print('\nl           :', l)
-    exit(0)
     """
 
     try:
-        after  = np.mean(thrput_after) / np.max(thrput_after)
-        before = np.mean(thrput)       / np.max(thrput)
-        output = 1.0 / (1.0 + math.exp(-(after - before) * 400))
+        thrput_relative = np.array(thrput) / np.max(thrput)
+        sumWeight = 0
+        sumNearness = 0
+
+        for device in w:
+            if device[0] == l:
+                idOfDeviceInCluster = device[1]
+                sqDist = pow(q_after[0] - device[2], 2) + pow(q_after[1] - device[3], 2) + pow(q_after[0], 2)
+                nearness = 1 / (sqDist + 0.01)
+
+                sumWeight += thrput_relative[int(idOfDeviceInCluster)] * nearness
+                sumNearness += nearness
+
+        output = 1.0 - sumWeight / sumNearness
+
     except:
         output = 0.5
 
