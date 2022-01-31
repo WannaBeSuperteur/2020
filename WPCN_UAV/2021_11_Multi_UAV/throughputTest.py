@@ -379,34 +379,25 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.windowSize = window
 
         # common
-        self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
-        self.flat    = tf.keras.layers.Flatten()
-        L2           = tf.keras.regularizers.l2(0.001)
+        self.dropout  = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
+        self.flat     = tf.keras.layers.Flatten()
+        L2            = tf.keras.regularizers.l2(0.001)
 
         # CNN layers for board (2 * window) * (2 * window)
-        self.CNN0    = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN0')
-        self.MaxP0   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
-        self.CNN1    = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1')
-        self.CNN2    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')
-        #self.MaxP1   = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
-        #self.CNN3    = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
-        #self.CNN4    = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
+        self.CNN0     = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN0')
+        self.MaxP0    = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')
+        self.CNN1     = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1')
+        self.MaxP1    = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
+        self.CNN2     = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')
+        #self.MaxP1    = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling1')
+        #self.CNN3     = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN3')
+        #self.CNN4     = tf.keras.layers.Conv2D(filters=1, kernel_size=1, padding='valid', activation='relu', name='CNN4')
 
-        self.den_CNN = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense_CNN')
+        self.den_CNN0 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense_CNN0')
+        self.den_CNN1 = tf.keras.layers.Dense(1, activation='relu', kernel_regularizer=L2, name='dense_CNN1')
         
-        # Deep Neural Networks for height of UAV (1)
-        self.dense00 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense00')
-        self.dense01 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense01')
-        self.dense02 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense02')
-
-        # Deep Neural Networks for action info (3)
-        self.dense10 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense10')
-        self.dense11 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense11')
-        self.dense12 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense12')
-
         # final
-        self.merged  = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense_merged')
-        self.final   = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
+        self.final    = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
 
@@ -420,40 +411,22 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         # CNN layers for board (2 * window)*(2 * window)
         board = tf.reshape(board, (-1, (2 * ws), (2 * ws), 1))
 
-        board = self.CNN0(board)    # 16 -> 14
+        board = self.CNN0(board)    # 30 -> 28
         board = self.dropout(board)
-        board = self.MaxP0(board)   # 14 ->  7
+        board = self.MaxP0(board)   # 28 -> 14
         
-        board = self.CNN1(board)    #  7 ->  5
+        board = self.CNN1(board)    # 14 -> 12
         board = self.dropout(board)
-        board = self.CNN2(board)    #  5 ->  3
-        #board = self.MaxP1(board)
-
-        #board = self.CNN3(board)
-        #board = self.dropout(board)
-        #board = self.CNN4(board)
-
+        board = self.MaxP1(board)   # 12 -> 6
+        board = self.dropout(board)
+        board = self.CNN2(board)    # 6 -> 4
+        
         board = self.flat(board)
-        board = self.den_CNN(board)
-
-        # Deep Neural Networks for height of UAV (1)
-        UAV_height = self.dense00(UAV_height)
-        UAV_height = self.dropout(UAV_height)
-        UAV_height = self.dense01(UAV_height)
-        UAV_height = self.dropout(UAV_height)
-        UAV_height = self.dense02(UAV_height)
-
-        # Deep Neural Networks for action info (3)
-        actionInfo = self.dense10(actionInfo)
-        actionInfo = self.dropout(actionInfo)
-        actionInfo = self.dense11(actionInfo)
-        actionInfo = self.dropout(actionInfo)
-        actionInfo = self.dense12(actionInfo)
+        board = self.den_CNN0(board)
+        board = self.den_CNN1(board)
 
         # final
         concatenated = tf.concat([board, UAV_height, actionInfo], axis=-1)
-        concatenated = self.merged(concatenated)
-        concatenated = self.dropout(concatenated)
         output = self.final(concatenated)
 
         return output
@@ -524,7 +497,7 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output):
 
     # train using input and output data
     model.fit(train_input, train_output,
-              validation_split=0.1, callbacks=[early, lr_reduced], epochs=50)
+              validation_split=0.1, callbacks=[early, lr_reduced], epochs=3)
         
     model.summary()
     model.save('WPCN_DL_model')
@@ -728,7 +701,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     while True:
         (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True)
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
-        if min(numOfDevs) >= int(0.6 * devices // L): break
+        if min(numOfDevs) >= int(0.4 * devices // L): break
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
