@@ -310,7 +310,7 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount, minThroughputList, clusteringAtLeast, training):
+                   iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, training):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -329,7 +329,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     while True:
         (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True, False)
         numOfDevs = [cluster_mem.count(l) for l in range(L)]
-        if min(numOfDevs) >= int(clusteringAtLeast * devices // L): break
+
+        if min(numOfDevs) >= int(clusteringAtLeast * devices // L) and max(numOfDevs) <= int(clusteringAtMost * devices // L):
+            break
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
@@ -497,7 +499,7 @@ if __name__ == '__main__':
                                 's':'float', 'PD':'float', 'PU':'float',
                                 'width':'float', 'height':'float',
                                 'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float',
-                                'iters':'int', 'clusteringAtLeast':'float', 'epochs':'int'})
+                                'iters':'int', 'clusteringAtLeast':'float', 'clusteringAtMost':'float', 'epochs':'int'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -522,6 +524,7 @@ if __name__ == '__main__':
     H = paperArgs['H']
     iters = paperArgs['iters']
     clusteringAtLeast = paperArgs['clusteringAtLeast']
+    clusteringAtMost = paperArgs['clusteringAtMost']
     epochs = paperArgs['epochs']
 
     # (from https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1)
@@ -559,6 +562,7 @@ if __name__ == '__main__':
     configContent += 'iters=' + str(iters) + '\n'
     configContent += 'windowSize=' + str(WINDOWSIZE) + '\n'
     configContent += 'clusteringAtLeast=' + str(clusteringAtLeast) + '\n'
+    configContent += 'clusteringAtMost=' + str(clusteringAtMost) + '\n'
     configContent += 'epochs=' + str(epochs)
 
     configFile.write(configContent)
@@ -580,7 +584,7 @@ if __name__ == '__main__':
 
             throughputTest(M, T, N, L, devices, width, height, H,
                            ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                           iterationCount, minThroughputList, clusteringAtLeast, True)
+                           iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, True)
 
     # get and train model
     try:
@@ -599,4 +603,4 @@ if __name__ == '__main__':
 
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList, clusteringAtLeast, False)
+                       iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, False)
