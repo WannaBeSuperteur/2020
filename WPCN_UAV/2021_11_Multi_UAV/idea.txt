@@ -16,3 +16,8 @@
 
 <선행>
 각 device별 throughput을 좌표로 나타낸 그래프로 표시
+
+2022/02/01
+ - 입력: 해당 cluster의 device map (cluster center 부근을 -1, 각 device 부근을 +1), 알고리즘의 파라미터
+ - 출력: 최종 common throughput
+ - 알고리즘의 파라미터의 최적 setting을 탐색

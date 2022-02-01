@@ -1,3 +1,7 @@
+# todo:
+# input and output data (and how to preprocess) setting
+# algorithm (ex: genetic algorithm) and parameters setting
+
 import sys
 import os
 
@@ -153,7 +157,7 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output, epoc
               validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
         
     model.summary()
-    model.save('WPCN_DL_model')
+    model.save('WPCN_UAV_DL_model')
 
     # test the model (validation)
     test_prediction = model.predict(test_input)
@@ -171,8 +175,8 @@ def getAndTrainModel(epochs):
 
     # load and preprocess input and output data
     try:
-        input_data  = pd.read_csv('input_data_preprocessed.csv' , index_col=0)
-        output_data = pd.read_csv('output_data_preprocessed.csv', index_col=0)
+        input_data  = pd.read_csv('train_input_preprocessed.csv' , index_col=0)
+        output_data = pd.read_csv('train_output_preprocessed.csv', index_col=0)
     except:
         print('[ NO PREPROCESSED DATA ]')
         (input_data, output_data) = preprocessData()
@@ -307,10 +311,29 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
     # throughputs: shape (k, N) -> shape (N, k)
     return thrputs
 
+# preprocess input and output
+def preprocessInputAndOutput(input_data, output_data):
+    n = len(input_data)
+    assert(n == len(output_data))
+
+    preprocessed_input_data = []
+    preprocessed_output_data = []
+
+    for i in range(n):
+
+        # preprocess input data
+        preprocessed_input_data.append([input_data[i][0]])
+
+        # preprocess output data
+        preprocessed_output_data.append([1 / (1 + math.exp((-1)*output_data[i][0]))])
+
+    return (preprocessed_input_data, preprocessed_output_data)
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, training):
+                   iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                   input_data, output_data, training):
 
     # create list of devices (randomly place devices)
     while True:
@@ -377,7 +400,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # speed of light
     c = 300000000
 
+    # minimum throughputs
     minthroughputs  = []
+
+    # for trajectory drawing
     all_throughputs = []
     
     for l in range(L):
@@ -461,10 +487,26 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             else:
                 final_throughputs_df.to_csv('test_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
-        minthroughputs.append(min(final_throughputs))
+        minThrput = min(final_throughputs)
+        minthroughputs.append(minThrput)
 
         # save at all_throughputs
         all_throughputs += list(final_throughputs)
+
+        if training:
+
+            # add input and output data
+            input_data.append([0])
+            output_data.append([minThrput])
+
+            # save input and output data
+            pd.DataFrame(np.array(input_data)).to_csv('train_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('train_output_raw.csv')
+
+            (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data, output_data)
+
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
 
     # create min throughput information
     minThroughputList.append([iterationCount] + minthroughputs)
@@ -587,22 +629,27 @@ if __name__ == '__main__':
 
     # run training
     try:
-        _ = pd.read_csv('input_data_preprocessed.csv' , index_col=0)
-        _ = pd.read_csv('output_data_preprocessed.csv', index_col=0)
+        _ = pd.read_csv('train_input_preprocessed.csv' , index_col=0)
+        _ = pd.read_csv('train_output_preprocessed.csv', index_col=0)
 
     except:
         print('[ NO PREPROCESSED DATA ]')
+
+        # input and output data for deep learning
+        input_data = []  # input data  (parameters of the algorithm)
+        output_data = [] # output data (minimum throughput values)
 
         for iterationCount in range(iters):
             print('TRAINING ITER COUNT ', iterationCount, '/', iters)
 
             throughputTest(M, T, N, L, devices, width, height, H,
                            ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                           iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, True)
+                           iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                           input_data, output_data, True)
 
     # get and train model
     try:
-        model = tf.keras.models.load_model('WPCN_DL_model')
+        model = tf.keras.models.load_model('WPCN_UAV_DL_model')
     except:
         print('model load failed')
         model = getAndTrainModel(epochs)
@@ -617,4 +664,5 @@ if __name__ == '__main__':
 
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, False)
+                       iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                       None, None, False)
