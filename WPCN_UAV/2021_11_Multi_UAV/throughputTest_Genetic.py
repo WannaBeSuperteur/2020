@@ -464,7 +464,7 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
         for dx in range(-dist, dist + 1):
             if dy * dy + dx * dx <= sqDist:
                 try:
-                    inputImage[windowSize + dx][windowSize + dy] = -1.0
+                    inputImage[windowSize + dx][windowSize + dy] = -1.0 + (dy * dy + dx * dx) / sqDist
                 except:
                     pass
 
@@ -483,10 +483,15 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
                         try:
                             pos_device_x = round(windowSize + relative_device_x) + dx
                             pos_device_y = round(windowSize + relative_device_y) + dy
-                            inputImage[pos_device_y][pos_device_x] = 1
+                            inputImage[pos_device_y][pos_device_x] += (1.0 - (dy * dy + dx * dx) / sqDist)
+
+                            # at most 1.5
+                            if inputImage[pos_device_y][pos_device_x] >= 1.5:
+                                inputImage[pos_device_y][pos_device_x] = 1.5
                         except:
                             pass
 
+    print(np.round_(inputImage, 2))
     return inputImage
 
 # running throughput test
@@ -568,7 +573,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # parameters = rounds(10 ~ 20), 100p(5 ~ 20), casesToFindInit(5 ~ 15)
     ranges = [[10, 20], [5, 20], [5, 15]]
-    sqDist = 1
+    sqDist = 7.5
 
     for l in range(L):
 
@@ -825,7 +830,7 @@ if __name__ == '__main__':
     configContent += 'epochs=' + str(epochs)
 
     # manual window size setting
-    windowSize = 10
+    windowSize = 12
 
     configFile.write(configContent)
     configFile.close()
