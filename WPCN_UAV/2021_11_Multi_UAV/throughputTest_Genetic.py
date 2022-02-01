@@ -294,23 +294,18 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
         # update a_l,kl[n] for this (l, t)
         update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
 
-        # compute average throughput for each device in L
-        thrputs = []
+    # compute average throughput for each device in L
+    thrputs = []
 
-        for k in range(devices):
-            thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
-            thrputs.append(thrput)
+    for k in range(devices):
+        thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
+        thrputs.append(thrput)
 
-            if printDetails == True:
-                print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
-
-        throughputs.append(thrputs)
+        if printDetails == True:
+            print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
 
     # throughputs: shape (k, N) -> shape (N, k)
-    throughputs = np.array(throughputs)
-    final_throughputs = throughputs[-1]
-
-    return (throughputs, final_throughputs)
+    return thrputs
 
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
@@ -374,22 +369,24 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # the number of devices in cluster l
         devices = numOfDevs[l]
         directionList = [None for i in range(N)]
+        print('number of devices: ', devices)
 
         # make direction list using random (when training)
         for t in range(N):
             directionList[t] = random.randint(0, 3*3*3-1)
 
         # modifying directions for minimum (common) throughput maximization
-        rounds = 50
+        rounds = 20
         for round in range(rounds):
             print(round)
 
             # get throughput
-            (throughputs, final_throughputs) = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
-                                                             alphaP, PU, numOfDevs, devices, printDetails,
-                                                             directionList, width, height)
+            final_throughputs = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
+                                              alphaP, PU, numOfDevs, devices, printDetails,
+                                              directionList, width, height)
 
             print('min throughputs:', min(final_throughputs))
+            print('------')
 
             # terminate here at the last round
             if round == rounds - 1: break
@@ -399,12 +396,17 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             avgThroughput = np.mean(final_throughputs) # average throughput
 
             # find near cases (and select the best 2 near cases) with change probability p
-            p = 0.1 - 0.0015 * round
+            p = 0.15 - 0.0025 * round
             print('probability:', p)
             nearCasesInfo = []
 
-            # find 30 near cases in total
-            for nearCaseNo in range(30):
+            # find original case into near case list
+            nearCasesInfo.append([minThroughput, zeros, avgThroughput, directionList])
+
+            # find N near cases in total
+            casesToFind = 10 + round // 2
+            
+            for nearCaseNo in range(casesToFind):
                 nearCase = copy.deepcopy(directionList)
 
                 # randomly modify each element of direction list
@@ -413,19 +415,19 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                         nearCase[i] = random.randint(0, 3*3*3-1)
 
                 # throughput test using modified direction list
-                (_, final_near) = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
-                                                alphaP, PU, numOfDevs, devices, printDetails,
-                                                nearCase, width, height)
+                final_near = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
+                                           alphaP, PU, numOfDevs, devices, printDetails,
+                                           nearCase, width, height)
 
                 nearCasesInfo.append([min(final_near),
                                       list(final_near).count(0),
                                       np.mean(final_near),
                                       nearCase])
 
-                print(min(final_near),
+                print(str(np.round(min(final_near), 6)) + ' '*(8 - len(str(np.round(min(final_near), 6)))),
                       list(final_near).count(0),
-                      np.mean(final_near),
-                      nearCase)
+                      str(np.round(np.mean(final_near), 6)) + ' '*(8 - len(str(np.round(np.mean(final_near), 6)))),
+                      np.array(nearCase))
 
             # find the best near cases (order: min -> number of zeros -> average throughput)
             nearCasesInfo.sort(key=lambda x: x[2], reverse=True) # sort by average
@@ -436,9 +438,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # save throughputs at first iteration
         if iterationCount == 0:
-            throughputs_df = pd.DataFrame(throughputs)
-            throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '.csv')
-
             final_throughputs_df = pd.DataFrame(final_throughputs)
             final_throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
@@ -476,6 +475,9 @@ def saveMinThroughput(minThroughputList, memo):
     noteFile.close()
 
 if __name__ == '__main__':
+
+    # numpy setting
+    np.set_printoptions(edgeitems=5, linewidth=150)
 
     # ignore warnings
     import warnings
