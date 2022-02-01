@@ -1,6 +1,6 @@
 # todo:
-# input and output data (and how to preprocess) setting
-# algorithm (ex: genetic algorithm) and parameters setting
+# input and output data (and how to preprocess) and deep learning model setting
+# path finding algorithm (ex: genetic algorithm) and parameters setting
 
 import sys
 import os
@@ -134,9 +134,37 @@ def changeColor(colorCode, k):
         
     return result
 
+
+# deep learning model class
+class DEEP_LEARNING_MODEL(tf.keras.Model):
+
+    def __init__(self, dropout_rate=0.25, training=False, name='WPCN_UAV_model'):
+        super(DEEP_LEARNING_MODEL, self).__init__(name=name)
+
+        # common
+        self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
+        #self.flat = tf.keras.layers.Flatten()
+        L2 = tf.keras.regularizers.l2(0.001)
+
+        # example model
+        self.dense0 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense0')
+        self.dense1 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense1')
+        self.final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
+
+    def call(self, inputs, training):
+
+        # running example model
+        inputs = self.dense0(inputs)
+        inputs = self.dropout(inputs)
+        inputs = self.dense1(inputs)
+        inputs = self.dropout(inputs)
+        output = self.final(inputs)
+
+        return output
+
 # define and train model
 def defineAndTrainModel(train_input, train_output, test_input, test_output, epochs):
-    model = DEEP_LEARNING_MODEL(window=WINDOWSIZE)
+    model = DEEP_LEARNING_MODEL()
 
     # training setting (early stopping and reduce learning rate)
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
