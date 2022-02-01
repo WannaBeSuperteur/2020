@@ -383,7 +383,7 @@ def findBestParams(model, inputImage, ranges):
                 bestParamsCopy[i] += 2.0 * j / (ranges[i][1] - ranges[i][0])
                 bestParamsCopy[i] = np.clip(bestParamsCopy[i], -1.0, 1.0)
                 inputData = np.concatenate((inputImage, params), axis=-1)
-                inputData = [inputData]
+                inputData = np.array([inputData])
                 print('input data:', inputData)
 
                 outputOfModifiedParam = model(inputData, training=False)
@@ -481,25 +481,28 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # for trajectory drawing
     all_throughputs = []
 
-    # find best parameters using model
     # parameters = rounds(10 ~ 20), 100p(5 ~ 20), casesToFindInit(5 ~ 15)
     ranges = [[10, 20], [5, 20], [5, 15]]
-
-    if training == False:
-        bestParams = findBestParams(model, [], ranges)
-        print('\n[ best parameters derived by model ]')
-    else:
-        bestParams = [random.randint(10, 20), random.randint(5, 20), random.randint(5, 15)]
-        print('\n[ best parameters derived randomly ]')
-
-    print(np.round_(bestParams, 6))
-    print('\n')
-
-    rounds          = int(round(bestParams[0]))
-    pPercent        = int(round(bestParams[1]))
-    casesToFindInit = int(round(bestParams[2]))
+    inputImage = np.array([])
 
     for l in range(L):
+
+        # find best parameters using model
+        if training == False:
+            bestParams = findBestParams(model, inputImage, ranges)
+            print('\n[ best parameters derived by model ]')
+        else:
+            bestParams = []
+            for i in range(len(ranges)):
+                bestParams.append(random.randint(ranges[i][0], ranges[i][1]))
+            print('\n[ best parameters derived randomly ]')
+
+        print(np.round_(bestParams, 6))
+        print('\n')
+
+        rounds = int(round(bestParams[0]))
+        pPercent = int(round(bestParams[1]))
+        casesToFindInit = int(round(bestParams[2]))
 
         # the number of devices in cluster l
         devices = numOfDevs[l]
