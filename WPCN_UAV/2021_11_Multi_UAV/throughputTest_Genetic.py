@@ -313,25 +313,39 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                    iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost, training):
 
     # create list of devices (randomly place devices)
-    deviceList = []
-
-    for i in range(devices):
-        xVal = random.random() * width
-        yVal = random.random() * height
-        device_i = [xVal, yVal]
-        deviceList.append(device_i)
-
-    # clustering
-
-    # create the list of [cluster -> the number of devices] for each cluster and use it
-    # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
-    # then, it becomes [3, 7, 6]
     while True:
-        (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True, False)
-        numOfDevs = [cluster_mem.count(l) for l in range(L)]
+        deviceList = []
+        clustering_finished = False
 
-        if min(numOfDevs) >= int(clusteringAtLeast * devices // L) and max(numOfDevs) <= int(clusteringAtMost * devices // L):
-            break
+        for i in range(devices):
+            xVal = random.random() * width
+            yVal = random.random() * height
+            device_i = [xVal, yVal]
+            deviceList.append(device_i)
+
+        # clustering
+        clustering_count = 0
+
+        # create the list of [cluster -> the number of devices] for each cluster and use it
+        # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
+        # then, it becomes [3, 7, 6]
+        while True:
+            (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True, False)
+            numOfDevs = [cluster_mem.count(l) for l in range(L)]
+            print(numOfDevs)
+            clustering_count += 1
+
+            # to prevent stuck in clustering stage
+            if clustering_count >= 10:
+                print('re-initializing device list ...')
+                break
+
+            if min(numOfDevs) >= int(clusteringAtLeast * devices // L) and max(numOfDevs) <= int(clusteringAtMost * devices // L):
+                clustering_finished = True
+                break
+
+        # clustering finished
+        if clustering_finished: break
 
     # compute common throughput using q and directionList
     # update alkl for each time from 0 to T (N+1 times, N moves)
@@ -378,7 +392,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             directionList[t] = random.randint(0, 3*3*3-1)
 
         # modifying directions for minimum (common) throughput maximization
-        rounds = 20
+        rounds = 15
         for round in range(rounds):
             print(round)
 
@@ -398,7 +412,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             avgThroughput = np.mean(final_throughputs) # average throughput
 
             # find near cases (and select the best 2 near cases) with change probability p
-            p = 0.15 - 0.0025 * round
+            p = 0.15 - 0.005 * round
             print('probability:', p)
             nearCasesInfo = []
 
