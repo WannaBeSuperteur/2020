@@ -310,7 +310,7 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount, minThroughputList, clusteringAtLeast):
+                   iterationCount, minThroughputList, clusteringAtLeast, training):
 
     # create list of devices (randomly place devices)
     deviceList = []
@@ -439,7 +439,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # save throughputs at first iteration
         if iterationCount == 0:
             final_throughputs_df = pd.DataFrame(final_throughputs)
-            final_throughputs_df.to_csv('thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+
+            if training:
+                final_throughputs_df.to_csv('train_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+            else:
+                final_throughputs_df.to_csv('test_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
         minthroughputs.append(min(final_throughputs))
 
@@ -576,7 +580,7 @@ if __name__ == '__main__':
 
             throughputTest(M, T, N, L, devices, width, height, H,
                            ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                           iterationCount, minThroughputList, clusteringAtLeast)
+                           iterationCount, minThroughputList, clusteringAtLeast, True)
 
     # get and train model
     try:
@@ -595,4 +599,4 @@ if __name__ == '__main__':
 
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                       iterationCount, minThroughputList, clusteringAtLeast)
+                       iterationCount, minThroughputList, clusteringAtLeast, False)
