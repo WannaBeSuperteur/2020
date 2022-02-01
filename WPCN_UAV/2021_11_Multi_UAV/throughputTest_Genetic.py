@@ -207,7 +207,7 @@ def getAndTrainModel(epochs):
         output_data = pd.read_csv('train_output_preprocessed.csv', index_col=0)
     except:
         print('[ NO PREPROCESSED DATA ]')
-        (input_data, output_data) = preprocessData()
+        exit(0)
 
     # convert data into numpy array
     input_data  = np.array(input_data)
@@ -372,10 +372,10 @@ def findBestParams(model, inputImage, ranges):
 
     while (True):
         improvedParams = None
+        print('best params:', np.round_(bestParams, 6))
 
         for i in range(len(params)):
             bestParamsCopy = copy.deepcopy(bestParams)
-            print('best params:', np.round_(bestParamsCopy, 6))
 
             for j in [-1, 1]:
 
@@ -383,11 +383,13 @@ def findBestParams(model, inputImage, ranges):
                 bestParamsCopy[i] += 2.0 * j / (ranges[i][1] - ranges[i][0])
                 bestParamsCopy[i] = np.clip(bestParamsCopy[i], -1.0, 1.0)
                 inputData = np.concatenate((inputImage, params), axis=-1)
+                inputData = [inputData]
+                print('input data:', inputData)
 
                 outputOfModifiedParam = model(inputData, training=False)
 
                 if outputOfModifiedParam > bestOutput:
-                    improvedParams = bestParamsCopy[i]
+                    improvedParams = bestParamsCopy
                     bestOutput = outputOfModifiedParam
 
         if improvedParams != None:
@@ -395,12 +397,10 @@ def findBestParams(model, inputImage, ranges):
         else:
             break
 
-    # convert to the value in [-1, 1] for each parameter using ranges
-    print('bestParams [before] : ', bestParams)
+    # convert to the actual value for each parameter, using ranges
     for i in range(len(bestParams)):
-        bestParams[i] = (bestParams[i] - ranges[i][0]) / (ranges[i][1] - ranges[i][0]) # [0, 1]
-        bestParams[i] = bestParams[i] * 2.0 - 1.0                                      # [-1, 1]
-    print('bestParams [after]  : ', bestParams)
+        bestParams[i] = (bestParams[i] + 1.0) / 2.0 # [-1, 1] -> [0, 1]
+        bestParams[i] = bestParams[i] * (ranges[i][1] - ranges[i][0]) + ranges[i][0] # [0, 1] -> actual value
 
     return bestParams
 
@@ -603,8 +603,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
             pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
         else:
-            pd.DataFrame(np.array(input_data)).to_csv('test_input_preprocessed.csv')
-            pd.DataFrame(np.array(output_data)).to_csv('test_output_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_output_preprocessed.csv')
 
     # create min throughput information
     minThroughputList.append([iterationCount] + minthroughputs)
@@ -757,12 +757,12 @@ if __name__ == '__main__':
     # run test (using 5% (min 10) iterations of training)
     iters = max(10, iters // 20)
 
+    # input and output data for testing
+    test_input_data = []
+    test_output_data = []
+
     for iterationCount in range(iters):
         print('TEST ITER COUNT ', iterationCount, '/', iters)
-
-        # input and output data for testing
-        test_input_data = []
-        test_output_data = []
 
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
