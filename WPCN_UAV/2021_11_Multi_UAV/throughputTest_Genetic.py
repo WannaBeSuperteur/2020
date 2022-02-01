@@ -2,6 +2,8 @@
 # input and output data (and how to preprocess) and deep learning model setting
 # path finding algorithm (ex: genetic algorithm) and parameters setting
 
+# WINDOW_SIZE is set MANUALLY in this code file, not settings.txt file.
+
 import sys
 import os
 
@@ -37,9 +39,6 @@ try:
         tf.config.experimental.set_memory_growth(gpu, True)
 except:
     pass
-
-# window size
-WINDOWSIZE = h_.loadSettings({'windowSize':'int'})['windowSize']
 
 # note:
 # to ensure that MINIMUM THROUGHPUT > 0
@@ -134,37 +133,72 @@ def changeColor(colorCode, k):
         
     return result
 
-
 # deep learning model class
 class DEEP_LEARNING_MODEL(tf.keras.Model):
 
-    def __init__(self, dropout_rate=0.25, training=False, name='WPCN_UAV_model'):
+    def __init__(self, window, dropout_rate=0.25, training=False, name='WPCN_UAV_model'):
         super(DEEP_LEARNING_MODEL, self).__init__(name=name)
+        self.windowSize = window
 
         # common
         self.dropout = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
-        #self.flat = tf.keras.layers.Flatten()
+        self.flat = tf.keras.layers.Flatten()
         L2 = tf.keras.regularizers.l2(0.001)
 
-        # example model
-        self.dense0 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense0')
-        self.dense1 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense1')
+        # convolutional neural network part
+        self.CNN0 = tf.keras.layers.Conv2D(filters=256, kernel_size=3, padding='valid', activation='relu', name='CNN0') # 18
+        self.MaxP0 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2), padding='valid', name='MaxPooling0')                # 9
+        self.CNN1 = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1') # 7
+        self.CNN2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')  # 5
+
+        self.CNNDense0 = tf.keras.layers.Dense(1024, activation='relu', kernel_regularizer=L2, name='CNNDense0')
+        self.CNNDense1 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='CNNDense1')
+
+        # dense part
+        self.dense0 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense0')
+        self.dense1 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense1')
+        self.dense2 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='dense2')
+
+        # final output part
         self.final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
+        ws = self.windowSize
 
-        # running example model
-        inputs = self.dense0(inputs)
-        inputs = self.dropout(inputs)
-        inputs = self.dense1(inputs)
-        inputs = self.dropout(inputs)
-        output = self.final(inputs)
+        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), 3], axis=1)
+
+        # convolutional neural network part
+        board = tf.reshape(board, (-1, 2 * ws + 1, 2 * ws + 1, 1))
+
+        board = self.CNN0(board)    # 20 -> 18
+        board = self.dropout(board)
+        board = self.MaxP0(board)   # 18 -> 9
+        board = self.dropout(board)
+        board = self.CNN1(board)    # 9  -> 7
+        board = self.dropout(board)
+        board = self.CNN2(board)    # 7  -> 5
+
+        board = self.flat(board)
+        board = self.CNNDense0(board)
+        board = self.dropout(board)
+        board = self.CNNDense1(board)
+
+        # dense part
+        parameters = self.dense0(parameters)
+        parameters = self.dropout(parameters)
+        parameters = self.dense1(parameters)
+        parameters = self.dropout(parameters)
+        parameters = self.dense2(parameters)
+
+        # final output part
+        concatenated = tf.concat([board, parameters], axis=-1)
+        output = self.final(concatenated)
 
         return output
 
 # define and train model
-def defineAndTrainModel(train_input, train_output, test_input, test_output, epochs):
-    model = DEEP_LEARNING_MODEL()
+def defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize):
+    model = DEEP_LEARNING_MODEL(window=windowSize)
 
     # training setting (early stopping and reduce learning rate)
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
@@ -199,7 +233,7 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output, epoc
     return model
 
 # deep learning model
-def getAndTrainModel(epochs):
+def getAndTrainModel(epochs, windowSize):
 
     # load and preprocess input and output data
     try:
@@ -225,11 +259,11 @@ def getAndTrainModel(epochs):
     # model definition (with regularizer)
     try:
         with tf.device('/gpu:0'):
-            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs)
+            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
     except:
         print('GPU load failed -> using CPU')
         with tf.device('/cpu:0'):
-            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs)
+            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
 
 # save trajectory as graph
 def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training):
@@ -340,7 +374,7 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
     return thrputs
 
 # preprocess input and output
-def preprocessInputAndOutput(input_data, output_data, ranges):
+def preprocessInputAndOutput(input_data, output_data, ranges, windowSize):
     n = len(input_data)
     nColumns = len(ranges)
     assert(n == len(output_data))
@@ -348,15 +382,27 @@ def preprocessInputAndOutput(input_data, output_data, ranges):
     preprocessed_input_data = []
     preprocessed_output_data = []
 
+    # the number of cells representing the input image
+    imgCells = (2 * windowSize + 1) * (2 * windowSize + 1)
+
     for i in range(n):
 
         # preprocess input data
         preprocessed_input = []
+
+        for j in range(imgCells):
+            preprocessed_input.append(input_data[i][j])
+
         for j in range(nColumns):
-            preprocessed_input.append((input_data[i][j] - ranges[j][0]) / (ranges[j][1] - ranges[j][0]) * 2.0 - 1.0)
+            paramValue = input_data[i][imgCells + j]
+            paramMax   = ranges[j][1]
+            paramMin   = ranges[j][0]
+            convertedValue = (paramValue - paramMin) / (paramMax - paramMin) * 2.0 - 1.0
+            preprocessed_input.append(convertedValue)
+
         preprocessed_input_data.append(preprocessed_input)
 
-        # preprocess output data
+        # preprocess output data (sigmoid function)
         preprocessed_output_data.append([1 / (1 + math.exp((-1)*output_data[i][0]))])
 
     return (preprocessed_input_data, preprocessed_output_data)
@@ -372,7 +418,6 @@ def findBestParams(model, inputImage, ranges):
 
     while (True):
         improvedParams = None
-        print('best params:', np.round_(bestParams, 6))
 
         for i in range(len(params)):
             bestParamsCopy = copy.deepcopy(bestParams)
@@ -384,7 +429,6 @@ def findBestParams(model, inputImage, ranges):
                 bestParamsCopy[i] = np.clip(bestParamsCopy[i], -1.0, 1.0)
                 inputData = np.concatenate((inputImage, params), axis=-1)
                 inputData = np.array([inputData])
-                print('input data:', inputData)
 
                 outputOfModifiedParam = model(inputData, training=False)
 
@@ -404,11 +448,52 @@ def findBestParams(model, inputImage, ranges):
 
     return bestParams
 
+# make input image for current UAV location and device location
+# dist : cell with ((distance to UAV or device)^2 < sqDist) is marked as -1 (UAV) or 1 (device)
+def makeInputImage(q, l, N, w, windowSize, sqDist):
+
+    # current location of UAV [xlt, ylt, hlt]
+    UAV_loc = q[l * (N + 1)][2:]
+    UAV_x = UAV_loc[0]
+    UAV_y = UAV_loc[1]
+
+    inputImage = np.zeros((2 * windowSize + 1, 2 * windowSize + 1))
+    dist = int(math.sqrt(sqDist))
+
+    for dy in range(-dist, dist + 1):
+        for dx in range(-dist, dist + 1):
+            if dy * dy + dx * dx <= sqDist:
+                try:
+                    inputImage[windowSize + dx][windowSize + dy] = -1.0
+                except:
+                    pass
+
+    # each device : w = [[l, k, xkl, ykl, 0], ...]
+    for device in w:
+        if device[0] == l:
+            device_x = device[2]
+            device_y = device[3]
+
+            relative_device_x = device[2] - UAV_x
+            relative_device_y = device[3] - UAV_y
+
+            for dy in range(-dist, dist+1):
+                for dx in range(-dist, dist+1):
+                    if dy * dy + dx * dx <= sqDist:
+                        try:
+                            pos_device_x = round(windowSize + relative_device_x) + dx
+                            pos_device_y = round(windowSize + relative_device_y) + dy
+                            inputImage[pos_device_y][pos_device_x] = 1
+                        except:
+                            pass
+
+    return inputImage
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                   input_data, output_data, training, model):
+                   input_data, output_data, training, model, windowSize):
 
     # create list of devices (randomly place devices)
     while True:
@@ -483,9 +568,13 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # parameters = rounds(10 ~ 20), 100p(5 ~ 20), casesToFindInit(5 ~ 15)
     ranges = [[10, 20], [5, 20], [5, 15]]
-    inputImage = np.array([])
+    sqDist = 1
 
     for l in range(L):
+
+        # make input image
+        inputImage = makeInputImage(q, l, N, w, windowSize, sqDist)
+        inputImage = np.array(inputImage).flatten()
 
         # find best parameters using model
         if training == False:
@@ -589,7 +678,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         all_throughputs += list(final_throughputs)
 
         # add to input and output data
-        input_data.append([rounds, pPercent, casesToFindInit])
+        input_data.append(np.concatenate((inputImage, [rounds, pPercent, casesToFindInit]), axis=-1))
         output_data.append([minThrput])
 
         # save input and output data
@@ -600,7 +689,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
             pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
 
-        (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data, output_data, ranges)
+        (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data, output_data, ranges, windowSize)
 
         if training == True:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
@@ -640,7 +729,7 @@ def saveMinThroughput(minThroughputList, memo):
 if __name__ == '__main__':
 
     # numpy setting
-    np.set_printoptions(edgeitems=5, linewidth=150)
+    np.set_printoptions(edgeitems=20, linewidth=200)
 
     # ignore warnings
     import warnings
@@ -717,10 +806,13 @@ if __name__ == '__main__':
     configContent += 'N=' + str(N) + '\n'
     configContent += 'H=' + str(H) + '\n'
     configContent += 'iters=' + str(iters) + '\n'
-    configContent += 'windowSize=' + str(WINDOWSIZE) + '\n'
+    #configContent += 'windowSize=' + str(WINDOWSIZE) + '\n'
     configContent += 'clusteringAtLeast=' + str(clusteringAtLeast) + '\n'
     configContent += 'clusteringAtMost=' + str(clusteringAtMost) + '\n'
     configContent += 'epochs=' + str(epochs)
+
+    # manual window size setting
+    windowSize = 10
 
     configFile.write(configContent)
     configFile.close()
@@ -746,14 +838,14 @@ if __name__ == '__main__':
             throughputTest(M, T, N, L, devices, width, height, H,
                            ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                            iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                           input_data, output_data, True, None)
+                           input_data, output_data, True, None, windowSize)
 
     # get and train model
     try:
         model = tf.keras.models.load_model('WPCN_UAV_DL_model')
     except:
         print('model load failed')
-        model = getAndTrainModel(epochs)
+        model = getAndTrainModel(epochs, windowSize)
 
     # find the best genetic algorithm argument based on the WPCN UAV network environment arguments
 
@@ -770,4 +862,4 @@ if __name__ == '__main__':
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                        iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                       test_input_data, test_output_data, False, model)
+                       test_input_data, test_output_data, False, model, windowSize)
