@@ -340,8 +340,9 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
     return thrputs
 
 # preprocess input and output
-def preprocessInputAndOutput(input_data, output_data):
+def preprocessInputAndOutput(input_data, output_data, ranges):
     n = len(input_data)
+    nColumns = len(ranges)
     assert(n == len(output_data))
 
     preprocessed_input_data = []
@@ -350,18 +351,64 @@ def preprocessInputAndOutput(input_data, output_data):
     for i in range(n):
 
         # preprocess input data
-        preprocessed_input_data.append([input_data[i][0]])
+        preprocessed_input = []
+        for j in range(nColumns):
+            preprocessed_input.append((input_data[i][j] - ranges[j][0]) / (ranges[j][1] - ranges[j][0]) * 2.0 - 1.0)
+        preprocessed_input_data.append(preprocessed_input)
 
         # preprocess output data
         preprocessed_output_data.append([1 / (1 + math.exp((-1)*output_data[i][0]))])
 
     return (preprocessed_input_data, preprocessed_output_data)
 
+# find best parameters for path-finding algorithm
+# ranges : the size of range for each parameter
+# for example, params = [20~50, 10~15, -5~100] -> ranges = [[20, 50], [10, 15], [-5, 100]]
+def findBestParams(model, inputImage, ranges):
+
+    params = [0.0 for i in range(len(ranges))]
+    bestParams = params
+    bestOutput = 0
+
+    while (True):
+        improvedParams = None
+
+        for i in range(len(params)):
+            bestParamsCopy = copy.deepcopy(bestParams)
+            print('best params:', np.round_(bestParamsCopy, 6))
+
+            for j in [-1, 1]:
+
+                # "+1" for actual parameter value = "+2 / (max value - min value)" for [-1, 1] mapping
+                bestParamsCopy[i] += 2.0 * j / (ranges[i][1] - ranges[i][0])
+                bestParamsCopy[i] = np.clip(bestParamsCopy[i], -1.0, 1.0)
+                inputData = np.concatenate((inputImage, params), axis=-1)
+
+                outputOfModifiedParam = model(inputData, training=False)
+
+                if outputOfModifiedParam > bestOutput:
+                    improvedParams = bestParamsCopy[i]
+                    bestOutput = outputOfModifiedParam
+
+        if improvedParams != None:
+            bestParams = improvedParams
+        else:
+            break
+
+    # convert to the value in [-1, 1] for each parameter using ranges
+    print('bestParams [before] : ', bestParams)
+    for i in range(len(bestParams)):
+        bestParams[i] = (bestParams[i] - ranges[i][0]) / (ranges[i][1] - ranges[i][0]) # [0, 1]
+        bestParams[i] = bestParams[i] * 2.0 - 1.0                                      # [-1, 1]
+    print('bestParams [after]  : ', bestParams)
+
+    return bestParams
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                   input_data, output_data, training):
+                   input_data, output_data, training, model):
 
     # create list of devices (randomly place devices)
     while True:
@@ -433,7 +480,25 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # for trajectory drawing
     all_throughputs = []
-    
+
+    # find best parameters using model
+    # parameters = rounds(10 ~ 20), 100p(5 ~ 20), casesToFindInit(5 ~ 15)
+    ranges = [[10, 20], [5, 20], [5, 15]]
+
+    if training == False:
+        bestParams = findBestParams(model, [], ranges)
+        print('\n[ best parameters derived by model ]')
+    else:
+        bestParams = [random.randint(10, 20), random.randint(5, 20), random.randint(5, 15)]
+        print('\n[ best parameters derived randomly ]')
+
+    print(np.round_(bestParams, 6))
+    print('\n')
+
+    rounds          = int(round(bestParams[0]))
+    pPercent        = int(round(bestParams[1]))
+    casesToFindInit = int(round(bestParams[2]))
+
     for l in range(L):
 
         # the number of devices in cluster l
@@ -446,9 +511,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             directionList[t] = random.randint(0, 3*3*3-1)
 
         # modifying directions for minimum (common) throughput maximization
-        rounds = 15
-        for round in range(rounds):
-            print(round)
+        for currentRound in range(rounds):
+            print(currentRound)
 
             # get throughput
             final_throughputs = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
@@ -459,14 +523,14 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             print('------')
 
             # terminate here at the last round
-            if round == rounds - 1: break
+            if currentRound == rounds - 1: break
 
             minThroughput = min(final_throughputs) # min throughput
             zeros         = list(final_throughputs).count(0) # number of zero throughputs
             avgThroughput = np.mean(final_throughputs) # average throughput
 
             # find near cases (and select the best 2 near cases) with change probability p
-            p = 0.15 - 0.005 * round
+            p = pPercent / 100.0 * (1.0 - 0.75 * currentRound / rounds)
             print('probability:', p)
             nearCasesInfo = []
 
@@ -474,7 +538,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             nearCasesInfo.append([minThroughput, zeros, avgThroughput, directionList])
 
             # find N near cases in total
-            casesToFind = 10 + round // 2
+            casesToFind = casesToFindInit + currentRound // 2
             
             for nearCaseNo in range(casesToFind):
                 nearCase = copy.deepcopy(directionList)
@@ -521,20 +585,26 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # save at all_throughputs
         all_throughputs += list(final_throughputs)
 
-        if training:
+        # add to input and output data
+        input_data.append([rounds, pPercent, casesToFindInit])
+        output_data.append([minThrput])
 
-            # add input and output data
-            input_data.append([0])
-            output_data.append([minThrput])
-
-            # save input and output data
+        # save input and output data
+        if training == True:
             pd.DataFrame(np.array(input_data)).to_csv('train_input_raw.csv')
             pd.DataFrame(np.array(output_data)).to_csv('train_output_raw.csv')
+        else:
+            pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
 
-            (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data, output_data)
+        (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data, output_data, ranges)
 
+        if training == True:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
             pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
+        else:
+            pd.DataFrame(np.array(input_data)).to_csv('test_input_preprocessed.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('test_output_preprocessed.csv')
 
     # create min throughput information
     minThroughputList.append([iterationCount] + minthroughputs)
@@ -673,7 +743,7 @@ if __name__ == '__main__':
             throughputTest(M, T, N, L, devices, width, height, H,
                            ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                            iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                           input_data, output_data, True)
+                           input_data, output_data, True, None)
 
     # get and train model
     try:
@@ -690,7 +760,11 @@ if __name__ == '__main__':
     for iterationCount in range(iters):
         print('TEST ITER COUNT ', iterationCount, '/', iters)
 
+        # input and output data for testing
+        test_input_data = []
+        test_output_data = []
+
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                        iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                       None, None, False)
+                       test_input_data, test_output_data, False, model)
