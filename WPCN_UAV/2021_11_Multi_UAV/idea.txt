@@ -21,3 +21,12 @@
  - 입력: 해당 cluster의 device map (cluster center 부근을 -1, 각 device 부근을 +1), 알고리즘의 파라미터
  - 출력: 최종 common throughput
  - 알고리즘의 파라미터의 최적 setting을 탐색
+
+ - Genetic Algorithm 기준
+   - 이동 방향 자체를 바꾸는 대신 2개의 이동 순서를 바꾸는 확률을 부분적으로 이용 V
+   - output이 항상 0 이상이므로, output activation function을 Sigmoid에서 tanh 함수로 변경 V
+   - 더 좋은 path에 대한 판정 우선순위 변경 V
+ - 추후 sqDist와 거리의 비의 값에 따라 -1, 1이 아닌 0.5, -0.5와 같은 중간의 값을 적용, 이에 따라 sqDist의 값 조절
+ - Window size를 10 -> 15로 증가
+
+ - 새로운 알고리즘의 파라미터에는 이동 크기 추가

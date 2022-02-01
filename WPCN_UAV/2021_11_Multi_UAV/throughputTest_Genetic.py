@@ -160,7 +160,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.dense2 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='dense2')
 
         # final output part
-        self.final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
+        self.final = tf.keras.layers.Dense(1, activation='tanh', kernel_regularizer=L2, name='dense_final')
 
     def call(self, inputs, training):
         ws = self.windowSize
@@ -402,8 +402,8 @@ def preprocessInputAndOutput(input_data, output_data, ranges, windowSize):
 
         preprocessed_input_data.append(preprocessed_input)
 
-        # preprocess output data (sigmoid function)
-        preprocessed_output_data.append([1 / (1 + math.exp((-1)*output_data[i][0]))])
+        # preprocess output data (tanh function)
+        preprocessed_output_data.append([math.tanh(output_data[i][0])])
 
     return (preprocessed_input_data, preprocessed_output_data)
 
@@ -617,17 +617,17 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # terminate here at the last round
             if currentRound == rounds - 1: break
 
-            minThroughput = min(final_throughputs) # min throughput
+            minThroughput = min(final_throughputs)           # min throughput
             zeros         = list(final_throughputs).count(0) # number of zero throughputs
-            avgThroughput = np.mean(final_throughputs) # average throughput
+            minusMax      = (-1) * max(final_throughputs)    # minus max throughput
 
             # find near cases (and select the best 2 near cases) with change probability p
             p = pPercent / 100.0 * (1.0 - 0.75 * currentRound / rounds)
             print('probability:', p)
-            nearCasesInfo = []
 
-            # find original case into near case list
-            nearCasesInfo.append([minThroughput, zeros, avgThroughput, directionList])
+            # add original case into near case list first
+            nearCasesInfo = []
+            nearCasesInfo.append([minThroughput, zeros, minusMax, directionList])
 
             # find N near cases in total
             casesToFind = casesToFindInit + currentRound // 2
@@ -635,24 +635,37 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             for nearCaseNo in range(casesToFind):
                 nearCase = copy.deepcopy(directionList)
 
-                # randomly modify each element of direction list
-                for i in range(len(nearCase)):
+                # randomly modify (swap) each element of direction list
+                for i in range(len(nearCase) + 1):
+
+                    # randomly modify movement
                     if random.random() < p:
-                        nearCase[i] = random.randint(0, 3*3*3-1)
+                        if i < len(nearCase):
+                            nearCase[i] = random.randint(0, 3 * 3 * 3 - 1)
+
+                    # randomly swap two movements
+                    elif random.random() >= p and random.random() < 2 * p:
+                        if i == 0:
+                            nearCase[i] = random.randint(0, 3 * 3 * 3 - 1)
+                        elif i == len(nearCase):
+                            nearCase[i-1] = random.randint(0, 3 * 3 * 3 - 1)
+                        else:
+                            nearCase[i], nearCase[i-1] = nearCase[i-1], nearCase[i]
 
                 # throughput test using modified direction list
                 final_near = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
                                            alphaP, PU, numOfDevs, devices, printDetails,
                                            nearCase, width, height)
 
+                nearCase_minNonzero = np.min(np.array(final_near)[np.nonzero(np.array(final_near))])
                 nearCasesInfo.append([min(final_near),
                                       list(final_near).count(0),
-                                      np.mean(final_near),
+                                      (-1) * max(final_near),
                                       nearCase])
 
                 print(str(np.round(min(final_near), 6)) + ' '*(8 - len(str(np.round(min(final_near), 6)))),
                       list(final_near).count(0),
-                      str(np.round(np.mean(final_near), 6)) + ' '*(8 - len(str(np.round(np.mean(final_near), 6)))),
+                      str(np.round((-1) * max(final_near), 6)) + ' '*(9 - len(str(np.round((-1) * max(final_near), 6)))),
                       np.array(nearCase))
 
             # find the best near cases (order: min -> number of zeros -> average throughput)
