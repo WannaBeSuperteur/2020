@@ -635,7 +635,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         devices = numOfDevs[l]
         communicated_devices = []
         directionList = [None for i in range(N)]
-        #print('number of devices: ', devices)
 
         # make direction list using random (when training)
         for t in range(N):
@@ -652,41 +651,20 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
             # decide the direction using inverse direction of "the mean of already communicated devices"
             # with probability useRemainingDevices
-            if decision < useRemainingDevices:
-                #print('using inverse of mean of communicated devices')
-
+            if False: # decision < useRemainingDevices:
                 [inverse_goto_X, inverse_goto_Y] = getMeanOfDeviceLocation(l, w, final_throughputs, True)
-                #print(inverse_goto_X, inverse_goto_Y)
-
                 directionX = currentX - inverse_goto_X
                 directionY = currentY - inverse_goto_Y
 
             # decide the direction using direction of "the mean of not communicated devices"
             # with probability (1 - useRemainingDevices)
             else:
-                #print('using mean of not-communicated devices')
-
                 [goto_X, goto_Y] = getMeanOfDeviceLocation(l, w, final_throughputs, False)
-                #print(goto_X, goto_Y)
-
                 directionX = goto_X - currentX
                 directionY = goto_Y - currentY
 
-            #print(currentX, currentY)
-            #print(directionX, directionY)
-
             # decide next direction
             directionList[t] = getIndexOfDirection(directionX, directionY)
-
-        """
-        print('direction list:')
-        print(directionList)
-        print('final throughputs:')
-        print(final_throughputs)
-        print('q:')
-        for i in range(len(q)):
-            print(q[i])
-        """
 
         # save throughputs at first iteration
         if iterationCount == 0:
