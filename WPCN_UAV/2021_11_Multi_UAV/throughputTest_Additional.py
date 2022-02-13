@@ -505,10 +505,14 @@ def getMeanOfDeviceLocation(l, w, final_throughputs, communicated):
 
     for i in range(len(w)):
         if w[i][0] == l:
+
+            # not communicated -> throughput is 0
             if final_throughputs[w[i][1]] == 0:
                 sum_X_n += w[i][2]
                 sum_Y_n += w[i][3]
                 count_n += 1
+
+            # communicated -> throughput > 0
             else:
                 sum_X_c += w[i][2]
                 sum_Y_c += w[i][3]
@@ -651,7 +655,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
             # decide the direction using inverse direction of "the mean of already communicated devices"
             # with probability useRemainingDevices
-            if False: # decision < useRemainingDevices:
+            if decision < useRemainingDevices:
                 [inverse_goto_X, inverse_goto_Y] = getMeanOfDeviceLocation(l, w, final_throughputs, True)
                 directionX = currentX - inverse_goto_X
                 directionY = currentY - inverse_goto_Y
