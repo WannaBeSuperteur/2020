@@ -387,7 +387,7 @@ def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
     return thrputs
 
 # preprocess input and output
-def preprocessInputAndOutput(input_data, output_data, windowSize, useRemainingDevices):
+def preprocessInputAndOutput(input_data, output_data, windowSize, probChooseMinThroughput):
     n = len(input_data)
     assert(n == len(output_data))
 
@@ -404,7 +404,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize, useRemainingDe
 
         for j in range(imgCells):
             preprocessed_input.append(input_data[i][j])
-        preprocessed_input.append(useRemainingDevices)
+        preprocessed_input.append(probChooseMinThroughput)
 
         preprocessed_input_data.append(preprocessed_input)
 
@@ -490,45 +490,34 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
     print(np.round_(inputImage, 2))
     return inputImage
 
-# get the mean of (communicated / not communicated) device location
-def getMeanOfDeviceLocation(l, w, final_throughputs, communicated):
+# get the device location (choose device randomly)
+def getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput):
 
-    # for communicated devices
-    sum_X_c = 0
-    sum_Y_c = 0
-    count_c = 0
-
-    # for not communicated devices
-    sum_X_n = 0
-    sum_Y_n = 0
-    count_n = 0
-
+    # find min throughput
+    minThroughput = 1000000
     for i in range(len(w)):
         if w[i][0] == l:
+            if final_throughputs[w[i][1]] < minThroughput:
+                minThroughput = final_throughputs[w[i][1]]
 
-            # not communicated -> throughput is 0
-            if final_throughputs[w[i][1]] == 0:
-                sum_X_n += w[i][2]
-                sum_Y_n += w[i][3]
-                count_n += 1
+    while True:
 
-            # communicated -> throughput > 0
-            else:
-                sum_X_c += w[i][2]
-                sum_Y_c += w[i][3]
-                count_c += 1
+        r = random.random()
 
-    # return average device location
-    if count_c == 0:
-        return [sum_X_n / count_n, sum_Y_n / count_n]
-    if count_n == 0:
-        return [sum_X_c / count_c, sum_Y_c / count_c]
-    if communicated == True:
-        return [sum_X_c / count_c, sum_Y_c / count_c]
-    else:
-        return [sum_X_n / count_n, sum_Y_n / count_n]
+        # choose the device with min throughput
+        if r < probChooseMinThroughput:
+            i = random.randint(0, len(w)-1)
 
-    return 0
+            if w[i][0] == l:
+                if final_throughputs[w[i][1]] <= minThroughput:
+                    return [w[i][2], w[i][3]]
+
+        # choose device randomly
+        else:
+            i = random.randint(0, len(w) - 1)
+
+            if w[i][0] == l:
+                return [w[i][2], w[i][3]]
 
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
@@ -632,8 +621,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         print(np.round_(bestParams, 6))
         print('\n')
 
-        # probability of using direction of remaining devices at current
-        useRemainingDevices = bestParams[0]
+        # probability of using direction of LOWEST-THROUGHPUT device
+        probChooseMinThroughput = bestParams[0]
 
         # the number of devices in cluster l
         devices = numOfDevs[l]
@@ -653,19 +642,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             currentX = q[l * (N + 1) + t][2]
             currentY = q[l * (N + 1) + t][3]
 
-            # decide the direction using inverse direction of "the mean of already communicated devices"
-            # with probability useRemainingDevices
-            if decision < useRemainingDevices:
-                [inverse_goto_X, inverse_goto_Y] = getMeanOfDeviceLocation(l, w, final_throughputs, True)
-                directionX = currentX - inverse_goto_X
-                directionY = currentY - inverse_goto_Y
+            # decide the direction using nearby LOWEST-THROUGHPUT device with probability 'probChooseMinThroughput'
+            # or randomly with probability '1 - probChooseMinThroughput'
+            [goto_X, goto_Y] = getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)
 
-            # decide the direction using direction of "the mean of not communicated devices"
-            # with probability (1 - useRemainingDevices)
-            else:
-                [goto_X, goto_Y] = getMeanOfDeviceLocation(l, w, final_throughputs, False)
-                directionX = goto_X - currentX
-                directionY = goto_Y - currentY
+            directionX = goto_X - currentX
+            directionY = goto_Y - currentY
 
             # decide next direction
             directionList[t] = getIndexOfDirection(directionX, directionY)
@@ -686,7 +668,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         all_throughputs += list(final_throughputs)
 
         # add to input and output data
-        input_data.append(np.concatenate((inputImage, [useRemainingDevices]), axis=-1))
+        input_data.append(np.concatenate((inputImage, [probChooseMinThroughput]), axis=-1))
         output_data.append([minThrput])
 
         # save input and output data
@@ -700,7 +682,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
                                                                                        output_data,
                                                                                        windowSize,
-                                                                                       useRemainingDevices)
+                                                                                       probChooseMinThroughput)
 
         if training == True:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
