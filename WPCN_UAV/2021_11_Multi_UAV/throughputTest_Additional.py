@@ -409,7 +409,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize, probChooseMinT
         preprocessed_input_data.append(preprocessed_input)
 
         # preprocess output data (tanh function)
-        preprocessed_output_data.append([math.tanh(output_data[i][0])])
+        preprocessed_output_data.append([math.tanh(10 * output_data[i][0])])
 
     return (preprocessed_input_data, preprocessed_output_data)
 
@@ -805,7 +805,7 @@ if __name__ == '__main__':
     configContent += 'epochs=' + str(epochs)
 
     # manual window size setting
-    windowSize = 12
+    windowSize = 15
 
     configFile.write(configContent)
     configFile.close()
