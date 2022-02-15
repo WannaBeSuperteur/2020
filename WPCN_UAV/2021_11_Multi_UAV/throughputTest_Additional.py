@@ -456,14 +456,6 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
     inputImage = np.zeros((2 * windowSize + 1, 2 * windowSize + 1))
     dist = int(math.sqrt(sqDist))
 
-    for dy in range(-dist, dist + 1):
-        for dx in range(-dist, dist + 1):
-            if dy * dy + dx * dx <= sqDist:
-                try:
-                    inputImage[windowSize + dx][windowSize + dy] = -1.0 + (dy * dy + dx * dx) / sqDist
-                except:
-                    pass
-
     # each device : w = [[l, k, xkl, ykl, 0], ...]
     for device in w:
         if device[0] == l:
