@@ -12,7 +12,7 @@ for each UAV and every time slot,
  * Find the best possible case of movement to move to the desired location.
 
 ## result
-<b>worse than genetic-based algorithm</b>, have to try with more dataset and improvement of output value metric
+<b>better than genetic-based algorithm</b>, with more dataset and improvement of output value metric (```tanh(x)``` -> ```tanh(10x)```)
 
 the set of ```{model prediction,ground truth}``` (in ```train_valid_result.csv```):
 (the prediction converged to average)
