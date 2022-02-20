@@ -66,7 +66,6 @@ except:
 
 # the cases are equivalent with below, so REPLACE AS BELOW:
 #  x       mod 9 == 0 -> 5m with degree 0, 1 -> 5m with degree 45, ..., 7 -> 5m with degree 315, 8 -> stop
-# (x // 9) mod 3 == 0 -> h+1      , 1 -> h       , 2 -> h-1
 
 # initial direction: positive direction of x-axis (0 degree)
 # q = [[l, t, xlt, ylt, hlt], ...] -> update q
@@ -75,13 +74,11 @@ def moveUAV(q, directionList, N, l, width, height):
     for t in range(N):
 
         direction = directionList[t]
+        deg = direction
 
         # check if None value
         if direction == None: continue
 
-        deg  =  direction       % 9
-        ud   = (direction // 9) % 3 # h+1, h or h-1
-            
         currentLocation = q[l * (N+1) + t][2:] # [xlt, ylt, hlt] of the UAV
 
         # initialize new X, Y and H
@@ -90,20 +87,12 @@ def moveUAV(q, directionList, N, l, width, height):
         new_H = currentLocation[2]
 
         # move X, Y with degree 0, 45, ..., 315 or stop
-        if deg < 8:
+        if direction < 8:
             new_X += 5.0 * math.cos(deg * math.pi / 4)
             new_Y += 5.0 * math.sin(deg * math.pi / 4)
 
         new_X = np.clip(new_X, 0.0, width)
         new_Y = np.clip(new_Y, 0.0, height)
-
-        # height
-        if ud == 0:
-            new_H += 1
-        elif ud == 2:
-            new_H -= 1
-
-        if new_H < 0: new_H = 0.0
 
         # update corresponding q value as new q
         q[l * (N+1) + t+1] = [l, t+1, new_X, new_Y, new_H]
@@ -113,9 +102,6 @@ def moveUAV(q, directionList, N, l, width, height):
 #  x       mod 9 == 0 -> 5m with degree 0, 1 -> 5m with degree 45, ..., 7 -> 5m with degree 315, 8 -> stop
 # (x // 9) mod 3 == 0 -> h+1      , 1 -> h       , 2 -> h-1
 def getIndexOfDirection(directionX, directionY):
-
-    # decide height change randomly (0, 1 or 2)
-    h_change = random.randint(0, 2)
 
     # decide x and y change using directionX and directionY
     if abs(directionX) < 2.5 and abs(directionY) < 2.5:
@@ -127,7 +113,7 @@ def getIndexOfDirection(directionX, directionY):
 
         xy_change = round(arcTan / (math.pi / 4))
 
-    return xy_change + 9 * h_change
+    return xy_change
 
 # change color
 def changeColor(colorCode, k):
@@ -416,31 +402,30 @@ def preprocessInputAndOutput(input_data, output_data, windowSize, probChooseMinT
 # find best parameter for path-finding algorithm
 def findBestParams(model, inputImage):
 
-    params = [0.5]
-    bestParams = params
-    bestOutput = 0
+    bestParams = None
+    bestOutput = -1.0 # actually at least 0 -> always updated
+    outputs    = []
 
-    while (True):
-        improvedParams = None
+    for j in range(101):
+        params    = [j * 0.01]
+        inputData = np.concatenate((inputImage, params), axis=-1)
+        inputData = np.array([inputData])
 
-        for i in range(len(params)):
-            bestParamsCopy = copy.deepcopy(bestParams)
+        outputOfModifiedParam = model(inputData, training=False)
+        outputs.append(outputOfModifiedParam[0][0])
 
-            for j in [-1, 1]:
-                bestParamsCopy[i] += j * 0.01
-                inputData = np.concatenate((inputImage, bestParamsCopy), axis=-1)
-                inputData = np.array([inputData])
-
-                outputOfModifiedParam = model(inputData, training=False)
-
-                if outputOfModifiedParam > bestOutput:
-                    improvedParams = bestParamsCopy
-                    bestOutput     = outputOfModifiedParam
+        if outputOfModifiedParam > bestOutput:
+            improvedParams = params
+            bestOutput     = outputOfModifiedParam
 
         if improvedParams != None:
             bestParams = improvedParams
         else:
             break
+
+    print('outputs:')
+    print(np.round_(np.array(outputs), 4))
+    print('best param: ' + str(bestParams) + ', best output: ' + str(bestOutput))
 
     return bestParams
 
@@ -714,7 +699,7 @@ def saveMinThroughput(minThroughputList, memo):
 if __name__ == '__main__':
 
     # numpy setting
-    np.set_printoptions(edgeitems=20, linewidth=200)
+    np.set_printoptions(edgeitems=20, linewidth=170)
 
     # ignore warnings
     import warnings
