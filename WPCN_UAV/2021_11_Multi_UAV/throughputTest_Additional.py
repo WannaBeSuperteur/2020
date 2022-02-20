@@ -606,13 +606,23 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         communicated_devices = []
         directionList = [None for i in range(N)]
 
+        # final throughput (updated for each time t)
+        final_throughputs = [0 for i in range(devices)]
+
         # make direction list using random (when training)
         for t in range(N):
 
+            # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
+            # (update q)
+            moveUAV(q, directionList, N, l, width, height)
+
+            # update a_l,kl[n] for this (l, t)
+            update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
+
             # get throughput
-            final_throughputs = getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
-                                              alphaP, PU, numOfDevs, devices, printDetails,
-                                              directionList, width, height)
+            for k in range(devices):
+                thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
+                final_throughputs[k] = thrput
 
             # decide next move
             decision = random.random()
