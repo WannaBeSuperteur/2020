@@ -340,38 +340,6 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
     alkl.sort(key=lambda x:x[1])
     alkl.sort(key=lambda x:x[0])
 
-# compute throughput value for the direction list
-def getThroughput(alkl, q, w, l, N, T, s, b1, b2, mu1, mu2, fc, c,
-                  alphaP, PU, numOfDevs, devices, printDetails,
-                  directionList, width, height):
-
-    # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
-    # (update q)
-    moveUAV(q, directionList, N, l, width, height)
-
-    # throughput results
-    throughputs = []
-
-    for t in range(N):
-        if printDetails == True:
-            print('cluster ' + str(l) + ' / ' + str(L) + ', time ' + str(t) + ' / ' + str(N))
-
-        # update a_l,kl[n] for this (l, t)
-        update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
-
-    # compute average throughput for each device in L
-    thrputs = []
-
-    for k in range(devices):
-        thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
-        thrputs.append(thrput)
-
-        if printDetails == True:
-            print('l=' + str(l) + ' k=' + str(k) + ' throughput=' + str(thrput))
-
-    # throughputs: shape (k, N) -> shape (N, k)
-    return thrputs
-
 # preprocess input and output
 def preprocessInputAndOutput(input_data, output_data, windowSize, probChooseMinThroughput):
     n = len(input_data)
