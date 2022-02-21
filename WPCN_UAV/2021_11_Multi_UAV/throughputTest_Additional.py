@@ -154,8 +154,8 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.CNNDense1 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='CNNDense1')
 
         # dense part
-        self.dense0 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense0')
-        self.dense1 = tf.keras.layers.Dense(16, activation='relu', kernel_regularizer=L2, name='dense1')
+        self.dense0 = tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=L2, name='dense0')
+        self.dense1 = tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=L2, name='dense1')
         self.dense2 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='dense2')
 
         # final output part
@@ -164,9 +164,9 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
     def call(self, inputs, training):
         ws = self.windowSize
 
-        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), 1], axis=1)
+        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), 4], axis=1)
 
-        # convolutional neural network part
+        # convolutional neural network part with shape (2 * ws + 1, 2 * ws + 1)
         board = tf.reshape(board, (-1, 2 * ws + 1, 2 * ws + 1, 1))
 
         board = self.CNN0(board)    # 20 -> 18
@@ -182,7 +182,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board = self.dropout(board)
         board = self.CNNDense1(board)
 
-        # dense part
+        # dense part with shape (4)
         parameters = self.dense0(parameters)
         parameters = self.dropout(parameters)
         parameters = self.dense1(parameters)
@@ -341,7 +341,7 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
     alkl.sort(key=lambda x:x[0])
 
 # preprocess input and output
-def preprocessInputAndOutput(input_data, output_data, windowSize, probChooseMinThroughput):
+def preprocessInputAndOutput(input_data, output_data, windowSize, bestParams):
     n = len(input_data)
     assert(n == len(output_data))
 
@@ -358,7 +358,8 @@ def preprocessInputAndOutput(input_data, output_data, windowSize, probChooseMinT
 
         for j in range(imgCells):
             preprocessed_input.append(input_data[i][j])
-        preprocessed_input.append(probChooseMinThroughput)
+        for j in range(4):
+            preprocessed_input.append(bestParams[j])
 
         preprocessed_input_data.append(preprocessed_input)
 
@@ -374,25 +375,28 @@ def findBestParams(model, inputImage):
     bestOutput = -1.0 # actually at least 0 -> always updated
     outputs    = []
 
-    for j in range(101):
-        params    = [j * 0.01]
-        inputData = np.concatenate((inputImage, params), axis=-1)
-        inputData = np.array([inputData])
+    for p0 in range(5):
+        for p1 in range(5):
+            for p2 in range(5):
+                for p3 in range(5):
+                    params    = [p0 * 0.25, p1 * 0.25, p2 * 0.25, p3 * 0.25]
+                    inputData = np.concatenate((inputImage, params), axis=-1)
+                    inputData = np.array([inputData])
 
-        outputOfModifiedParam = model(inputData, training=False)
-        outputs.append(outputOfModifiedParam[0][0])
+                    outputOfModifiedParam = model(inputData, training=False)
+                    outputs.append(outputOfModifiedParam[0][0])
 
-        if outputOfModifiedParam > bestOutput:
-            improvedParams = params
-            bestOutput     = outputOfModifiedParam
+                    if outputOfModifiedParam > bestOutput:
+                        improvedParams = params
+                        bestOutput     = outputOfModifiedParam
 
-        if improvedParams != None:
-            bestParams = improvedParams
-        else:
-            break
+                    if improvedParams != None:
+                        bestParams = improvedParams
+                    else:
+                        break
 
-    print('outputs:')
-    print(np.round_(np.array(outputs), 4))
+    print('outputs: (first 100 elements)')
+    print(np.round_(np.array(outputs[:100]), 4), '...')
     print('best param: ' + str(bestParams) + ', best output: ' + str(bestOutput))
 
     return bestParams
@@ -559,15 +563,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # decide best parameter randomly
         else:
-            bestParams = []
-            bestParams.append(random.random())
+            bestParams = [random.random(), random.random(), random.random(), random.random()]
             print('\n[ best parameters derived randomly ]')
 
         print(np.round_(bestParams, 6))
         print('\n')
-
-        # probability of using direction of LOWEST-THROUGHPUT device
-        probChooseMinThroughput = bestParams[0]
 
         # the number of devices in cluster l
         devices = numOfDevs[l]
@@ -579,6 +579,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # make direction list using random (when training)
         for t in range(N):
+
+            # probability of using direction of LOWEST-THROUGHPUT device
+            probChooseMinThroughput = 0.8 + bestParams[4 * t // N] * 0.2
 
             # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
             # (update q)
@@ -623,7 +626,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         all_throughputs += list(final_throughputs)
 
         # add to input and output data
-        input_data.append(np.concatenate((inputImage, [probChooseMinThroughput]), axis=-1))
+        input_data.append(np.concatenate((inputImage, bestParams), axis=-1))
         output_data.append([minThrput])
 
         # save input and output data
@@ -637,7 +640,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
                                                                                        output_data,
                                                                                        windowSize,
-                                                                                       probChooseMinThroughput)
+                                                                                       bestParams)
 
         if training == True:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
