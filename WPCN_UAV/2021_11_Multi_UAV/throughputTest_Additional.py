@@ -265,7 +265,7 @@ def getAndTrainModel(epochs, windowSize):
             return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
 
 # save trajectory as graph
-def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training):
+def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic):
 
     plt.clf()
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
@@ -298,7 +298,9 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, ma
                 plt.plot(x, y, linewidth=0.75, c=markerColors[l])
 
     # save the figure
-    if training == True:
+    if isStatic:
+        plt.savefig('static_trajectory_iter' + ('%04d' % iterationCount))
+    elif training == True:
         plt.savefig('train_trajectory_iter' + ('%04d' % iterationCount))
     else:
         plt.savefig('test_trajectory_iter' + ('%04d' % iterationCount))
@@ -306,11 +308,17 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, ma
 # update a_l,kl[n]
 # alkl      : a_l,kl[n] for each UAV l, device k and time slot n
 #             where alkl = [[l0, k, l1, n, value], ...
-def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices):
+def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic):
 
-    # decide the device to communicate with
-    deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
-                                                       mu1, mu2, fc, c, alphaP, numOfDevs)
+    # for static mode
+    # in sequence -> device 0, 1, ..., (devices-1), 0, 1, ... for each time slot,
+    #                until time slot number reaches N
+    if isStatic:
+        deviceToCommunicate = t % devices
+    else:
+        # decide the device to communicate with
+        deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
+                                                           mu1, mu2, fc, c, alphaP, numOfDevs)
 
     # update alkl, in the form of [[l0, k, l1, n, value], ...]
     alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
@@ -472,7 +480,7 @@ def getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput):
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                   input_data, output_data, training, model, windowSize):
+                   input_data, output_data, training, model, windowSize, isStatic):
 
     # create list of devices (randomly place devices)
     while True:
@@ -572,7 +580,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # the number of devices in cluster l
         devices = numOfDevs[l]
         communicated_devices = []
-        directionList = [None for i in range(N)]
+
+        if isStatic:
+            directionList = [8 for i in range(N)] # UAV does not move
+        else:
+            directionList = [None for i in range(N)]
 
         # final throughput (updated for each time t)
         final_throughputs = [0 for i in range(devices)]
@@ -585,10 +597,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
             # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
             # (update q)
-            moveUAV(q, directionList, N, l, width, height)
+            if not isStatic:
+                moveUAV(q, directionList, N, l, width, height)
 
             # update a_l,kl[n] for this (l, t)
-            update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices)
+            update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic)
 
             # get throughput
             for k in range(devices):
@@ -596,25 +609,28 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 final_throughputs[k] = thrput
 
             # decide next move
-            decision = random.random()
-            currentX = q[l * (N + 1) + t][2]
-            currentY = q[l * (N + 1) + t][3]
+            if not isStatic:
+                decision = random.random()
+                currentX = q[l * (N + 1) + t][2]
+                currentY = q[l * (N + 1) + t][3]
 
-            # decide the direction using nearby LOWEST-THROUGHPUT device with probability 'probChooseMinThroughput'
-            # or randomly with probability '1 - probChooseMinThroughput'
-            [goto_X, goto_Y] = getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)
+                # decide the direction using nearby LOWEST-THROUGHPUT device with probability 'probChooseMinThroughput'
+                # or randomly with probability '1 - probChooseMinThroughput'
+                [goto_X, goto_Y] = getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)
 
-            directionX = goto_X - currentX
-            directionY = goto_Y - currentY
+                directionX = goto_X - currentX
+                directionY = goto_Y - currentY
 
-            # decide next direction
-            directionList[t] = getIndexOfDirection(directionX, directionY)
+                # decide next direction
+                directionList[t] = getIndexOfDirection(directionX, directionY)
 
         # save throughputs at first iteration
         if iterationCount == 0:
             final_throughputs_df = pd.DataFrame(final_throughputs)
 
-            if training:
+            if isStatic:
+                final_throughputs_df.to_csv('static_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+            elif training == True:
                 final_throughputs_df.to_csv('train_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
             else:
                 final_throughputs_df.to_csv('test_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
@@ -630,7 +646,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         output_data.append([minThrput])
 
         # save input and output data
-        if training == True:
+        if isStatic:
+            pd.DataFrame(np.array(input_data)).to_csv('static_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('static_output_raw.csv')
+        elif training == True:
             pd.DataFrame(np.array(input_data)).to_csv('train_input_raw.csv')
             pd.DataFrame(np.array(output_data)).to_csv('train_output_raw.csv')
         else:
@@ -642,7 +661,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                                                                                        windowSize,
                                                                                        bestParams)
 
-        if training == True:
+        if isStatic:
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('static_output_preprocessed.csv')
+        elif training == True:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
             pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
         else:
@@ -657,7 +679,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
 
     # save trajectory as graph
-    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training)
+    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic)
 
 # save min throughput as *.csv file
 def saveMinThroughput(minThroughputList, memo):
@@ -762,14 +784,27 @@ if __name__ == '__main__':
     configContent += 'clusteringAtMost=' + str(clusteringAtMost) + '\n'
     configContent += 'epochs=' + str(epochs)
 
-    # manual window size setting
-    windowSize = 15
+    # MANUAL window size setting
+    windowSize = 12
 
     configFile.write(configContent)
     configFile.close()
 
     # minimum throughput list
     minThroughputList = []
+
+    # run for static (UAV location fixed : above the centroid of its cluster)
+    # ref: https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047 (reference [1] of the paper)
+    static_input_data = []
+    static_output_data = []
+
+    for iterationCount in range(iters // 2):
+        print('STATIC ITER COUNT ', iterationCount, '/', iters // 2)
+
+        throughputTest(M, T, N, L, devices, width, height, H,
+                       ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                       iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                       static_input_data, static_output_data, True, None, windowSize, True)
 
     # run training
     try:
@@ -789,7 +824,7 @@ if __name__ == '__main__':
             throughputTest(M, T, N, L, devices, width, height, H,
                            ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                            iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                           input_data, output_data, True, None, windowSize)
+                           input_data, output_data, True, None, windowSize, False)
 
     # get and train model
     try:
@@ -813,4 +848,4 @@ if __name__ == '__main__':
         throughputTest(M, T, N, L, devices, width, height, H,
                        ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                        iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                       test_input_data, test_output_data, False, model, windowSize)
+                       test_input_data, test_output_data, False, model, windowSize, False)
