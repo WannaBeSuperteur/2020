@@ -13,6 +13,9 @@ if __name__ == '__main__':
     warnings.filterwarnings('always')
     warnings.simplefilter('ignore')
 
+    # numpy setting
+    np.set_printoptions(edgeitems=20, linewidth=170)
+
     # load settings
     paperArgs = h_.loadSettings({'fc':'float', 'ng':'float', 'B':'float', 'o2':'float',
                                 'b1':'float', 'b2':'float',
