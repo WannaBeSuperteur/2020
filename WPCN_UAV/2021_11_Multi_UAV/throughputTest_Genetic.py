@@ -585,6 +585,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         if training == False:
             bestParams = findBestParams(model, inputImage, ranges)
             print('\n[ best parameters derived by model ]')
+
+        # decide best parameter randomly
         else:
             bestParams = []
             for i in range(len(ranges)):
