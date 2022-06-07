@@ -265,7 +265,7 @@ def getAndTrainModel(epochs, windowSize):
             return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
 
 # save trajectory as graph
-def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic):
+def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic, L, N):
 
     plt.clf()
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
@@ -679,7 +679,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
 
     # save trajectory as graph
-    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic)
+    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic, L, N)
 
 # save min throughput as *.csv file
 def saveMinThroughput(minThroughputList, memo):
