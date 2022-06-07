@@ -31,6 +31,21 @@ Reference:
   * summarize execution time for each case specified as ```{func},{inout}``` with ```time```, ```count``` and ```avgTime```(average time)
 
 ### main files
+* info about ```findBestParams``` function
+  * ```findBestParams(model, inputImage)``` of **```throughputTest_Additional.py```** : for each variable ```p0```, ```p1```, ```p2``` and ```p3``` with value range ```{0,1,2,3,4}```, **((D) and (E) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
+    * 1. with ```params = [p0*0.25, p1*0.25, p2*0.25, p3*0.25]```, create input data as the concatenation of ```(inputImage, params)```
+    * 2. with this input data, get the output ```outputOfModifiedParam``` of this input using ```model```
+    * ```bestParams``` is the ```params``` with the best (largest) value of ```outputOfModifiedParam```
+  * ```findBestParams(model, inputImage, ranges)``` of **```throughputTest_Genetic.py```** : for each parameter in ```ranges```
+    * ```ranges``` is in the form of ```[[a1, b1], [a2, b2], [a3, c3], ...]```, and ```[a1, b1]``` means parameter ```1``` with range ( -> can have value between) ```[a1, b1]```
+    * 1. with initial ```params``` (initial ```bestParams``` = ```params```), create input data as the concatenation of ```(inputImage, params)```
+    * 2. modify each parameter of ```bestParams``` slightly with ```+``` and ```-``` direction (only one selected parameter)
+    * 3. create input data ```(inputImage, bestParams)``` using each modified parameter set in ```2.```
+    * 4. with this input data, get the output ```outputOfModifiedParam``` of this input using ```model```
+      * for model input, we convert ```bestParams``` properly
+    * 5. if we find the largest ```outputOfModifiedParam``` value, then the corresponding parameters becomes ```bestParams``` in ```2.``` and go to ```2.```
+    * 6. if we did not find it, return ```bestParams``` as NOT-CONVERTED-FOR-MODEL (original) version.
+  * ```findBestParams()``` of **```throughputTest.py```** : **DOES NOT EXIST**
 * common (at least 2 of the files below)
   * **functions :**
     * ```main``` : get configuration info using ```helper.py``` and write them to ```config_info.txt```
@@ -54,10 +69,6 @@ Reference:
       * 2. add ```bestParams``` with ```4``` variables, to the same input array.
       * 3. Then the shape of flatten preprocessed input array becomes '''((2 * windowSize + 1)^2 + 4)```.
       * 4. for better performance of training, add ```tanh(10 * output_data[i][0])``` into the flatten preprocessed output array ```preprocessed_output_data```.
-    * ```findBestParams(model, inputImage)```: for each variable ```p0```, ```p1```, ```p2``` and ```p3``` with value range ```{0,1,2,3,4}```, **((D) and (E) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
-      * 1. with ```params = [p0*0.25, p1*0.25, p2*0.25, p3*0.25]```, create input data as the concatenation of ```(inputImage, params)```
-      * 2. with this input data, get the output ```outputOfModifiedParam``` of this input using ```model```
-      * ```bestParams``` is the ```params``` with the best (largest) value of ```outputOfModifiedParam```
     * ```makeInputImage(q, l, N, w, windowSize, sqDist)```: make the input image describing the current UAV and device location **((A), (B), and (C) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
     * ```getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)```: choose the device with minimum ```throughput```, or choose one of them randomly **(PHASE 1 of FIGURE 2)**
   * **input :**
