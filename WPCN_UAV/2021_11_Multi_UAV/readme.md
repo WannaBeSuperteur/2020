@@ -54,11 +54,11 @@ Reference:
       * 2. add ```bestParams``` with ```4``` variables, to the same input array.
       * 3. Then the shape of flatten preprocessed input array becomes '''((2 * windowSize + 1)^2 + 4)```.
       * 4. for better performance of training, add ```tanh(10 * output_data[i][0])``` into the flatten preprocessed output array ```preprocessed_output_data```.
-    * ```findBestParams(model, inputImage)```: for each variable ```p0```, ```p1```, ```p2``` and ```p3``` with value range ```{0,1,2,3,4}```,
+    * ```findBestParams(model, inputImage)```: for each variable ```p0```, ```p1```, ```p2``` and ```p3``` with value range ```{0,1,2,3,4}```, **((D) and (E) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
       * 1. with ```params = [p0*0.25, p1*0.25, p2*0.25, p3*0.25]```, create input data as the concatenation of ```(inputImage, params)```
       * 2. with this input data, get the output ```outputOfModifiedParam``` of this input using ```model```
       * ```bestParams``` is the ```params``` with the best (largest) value of ```outputOfModifiedParam```
-    * ```makeInputImage(q, l, N, w, windowSize, sqDist)```: make the input image describing the current UAV and device location **((A), (B) , and (C) of FIGURE 3)**
+    * ```makeInputImage(q, l, N, w, windowSize, sqDist)```: make the input image describing the current UAV and device location **((A), (B), and (C) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
     * ```getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)```: choose the device with minimum ```throughput```, or choose one of them randomly **(PHASE 1 of FIGURE 2)**
   * **input :**
     * (```getAndTrainModel(...)```) ```train_input_preprocessed.csv``` and ```train_output_preprocessed.csv```, preprocessed training input and output data
