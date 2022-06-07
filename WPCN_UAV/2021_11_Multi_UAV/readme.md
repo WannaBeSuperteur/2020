@@ -47,6 +47,37 @@ Reference:
   * 6. if we did not find it, return ```bestParams``` as NOT-CONVERTED-FOR-MODEL (original) version.
 * ```findBestParams()``` of **```throughputTest.py```** : **DOES NOT EXIST**
 
+### main files - throughputTest(...) function
+#### file name : ```throughputTest_Additional.py```
+* for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV),
+  * 1. create list of devices **(PHASE 1 of FIGURE 2)**
+  * 2. do clustering (if clustering failed, go to ```1.```) **(PHASE 2 of FIGURE 2)**
+  * 3. initialize and sort array ```alkl``` (```a_l,kl[n]``` of paper) as ```value```=```0```, the set of ```[i, k, j, t, value]```
+    * ```i```, ```j``` : ```i = 0,1,...,L-1```, ```j = 0,1,...,L-1```
+    * ```k```, ```t``` : ```k = (each device)```, ```t = 0,1,...,N-1```
+    * ```value``` : the value of ```a_l,kl[n]```
+  * 4. make input image using ```makeInputImage()``` function
+  * 5. find best parameter when ```training = False```, or find randomly decided parameter when ```training = True```
+  * 6. initialize direction list ```directionList```
+  * 7. for each time slot ```t = 0,1,...,N-1```,
+    * 1. move the UAV using ```moveUAV()``` function
+    * 2. update array ```alkl``` (```a_l,kl[n]``` in the paper) using ```update_alkl()``` function
+    * 3. get throughput using ```formula_11()``` function
+    * 4. when ```isStatic``` (static mode) is false, decide the next movement of te UAV
+      * find the direction to move UAV, using the nearest device derived by ```getDeviceLocation()``` function
+  * 8. save throughput values if first iteration (```iterationCount = 0```)
+    * throughput value file name: ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
+  * 9. save input and output data
+    * input data file name: ```{static/train/test}_input_raw.csv```
+    * output data file name: ```{static/train/test}_output_raw.csv```
+  * 10. preprocess the input and output data using ```preprocessInputAndOutput()``` function
+  * 11. save the preprocessed input and output data
+    * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
+    * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
+* create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
+
+#### file name : ```throughputTest_Genetic.py```
+
 ### main files - common
 common (at least 2 of the files below)
 * **functions :**
@@ -76,46 +107,6 @@ common (at least 2 of the files below)
   * ```saveMinThroughput(minThroughputList, memo)```: save minimum throughput list (based on ```minThroughputList```) as ```*.csv``` or ```*.txt``` file
     * mimimum throughput list file name: ```minThroughputList_{memo}_iter_{iters}_L_{L}_devs_{devs}_N_{N}.{csv/txt}```
 
-### main files - throughputTest(...) function
-* **```throughputTest(...)``` function of ```throughputTest_Additional.py``` :** for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV),
-  * 1. create list of devices **(PHASE 1 of FIGURE 2)**
-  * 2. do clustering (if clustering failed, go to ```1.```) **(PHASE 2 of FIGURE 2)**
-  * 3. initialize and sort array ```alkl``` (```a_l,kl[n]``` of paper) as ```value```=```0```, the set of ```[i, k, j, t, value]```
-    * ```i```, ```j``` : ```i = 0,1,...,L-1```, ```j = 0,1,...,L-1```
-    * ```k```, ```t``` : ```k = (each device)```, ```t = 0,1,...,N-1```
-    * ```value``` : the value of ```a_l,kl[n]```
-  * 4. make input image using ```makeInputImage()``` function
-  * 5. find best parameter when ```training = False```, or find randomly decided parameter when ```training = True```
-  * 6. initialize direction list ```directionList```
-  * 7. for each time slot ```t = 0,1,...,N-1```,
-    * 1. move the UAV using ```moveUAV()``` function
-    * 2. update array ```alkl``` (```a_l,kl[n]``` in the paper) using ```update_alkl()``` function
-    * 3. get throughput using ```formula_11()``` function
-    * 4. when ```isStatic``` (static mode) is false, decide the next movement of te UAV
-      * find the direction to move UAV, using the nearest device derived by ```getDeviceLocation()``` function
-  * 8. save throughput values if first iteration (```iterationCount = 0```)
-    * throughput value file name: ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
-  * 9. save input and output data
-    * input data file name: ```{static/train/test}_input_raw.csv```
-    * output data file name: ```{static/train/test}_output_raw.csv```
-  * 10. preprocess the input and output data using ```preprocessInputAndOutput()``` function
-  * 11. save the preprocessed input and output data
-    * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
-    * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
-  * 12. create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
-
-### main files - input and output
-* **input :**
-  * (```getAndTrainModel(...)```) ```train_input_preprocessed.csv``` and ```train_output_preprocessed.csv```, preprocessed training input and output data
-  * (```saveMinThroughput(...)```) ```minThroughputList_{memo}_iter_{iters}_L_{L}_devs_{devs}_N_{N}.{csv/txt}```, minimum throughput list
-* **output :**
-  * (```main```) ```config_info.txt```, the configuration info is written
-  * (```defineAndTrainModel(...)```) ```WPCN_UAV_DL_model```, the model
-  * (```defineAndTrainModel(...)```) ```train_valid_result.csv```, the result of training and validation
-  * (```saveTrajectoryGraph(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}.png```, the plotted trajectory data at iteration ```iterationCount```
-  * (```throughputTest(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
-  * (```throughputTest(...)```) ```{static/train/test}_{input/output}_{raw/preprocessed}.csv```
-
 ### main files - functions exist only in specific file
 * ```throughputTest.py``` only
   * ```convertToNumeric(value)``` : convert ```value``` to numeric (```int``` or ```float```)
@@ -130,6 +121,18 @@ common (at least 2 of the files below)
   * ```getThroughput(...)``` : compute throughput value based on the direction list ```directionList```
 * ```throughputTest_Additional.py``` only
   * ```getIndexOfDirection(directionX, directionY)``` : get the index of the direction using ```np.arctan(directionY / directionX)```, and decide ```xy_change``` (index of the change of ```x``` and ```y```) using it
+
+### main files - input and output
+* **input :**
+  * (```getAndTrainModel(...)```) ```train_input_preprocessed.csv``` and ```train_output_preprocessed.csv```, preprocessed training input and output data
+  * (```saveMinThroughput(...)```) ```minThroughputList_{memo}_iter_{iters}_L_{L}_devs_{devs}_N_{N}.{csv/txt}```, minimum throughput list
+* **output :**
+  * (```main```) ```config_info.txt```, the configuration info is written
+  * (```defineAndTrainModel(...)```) ```WPCN_UAV_DL_model```, the model
+  * (```defineAndTrainModel(...)```) ```train_valid_result.csv```, the result of training and validation
+  * (```saveTrajectoryGraph(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}.png```, the plotted trajectory data at iteration ```iterationCount```
+  * (```throughputTest(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
+  * (```throughputTest(...)```) ```{static/train/test}_{input/output}_{raw/preprocessed}.csv```
 
 ## FILE INFO - TRAIN AND TEST MANY TIMES AT ONCE
 * ```throughputTest_at_once.py```
