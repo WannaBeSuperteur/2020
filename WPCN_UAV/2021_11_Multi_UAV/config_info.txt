@@ -20,4 +20,5 @@ H=15.0
 iters=500
 clusteringAtLeast=0.51
 clusteringAtMost=1.51
+windowSize=12
 epochs=15

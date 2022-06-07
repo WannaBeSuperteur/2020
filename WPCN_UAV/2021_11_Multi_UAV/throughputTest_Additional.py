@@ -718,7 +718,8 @@ if __name__ == '__main__':
                                 's':'float', 'PD':'float', 'PU':'float',
                                 'width':'float', 'height':'float',
                                 'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float',
-                                'iters':'int', 'clusteringAtLeast':'float', 'clusteringAtMost':'float', 'epochs':'int'})
+                                'iters':'int', 'clusteringAtLeast':'float', 'clusteringAtMost':'float',
+                                'windowSize':'int', 'epochs':'int'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -744,6 +745,7 @@ if __name__ == '__main__':
     iters = paperArgs['iters']
     clusteringAtLeast = paperArgs['clusteringAtLeast']
     clusteringAtMost = paperArgs['clusteringAtMost']
+    windowSize = paperArgs['windowSize']
     epochs = paperArgs['epochs']
 
     # (from https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1)
@@ -782,10 +784,8 @@ if __name__ == '__main__':
     #configContent += 'windowSize=' + str(WINDOWSIZE) + '\n'
     configContent += 'clusteringAtLeast=' + str(clusteringAtLeast) + '\n'
     configContent += 'clusteringAtMost=' + str(clusteringAtMost) + '\n'
+    configContent += 'windowSize=' + str(windowSize) + '\n'
     configContent += 'epochs=' + str(epochs)
-
-    # MANUAL window size setting
-    windowSize = 12
 
     configFile.write(configContent)
     configFile.close()
