@@ -6,6 +6,17 @@ Reference:
 
  * JIE TANG and JINGRU SONG et al, "Minimum Throughput Maximization for Multi-UAV Enabled WPCN: A Deep Reinforcement Learning Method", IEEE Access, 2020. Available online at https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1.
 
+## RUN INFO
+command:
+* ```python throughputTest.py```
+or
+* ```python throughputTest_Genetic.py```
+or
+* ```python throughputTest_Additional.py``` (latest)
+
+to iterate many "train-test"s at once,
+* ```python throughputTest_at_once.py```
+
 ## FILE INFO - HELPER
 * ```algorithms.py```
   * ```kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbose)``` : K means clustering **(PHASE 2 of FIGURE 2)**
@@ -114,7 +125,7 @@ common (at least 2 of the files below)
   * ```saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic)``` : plot the trajectory data ```w``` at iteration ```iterationCount```, and save the figure of the data as ```{static/train/test}_trajectory_iter_{iterationCount}.png```
   * ```update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic)``` : update ```a_l,kl[n]``` in the paper = array ```alkl``` of the code file, and sort the array ```alkl```
   * ```preprocessInputAndOutput(input_data, output_data, windowSize, bestParams)``` : for each row of ```input_data```,
-    * 1. add (```(2 * windowSize + 1)``` x ```(2 * windowSize + 1)```) sized input data to flatten preprocessed input array ```preprocessed_input```.
+    * 1. add ```(2 * windowSize + 1)``` x ```(2 * windowSize + 1)``` sized input data to flatten preprocessed input array ```preprocessed_input```.
     * 2. add ```bestParams``` with ```4``` variables, to the same input array.
     * 3. Then the shape of flatten preprocessed input array becomes ```((2 * windowSize + 1)^2 + 4)```.
     * 4. for better performance of training, add ```tanh(10 * output_data[i][0])``` into the flatten preprocessed output array ```preprocessed_output_data```.
