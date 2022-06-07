@@ -79,7 +79,7 @@ to iterate many "train-test"s at once,
     * 4. when ```isStatic``` (static mode) is false, decide the next movement of te UAV
       * find the direction to move UAV, using the nearest device derived by ```getDeviceLocation()``` function
   * 5. save throughput values if first iteration (```iterationCount = 0```)
-    * throughput value file name: ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
+    * throughput value file name: ```{static/train/test}_thrputs_iter_{iterationCount}_cluster_{l}_final.csv```
   * 6. save input and output data
     * input data file name: ```{static/train/test}_input_raw.csv```
     * output data file name: ```{static/train/test}_output_raw.csv```
@@ -157,8 +157,8 @@ common (at least 2 of the files below)
   * (```main```) ```config_info.txt```, the configuration info is written
   * (```defineAndTrainModel(...)```) ```WPCN_UAV_DL_model```, the model
   * (```defineAndTrainModel(...)```) ```train_valid_result.csv```, the result of training and validation
-  * (```saveTrajectoryGraph(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}.png```, the plotted trajectory data at iteration ```iterationCount```
-  * (```throughputTest(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
+  * (```saveTrajectoryGraph(...)```) ```{static/train/test}_trajectory_iter{iterationCount}.png```, the plotted trajectory data at iteration ```iterationCount```
+  * (```throughputTest(...)```) ```{static/train/test}_thrputs_iter{iterationCount}_cluster_{l}_final.csv```
   * (```throughputTest(...)```) ```{static/train/test}_{input/output}_{raw/preprocessed}.csv```
 
 ## FILE INFO - TRAIN AND TEST MANY TIMES AT ONCE
