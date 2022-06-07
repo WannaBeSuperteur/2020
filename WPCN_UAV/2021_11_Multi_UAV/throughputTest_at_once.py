@@ -1,4 +1,6 @@
 import throughputTest as TT
+import throughputTest_Genetic as TTG
+import throughputTest_Additional as TTA
 import helper as h_
 import numpy as np
 import pandas as pd
@@ -19,7 +21,10 @@ if __name__ == '__main__':
                                 's':'float', 'PD':'float', 'PU':'float',
                                 'width':'float', 'height':'float',
                                 'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float',
-                                'iters':'int'})
+                                'iters':'int',
+                                'clusteringAtLeast':'float', 'clusteringAtMost':'float',
+                                'windowSize':'int',
+                                'epochs':'int'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -42,6 +47,10 @@ if __name__ == '__main__':
     N = paperArgs['N']
     H = paperArgs['H']
     iters = paperArgs['iters']
+    clusteringAtLeast = paperArgs['clusteringAtLeast']
+    clusteringAtMost = paperArgs['clusteringAtMost']
+    windowSize = paperArgs['windowSize']
+    epochs = paperArgs['epochs']
 
     # manual setting: iters, L, devices and N
     iters   = 30
@@ -55,11 +64,17 @@ if __name__ == '__main__':
         # list of min throughputs
         minThroughputList = []
 
+        input_data = []
+        output_data = []
+
         # execute THROUGHPUT TEST
         for iterationCount in range(iters):
-            TT.throughputTest(M, T, N, L, devices, width, height, H,
-                              ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                              iterationCount, minThroughputList)
+            print('\n**** iteration ' + str(iterationCount) + ' ****\n')
+            
+            TTA.throughputTest(M, T, N, L, devices, width, height, H,
+                               ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                               iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                               input_data, output_data, True, None, windowSize, True)
 
         # save min throughput list as *.csv file
         minThroughputList = pd.DataFrame(np.array(minThroughputList))
