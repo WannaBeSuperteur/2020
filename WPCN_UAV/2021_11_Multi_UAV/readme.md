@@ -49,34 +49,50 @@ Reference:
 
 ### main files - throughputTest(...) function
 #### file name : ```throughputTest_Additional.py```
-* for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV),
-  * 1. create list of devices **(PHASE 1 of FIGURE 2)**
-  * 2. do clustering (if clustering failed, go to ```1.```) **(PHASE 2 of FIGURE 2)**
-  * 3. initialize and sort array ```alkl``` (```a_l,kl[n]``` of paper) as ```value```=```0```, the set of ```[i, k, j, t, value]```
-    * ```i```, ```j``` : ```i = 0,1,...,L-1```, ```j = 0,1,...,L-1```
-    * ```k```, ```t``` : ```k = (each device)```, ```t = 0,1,...,N-1```
-    * ```value``` : the value of ```a_l,kl[n]```
-  * 4. make input image using ```makeInputImage()``` function
-  * 5. find best parameter when ```training = False```, or find randomly decided parameter when ```training = True```
-  * 6. initialize direction list ```directionList```
-  * 7. for each time slot ```t = 0,1,...,N-1```,
+* 1. create list of devices **(PHASE 1 of FIGURE 2)**
+* 2. do clustering (if clustering failed, go to ```1.```) **(PHASE 2 of FIGURE 2)**
+* 3. initialize and sort array ```alkl``` (```a_l,kl[n]``` of paper) as ```value```=```0```, the set of ```[i, k, j, t, value]```
+  * ```i```, ```j``` : ```i = 0,1,...,L-1```, ```j = 0,1,...,L-1```
+  * ```k```, ```t``` : ```k = (each device)```, ```t = 0,1,...,N-1```
+  * ```value``` : the value of ```a_l,kl[n]```
+* 4. for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV),
+  * 1. make input image using ```makeInputImage()``` function and flatten them
+  * 2. find best parameter when ```training = False```, or create randomly decided parameter when ```training = True```
+    * ```training = True``` (```training phase``` of our paper) : make randomly decided parameter set, and then train using the input and output derived using the parameter set
+    * ```training = False``` (```test phase``` of our paper) : find the best parameter using the ```model``` and ```input image``` : **bestParams = findBestParams(model, inputImage)**
+  * 3. initialize direction list ```directionList```, whose elements are for each time ```0,1,...,N-1```
+  * 4. for each time slot ```t = 0,1,...,N-1```,
     * 1. move the UAV using ```moveUAV()``` function
     * 2. update array ```alkl``` (```a_l,kl[n]``` in the paper) using ```update_alkl()``` function
     * 3. get throughput using ```formula_11()``` function
     * 4. when ```isStatic``` (static mode) is false, decide the next movement of te UAV
       * find the direction to move UAV, using the nearest device derived by ```getDeviceLocation()``` function
-  * 8. save throughput values if first iteration (```iterationCount = 0```)
+  * 5. save throughput values if first iteration (```iterationCount = 0```)
     * throughput value file name: ```{static/train/test}_trajectory_iter_{iterationCount}_cluster_{l}_final.csv```
-  * 9. save input and output data
+  * 6. save input and output data
     * input data file name: ```{static/train/test}_input_raw.csv```
     * output data file name: ```{static/train/test}_output_raw.csv```
-  * 10. preprocess the input and output data using ```preprocessInputAndOutput()``` function
-  * 11. save the preprocessed input and output data
+  * 7. preprocess the input and output data using ```preprocessInputAndOutput()``` function
+  * 8. save the preprocessed input and output data
     * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
     * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
 * create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
 
 #### file name : ```throughputTest_Genetic.py```
+difference from ```throughputTest_Additional.py``` is **```4-3``` and ```4-4```** of **4. for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV)**
+
+* 4. for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV),
+  * 0. same as ```4-1``` and ```4-2``` of ```throughputTest_Additional.py``` (note: parameter -> within specific ranges)
+  * 1. each parameter is called ```rounds```, ```pPercent```, and ```caseToFindInit```
+  * 2. initialize direction list ```directionList```, whose size is ```3*3*3```
+  * 3. for each ```round``` in ```rounds```,
+    * 1. get throughput list of ```device```s, ```final_throughputs``` and find the minimum throughput ```minThroughput```=```min(final_throughputs)```
+    * 2. define probability ```p``` using ```pPercent```, ```currentRound``` (the number indicating the current round) and ```rounds```
+    * 3. define the number of cases to find ```casesToFind``` using ```casesToFindInit``` and ```currentRound```
+    * 4. find the near cases (each case is ```nearCase```), and save info about each case
+      * with probability ```p```, randomly modify movement
+      * with probability ```1-p```, randomly swap two movements
+    * 5. find the best (maximize common/minimum throughput) near case using the saved info, and update the direction list ```directionList``` of the bast case
 
 ### main files - common
 common (at least 2 of the files below)
