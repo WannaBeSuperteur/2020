@@ -158,7 +158,7 @@ common (at least 2 of the files below)
   * (```defineAndTrainModel(...)```) ```WPCN_UAV_DL_model```, the model
   * (```defineAndTrainModel(...)```) ```train_valid_result.csv```, the result of training and validation
   * (```saveTrajectoryGraph(...)```) ```{static/train/test}_trajectory_iter{iterationCount}.png```, the plotted trajectory data at iteration ```iterationCount```
-  * (```throughputTest(...)```) ```{static/train/test}_thrputs_iter{iterationCount}_cluster_{l}_final.csv```
+  * (```throughputTest(...)```) ```{static/train/test}_thrputs_iter_{iterationCount}_cluster_{l}_final.csv```
   * (```throughputTest(...)```) ```{static/train/test}_{input/output}_{raw/preprocessed}.csv```
 
 ## FILE INFO - TRAIN AND TEST MANY TIMES AT ONCE
