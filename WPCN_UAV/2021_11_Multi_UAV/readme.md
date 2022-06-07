@@ -9,7 +9,7 @@ Reference:
 ## FILE INFO
 ### helper files
 * ```algorithms.py```
-  * ```kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbose)``` : K means clustering (PHASE 2 of FIGURE 2)
+  * ```kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbose)``` : K means clustering **(PHASE 2 of FIGURE 2)**
     * plot the clustering result and save it as ```clustering_result.png```
   * **input :** None
   * **output :** ```clustering_result.png```, the device clustering result
@@ -31,23 +31,35 @@ Reference:
   * summarize execution time for each case specified as ```{func},{inout}``` with ```time```, ```count``` and ```avgTime```(average time)
 
 ### main files
-* common
+* common (at least 2 of the files below)
   * **functions :**
     * ```main``` : get configuration info using ```helper.py``` and write them to ```config_info.txt```
-    * ```moveUAV(q, directionList, N, L, width, height)``` : move the UAV using an element of the direction list indexed by (```l = 0,1,...L-1``` and) ```t = 0,1,...,N-1```
+    * ```moveUAV(q, directionList, N, L, width, height)``` : move the UAV using an element of the direction list indexed by (```l = 0,1,...L-1``` and) ```t = 0,1,...,N-1``` **(PHASE 3 of FIGURE 2)**
     * ```changeColor(colorCode, k)``` : change the color based on the color given by the color code (```k``` is brightness)
-    * ```DEEP_LEARNING_MODEL(tf.keras.Model)``` : **MAIN DEEP LEARNING MODEL** including convolutional and dense layers
+    * ```DEEP_LEARNING_MODEL(tf.keras.Model)``` : **MAIN DEEP LEARNING MODEL** including convolutional and dense layers **(FIGURE 4)**
     * ```defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)``` :
       * 1. define and configure time model
       * 2. train the model using ```train_input``` and ```train_output```
       * 3. save the model as ```WPCN_UAV_DL_model```
-      * 4. test (predict the ```test_output``` as ```test_prediction```) and save the result as ```train_valid_result.csv```  
+      * 4. test (predict the ```test_output``` as ```test_prediction```) and save the result as ```train_valid_result.csv``` **(FIGURE 5)**
     * ```getAndTrainModel(epochs, windowSize)``` :
       * 1. load the preprocessed input and output data, ```train_input_preprocessed.csv``` and ```train_output_preprocessed.csv```
       * 2. convert the preprocessed data into numpy array
       * 3. divide the data into training/test data
       * 4. define and train model using ```defineAndTrainModel()``` function
     * ```saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic)``` : plot the trajectory data ```w``` at iteration ```iterationCount```, and save the figure of the data as ```{static/train/test}_trajectory_iter_{iterationCount}.png```
+    * ```update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic)``` : update ```a_l,kl[n]``` in the paper = array ```alkl``` of the code file, and sort the array ```alkl```
+    * ```preprocessInputAndOutput(input_data, output_data, windowSize, bestParams)``` : for each row of ```input_data```,
+      * 1. add (```(2 * windowSize + 1)``` x ```(2 * windowSize + 1)```) sized input data to flatten preprocessed input array ```preprocessed_input```.
+      * 2. add ```bestParams``` with ```4``` variables, to the same input array.
+      * 3. Then the shape of flatten preprocessed input array becomes '''((2 * windowSize + 1)^2 + 4)```.
+      * 4. for better performance of training, add ```tanh(10 * output_data[i][0])``` into the flatten preprocessed output array ```preprocessed_output_data```.
+    * ```findBestParams(model, inputImage)```: for each variable ```p0```, ```p1```, ```p2``` and ```p3``` with value range ```{0,1,2,3,4}```,
+      * 1. with ```params = [p0*0.25, p1*0.25, p2*0.25, p3*0.25]```, create input data as the concatenation of ```(inputImage, params)```
+      * 2. with this input data, get the output ```outputOfModifiedParam``` of this input using ```model```
+      * ```bestParams``` is the ```params``` with the best (largest) value of ```outputOfModifiedParam```
+    * ```makeInputImage(q, l, N, w, windowSize, sqDist)```: make the input image describing the current UAV and device location **((A), (B) , and (C) of FIGURE 3)**
+    * ```getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)```: choose the device with minimum ```throughput```, or choose one of them randomly **(PHASE 1 of FIGURE 2)**
   * **input :**
     * (```getAndTrainModel(...)```) ```train_input_preprocessed.csv``` and ```train_output_preprocessed.csv```, preprocessed training input and output data
   * **output :**
@@ -55,9 +67,9 @@ Reference:
     * (```defineAndTrainModel(...)```) ```WPCN_UAV_DL_model```, the model
     * (```defineAndTrainModel(...)```) ```train_valid_result.csv```, the result of training and validation
     * (```saveTrajectoryGraph(...)```) ```{static/train/test}_trajectory_iter_{iterationCount}.png```, the plotted trajectory data at iteration ```iterationCount```
-* ```throughputTest.py```
-* ```throughputTest_Genetic.py```
-* ```throughputTest_Additional.py```
+* ```throughputTest.py``` only
+* ```throughputTest_Genetic.py``` only
+* ```throughputTest_Additional.py``` only
   * ```getIndexOfDirection(directionX, directionY)``` : get the index of the direction using ```np.arctan(directionY / directionX)```, and decide ```xy_change``` (index of the change of ```x``` and ```y```) using it
 
 ### train and test many times at once
