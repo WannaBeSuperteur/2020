@@ -80,17 +80,19 @@ to iterate many "train-test"s at once,
       * find the direction to move UAV, using the nearest device derived by ```getDeviceLocation()``` function
   * 5. save throughput values if first iteration (```iterationCount = 0```)
     * throughput value file name: ```{static/train/test}_thrputs_iter_{iterationCount}_cluster_{l}_final.csv```
-  * 6. save input and output data
-    * input data file name: ```{static/train/test}_input_raw.csv```
-    * output data file name: ```{static/train/test}_output_raw.csv```
-  * 7. preprocess the input and output data using ```preprocessInputAndOutput()``` function
-  * 8. save the preprocessed input and output data
-    * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
-    * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
+* 5. save input and output data
+  * input data file name: ```{static/train/test}_input_raw.csv```
+  * output data file name: ```{static/train/test}_output_raw.csv```
+* 6. preprocess the input and output data using ```preprocessInputAndOutput()``` function
+* 7. save the preprocessed input and output data
+  * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
+  * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
 * create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
 
 #### file name : ```throughputTest_Genetic.py```
-difference from ```throughputTest_Additional.py``` is **```4-3``` and ```4-4```** of **4. for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV)**
+difference from ```throughputTest_Additional.py``` is ...
+
+1. **```4-3``` and ```4-4```** of **4. for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV)**
 
 * 4. for each UAV ```l``` in ```0,1,...,L-1``` (```L``` : the number of UAV),
   * 0. same as ```4-1``` and ```4-2``` of ```throughputTest_Additional.py``` (note: parameter -> within specific ranges)
@@ -104,6 +106,8 @@ difference from ```throughputTest_Additional.py``` is **```4-3``` and ```4-4```*
       * with probability ```p```, randomly modify movement
       * with probability ```1-p```, randomly swap two movements
     * 5. find the best (maximize common/minimum throughput) near case using the saved info, and update the direction list ```directionList``` of the bast case
+
+2. **run ```5.```, ```6.``` and ```7.``` of ```throughputTest_Additional.py``` just after ```4-3.``` of above
 
 ### main files - common
 common (at least 2 of the files below)
@@ -124,11 +128,11 @@ common (at least 2 of the files below)
     * 4. define and train model using ```defineAndTrainModel()``` function
   * ```saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic)``` : plot the trajectory data ```w``` at iteration ```iterationCount```, and save the figure of the data as ```{static/train/test}_trajectory_iter_{iterationCount}.png```
   * ```update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic)``` : update ```a_l,kl[n]``` in the paper = array ```alkl``` of the code file, and sort the array ```alkl```
-  * ```preprocessInputAndOutput(input_data, output_data, windowSize, bestParams)``` : for each row of ```input_data```,
+  * ```preprocessInputAndOutput(input_data, output_data, windowSize)``` : for each row of ```input_data```,
     * 1. add ```(2 * windowSize + 1)``` x ```(2 * windowSize + 1)``` sized input data to flatten preprocessed input array ```preprocessed_input```.
-    * 2. add ```bestParams``` with ```4``` variables, to the same input array.
+    * 2. add ```bestParams``` with ```4``` variables as ORIGINAL value, to the same input array.
     * 3. Then the shape of flatten preprocessed input array becomes ```((2 * windowSize + 1)^2 + 4)```.
-    * 4. for better performance of training, add ```tanh(10 * output_data[i][0])``` into the flatten preprocessed output array ```preprocessed_output_data```.
+    * 4. for better performance of training, apply ```tanh(10 * output_data[i][0])``` into the flatten preprocessed output array ```preprocessed_output_data```.
   * ```makeInputImage(q, l, N, w, windowSize, sqDist)```: make the input image describing the current UAV and device location **((A), (B), and (C) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
   * ```getDeviceLocation(l, w, final_throughputs, probChooseMinThroughput)```: choose the device with minimum ```throughput```, or choose one of them randomly
   * ```saveMinThroughput(minThroughputList, memo)```: save minimum throughput list (based on ```minThroughputList```) as ```*.csv``` or ```*.txt``` file
