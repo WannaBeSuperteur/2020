@@ -38,3 +38,6 @@
    - 3. 인수 2: 
  - 출력 :
    - common (minimum) throughput
+ - 경로 결정 :
+   - 모델을 학습시킨 다음, (인수 1, 인수 2)를 brute force 하여 모델 예측을 기준으로 최적 common throughput이 도출되는 인수의 쌍을 찾은 다음,
+     그 인수의 쌍을 이용하여 경로 결정 후 실제 common throughput을 측정
