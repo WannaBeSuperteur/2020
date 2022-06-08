@@ -57,11 +57,14 @@ if __name__ == '__main__':
     epochs = paperArgs['epochs']
     isStatic = paperArgs['isStatic']
 
-    # manual setting: iters, L, devices and N
-    iters   = 30
-    L       = 3
-    devices = 10
-    Ns      = [3, 5, 7, 10, 12, 15, 20, 30, 40, 60, 80, 100, 120, 150, 200]
+    # manual setting: iters   (the number of iterations),
+    #                 L       (the number of UAVs = clusters),
+    #                 devices (the number of devices),
+    #             and N       (the number of time slots)
+    iters   = 500
+    L       = 5
+    devices = 20
+    Ns      = [30, 40, 50]
 
     # execute
     for N in Ns:
