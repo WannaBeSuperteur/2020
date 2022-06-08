@@ -61,10 +61,10 @@ if __name__ == '__main__':
     #                 L       (the number of UAVs = clusters),
     #                 devices (the number of devices),
     #             and N       (the number of time slots)
-    iters   = 500
+    iters   = 100
     L       = 5
     devices = 20
-    Ns      = [30, 40, 50]
+    Ns      = [35]
 
     # execute
     for N in Ns:
