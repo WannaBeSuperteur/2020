@@ -83,11 +83,15 @@ to iterate many "train-test"s at once,
 * 5. save input and output data
   * input data file name: ```{static/train/test}_input_raw.csv```
   * output data file name: ```{static/train/test}_output_raw.csv```
+  * the number of columns and rows:
+    * input data columns: ```(2 * windowSize + 1)^2 + 4```
+    * output data columns: ```1```
+    * input and output data rows: ```L * iterations```
 * 6. preprocess the input and output data using ```preprocessInputAndOutput()``` function
 * 7. save the preprocessed input and output data
   * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
   * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
-* create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
+* 8. create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
 
 #### file name : ```throughputTest_Genetic.py```
 difference from ```throughputTest_Additional.py``` is ...
@@ -107,7 +111,7 @@ difference from ```throughputTest_Additional.py``` is ...
       * with probability ```1-p```, randomly swap two movements
     * 5. find the best (maximize common/minimum throughput) near case using the saved info, and update the direction list ```directionList``` of the bast case
 
-2. **run ```5.```, ```6.``` and ```7.``` of ```throughputTest_Additional.py``` just after ```4-3.``` of above
+2. **run ```5.```, ```6.``` and ```7.``` of ```throughputTest_Additional.py``` just after ```4-3.``` of above, so they become ```4-4.```, ```4-5.``` and ```4-6.``` respectively**
 
 ### main files - common
 common (at least 2 of the files below)
