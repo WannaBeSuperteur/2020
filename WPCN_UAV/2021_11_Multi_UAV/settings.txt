@@ -30,3 +30,4 @@ constantToFill=-1.0 # constant to fill the state arrays (because of difference a
 clusteringAtLeast=0.51 # each cluster contains devices at least int(this number * average)
 clusteringAtMost=1.51 # each cluster contains devices at most int(this number * average)
 epochs=15 # the number of epochs for training deep learning model
+isStatic=False # use static (devices do not move) mode

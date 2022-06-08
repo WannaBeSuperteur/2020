@@ -27,7 +27,8 @@ if __name__ == '__main__':
                                 'iters':'int',
                                 'clusteringAtLeast':'float', 'clusteringAtMost':'float',
                                 'windowSize':'int',
-                                'epochs':'int'})
+                                'epochs':'int',
+                                'isStatic':'logical'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -54,6 +55,7 @@ if __name__ == '__main__':
     clusteringAtMost = paperArgs['clusteringAtMost']
     windowSize = paperArgs['windowSize']
     epochs = paperArgs['epochs']
+    isStatic = paperArgs['isStatic']
 
     # manual setting: iters, L, devices and N
     iters   = 30
@@ -77,7 +79,7 @@ if __name__ == '__main__':
             TTA.throughputTest(M, T, N, L, devices, width, height, H,
                                ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                               input_data, output_data, True, None, windowSize, True)
+                               input_data, output_data, True, None, windowSize, isStatic)
 
         # save min throughput list as *.csv file
         minThroughputList = pd.DataFrame(np.array(minThroughputList))
