@@ -816,6 +816,9 @@ if __name__ == '__main__':
                        iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
                        static_input_data, static_output_data, True, None, windowSize, True)
 
+    # re-initialize minimum throughput list
+    minThroughputList = []
+
     # run training
     try:
         _ = pd.read_csv('train_input_preprocessed.csv' , index_col=0)
@@ -847,6 +850,9 @@ if __name__ == '__main__':
 
     # run test (using 5% (min 10) iterations of training)
     iters = max(10, iters // 20)
+
+    # re-initialize minimum throughput list
+    minThroughputList = []
 
     # input and output data for testing
     test_input_data = []

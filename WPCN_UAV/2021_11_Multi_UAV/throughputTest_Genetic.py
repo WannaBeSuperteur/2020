@@ -880,6 +880,9 @@ if __name__ == '__main__':
     # run test (using 5% (min 10) iterations of training)
     iters = max(10, iters // 20)
 
+    # re-initialize minimum throughput list
+    minThroughputList = []
+
     # input and output data for testing
     test_input_data = []
     test_output_data = []
