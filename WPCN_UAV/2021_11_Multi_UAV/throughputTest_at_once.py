@@ -98,3 +98,29 @@ if __name__ == '__main__':
         
         noteFile.write(note)
         noteFile.close()
+
+    # get and train model
+    if isStatic == False:
+        print('\n **** NOT STATIC -> train and test the model !! ****\n')
+        
+        try:
+            model = tf.keras.models.load_model('WPCN_UAV_DL_model')
+            print('model load succeeded')
+        except:
+            print('model load failed')
+            model = TTA.getAndTrainModel(epochs, windowSize)
+
+        # run test (using 5% (min 10) iterations of training)
+        iters = max(10, iters // 20)
+
+        # input and output data for testing
+        test_input_data = []
+        test_output_data = []
+
+        for iterationCount in range(iters):
+            print('TEST ITER COUNT ', iterationCount, '/', iters)
+
+            throughputTest(M, T, N, L, devices, width, height, H,
+                           ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                           iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                           test_input_data, test_output_data, False, model, windowSize, False)
