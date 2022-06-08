@@ -681,6 +681,16 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # save trajectory as graph
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic, L, N)
 
+    # save minimum throughput list
+    if isStatic:
+        memo = 'static'
+    elif training == True:
+        memo = 'train'
+    else:
+        memo = 'test'
+        
+    saveMinThroughput(minThroughputList, memo)
+
 # save min throughput as *.csv file
 def saveMinThroughput(minThroughputList, memo):
 
