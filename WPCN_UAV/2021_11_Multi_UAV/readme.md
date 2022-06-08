@@ -101,7 +101,7 @@ to iterate many "train-test"s at once,
 * 7. save the preprocessed input and output data
   * preprocessed input data file name: ```{static/train/test}_input_preprocessed.csv```
   * preprocessed output data file name: ```{static/train/test}_output_preprocessed.csv```
-* 8. create minimum/all throughput information, and save trajectory as graph using ```saveTrajectoryGraph()``` function
+* 8. create minimum/all throughput information and save it using ```saveMinThroughput()``` function, and save trajectory as graph using ```saveTrajectoryGraph()``` function
 
 #### file name : ```throughputTest_Genetic.py```
 difference from ```throughputTest_Additional.py``` is ...
