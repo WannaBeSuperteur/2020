@@ -41,6 +41,16 @@ to iterate many "train-test"s at once,
   * summarize execution time for each case specified as ```{func},{inout}``` with ```time```, ```count``` and ```avgTime```(average time)
 
 ## FILE INFO - MAIN
+### main files info
+* ```throughputTest_Additional.py``` (latest)
+  * the algorithm using best probability parameters of ```moving UAV optimally for each period```
+  * ```iters / 2``` iterations for ```STATIC```
+  * ```iters``` iterations for ```TRAIN```
+  * ```max(10, iters / 20)``` iterations for ```TEST```
+  * if ```iters = 500```, then ```STATIC, TRAIN, TEST = 250, 500, 25``` respectively, the number of rows of train/test dataset is ```STATIC, TRAIN, TEST = 250*L, 500*L, 25*L``` respectively when ```L``` is the number of UAVs
+* ```python throughputTest_Genetic.py```
+  * the genetic-like algorithm
+
 ### main files - findBestParams function
 * ```findBestParams(model, inputImage)``` of **```throughputTest_Additional.py```** : for each variable ```p0```, ```p1```, ```p2``` and ```p3``` with value range ```{0,1,2,3,4}```, **((D) and (E) of FIGURE 3, a part of PHASE 4 of FIGURE 2)**
   * 1. with ```params = [p0*0.25, p1*0.25, p2*0.25, p3*0.25]```, create input data as the concatenation of ```(inputImage, params)```
@@ -169,9 +179,9 @@ common (at least 2 of the files below)
   * (```throughputTest(...)```) ```{static/train/test}_thrputs_iter_{iterationCount}_cluster_{l}_final.csv```
   * (```throughputTest(...)```) ```{static/train/test}_{input/output}_{raw/preprocessed}.csv```
 
-## FILE INFO - TRAIN AND TEST MANY TIMES AT ONCE
+## FILE INFO - CREATE DATA FOR TRAIN AND TEST MANY TIMES AT ONCE
 * ```throughputTest_at_once.py```
-  * do many ```train-and-test``` iterations at once, using manual settings of ```iters```, ```L```, ```devices``` and ```Ns```(array)
+  * create input and output data of many ```train-and-test``` iterations at once, using manual settings of ```iters```, ```L```, ```devices``` and ```Ns```(array)
   * **output :** minimum throughput list at ```iters```, ```L```, ```devices``` and ```N```(in ```Ns```)
     * in ```txt``` form : ```minThroughputList_iter_{iters}_L_{L}_devs_{devs}_N_{N}.txt```
     * in ```csv``` form : ```minThroughputList_iter_{iters}_L_{L}_devs_{devs}_N_{N}.csv```
