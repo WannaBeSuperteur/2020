@@ -349,7 +349,7 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
     alkl.sort(key=lambda x:x[0])
 
 # preprocess input and output
-def preprocessInputAndOutput(input_data, output_data, windowSize, bestParams):
+def preprocessInputAndOutput(input_data, output_data, windowSize):
     n = len(input_data)
     assert(n == len(output_data))
 
@@ -367,7 +367,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize, bestParams):
         for j in range(imgCells):
             preprocessed_input.append(input_data[i][j])
         for j in range(4):
-            preprocessed_input.append(bestParams[j])
+            preprocessed_input.append(input_data[i][j + imgCells])
 
         preprocessed_input_data.append(preprocessed_input)
 
@@ -656,10 +656,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
             pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
 
+        # preprocess input and output data
         (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
                                                                                        output_data,
-                                                                                       windowSize,
-                                                                                       bestParams)
+                                                                                       windowSize)
 
         if isStatic:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_input_preprocessed.csv')
