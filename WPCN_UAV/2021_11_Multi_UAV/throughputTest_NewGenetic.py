@@ -364,7 +364,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize):
 
         for j in range(imgCells):
             preprocessed_input.append(input_data[i][j])
-        for j in range(    A    ): # fill in the blank
+        for j in range(2):
             preprocessed_input.append(input_data[i][j + imgCells])
 
         preprocessed_input_data.append(preprocessed_input)
@@ -381,9 +381,9 @@ def findBestParams(model, inputImage):
     bestOutput = -1.0 # actually at least 0 -> always updated
     outputs    = []
 
-    for p0 in range(  B  ): # fill in the blank
-        for p1 in range(  C  ): # fill in the blank
-            params    = [p0 * (  D  ), p1 * (  E  )] # fill in the blank
+    for p0 in range(11):
+        for p1 in range(11):
+            params = [p0 * 0.1, p1 * 0.1] # (0.0, 0.1, 0.2, ..., 1.0)
             
             inputData = np.concatenate((inputImage, params), axis=-1)
             inputData = np.array([inputData])
