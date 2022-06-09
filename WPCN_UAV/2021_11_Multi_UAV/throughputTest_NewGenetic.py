@@ -444,6 +444,11 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
     print(np.round_(inputImage, 2))
     return inputImage
 
+# initialize movement of UAV between devices
+# using random permutation (ex: 5 devices -> [2, 0, 1, 3, 4])
+def initializeMovementOfUAV(devices):
+    return list(np.random.permutation(range(devices)))
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
@@ -557,8 +562,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # final throughput (updated for each time t)
         final_throughputs = [0 for i in range(devices)]
 
-        # initialize movement of UAV between devices
-        (      F      ) # fill in the blank
+        # initialize movement of UAV between devices as list of devices (random permutation)
+        initialMovement = initializeMovementOfUAV(devices)
 
         # use genetic-like algorithm to decide optimal path :
         # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
