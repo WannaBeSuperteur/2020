@@ -449,12 +449,41 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
 def initializeMovementOfUAV(devices):
     return list(np.random.permutation(range(devices)))
 
-# genetic-like algorithm to decide optimal path
+# genetic-like algorithm to decide optimal path (= direction list)
+
+#### NOTE ####
+# movement     -> device visit sequence
+# path         -> direction list = list of directions of UAV to move
+# optimal path -> path of the optimal movement with the formula to minimize
+
 # parameter 1 -> random swap probability of two neighboring device
 # parameter 2 -> proportion of A and B
-def optimalPath(N, initialMovement, param1, param2):
+def optimalPath(N, deviceList, initialMovement, param1, param2):
 
-    (      G      ) # fill in the blank
+    # define parameter A and B using param2 (between 0.0 ~ 1.0)
+    A = param2
+    B = 1.0 - param2
+
+    # compute the score
+    score = computeScore(A, B, totalDistance)
+
+    # NOT COMPLETED
+
+# optimal : minimize A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
+def computeScore(A, B, movement, deviceList):
+    return A * computeTotalDist(movement, deviceList) + B * computeClosenessWithMinMoves(movement, deviceList)
+
+# compute (total movement distance)
+def computeTotalDist(movement, deviceList):
+    pass
+
+    # NOT COMPLETED
+
+# compute (sum of 1/d^2 by moving minimum times)
+def computeClosenessWithMinMoves(movement, deviceList):
+    pass
+
+    # NOT COMPLETED
 
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
@@ -581,7 +610,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         param2 = bestParams[1]
 
         if isStatic == False:
-            directionList = optimalPath(N, initialMovement, param1, param2)
+            directionList = optimalPath(N, deviceList, initialMovement, param1, param2)
 
         # make direction list using random (when training)
         for t in range(N):
