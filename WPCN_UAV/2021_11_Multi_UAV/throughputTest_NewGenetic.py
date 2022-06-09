@@ -458,14 +458,14 @@ def initializeMovementOfUAV(devices):
 
 # parameter 1 -> 5 * (random swap probability of two neighboring device)
 # parameter 2 -> proportion of A and B
-def findOptimalPath(N, deviceList, initialMovement, param1, param2):
+def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2):
 
     # define parameter A and B using param2 (between 0.0 ~ 1.0)
     A = param2
     B = 1.0 - param2
     moves = len(initialMovement)
 
-    currentBestScore    = computeScore(A, B, initialMovement, deviceList)
+    currentBestScore    = computeScore(A, B, initialLocUAV, initialMovement, deviceList)
     currentBestMovement = initialMovement
 
     # 30 iterations
@@ -485,7 +485,7 @@ def findOptimalPath(N, deviceList, initialMovement, param1, param2):
                     modifiedMovement[j], modifiedMovement[j+1] = modifiedMovement[j+1], modifiedMovement[j]
 
             # compute the score
-            score = computeScore(A, B, modifiedMovement, deviceList)
+            score = computeScore(A, B, initialLocUAV, modifiedMovement, deviceList)
 
             # update best modified score/movement
             if bestModifiedMovement == None or score < bestModifiedScore:
@@ -500,16 +500,20 @@ def findOptimalPath(N, deviceList, initialMovement, param1, param2):
     bestMovement = currentBestMovement
 
     # create the optimal path based on the best movement, and then return it
-    return createOptimalPath(N, bestMovement, deviceList)
+    return createOptimalPath(N, initialLocUAV, bestMovement, deviceList)
 
-# create the optimal path based on the best movement
-def createOptimalPath(N, bestMovement, deviceList):
+# compute the path (with moving minimum times) corresponding to the movement
+def computeMinimumPath(initialLocUAV, movement):
     pass
-
-    # suppose that the UAV "stops" near each device for a while
 
     # NOT COMPLETED
 
+# create the optimal path based on the best movement
+def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
+    pass
+
+    # suppose that the UAV "stops" near each device for a while
+    
     # compute the time needed to move as bestMovement
     # (suppose that it is below N, otherwise common throughput can be zero)
 
@@ -528,17 +532,19 @@ def createOptimalPath(N, bestMovement, deviceList):
     return optimalPath
 
 # optimal : minimize A*(total movement distance) + B*(sum of 1/(dist)^2 by moving minimum times)
-def computeScore(A, B, movement, deviceList):
-    return A * computeTotalDist(movement, deviceList) + B * computeClosenessWithMinMoves(movement, deviceList)
+def computeScore(A, B, initialLocUAV, movement, deviceList):
+    A_score = A * computeTotalDist(initialLocUAV, movement, deviceList)
+    B_score = B * computeClosenessWithMinMoves(initialLocUAV, movement, deviceList)
+    return A_score + B_score
 
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
-def computeTotalDist(movement, deviceList):
+def computeTotalDist(initialLocUAV, movement, deviceList):
     pass
 
     # NOT COMPLETED
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
-def computeClosenessWithMinMoves(movement, deviceList):
+def computeClosenessWithMinMoves(initialLocUAV, movement, deviceList):
     pass
 
     # NOT COMPLETED
@@ -668,7 +674,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         param2 = bestParams[1]
 
         if isStatic == False:
-            directionList = findOptimalPath(N, deviceList, initialMovement, param1, param2)
+            UAV_x = q[l * (N+1)][2]
+            UAV_y = q[l * (N+1)][3]
+            UAV_h = q[l * (N+1)][4]
+            initialLocUAV = [UAV_x, UAV_y, UAV_h]
+            
+            directionList = findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2)
 
         # make direction list using random (when training)
         for t in range(N):
