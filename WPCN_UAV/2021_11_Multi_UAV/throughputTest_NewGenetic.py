@@ -502,7 +502,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
     # create the optimal path based on the best movement, and then return it
     return createOptimalPath(N, initialLocUAV, bestMovement, deviceList)
 
-# distance between UAV and device
+# distance between UAV and device (also can be between device A and device B)
 def dist(locUAV, locDevice):
     if len(locUAV) == 3:
         return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2) + pow(locUAV[2], 2))
@@ -586,9 +586,15 @@ def computeScore(A, B, initialLocUAV, movement, deviceList):
 
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
 def computeTotalDist(initialLocUAV, movement, deviceList):
-    pass
 
-    # NOT COMPLETED
+    # initial UAV location <-> first device
+    totalDist = dist(initialLocUAV, deviceList[movement[0]])
+
+    # k-th device <-> (k+1)-th device
+    for i in range(len(deviceList)-1):
+        totalDist += dist(deviceList[movement[i]], deviceList[movement[i+1]])
+
+    return totalDist
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
 def computeClosenessWithMinMoves(initialLocUAV, movement, deviceList):
