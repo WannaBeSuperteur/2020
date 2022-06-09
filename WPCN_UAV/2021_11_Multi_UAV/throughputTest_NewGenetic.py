@@ -456,18 +456,55 @@ def initializeMovementOfUAV(devices):
 # path         -> direction list = list of directions of UAV to move
 # optimal path -> path of the optimal movement with the formula to minimize
 
-# parameter 1 -> random swap probability of two neighboring device
+# parameter 1 -> 5 * (random swap probability of two neighboring device)
 # parameter 2 -> proportion of A and B
 def optimalPath(N, deviceList, initialMovement, param1, param2):
 
     # define parameter A and B using param2 (between 0.0 ~ 1.0)
     A = param2
     B = 1.0 - param2
+    moves = len(initialMovement)
 
-    # compute the score
-    score = computeScore(A, B, totalDistance)
+    currentBestScore    = computeScore(A, B, initialMovement, deviceList)
+    currentBestMovement = initialMovement
+
+    # 30 iterations
+    for i in range(30):
+        bestModifiedMovement = None
+        
+        # create 20 candidate moves in an iteration to find ONLY ONE best move
+        for j in range(20):
+            modifiedMovement = copy.deepcopy(currentBestMovement)
+
+            # change the movement
+            for j in range(moves-1):
+                r = random.random()
+
+                # random swap with probability (param1)
+                if r < param1 / 5.0:
+                    modifiedMovement[j], modifiedMovement[j+1] = modifiedMovement[j+1], modifiedMovement[j]
+
+            # compute the score
+            score = computeScore(A, B, modifiedMovement, deviceList)
+
+            # update best modified score/movement
+            if bestModifiedMovement == None or score < bestModifiedScore:
+                bestModifiedScore    = score
+                bestModifiedMovement = copy.deepcopy(modifiedMovement)
+
+        # update current best score and movement at the end of each iteration
+        currentBestScore    = bestModifiedScore
+        currentBestMovement = bestModifiedMovement
+
+    # define best movement as the current best movement at the end of all the iterations
+    bestMovement = currentBestMovement
+
+    # create the optimal path based on the best movement
 
     # NOT COMPLETED
+
+    # return the optimal path
+    return optimalDirectionList
 
 # optimal : minimize A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
 def computeScore(A, B, movement, deviceList):
@@ -479,7 +516,7 @@ def computeTotalDist(movement, deviceList):
 
     # NOT COMPLETED
 
-# compute (sum of 1/d^2 by moving minimum times)
+# compute (sum of 1/d^2 by moving minimum times) where d = distance
 def computeClosenessWithMinMoves(movement, deviceList):
     pass
 
@@ -603,7 +640,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # use genetic-like algorithm to decide optimal path :
         # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
-        # parameter 1 -> random swap probability of two neighboring device
+        # parameter 1 -> 5 * (random swap probability of two neighboring device)
         # parameter 2 -> proportion of A and B
         # return : direction list (same form as directionList)
         param1 = bestParams[0]
