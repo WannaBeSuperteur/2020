@@ -505,9 +505,9 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
 # distance between UAV and device
 def dist(locUAV, locDevice):
     if len(locUAV) == 3:
-        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2) + pow(locUAV[2], 2)
+        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2) + pow(locUAV[2], 2))
     else:
-        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2)
+        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2))
 
 # compute the path (with moving minimum times) corresponding to the movement
 def computeMinimumPath(initialLocUAV, movement, deviceList):
@@ -597,8 +597,13 @@ def computeClosenessWithMinMoves(initialLocUAV, movement, deviceList):
     minimumPath = computeMinimumPath(initialLocUAV, movement, deviceList)
 
     # compute the closeness for each device
+    closeness = [0.0 for i in range(len(deviceList))]
 
-    # NOT COMPLETED
+    for i in range(1, len(minimumPath)): # except for (first element of the minimum path = original UAV location)
+        for j in range(len(deviceList)):
+            closeness[i] = max(closeness[i], 1.0 / pow(dist(minimumPath[i], deviceList[j]), 2))
+
+    return sum(closeness)
 
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
