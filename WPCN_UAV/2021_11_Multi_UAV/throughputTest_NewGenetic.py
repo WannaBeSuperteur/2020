@@ -450,7 +450,9 @@ def initializeMovementOfUAV(devices):
     return list(np.random.permutation(range(devices)))
 
 # genetic-like algorithm to decide optimal path
-def optimalPath(N, initialMovement, param_A, param_B):
+# parameter 1 -> random swap probability of two neighboring device
+# parameter 2 -> proportion of A and B
+def optimalPath(N, initialMovement, param1, param2):
 
     (      G      ) # fill in the blank
 
@@ -575,10 +577,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # parameter 1 -> random swap probability of two neighboring device
         # parameter 2 -> proportion of A and B
         # return : direction list (same form as directionList)
-        param_A = bestParams[0]
-        param_B = bestParams[1]
-        
-        directionList = optimalPath(N, initialMovement, param_A, param_B)
+        param1 = bestParams[0]
+        param2 = bestParams[1]
+
+        if isStatic == False:
+            directionList = optimalPath(N, initialMovement, param1, param2)
 
         # make direction list using random (when training)
         for t in range(N):
@@ -595,21 +598,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             for k in range(devices):
                 thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
                 final_throughputs[k] = thrput
-
-            # decide next move
-            if not isStatic:
-                decision = random.random()
-                currentX = q[l * (N + 1) + t][2]
-                currentY = q[l * (N + 1) + t][3]
-
-                # decide the direction using the optimal path decided above
-                [goto_X, goto_Y] = (    H    ) # fill in the blank
-
-                directionX = goto_X - currentX
-                directionY = goto_Y - currentY
-
-                # decide next direction
-                directionList[t] = getIndexOfDirection(directionX, directionY)
 
         # save throughputs at first iteration
         if iterationCount == 0:
