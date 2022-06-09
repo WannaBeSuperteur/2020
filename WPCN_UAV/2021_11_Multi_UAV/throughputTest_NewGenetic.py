@@ -458,7 +458,7 @@ def initializeMovementOfUAV(devices):
 
 # parameter 1 -> 5 * (random swap probability of two neighboring device)
 # parameter 2 -> proportion of A and B
-def optimalPath(N, deviceList, initialMovement, param1, param2):
+def findOptimalPath(N, deviceList, initialMovement, param1, param2):
 
     # define parameter A and B using param2 (between 0.0 ~ 1.0)
     A = param2
@@ -499,12 +499,13 @@ def optimalPath(N, deviceList, initialMovement, param1, param2):
     # define best movement as the current best movement at the end of all the iterations
     bestMovement = currentBestMovement
 
-    # create the optimal path based on the best movement
+    # create the optimal path based on the best movement, and then return it
+    return createOptimalPath(N, bestMovement, deviceList)
 
-    # NOT COMPLETED
+# create the optimal path based on the best movement
+def createOptimalPath(N, bestMovement, deviceList):
 
-    # return the optimal path
-    return optimalDirectionList
+    pass
 
 # optimal : minimize A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
 def computeScore(A, B, movement, deviceList):
@@ -647,7 +648,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         param2 = bestParams[1]
 
         if isStatic == False:
-            directionList = optimalPath(N, deviceList, initialMovement, param1, param2)
+            directionList = findOptimalPath(N, deviceList, initialMovement, param1, param2)
 
         # make direction list using random (when training)
         for t in range(N):
