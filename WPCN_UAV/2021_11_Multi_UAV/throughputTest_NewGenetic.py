@@ -502,12 +502,59 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
     # create the optimal path based on the best movement, and then return it
     return createOptimalPath(N, initialLocUAV, bestMovement, deviceList)
 
+# distance between UAV and device
+def dist(locUAV, locDevice):
+    if len(locUAV) == 3:
+        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2) + pow(locUAV[2], 2)
+    else:
+        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2)
+
 # compute the path (with moving minimum times) corresponding to the movement
-def computeMinimumPath(initialLocUAV, movement):
-    pass
+def computeMinimumPath(initialLocUAV, movement, deviceList):
 
-    # NOT COMPLETED
+    # list of possible unit movement
+    unitMovements = []
+    for i in range(8):
+        unitMovements.add([math.cos(i * math.pi / 4), math.sin(i * math.pi / 4)])
+    unitMovements.append([0, 0])
 
+    # use only X and Y location of UAV
+    minimumPath = [initialLocUAV[:2]]
+
+    # initialize the location of UAV
+    currentLocUAV = initialLocUAV[:2]
+
+    # make path
+    for device in deviceList:
+
+        # move toward best direction until "do not move" becomes closest to the device
+        while True:
+            minDist          = dist(currentLocUAV, device)
+            minDistDirection = 8
+
+            # find the index of the best direction (index 0~7: move, index 8: stop)
+            for i in range(8):
+                nextLocUAV = np.array(currentLocUAV) + np.array(unitMovements[i])
+                nextLocUAV = list(nextLocUAV)
+                nextDist   = dist(nextLocUAV, device)
+
+                if nextDist < minDist:
+                    minDist          = nextDist
+                    minDistDirection = i
+
+            # stop is best for the UAV
+            if minDistDirection == 8:
+                break
+
+            # add movement and update the location of UAV
+            else:
+                currentLocUAV = np.array(currentLocUAV) + np.array(unitMovements[minDistDirection])
+                currentLocUAV = list(currentLocUAV)
+                
+                minimumPath.append(currentLocUAV)
+
+    return minimumPath
+    
 # create the optimal path based on the best movement
 def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
     pass
@@ -516,8 +563,8 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
     
     # compute the time needed to move as bestMovement
     # (suppose that it is below N, otherwise common throughput can be zero)
-
-    # NOT COMPLETED
+    minimumPath = computeMinimumPath(initialLocUAV, bestMovement, deviceList)
+    bestMoveTime = len(minimumPath) - 1
 
     # compute the remaining time
 
@@ -545,7 +592,11 @@ def computeTotalDist(initialLocUAV, movement, deviceList):
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
 def computeClosenessWithMinMoves(initialLocUAV, movement, deviceList):
-    pass
+
+    # compute the minimum path first
+    minimumPath = computeMinimumPath(initialLocUAV, movement, deviceList)
+
+    # compute the closeness for each device
 
     # NOT COMPLETED
 
