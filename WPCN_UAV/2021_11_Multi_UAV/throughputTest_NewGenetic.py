@@ -449,6 +449,11 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
 def initializeMovementOfUAV(devices):
     return list(np.random.permutation(range(devices)))
 
+# genetic-like algorithm to decide optimal path
+def optimalPath(N, initialMovement, param_A, param_B):
+
+    (      G      ) # fill in the blank
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
@@ -569,7 +574,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
         # parameter 1 -> random swap probability of two neighboring device
         # parameter 2 -> proportion of A and B
-        (      G      ) # fill in the blank
+        # return : direction list (same form as directionList)
+        param_A = bestParams[0]
+        param_B = bestParams[1]
+        
+        directionList = optimalPath(N, initialMovement, param_A, param_B)
 
         # make direction list using random (when training)
         for t in range(N):
