@@ -557,7 +557,6 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
     
 # create the optimal path based on the best movement
 def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
-    pass
 
     # suppose that the UAV "stops" near each device for a while
     
@@ -569,9 +568,38 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
     # compute the remaining time
     remainingTime = N - bestMoveTime
 
-    # allocate the remaining time for each device in proportion to (dist)^2, using closeness
+    # find (dist^2) using closeness
+    sqDistList = []
+    for c in closeness:
+        sqDistList.append(1 / c)
+
+    # the sum of sqDistList -> 1
+    sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
+
+    # allocate the remaining time for each device in proportion to (dist)^2
     # (maybe use binary search algorithm)
     remainingTimeForEachDevice = []
+
+    minWeight = 0.0
+    maxWeight = 10.0 * len(deviceList)
+    fitWeight = None
+
+    while True:
+        midWeight = (minWeight * maxWeight / 2.0)
+        remainingTimeDistribution = np.array(sqDistListNormalized * midWeight).astype(int)
+
+        if sum(remainingTimeDistribution) > remainingTime:
+            maxWeight = midWeight
+        elif sum(remainingTimeDistribution) < remainingTime:
+            minWeight = midWeight
+        else:
+            fitWeight = midWeight
+            remainingTimeForEachDevice = remainingTimeDistribution
+            break
+
+    # append "stop"s to the optimal path based on the allocated remaining time for each device
+
+    # NOT COMPLETED
 
     # return the optimal path
     return optimalPath
