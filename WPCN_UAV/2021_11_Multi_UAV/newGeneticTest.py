@@ -33,11 +33,11 @@ if __name__ == '__main__':
     param2 = 0.3
 
     # get optimal path
-    (bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2)
+    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2)
 
     print('best movement :')
     print(bestMovement)
 
-    print('optimal path :')
+    print('optimal path + locations of UAV with the optimal path :')
     for i in range(len(optimalPath)):
-        print(i, optimalPath[i])
+        print(i, optimalPath[i], locsUAV[i])
