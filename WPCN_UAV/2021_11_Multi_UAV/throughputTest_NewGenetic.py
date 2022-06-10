@@ -499,8 +499,10 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
     # define best movement as the current best movement at the end of all the iterations
     bestMovement = currentBestMovement
 
-    # create the optimal path based on the best movement, and then return it
-    return createOptimalPath(N, initialLocUAV, bestMovement, deviceList)
+    # create the optimal path based on the best movement
+    optimalPath = createOptimalPath(N, initialLocUAV, bestMovement, deviceList)
+
+    return (bestMovement, optimalPath)
 
 # distance between UAV and device (also can be between device A and device B)
 def dist(locUAV, locDevice):
@@ -785,7 +787,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             UAV_h = q[l * (N+1)][4]
             initialLocUAV = [UAV_x, UAV_y, UAV_h]
 
-            directionList = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, param2)
+            (_, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, param2)
 
         # make direction list using random (when training)
         for t in range(N):
