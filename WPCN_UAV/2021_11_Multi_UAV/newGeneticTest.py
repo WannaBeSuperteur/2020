@@ -1,6 +1,10 @@
+import numpy as np
 import throughputTest_NewGenetic as T_NG
 
 if __name__ == '__main__':
+
+    # numpy setting
+    np.set_printoptions(edgeitems=20, linewidth=200)
     
     N = 50
 
