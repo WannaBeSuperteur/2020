@@ -642,6 +642,16 @@ def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceLi
 
     return (minimumPath, closeness, stops)
 
+# return the list of device in the current cluster
+def findDevicesInCluster(l, deviceList, cluster_mem):
+    newDeviceList = []
+
+    for i in range(len(deviceList)):
+        if cluster_mem[i] == l:
+            newDeviceList.append(deviceList[i])
+
+    return newDeviceList
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
@@ -743,6 +753,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         print(np.round_(bestParams, 6))
         print('\n')
 
+        # the list of devices in cluster l
+        deviceListC = findDevicesInCluster(l, deviceList, cluster_mem)
+
         # the number of devices in cluster l
         devices = numOfDevs[l]
         communicated_devices = []
@@ -771,8 +784,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             UAV_y = q[l * (N+1)][3]
             UAV_h = q[l * (N+1)][4]
             initialLocUAV = [UAV_x, UAV_y, UAV_h]
-            
-            directionList = findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2)
+
+            directionList = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, param2)
 
         # make direction list using random (when training)
         for t in range(N):
