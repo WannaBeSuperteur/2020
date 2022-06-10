@@ -600,11 +600,13 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
             break
 
     # append "stop"s to the optimal path based on the allocated remaining time for each device
+    remainingReverse = remainingTimeForEachDevice[::-1]
+    
+    for stop in stops[::-1]:
+        minimumPath = minimumPath[:stop] + [8 for i in range(remainingReverse[i])] + minimumPath[stop:]
 
-    # NOT COMPLETED
-
-    # return the optimal path
-    return optimalPath
+    # return the optimal path (=minimumPath)
+    return minimumPath
 
 # optimal : minimize A*(total movement distance) + B*(sum of 1/(dist)^2 by moving minimum times)
 def computeScore(A, B, initialLocUAV, movement, deviceList):
