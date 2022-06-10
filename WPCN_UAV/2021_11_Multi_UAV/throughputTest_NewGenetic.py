@@ -588,8 +588,15 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
 
-    print('\n closeness :')
-    print(closeness)
+    print('\n sqDistListNormalized :')
+    print(sqDistListNormalized)
+
+    # add random small noise to sqDistListNormalized
+    for i in range(len(sqDistListNormalized)):
+        sqDistListNormalized[i] += random.random() * 1.0e-8
+
+    print('\n sqDistListNormalized with noise :')
+    print(sqDistListNormalized)
 
     # allocate the remaining time for each device in proportion to (dist)^2
     # (maybe use binary search algorithm)
