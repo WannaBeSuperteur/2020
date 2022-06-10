@@ -520,6 +520,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
 
     # use only X and Y location of UAV
     minimumPath = [initialLocUAV[:2]]
+    stops = [0]
 
     # initialize the location of UAV
     currentLocUAV = initialLocUAV[:2]
@@ -544,6 +545,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
 
             # stop is best for the UAV
             if minDistDirection == 8:
+                stops.append(len(minimumPath))
                 break
 
             # add movement and update the location of UAV
@@ -553,7 +555,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
                 
                 minimumPath.append(currentLocUAV)
 
-    return minimumPath
+    return (minimumPath, stops)
     
 # create the optimal path based on the best movement
 def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
@@ -562,7 +564,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
     
     # compute the time needed to move as bestMovement
     # (suppose that it is below N, otherwise common throughput can be zero)
-    (minimumPath, closeness) = computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, bestMovement, deviceList)
+    (minimumPath, closeness, stops) = computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, bestMovement, deviceList)
     bestMoveTime = len(minimumPath) - 1
 
     # compute the remaining time
@@ -607,7 +609,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
 # optimal : minimize A*(total movement distance) + B*(sum of 1/(dist)^2 by moving minimum times)
 def computeScore(A, B, initialLocUAV, movement, deviceList):
     A_score = A * computeTotalDist(initialLocUAV, movement, deviceList)
-    (_, closeness) = computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList)
+    (_, closeness, _) = computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList)
     B_score = B * sum(closeness)
     return A_score + B_score
 
@@ -627,7 +629,7 @@ def computeTotalDist(initialLocUAV, movement, deviceList):
 def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList):
 
     # compute the minimum path first
-    minimumPath = computeMinimumPath(initialLocUAV, movement, deviceList)
+    (minimumPath, stops) = computeMinimumPath(initialLocUAV, movement, deviceList)
 
     # compute the closeness for each device
     closeness = [0.0 for i in range(len(deviceList))]
@@ -636,7 +638,7 @@ def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceLi
         for j in range(len(deviceList)):
             closeness[i] = max(closeness[i], 1.0 / pow(dist(minimumPath[i], deviceList[j]), 2))
 
-    return (minimumPath, closeness)
+    return (minimumPath, closeness, stops)
 
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
