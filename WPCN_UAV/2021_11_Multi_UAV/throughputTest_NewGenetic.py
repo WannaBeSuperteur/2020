@@ -611,12 +611,13 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
         
         for i in range(len(stops)):
             stop = stops[len(stops) - (i+1)]
-            minimumPath = minimumPath[:stop] + [8 for j in range(remainingReverse[i])] + minimumPath[stop:]
+            stopCount = remainingReverse[i]
+            minimumPath = minimumPath[:stop] + [8 for j in range(stopCount)] + minimumPath[stop:]
 
             if stop > 0:
-                locsUAV = locsUAV[:stop] + locsUAV[stop-1] + locsUAV[stop:]
+                locsUAV = locsUAV[:stop] + [locsUAV[stop-1] for j in range(stopCount)] + locsUAV[stop:]
             else:
-                locsUAV = initialLocUAV + locsUAV[stop:]
+                locsUAV = [initialLocUAV[:2] for j in range(stopCount)] + locsUAV[stop:]
 
         # return the list of the locations of UAV + optimal path (=minimumPath)
         return (locsUAV, minimumPath)
