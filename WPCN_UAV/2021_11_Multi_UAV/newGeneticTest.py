@@ -39,7 +39,7 @@ if __name__ == '__main__':
     param2 = 0.3
 
     # get optimal path
-    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height)
+    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height, printed=True)
 
     print('\ndevice list :')
     print(deviceList)

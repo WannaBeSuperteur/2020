@@ -458,7 +458,7 @@ def initializeMovementOfUAV(devices):
 
 # parameter 1 -> 5 * (random swap probability of two neighboring device)
 # parameter 2 -> proportion of A and B
-def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height):
+def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height, printed=False):
 
     # define parameter A and B using param2 (between 0.0 ~ 1.0)
     A = param2
@@ -500,7 +500,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
     bestMovement = currentBestMovement
 
     # create the optimal path based on the best movement
-    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
+    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, printed)
 
     return (locsUAV, bestMovement, optimalPath)
 
@@ -568,7 +568,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
     return (locsUAV, minimumPath, stops)
     
 # create the optimal path based on the best movement
-def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height):
+def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, printed=False):
 
     # suppose that the UAV "stops" near each device for a while
     
@@ -588,18 +588,20 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
 
-    print('\n closeness :')
-    print(closeness)
+    if printed:
+        print('\n closeness :')
+        print(closeness)
 
-    print('\n sqDistListNormalized :')
-    print(sqDistListNormalized)
+        print('\n sqDistListNormalized :')
+        print(sqDistListNormalized)
 
     # add random small noise to sqDistListNormalized
     for i in range(len(sqDistListNormalized)):
         sqDistListNormalized[i] += random.random() * 1.0e-8
 
-    print('\n sqDistListNormalized with noise :')
-    print(sqDistListNormalized)
+    if printed:
+        print('\n sqDistListNormalized with noise :')
+        print(sqDistListNormalized)
 
     # visit sequence based on the best movement
     sqDistListNormalizedVisit = []
@@ -609,8 +611,9 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
     # change to NumPy array
     sqDistListNormalizedVisit = np.array(sqDistListNormalizedVisit)
 
-    print('\n sqDistListNormalized with best movement visit sequence :')
-    print(sqDistListNormalizedVisit)
+    if printed:
+        print('\n sqDistListNormalized with best movement visit sequence :')
+        print(sqDistListNormalizedVisit)
 
     # allocate the remaining time for each device in proportion to (dist)^2
     # (maybe use binary search algorithm)
