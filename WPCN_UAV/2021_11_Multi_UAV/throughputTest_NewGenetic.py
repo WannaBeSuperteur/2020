@@ -529,7 +529,11 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
     currentLocUAV = initialLocUAV[:2]
 
     # make path (DO NOT consider N, the number of time slots)
-    for device in deviceList:
+    for d in range(len(deviceList)):
+
+        # find the index of device with the given movement array
+        deviceIndex = movement[d]
+        device = deviceList[deviceIndex]
 
         # move toward best direction until "do not move" becomes closest to the device
         while True:
@@ -583,6 +587,9 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
 
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
+
+    print('\n closeness :')
+    print(closeness)
 
     # allocate the remaining time for each device in proportion to (dist)^2
     # (maybe use binary search algorithm)
