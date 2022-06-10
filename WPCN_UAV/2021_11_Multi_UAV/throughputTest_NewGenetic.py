@@ -522,7 +522,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
 
     # use only X and Y location of UAV
     minimumPath = [initialLocUAV[:2]]
-    stops = [0]
+    stops = []
 
     # initialize the location of UAV
     currentLocUAV = initialLocUAV[:2]
@@ -607,8 +607,9 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
         # append "stop"s to the optimal path based on the allocated remaining time for each device
         remainingReverse = remainingTimeForEachDevice[::-1]
         
-        for stop in stops[::-1]:
-            minimumPath = minimumPath[:stop] + [8 for i in range(remainingReverse[i])] + minimumPath[stop:]
+        for i in range(len(stops)):
+            stop = stops[len(stops) - (i+1)]
+            minimumPath = minimumPath[:stop] + [8 for j in range(remainingReverse[i])] + minimumPath[stop:]
 
         # return the optimal path (=minimumPath)
         return minimumPath
