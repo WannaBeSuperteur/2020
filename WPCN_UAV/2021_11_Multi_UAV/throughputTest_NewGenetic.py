@@ -588,27 +588,36 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList):
     maxWeight = 10.0 * len(deviceList)
     fitWeight = None
 
-    while True:
-        midWeight = (minWeight * maxWeight / 2.0)
-        remainingTimeDistribution = np.array(sqDistListNormalized * midWeight).astype(int)
+    # use remaining time for stop
+    if remainingTime > 0:
+        
+        while True:
+            midWeight = (minWeight + maxWeight) / 2.0
+            remainingTimeDistribution = np.array(sqDistListNormalized * midWeight).astype(int)
 
-        if sum(remainingTimeDistribution) > remainingTime:
-            maxWeight = midWeight
-        elif sum(remainingTimeDistribution) < remainingTime:
-            minWeight = midWeight
-        else:
-            fitWeight = midWeight
-            remainingTimeForEachDevice = remainingTimeDistribution
-            break
+            if sum(remainingTimeDistribution) > remainingTime:
+                maxWeight = midWeight
+            elif sum(remainingTimeDistribution) < remainingTime:
+                minWeight = midWeight
+            else:
+                fitWeight = midWeight
+                remainingTimeForEachDevice = remainingTimeDistribution
+                break
 
-    # append "stop"s to the optimal path based on the allocated remaining time for each device
-    remainingReverse = remainingTimeForEachDevice[::-1]
-    
-    for stop in stops[::-1]:
-        minimumPath = minimumPath[:stop] + [8 for i in range(remainingReverse[i])] + minimumPath[stop:]
+        # append "stop"s to the optimal path based on the allocated remaining time for each device
+        remainingReverse = remainingTimeForEachDevice[::-1]
+        
+        for stop in stops[::-1]:
+            minimumPath = minimumPath[:stop] + [8 for i in range(remainingReverse[i])] + minimumPath[stop:]
 
-    # return the optimal path (=minimumPath)
-    return minimumPath
+        # return the optimal path (=minimumPath)
+        return minimumPath
+
+    else:
+
+        # NO REMAINING TIME
+        # return first N elements of the minimum path
+        return minimumPath[:N]
 
 # optimal : minimize A*(total movement distance) + B*(sum of 1/(dist)^2 by moving minimum times)
 def computeScore(A, B, initialLocUAV, movement, deviceList):
