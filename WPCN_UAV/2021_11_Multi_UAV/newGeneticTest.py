@@ -7,6 +7,8 @@ if __name__ == '__main__':
     np.set_printoptions(edgeitems=20, linewidth=200)
     
     N = 50
+    width = 60
+    height = 70
 
     # device placement (X) :
     #
@@ -37,7 +39,7 @@ if __name__ == '__main__':
     param2 = 0.3
 
     # get optimal path
-    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2)
+    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height)
 
     print('\ndevice list :')
     print(deviceList)
