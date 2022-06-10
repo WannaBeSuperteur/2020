@@ -517,7 +517,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
     # list of possible unit movement
     unitMovements = []
     for i in range(8):
-        unitMovements.add([math.cos(i * math.pi / 4), math.sin(i * math.pi / 4)])
+        unitMovements.append([math.cos(i * math.pi / 4), math.sin(i * math.pi / 4)])
     unitMovements.append([0, 0])
 
     # use only X and Y location of UAV
@@ -640,7 +640,7 @@ def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceLi
 
     for i in range(1, len(minimumPath)): # except for (first element of the minimum path = original UAV location)
         for j in range(len(deviceList)):
-            closeness[i] = max(closeness[i], 1.0 / pow(dist(minimumPath[i], deviceList[j]), 2))
+            closeness[j] = max(closeness[j], 1.0 / pow(dist(minimumPath[i], deviceList[j]), 2))
 
     return (minimumPath, closeness, stops)
 
