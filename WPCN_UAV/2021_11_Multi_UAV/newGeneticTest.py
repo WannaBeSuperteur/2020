@@ -24,8 +24,8 @@ if __name__ == '__main__':
     
     deviceList = [[10, 20], [30, 20], [50, 20], [30, 40], [50, 40], [10, 60], [30, 60]]
 
-    # average of x : 30.00, y : 37.14, h : 15.00 (as same as the setting)
-    initialLocUAV = [30.0, 37.14, 15.0]
+    # average of x : 30.00 (-> 31.00), y : 37.14, h : 15.00 (as same as the setting)
+    initialLocUAV = [31.0, 37.14, 15.0]
 
     # initial movement
     initialMovement = [3, 1, 2, 5, 4, 6, 0]
