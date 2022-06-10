@@ -6,7 +6,7 @@ if __name__ == '__main__':
     # numpy setting
     np.set_printoptions(edgeitems=20, linewidth=200)
     
-    N = 50
+    N = 100
     width = 60
     height = 70
 

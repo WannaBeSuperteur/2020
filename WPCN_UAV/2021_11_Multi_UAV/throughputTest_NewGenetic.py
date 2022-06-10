@@ -588,6 +588,9 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
 
+    print('\n closeness :')
+    print(closeness)
+
     print('\n sqDistListNormalized :')
     print(sqDistListNormalized)
 
@@ -598,12 +601,23 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
     print('\n sqDistListNormalized with noise :')
     print(sqDistListNormalized)
 
+    # visit sequence based on the best movement
+    sqDistListNormalizedVisit = []
+    for i in range(len(bestMovement)):
+        sqDistListNormalizedVisit.append(sqDistListNormalized[bestMovement[i]])
+
+    # change to NumPy array
+    sqDistListNormalizedVisit = np.array(sqDistListNormalizedVisit)
+
+    print('\n sqDistListNormalized with best movement visit sequence :')
+    print(sqDistListNormalizedVisit)
+
     # allocate the remaining time for each device in proportion to (dist)^2
     # (maybe use binary search algorithm)
     remainingTimeForEachDevice = []
 
     minWeight = 0.0
-    maxWeight = 10.0 * len(deviceList)
+    maxWeight = N * len(deviceList)
     fitWeight = None
 
     # use remaining time for stop
@@ -611,7 +625,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height)
         
         while True:
             midWeight = (minWeight + maxWeight) / 2.0
-            remainingTimeDistribution = np.array(sqDistListNormalized * midWeight).astype(int)
+            remainingTimeDistribution = np.array(sqDistListNormalizedVisit * midWeight).astype(int)
 
             if sum(remainingTimeDistribution) > remainingTime:
                 maxWeight = midWeight
