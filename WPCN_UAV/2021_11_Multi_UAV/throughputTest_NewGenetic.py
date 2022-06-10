@@ -517,8 +517,8 @@ def computeMinimumPath(initialLocUAV, movement, deviceList):
     # list of possible unit movement
     unitMovements = []
     for i in range(8):
-        unitMovements.append([math.cos(i * math.pi / 4), math.sin(i * math.pi / 4)])
-    unitMovements.append([0, 0])
+        unitMovements.append([5.0 * math.cos(i * math.pi / 4), 5.0 * math.sin(i * math.pi / 4)])
+    unitMovements.append([0.0, 0.0])
 
     # use only X and Y location of UAV
     minimumPath = [initialLocUAV[:2]]
