@@ -10,22 +10,22 @@ if __name__ == '__main__':
 
     # device placement (X) :
     #
-    #  X . . . X          60
+    #  X . . . X          58
     #          .
     #          .
     #          .
-    #          X . . . X  40
+    #          X . . . X  39
     #          .       .
     #          .       .
     #          .       .
     #  X . . . X . . . X  20
     #
-    # 10      30      50
+    # 10      27      44
     
-    deviceList = [[10, 20], [30, 20], [50, 20], [30, 40], [50, 40], [10, 60], [30, 60]]
+    deviceList = [[10, 20], [27, 20], [44, 20], [27, 39], [44, 39], [10, 58], [27, 58]]
 
-    # average of x : 30.00 (-> 31.00), y : 37.14, h : 15.00 (as same as the setting)
-    initialLocUAV = [31.0, 37.14, 15.0]
+    # average of x : 27.00 (-> 28.00), y : 36.29, h : 15.00 (as same as the setting)
+    initialLocUAV = [28.0, 36.29, 15.0]
 
     # initial movement
     initialMovement = [3, 1, 2, 5, 4, 6, 0]
