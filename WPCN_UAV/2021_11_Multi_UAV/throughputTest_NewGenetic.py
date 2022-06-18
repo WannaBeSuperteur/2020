@@ -514,6 +514,7 @@ def dist(locUAV, locDevice):
 
 # compute the path (with moving minimum times) corresponding to the movement
 def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
+    print('computing minimum path ...')
 
     # list of possible unit movement
     unitMovements = []
@@ -541,8 +542,6 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
             minDist          = dist(currentLocUAV, device)
             minDistDirection = 8
 
-            print(minDist, minDistDirection)
-
             # find the index of the best direction (index 0~7: move, index 8: stop)
             for i in range(8):
                 nextLocUAV    = np.array(currentLocUAV) + np.array(unitMovements[i])
@@ -555,14 +554,18 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
                     minDist          = nextDist
                     minDistDirection = i
 
+            print(d, np.array(currentLocUAV), np.array(unitMovements[minDistDirection]), np.round_(minDist, 6), minDistDirection)
+
             # stop is best for the UAV
             if minDistDirection == 8:
                 stops.append(len(minimumPath))
                 break
 
-            # add movement and update the location of UAV
+            # add movement and update the location of UAV (with clipping)
             else:
                 currentLocUAV = np.array(currentLocUAV) + np.array(unitMovements[minDistDirection])
+                currentLocUAV[0] = np.clip(currentLocUAV[0], 0.0, width)
+                currentLocUAV[1] = np.clip(currentLocUAV[1], 0.0, height)
                 currentLocUAV = list(currentLocUAV)
 
                 minimumPath.append(minDistDirection)
@@ -572,6 +575,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
     
 # create the optimal path based on the best movement
 def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, printed=False):
+    print('creating optimal path ...')
 
     # suppose that the UAV "stops" near each device for a while
     
@@ -666,6 +670,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height,
 
 # optimal : minimize A*(total movement distance) + B*(sum of 1/(dist)^2 by moving minimum times)
 def computeScore(A, B, initialLocUAV, movement, deviceList, width, height):
+    print('computing score ...')
     A_score = A * computeTotalDist(initialLocUAV, movement, deviceList)
     (_, _, closeness, _) = computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList, width, height)
     B_score = B * sum(closeness)
@@ -673,6 +678,7 @@ def computeScore(A, B, initialLocUAV, movement, deviceList, width, height):
 
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
 def computeTotalDist(initialLocUAV, movement, deviceList):
+    print('computing total distance ...')
 
     # initial UAV location <-> first device
     totalDist = dist(initialLocUAV, deviceList[movement[0]])
@@ -685,6 +691,7 @@ def computeTotalDist(initialLocUAV, movement, deviceList):
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
 def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList, width, height):
+    print('computing minimum path and closeness ...')
 
     # compute the minimum path first
     (locsUAV, minimumPath, stops) = computeMinimumPath(initialLocUAV, movement, deviceList, width, height)
