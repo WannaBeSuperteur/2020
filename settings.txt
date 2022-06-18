@@ -1,0 +1,33 @@
+fc=800000000 # carrier frequency
+ng=0.1 # energy conversion efficiency of devices (= 0.1)
+B=1000000 # bandwidth
+o2=-110 # Noise power spectral
+b1=0.36 # environmental parameter
+b2=0.21 # environmental parameter
+alphaP=2.0 # path loss exponent
+alphaL=-1.0 # proportion of downlink WPT in a period (temp value)
+mu1=3 # additional path loss for LoS
+mu2=23 # additional path loss for NLoS
+s=0.0 # (temp) constant value determined by both the antenna and the environment
+PD=40.0 # transmission power for UAVs' downlink
+PU=-20.0 # transmission power for IoT devices' uplink
+width=50 # width (m)
+height=50 # height (m)
+M=1 # episodes
+L=5 # number of clusters = number of UAVs # 5
+devices=20 # number of devices
+T=1.0 # flight period (in seconds) (1.0 for example)
+N=30 # flight period T -> into N+1 time slots
+H=15 # hovering elevation (m)
+iters=5 # iteration count
+windowSize=12 # window size for input data (1.0m per window size 1)
+learningRate=0.0001 # learning rate of DQN
+printDetails=False # print detailed info
+printTimeDif=False # print time difference
+timeCheck=False # print time for important functions such as getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
+warning=True # print warning for Q-value penalties
+constantToFill=-1.0 # constant to fill the state arrays (because of difference among the number of devices among clusters) (UNUSED)
+clusteringAtLeast=0.51 # each cluster contains devices at least int(this number * average)
+clusteringAtMost=1.51 # each cluster contains devices at most int(this number * average)
+epochs=15 # the number of epochs for training deep learning model
+isStatic=False # use static (devices do not move) mode
