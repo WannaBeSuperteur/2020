@@ -474,6 +474,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
         
         # create 20 candidate moves in an iteration to find ONLY ONE best move
         for j in range(20):
+            ###print(i, j)
             modifiedMovement = copy.deepcopy(currentBestMovement)
 
             # change the movement
@@ -552,6 +553,8 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
                     minDist          = nextDist
                     minDistDirection = i
 
+            ###print(d, np.array(currentLocUAV), np.array(unitMovements[minDistDirection]), np.round_(minDist, 6), minDistDirection)
+
             # stop is best for the UAV
             if minDistDirection == 8:
                 stops.append(len(minimumPath))
@@ -559,13 +562,23 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
 
             # add movement and update the location of UAV (with clipping)
             else:
+                tempCurrentLocUAV = np.array(currentLocUAV)
+                
                 currentLocUAV = np.array(currentLocUAV) + np.array(unitMovements[minDistDirection])
-                currentLocUAV[0] = np.clip(currentLocUAV[0], 0.0, width)
-                currentLocUAV[1] = np.clip(currentLocUAV[1], 0.0, height)
-                currentLocUAV = list(currentLocUAV)
+                currentLocUAV[0] = np.clip(currentLocUAV[0], 0.0, width) # limit x value
+                currentLocUAV[1] = np.clip(currentLocUAV[1], 0.0, height) # limit y value
 
-                minimumPath.append(minDistDirection)
-                locsUAV.append(currentLocUAV)
+                # clipping result is the same with original -> not meaningful movement
+                if dist(currentLocUAV, tempCurrentLocUAV) < 1e-6:
+                    stops.append(len(minimumPath))
+                    break
+
+                # meaningful movement
+                else:
+                    currentLocUAV = list(currentLocUAV)
+
+                    minimumPath.append(minDistDirection)
+                    locsUAV.append(currentLocUAV)
 
     return (locsUAV, minimumPath, stops)
     
