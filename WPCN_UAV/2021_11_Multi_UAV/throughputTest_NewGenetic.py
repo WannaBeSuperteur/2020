@@ -162,7 +162,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
     def call(self, inputs, training):
         ws = self.windowSize
 
-        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), 4], axis=1)
+        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), 2], axis=1)
 
         # convolutional neural network part with shape (2 * ws + 1, 2 * ws + 1)
         board = tf.reshape(board, (-1, 2 * ws + 1, 2 * ws + 1, 1))
@@ -180,7 +180,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board = self.dropout(board)
         board = self.CNNDense1(board)
 
-        # dense part with shape (4)
+        # dense part with shape (2)
         parameters = self.dense0(parameters)
         parameters = self.dropout(parameters)
         parameters = self.dense1(parameters)
