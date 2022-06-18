@@ -474,6 +474,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
         
         # create 20 candidate moves in an iteration to find ONLY ONE best move
         for j in range(20):
+            print(i, j)
             modifiedMovement = copy.deepcopy(currentBestMovement)
 
             # change the movement
@@ -539,6 +540,8 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
         while True:
             minDist          = dist(currentLocUAV, device)
             minDistDirection = 8
+
+            print(minDist, minDistDirection)
 
             # find the index of the best direction (index 0~7: move, index 8: stop)
             for i in range(8):
@@ -838,6 +841,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             UAV_h = q[l * (N+1)][4]
             initialLocUAV = [UAV_x, UAV_y, UAV_h]
 
+            print('N:', N)
+            print('device list:', deviceListC)
+            print('initial location:', initialLocUAV)
+            print('initial movement:', initialMovement)
+            print('param1:', param1)
+            print('param2:', param2)
+            print('width:', width)
+            print('height:', height)
+            
             (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, param2, width, height)
 
         # make direction list using random (when training)
