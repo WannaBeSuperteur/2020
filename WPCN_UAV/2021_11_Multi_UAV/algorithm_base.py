@@ -27,6 +27,19 @@ import time
 timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
 
+# load base settings
+baseSettings = loadSettings({'outputCells':'int',
+                             'p0_cases':'int',
+                             'p1_cases':'int',
+                             'p2_cases':'int',
+                             'p3_cases':'int'})
+
+base_outputCells = baseSettings['outputCells']
+base_p0_cases    = baseSettings['p0_cases']
+base_p1_cases    = baseSettings['p1_cases']
+base_p2_cases    = baseSettings['p2_cases']
+base_p3_cases    = baseSettings['p3_cases']
+
 # enable GPU
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
 
@@ -364,7 +377,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize):
 
         for j in range(imgCells):
             preprocessed_input.append(input_data[i][j])
-        for j in range(    A    ): # fill in the blank
+        for j in range(base_outputCells):
             preprocessed_input.append(input_data[i][j + imgCells])
 
         preprocessed_input_data.append(preprocessed_input)
@@ -374,6 +387,13 @@ def preprocessInputAndOutput(input_data, output_data, windowSize):
 
     return (preprocessed_input_data, preprocessed_output_data)
 
+# weight w0, w1, w2 and w3 for the base parameter p0, p1, p2 and p3 for model output
+def getWeight(base_cases):
+    if base_cases == 1:
+        return 0
+    else:
+        return 1 / (base_cases - 1)
+
 # find best parameter for path-finding algorithm
 def findBestParams(model, inputImage):
 
@@ -381,24 +401,32 @@ def findBestParams(model, inputImage):
     bestOutput = -1.0 # actually at least 0 -> always updated
     outputs    = []
 
-    for p0 in range(  B  ): # fill in the blank
-        for p1 in range(  C  ): # fill in the blank
-            params    = [p0 * (  D  ), p1 * (  E  )] # fill in the blank
+    # weights for p0, p1, p2 and p3
+    w0 = getWeight(base_p0_cases)
+    w1 = getWeight(base_p1_cases)
+    w2 = getWeight(base_p2_cases)
+    w3 = getWeight(base_p3_cases)
 
-            inputData = np.concatenate((inputImage, params), axis=-1)
-            inputData = np.array([inputData])
+    for p0 in range(base_p0_cases):
+        for p1 in range(base_p1_cases):
+            for p2 in range(base_p2_cases):
+                for p3 in range(base_p3_cases):
+                    params    = [p0 * w0, p1 * w1, p2 * w2, p3 * w3]
 
-            outputOfModifiedParam = model(inputData, training=False)
-            outputs.append(outputOfModifiedParam[0][0])
+                    inputData = np.concatenate((inputImage, params), axis=-1)
+                    inputData = np.array([inputData])
 
-            if outputOfModifiedParam > bestOutput:
-                improvedParams = params
-                bestOutput     = outputOfModifiedParam
+                    outputOfModifiedParam = model(inputData, training=False)
+                    outputs.append(outputOfModifiedParam[0][0])
 
-            if improvedParams != None:
-                bestParams = improvedParams
-            else:
-                break
+                    if outputOfModifiedParam > bestOutput:
+                        improvedParams = params
+                        bestOutput     = outputOfModifiedParam
+
+                    if improvedParams != None:
+                        bestParams = improvedParams
+                    else:
+                        break
 
     print('outputs: (for 100 elements with first 100 brute-force params)')
     print(np.round_(np.array(outputs[:100]), 4), '...')
