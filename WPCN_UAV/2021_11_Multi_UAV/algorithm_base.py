@@ -268,12 +268,17 @@ def getAndTrainModel(epochs, windowSize):
 
     # model definition (with regularizer)
     try:
-        with tf.device('/gpu:0'):
-            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
+        try:
+            with tf.device('/gpu:0'):
+                return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
+        except:
+            print('GPU load failed -> using CPU')
+            with tf.device('/cpu:0'):
+                return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
     except:
-        print('GPU load failed -> using CPU')
-        with tf.device('/cpu:0'):
-            return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
+        print('Error occurred. If the error is because of the number of COLUMNS in the INPUT data\n' +
+              '(for example, 627 = (2*12 + 1) * (2*12 + 1) + 2 when window size is 12 and the number of param is 2)\n' +
+              'then remove the model directory (for example, WPCN_UAV_DL_model) and retry.')
 
 # save trajectory as graph
 def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic, L, N):
