@@ -47,12 +47,12 @@
    - 모델을 학습시킨 다음, (인수 1, 인수 2)를 brute force 하여 모델 예측을 기준으로 최적 common throughput이 도출되는 인수의 쌍을 찾은 다음,
      그 인수의 쌍을 이용하여 경로 결정 후 실제 common throughput을 측정
 
-2022/07/03 added
+2022/07/03 added, 2022/07/05 modified
  - if there are more than 1 devices within 2.5m, then communicate with the device among these devices with minimum accumulated throughput
- - train the deep learning model : input ```(dif x, dif y)``` to output ```(the final closeness of moving to direction 0 deg, 45 deg, ..., 315 deg / do not move, before heading to the device)```
+ - train the deep learning model : input (dif x, dif y) to output (the final closeness of moving to direction {0 deg, 45 deg, ..., 315 deg, do not move}, "before" heading to the device)
    - the final closeness is the closeness when the UAV reached the nearest possible position to the device
-   - ```dif x```: the difference of ```x``` value between the UAV and the device
-   - ```dif y```: the difference of ```y``` value between the UAV and the device
+   - "dif x": the difference of "x" value between the UAV and the device
+   - "dif y": the difference of "y" value between the UAV and the device
 
 [TODO]
 아이디어 3 구현에서 trajectory image의 정지 횟수 표시
