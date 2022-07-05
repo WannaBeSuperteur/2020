@@ -472,11 +472,24 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
     print(np.round_(inputImage, 2))
     return inputImage
 
+# return the list of device in the current cluster
+def findDevicesInCluster(l, deviceList, cluster_mem):
+    newDeviceList = []
+
+    for i in range(len(deviceList)):
+        if cluster_mem[i] == l:
+            newDeviceList.append(deviceList[i])
+
+    return newDeviceList
+
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                   input_data, output_data, training, model, windowSize, isStatic):
+                   input_data, output_data, training, model, windowSize, isStatic,
+                   base_func_initializeMovementOfUAV=None,
+                   base_func_computeDirectionList=None,
+                   base_func_getDeviceLocation=None):
 
     # create list of devices (randomly place devices)
     while True:
@@ -573,6 +586,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         print(np.round_(bestParams, 6))
         print('\n')
 
+        # the list of devices in cluster l
+        deviceListC = findDevicesInCluster(l, deviceList, cluster_mem)
+
         # the number of devices in cluster l
         devices = numOfDevs[l]
         communicated_devices = []
@@ -586,13 +602,17 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         final_throughputs = [0 for i in range(devices)]
 
         # initialize movement of UAV between devices
-        (      F      ) # fill in the blank
+        if base_func_initializeMovementOfUAV == None:
+            initialMovement = base_func_initializeMovementOfUAV(devices)
 
         # use genetic-like algorithm to decide optimal path :
+
+        # for example,
         # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
         # parameter 1 -> random swap probability of two neighboring device
         # parameter 2 -> proportion of A and B
-        (      G      ) # fill in the blank
+        if base_func_computeDirectionList == None:
+            directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height)
 
         # make direction list using random (when training)
         for t in range(N):
@@ -617,7 +637,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 currentY = q[l * (N + 1) + t][3]
 
                 # decide the direction using the optimal path decided above
-                [goto_X, goto_Y] = (    H    ) # fill in the blank
+                if base_func_getDeviceLocation != None:
+                    [goto_X, goto_Y] = base_func_getDeviceLocation(l, w, final_throughputs)
 
                 directionX = goto_X - currentX
                 directionY = goto_Y - currentY
