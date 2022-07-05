@@ -324,13 +324,14 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, ma
 # update a_l,kl[n]
 # alkl      : a_l,kl[n] for each UAV l, device k and time slot n
 #             where alkl = [[l0, k, l1, n, value], ...
-def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic):
+def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic):
+    devices_in_l = numOfDevs[l]
 
     # for static mode
     # in sequence -> device 0, 1, ..., (devices-1), 0, 1, ... for each time slot,
     #                until time slot number reaches N
     if isStatic:
-        deviceToCommunicate = t % devices
+        deviceToCommunicate = t % devices_in_l
     else:
         # decide the device to communicate with
         deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
@@ -344,7 +345,7 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         alkl.append([l, deviceToCommunicate, l, t, 1])
 
         # set alkl as 0 for other devices
-        for k in range(devices):
+        for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
             alkl.append([l, k, l, t, 0])
 
@@ -353,7 +354,7 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         alkl[alkl_index][4] = 1
 
         # set alkl as 0 for other devices
-        for k in range(devices):
+        for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
             alkl_index_k = f.find_alkl(alkl, l, k, l, t)
             alkl[alkl_index_k] = [l, k, l, t, 0]
@@ -542,9 +543,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         for j in range(L):
 
             # the number of devices in cluster j
-            devices = numOfDevs[j]
+            devices_in_l = numOfDevs[j]
 
-            for k in range(devices):
+            for k in range(devices_in_l):
                 for t in range(N):
                     alkl.append([i, k, j, t, 0])
 
@@ -595,7 +596,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         deviceListC = findDevicesInCluster(l, deviceList, cluster_mem)
 
         # the number of devices in cluster l
-        devices = numOfDevs[l]
+        devices_in_l = numOfDevs[l]
         communicated_devices = []
 
         if isStatic:
@@ -604,11 +605,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             directionList = [None for i in range(N)]
 
         # final throughput (updated for each time t)
-        final_throughputs = [0 for i in range(devices)]
+        final_throughputs = [0 for i in range(devices_in_l)]
 
         # initialize movement of UAV between devices
         if base_func_initializeMovementOfUAV != None:
-            initialMovement = base_func_initializeMovementOfUAV(devices)
+            initialMovement = base_func_initializeMovementOfUAV(devices_in_l)
 
         # use genetic-like algorithm to decide optimal path :
 
@@ -626,13 +627,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # (update q)
             if not isStatic:
                 moveUAV(q, directionList, N, l, width, height)
-                print(directionList)
 
             # update a_l,kl[n] for this (l, t)
-            update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic)
+            update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic)
 
             # get throughput
-            for k in range(devices):
+            for k in range(devices_in_l):
                 thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
                 final_throughputs[k] = thrput
 
@@ -724,15 +724,15 @@ def saveMinThroughput(minThroughputList, memo, iters, L, devices, N):
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))
-    minThroughputList.to_csv('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
-                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
+    minThroughputList.to_csv('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) +
+                             '_L_' + ('%04d' % L) + '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
 
     # save min throughput list as *.txt file
     arr = np.array(minThroughputList)[:, 1:]
     note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
 
-    noteFile = open('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) + '_L_' + ('%04d' % L) +
-                             '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
+    noteFile = open('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) +
+                    '_L_' + ('%04d' % L) + '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
 
     noteFile.write(note)
     noteFile.close()
