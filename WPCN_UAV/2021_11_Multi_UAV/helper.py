@@ -1,11 +1,11 @@
 import time
 
-def loadSettings(args):
+def loadSettings(args, fileName='settings.txt'):
 
     argValues = {}
 
     # load settings and find learning rate
-    settingsFile = open('settings.txt', 'r')
+    settingsFile = open(fileName, 'r')
     settings = settingsFile.readlines()
     settingsFile.close()
 
@@ -44,10 +44,10 @@ def printTime(funcName, inout):
     f.close()
 
 if __name__ == '__main__':
-    argValues = loadSettings({'deviceName':'str',
+    argValues = loadSettings({'devices':'int',
                               'QTable_rate':'float',
                               'M':'int',
                               'printTimeDif':'logical'})
 
     print(argValues)
-    print(argValues['deviceName'])
+    print(argValues['devices'])
