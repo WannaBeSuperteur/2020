@@ -31,11 +31,10 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
     param1 = bestParams[0]
     param2 = bestParams[1]
 
-    if isStatic == False:
-        UAV_x = q[l * (N+1)][2]
-        UAV_y = q[l * (N+1)][3]
-        UAV_h = q[l * (N+1)][4]
-        initialLocUAV = [UAV_x, UAV_y, UAV_h]
+    UAV_x = q[l * (N+1)][2]
+    UAV_y = q[l * (N+1)][3]
+    UAV_h = q[l * (N+1)][4]
+    initialLocUAV = [UAV_x, UAV_y, UAV_h]
             
     (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, param2, width, height)
     return directionList

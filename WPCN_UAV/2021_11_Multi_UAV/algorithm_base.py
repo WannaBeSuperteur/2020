@@ -607,7 +607,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         final_throughputs = [0 for i in range(devices)]
 
         # initialize movement of UAV between devices
-        if base_func_initializeMovementOfUAV == None:
+        if base_func_initializeMovementOfUAV != None:
             initialMovement = base_func_initializeMovementOfUAV(devices)
 
         # use genetic-like algorithm to decide optimal path :
@@ -616,7 +616,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
         # parameter 1 -> random swap probability of two neighboring device
         # parameter 2 -> proportion of A and B
-        if base_func_computeDirectionList == None:
+        if base_func_computeDirectionList != None and isStatic == False:
             directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height)
 
         # make direction list using random (when training)
@@ -626,6 +626,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             # (update q)
             if not isStatic:
                 moveUAV(q, directionList, N, l, width, height)
+                print(directionList)
 
             # update a_l,kl[n] for this (l, t)
             update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, devices, isStatic)
