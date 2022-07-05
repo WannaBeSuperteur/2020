@@ -25,3 +25,29 @@ There are three ```base function```s.
     * ```8``` means stop
 * ```getDeviceLocation(l, w, final_throughputs)``` : return the location of the device to visit at next time (probably is null)
   * in the form of ```(x, y)``` which means ```x``` and ```y``` location of the device
+
+## usage
+import :
+
+```import algorithm_base as algo_base```
+
+basic usage of base settings : refer to ```base_settings.txt```
+```
+paramCells=2 # the number of parameter cells in the input of deep learning model
+p0_cases=11 # the number of possible cases for parameter 0
+p1_cases=11 # the number of possible cases for parameter 1
+p2_cases=1 # the number of possible cases for parameter 2
+p3_cases=1 # the number of possible cases for parameter 3
+```
+
+basic usage of base functions :
+```
+algo_base.throughputTest(M, T, N, L, ...,
+                         base_func_initializeMovementOfUAV=func0,
+                         base_func_computeDirectionList=func1,
+                         base_func_getDeviceLocation=func2)
+```
+* ```func0```, ```func1```, ```func2``` are the three ```base function```s.
+
+refer to examples:
+* ```throughputTest_NewGenetic.py``` (refactorized on ```Jul 05, 2022```)
