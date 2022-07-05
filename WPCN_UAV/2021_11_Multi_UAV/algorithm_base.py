@@ -28,17 +28,17 @@ timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
 
 # load base settings
-baseSettings = loadSettings({'outputCells':'int',
+baseSettings = loadSettings({'paramCells':'int',
                              'p0_cases':'int',
                              'p1_cases':'int',
                              'p2_cases':'int',
                              'p3_cases':'int'})
 
-base_outputCells = baseSettings['outputCells']
-base_p0_cases    = baseSettings['p0_cases']
-base_p1_cases    = baseSettings['p1_cases']
-base_p2_cases    = baseSettings['p2_cases']
-base_p3_cases    = baseSettings['p3_cases']
+base_paramCells = baseSettings['paramCells']
+base_p0_cases   = baseSettings['p0_cases']
+base_p1_cases   = baseSettings['p1_cases']
+base_p2_cases   = baseSettings['p2_cases']
+base_p3_cases   = baseSettings['p3_cases']
 
 # enable GPU
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
@@ -175,7 +175,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
     def call(self, inputs, training):
         ws = self.windowSize
 
-        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), 4], axis=1)
+        board, parameters = tf.split(inputs, [(2 * ws + 1) * (2 * ws + 1), base_paramCells], axis=1)
 
         # convolutional neural network part with shape (2 * ws + 1, 2 * ws + 1)
         board = tf.reshape(board, (-1, 2 * ws + 1, 2 * ws + 1, 1))
@@ -377,7 +377,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize):
 
         for j in range(imgCells):
             preprocessed_input.append(input_data[i][j])
-        for j in range(base_outputCells):
+        for j in range(base_paramCells):
             preprocessed_input.append(input_data[i][j + imgCells])
 
         preprocessed_input_data.append(preprocessed_input)
@@ -387,7 +387,7 @@ def preprocessInputAndOutput(input_data, output_data, windowSize):
 
     return (preprocessed_input_data, preprocessed_output_data)
 
-# weight w0, w1, w2 and w3 for the base parameter p0, p1, p2 and p3 for model output
+# weight w0, w1, w2 and w3 for the base parameter p0, p1, p2 and p3 for the input parameter of the model
 def getWeight(base_cases):
     if base_cases == 1:
         return 0

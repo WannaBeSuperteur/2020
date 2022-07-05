@@ -1,4 +1,4 @@
-outputCells=2 # the number of output cells in the deep learning model
+paramCells=2 # the number of parameter cells in the input of deep learning model
 p0_cases=11 # the number of possible cases for parameter 0
 p1_cases=11 # the number of possible cases for parameter 1
 p2_cases=1 # the number of possible cases for parameter 2
