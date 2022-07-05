@@ -28,11 +28,11 @@ timeCheck = h_.loadSettings({'timeCheck':'logical'})['timeCheck']
 printDetails = h_.loadSettings({'printDetails':'logical'})['printDetails']
 
 # load base settings
-baseSettings = loadSettings({'paramCells':'int',
-                             'p0_cases':'int',
-                             'p1_cases':'int',
-                             'p2_cases':'int',
-                             'p3_cases':'int'})
+baseSettings = h_.loadSettings({'paramCells':'int',
+                                'p0_cases':'int',
+                                'p1_cases':'int',
+                                'p2_cases':'int',
+                                'p3_cases':'int'}, fileName='base_settings.txt')
 
 base_paramCells = baseSettings['paramCells']
 base_p0_cases   = baseSettings['p0_cases']
@@ -413,7 +413,7 @@ def findBestParams(model, inputImage):
                 for p3 in range(base_p3_cases):
                     params    = [p0 * w0, p1 * w1, p2 * w2, p3 * w3]
 
-                    inputData = np.concatenate((inputImage, params), axis=-1)
+                    inputData = np.concatenate((inputImage, params[:base_paramCells]), axis=-1)
                     inputData = np.array([inputData])
 
                     outputOfModifiedParam = model(inputData, training=False)
@@ -485,7 +485,7 @@ def findDevicesInCluster(l, deviceList, cluster_mem):
 # running throughput test
 def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
-                   iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                   iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                    input_data, output_data, training, model, windowSize, isStatic,
                    base_func_initializeMovementOfUAV=None,
                    base_func_computeDirectionList=None,
@@ -630,21 +630,21 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
                 final_throughputs[k] = thrput
 
-            # decide next move
-            if not isStatic:
-                decision = random.random()
-                currentX = q[l * (N + 1) + t][2]
-                currentY = q[l * (N + 1) + t][3]
+            # decide next move (update directionList at time t)
+            if base_func_getDeviceLocation != None:
+                if not isStatic:
+                    decision = random.random()
+                    currentX = q[l * (N + 1) + t][2]
+                    currentY = q[l * (N + 1) + t][3]
 
-                # decide the direction using the optimal path decided above
-                if base_func_getDeviceLocation != None:
+                    # decide the direction using the optimal path decided above
                     [goto_X, goto_Y] = base_func_getDeviceLocation(l, w, final_throughputs)
 
-                directionX = goto_X - currentX
-                directionY = goto_Y - currentY
+                    directionX = goto_X - currentX
+                    directionY = goto_Y - currentY
 
-                # decide next direction
-                directionList[t] = getIndexOfDirection(directionX, directionY)
+                    # decide next direction
+                    directionList[t] = getIndexOfDirection(directionX, directionY)
 
         # save throughputs at first iteration
         if iterationCount == 0:
@@ -711,10 +711,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     else:
         memo = 'test'
 
-    saveMinThroughput(minThroughputList, memo)
+    saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
 
 # save min throughput as *.csv file
-def saveMinThroughput(minThroughputList, memo):
+def saveMinThroughput(minThroughputList, memo, iters, L, devices, N):
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))

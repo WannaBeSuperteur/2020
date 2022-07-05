@@ -419,7 +419,7 @@ if __name__ == '__main__':
 
         algo_base.throughputTest(M, T, N, L, devices, width, height, H,
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                                 iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                                 iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  static_input_data, static_output_data, True, None, windowSize, True,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
@@ -445,7 +445,7 @@ if __name__ == '__main__':
 
             algo_base.throughputTest(M, T, N, L, devices, width, height, H,
                                      ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                                     iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                                     iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                      input_data, output_data, True, None, windowSize, False,
                                      base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                      base_func_computeDirectionList=computeDirectionList,
@@ -456,7 +456,7 @@ if __name__ == '__main__':
         model = tf.keras.models.load_model('WPCN_UAV_DL_model')
     except:
         print('model load failed')
-        model = getAndTrainModel(epochs, windowSize)
+        model = algo_base.getAndTrainModel(epochs, windowSize)
 
     # find the best genetic algorithm argument based on the WPCN UAV network environment arguments
 
@@ -475,7 +475,7 @@ if __name__ == '__main__':
 
         algo_base.throughputTest(M, T, N, L, devices, width, height, H,
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
-                                 iterationCount, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                                 iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  test_input_data, test_output_data, False, model, windowSize, False,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
