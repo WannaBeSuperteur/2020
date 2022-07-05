@@ -46,6 +46,7 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
 # path         -> direction list = list of directions of UAV to move
 # optimal path -> path of the optimal movement with the formula to minimize
 
+# minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
 # parameter 1 -> 5 * (random swap probability of two neighboring device)
 # parameter 2 -> proportion of A and B
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height, printed=False):
