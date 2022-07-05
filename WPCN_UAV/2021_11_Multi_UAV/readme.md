@@ -5,6 +5,8 @@ ORIGINAL BASELINE PAPER : https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8
 Reference:
 
  * JIE TANG and JINGRU SONG et al, "Minimum Throughput Maximization for Multi-UAV Enabled WPCN: A Deep Reinforcement Learning Method", IEEE Access, 2020. Available online at https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1.
+ 
+**For the usage of ```algorithm_base.py```, refer to ```algo_base.md```.**
 
 ## RUN INFO
 command:
