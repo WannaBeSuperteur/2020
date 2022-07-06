@@ -380,7 +380,7 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         deviceToCommunicate = t % devices_in_l
     else:
         # decide the device to communicate with
-        if base_comm_option = 'nearest':
+        if base_comm_option == 'nearest':
             deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
                                                                mu1, mu2, fc, c, alphaP, numOfDevs)
 
