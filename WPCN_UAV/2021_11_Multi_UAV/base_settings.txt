@@ -3,3 +3,4 @@ p0_cases=11 # the number of possible cases for parameter 0
 p1_cases=11 # the number of possible cases for parameter 1
 p2_cases=1 # the number of possible cases for parameter 2
 p3_cases=1 # the number of possible cases for parameter 3
+commOption=near # nearest -> communicate with nearest 1 device / near -> communicate devices within 3m for only x and y (like round-robin)

@@ -32,13 +32,15 @@ baseSettings = h_.loadSettings({'paramCells':'int',
                                 'p0_cases':'int',
                                 'p1_cases':'int',
                                 'p2_cases':'int',
-                                'p3_cases':'int'}, fileName='base_settings.txt')
+                                'p3_cases':'int',
+                                'commOption':'str'}, fileName='base_settings.txt')
 
-base_paramCells = baseSettings['paramCells']
-base_p0_cases   = baseSettings['p0_cases']
-base_p1_cases   = baseSettings['p1_cases']
-base_p2_cases   = baseSettings['p2_cases']
-base_p3_cases   = baseSettings['p3_cases']
+base_paramCells  = baseSettings['paramCells']
+base_p0_cases    = baseSettings['p0_cases']
+base_p1_cases    = baseSettings['p1_cases']
+base_p2_cases    = baseSettings['p2_cases']
+base_p3_cases    = baseSettings['p3_cases']
+base_comm_option = baseSettings['commOption']
 
 # enable GPU
 os.environ['TF_XLA_FLAGS'] = '--tf_xla_enable_xla_devices'
@@ -334,6 +336,37 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
     else:
         plt.savefig('test_trajectory_iter' + ('%04d' % iterationCount))
 
+# find devices within 3m (only x and y)
+# w = [[l, k, xkl, ykl, 0], ...]
+# q = [[l, t, xlt, ylt, hlt], ...]
+def findNearDevice(q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs):
+
+    result = []
+
+    # get (x, y) of the UAV
+    ind = l * (N+1) + t
+    UAV_x = q[ind][2]
+    UAV_y = q[ind][3]
+
+    # find devices within 3m in array 'w'
+    for device in w:
+        if device[0] == l:
+            k = device[1]
+            dev_x = device[2]
+            dev_y = device[3]
+
+            if pow(UAV_x - dev_x, 2) + pow(UAV_y - dev_y, 2) <= 3 * 3:
+                result.append(k)
+
+    # no device within 3m
+    if len(result) == 0:
+        return algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
+                                            mu1, mu2, fc, c, alphaP, numOfDevs)
+    
+    # at least 1 devices within 3m
+    else:
+        return result[t % len(result)]
+
 # update a_l,kl[n]
 # alkl      : a_l,kl[n] for each UAV l, device k and time slot n
 #             where alkl = [[l0, k, l1, n, value], ...
@@ -347,8 +380,17 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         deviceToCommunicate = t % devices_in_l
     else:
         # decide the device to communicate with
-        deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
-                                                           mu1, mu2, fc, c, alphaP, numOfDevs)
+        if base_comm_option = 'nearest':
+            deviceToCommunicate = algo.findDeviceToCommunicate(q, w, l, t, N, s, b1, b2,
+                                                               mu1, mu2, fc, c, alphaP, numOfDevs)
+
+        elif base_comm_option == 'near':
+            deviceToCommunicate = findNearDevice(q, w, l, t, N, s, b1, b2,
+                                                 mu1, mu2, fc, c, alphaP, numOfDevs)
+
+        else:
+            print('base_comm_option of base_settings.txt must be "nearest" or "near".')
+            exit(1)
 
     # update alkl, in the form of [[l0, k, l1, n, value], ...]
     alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
