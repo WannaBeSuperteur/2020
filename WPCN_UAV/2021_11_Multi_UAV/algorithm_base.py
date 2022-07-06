@@ -674,6 +674,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # parameter 2 -> proportion of A and B
         if base_func_computeDirectionList != None and isStatic == False:
             directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height)
+            
+            print(deviceListC, initialMovement)
+            print(iterationCount, l, directionList)
 
         # make direction list using random (when training)
         for t in range(N):
