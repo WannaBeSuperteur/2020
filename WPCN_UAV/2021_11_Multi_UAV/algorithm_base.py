@@ -288,7 +288,7 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
     plt.axis([-1, width+1, -1, height+1])
 
-    # w = [[l, k, xkl, ykl, 0], ...]
+    # w = [[l, k, xkl, ykl, 0], ...] for devices
     for i in range(len(w)):
 
         # device throughput = 0 (refer to all_throughputs_zero)
@@ -302,8 +302,10 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                         s=int(pow(5.0 + all_throughputs[i] * 7.0, 2.0)),
                         marker='o', c=changeColor(markerColors[w[i][0]], 0.6))
 
-    # q = [[l, t, xlt, ylt, hlt], ...]
+    # q = [[l, t, xlt, ylt, hlt], ...] for UAV
     for l in range(L):
+        doNotMoveCnt = 0
+        
         for t in range(N):
             ind = l * (N+1) + t
 
@@ -312,6 +314,18 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             if t < N-1:
                 x = [q[ind][2], q[ind+1][2]]
                 y = [q[ind][3], q[ind+1][3]]
+
+                print(t, doNotMoveCnt, N)
+
+                # check stop of UAV
+                if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-2:
+                    doNotMoveCnt += 1
+                else:
+                    # write "stop count" when starting moving or the last time slot
+                    if doNotMoveCnt > 0:
+                        plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
+                    doNotMoveCnt = 0
+                    
                 plt.plot(x, y, linewidth=0.75, c=markerColors[l])
 
     # save the figure
