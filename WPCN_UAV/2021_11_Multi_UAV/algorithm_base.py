@@ -281,7 +281,8 @@ def getAndTrainModel(epochs, windowSize):
               'then remove the model directory (for example, WPCN_UAV_DL_model) and retry.')
 
 # save trajectory as graph
-def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic, L, N):
+def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
+                        q, markerColors, training, isStatic, L, N):
 
     plt.clf()
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
@@ -290,8 +291,8 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, ma
     # w = [[l, k, xkl, ykl, 0], ...]
     for i in range(len(w)):
 
-        # device throughput = 0
-        if all_throughputs[i] == 0:
+        # device throughput = 0 (refer to all_throughputs_zero)
+        if all_throughputs_zero[i]:
             plt.scatter(w[i][2], w[i][3], s=25,
                         marker='o', c=markerColors[w[i][0]])
 
@@ -704,10 +705,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # all_throughputs
     all_throughputs = np.array(all_throughputs)
+    all_throughputs_zero = (all_throughputs == 0)
     all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
 
     # save trajectory as graph
-    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, q, markerColors, training, isStatic, L, N)
+    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
+                        q, markerColors, training, isStatic, L, N)
 
     # save minimum throughput list
     if isStatic:
