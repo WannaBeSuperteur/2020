@@ -16,6 +16,8 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
         plt.scatter(deviceList[i][0], deviceList[i][1], s=25, marker='o', c='orange')
 
     # for each location of UAV
+    doNotMoveCnt = 0
+    
     for t in range(N):
         if t == 0:
             plt.scatter(initialLocUAV[0], initialLocUAV[1], s=25, marker='x', c='black')
@@ -27,6 +29,15 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
             plt.scatter(locsUAV[t][0], locsUAV[t][1], s=25, marker='x', c='forestgreen')
             x = [locsUAV[t-1][0], locsUAV[t][0]]
             y = [locsUAV[t-1][1], locsUAV[t][1]]
+
+        # check stop of UAV
+        if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-2:
+            doNotMoveCnt += 1
+        else:
+            # write "stop count" when starting moving or the last time slot
+            if doNotMoveCnt > 0:
+                plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
+            doNotMoveCnt = 0
             
         plt.plot(x, y, linewidth=0.75, c='forestgreen')
 

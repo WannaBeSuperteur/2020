@@ -315,8 +315,6 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                 x = [q[ind][2], q[ind+1][2]]
                 y = [q[ind][3], q[ind+1][3]]
 
-                print(t, doNotMoveCnt, N)
-
                 # check stop of UAV
                 if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-2:
                     doNotMoveCnt += 1
