@@ -308,17 +308,17 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
     for l in range(L):
         doNotMoveCnt = 0
         
-        for t in range(N):
+        for t in range(N+1):
             ind = l * (N+1) + t
 
             plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
 
-            if t < N-1:
+            if t < N:
                 x = [q[ind][2], q[ind+1][2]]
                 y = [q[ind][3], q[ind+1][3]]
 
                 # check stop of UAV
-                if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-2:
+                if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-1:
                     doNotMoveCnt += 1
                 else:
                     # write "stop count" when starting moving or the last time slot
@@ -678,15 +678,15 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             print(deviceListC, initialMovement)
             print(iterationCount, l, directionList)
 
+        # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
+        # (update q)
+        if not isStatic:
+            moveUAV(q, directionList, N, l, width, height)
+
         # make direction list using random (when training)
-        for t in range(N):
+        for t in range(N+1):
 
-            # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
-            # (update q)
-            if not isStatic:
-                moveUAV(q, directionList, N, l, width, height)
-
-            # update a_l,kl[n] for this (l, t)
+            # update a_l,kl[n] for this (l, t) -> using the UAV location at time t
             update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic)
 
             # get throughput
@@ -694,9 +694,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                 thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
                 final_throughputs[k] = thrput
 
-            # decide next move (update directionList at time t)
+            # decide next move (update directionList at time t < N)
             if base_func_getDeviceLocation != None:
-                if not isStatic:
+                if not isStatic and t < N:
                     decision = random.random()
                     currentX = q[l * (N + 1) + t][2]
                     currentY = q[l * (N + 1) + t][3]
