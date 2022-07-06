@@ -316,17 +316,22 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             if t < N:
                 x = [q[ind][2], q[ind+1][2]]
                 y = [q[ind][3], q[ind+1][3]]
+            else:
+                x = [q[ind][2], None]
+                y = [q[ind][3], None]
 
-                # check stop of UAV
-                if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-1:
-                    doNotMoveCnt += 1
-                else:
-                    # write "stop count" when starting moving or the last time slot
-                    if doNotMoveCnt > 0:
-                        plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
-                    doNotMoveCnt = 0
+            # check stop of UAV
+            if t == N or pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) >= 0.1:
+                
+                # write "stop count" when starting moving or the last time slot
+                if doNotMoveCnt > 0:
+                    plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
+                doNotMoveCnt = 0
+                
+            else:
+                doNotMoveCnt += 1
                     
-                plt.plot(x, y, linewidth=0.75, c=markerColors[l])
+            plt.plot(x, y, linewidth=0.75, c=markerColors[l])
 
     # save the figure
     if isStatic:
@@ -674,9 +679,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # parameter 2 -> proportion of A and B
         if base_func_computeDirectionList != None and isStatic == False:
             directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height)
-            
-            print(deviceListC, initialMovement)
-            print(iterationCount, l, directionList)
 
         # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
         # (update q)
