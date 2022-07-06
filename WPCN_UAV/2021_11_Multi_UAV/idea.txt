@@ -53,6 +53,10 @@
    - the final closeness is the closeness when the UAV reached the nearest possible position to the device
    - "dif x": the difference of "x" value between the UAV and the device
    - "dif y": the difference of "y" value between the UAV and the device
+ 
+2022/07/06 추가
+ - 3번째 인수 : device와의 통신을 위한 UAV의 정지 횟수가 UAV-device 간 거리에 비례하여 결정되는데, 이 거리의 몇 제곱에 비례할 것인지 지수(exponential)를 학습
+ - 4번째 인수 : 일정 거리 (3m or 5m) 이내에 device가 여러 개 있을 때 이들 device를 순차적으로 반복하여 (round-robin) 통신할 때의 일정 거리
 
 [TODO]
 아이디어 3 구현에서 trajectory image의 정지 횟수 표시
