@@ -178,8 +178,6 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
 # create the optimal path based on the best movement
 def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param3, printed=False):
 
-    param3 = 0.0 # first, assume that all sqDist's are ALL THE SAME
-
     # suppose that the UAV "stops" near each device for a while
     
     # compute the time needed to move as bestMovement
@@ -190,10 +188,10 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height,
     # compute the remaining time ( = (N - 1) - (minimum path length) )
     remainingTime = (N - 1) - bestMoveTime
 
-    # find (dist^2x) using closeness (=dist^-2) where x = (parameter 3)
+    # find (dist^(2x^2)) using closeness (=dist^-2) where x = (parameter 3)
     sqDistList = []
     for c in closeness:
-        sqDistList.append(1 / max(1e-6, pow(c, param3)))
+        sqDistList.append(1 / max(1e-6, pow(c, param3*param3)))
 
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
