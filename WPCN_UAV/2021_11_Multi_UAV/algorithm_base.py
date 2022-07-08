@@ -314,8 +314,12 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
 
             if t < N-1:
-                x = [q[ind][2], q[ind+1][2]]
-                y = [q[ind][3], q[ind+1][3]]
+                x = [q[ind][2], q[ind][2] * 0.25 + q[ind+1][2] * 0.75, q[ind+1][2]]
+                y = [q[ind][3], q[ind][3] * 0.25 + q[ind+1][3] * 0.75, q[ind+1][3]]
+
+                plt.plot(x[:2], y[:2], linewidth=0.75, c=markerColors[l])
+                plt.plot(x[1:], y[1:], linewidth=2.5, c=markerColors[l])
+            
             else:
                 x = [q[ind][2], None]
                 y = [q[ind][3], None]
@@ -330,8 +334,6 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                 
             else:
                 doNotMoveCnt += 1
-                    
-            plt.plot(x, y, linewidth=0.75, c=markerColors[l])
 
     # save the figure
     if isStatic:
