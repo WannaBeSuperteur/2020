@@ -405,37 +405,23 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
             print('base_comm_option of base_settings.txt must be "nearest" or "near".')
             exit(1)
 
-    # print if value > 0 ( = 1)
-    for i in range(len(alkl)):
-        if alkl[i][4] > 0: print(alkl[i])
-
-    # update alkl, in the form of [[l0, k, l1, n, value], ...]
-    alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
-
     # when DO NOT have alkl with (l, deviceToCommunicate, l, t)
-    if alkl_index == None or alkl_index == len(alkl):
-        alkl.append([l, deviceToCommunicate, l, t, 1])
+    if str(l) + ',' + str(deviceToCommunicate) not in alkl:
+        alkl[str(l) + ',' + str(deviceToCommunicate)] = str(t) + ','
 
         # set alkl as 0 for other devices
         for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
-            alkl.append([l, k, l, t, 0])
+            alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
 
     # when have alkl with (l, deviceToCommunicate, l, t)
     else:
-        alkl[alkl_index][4] = 1
+        alkl[str(l) + ',' + str(deviceToCommunicate)] += str(t) + ','
 
         # set alkl as 0 for other devices
         for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
-            alkl_index_k = f.find_alkl(alkl, l, k, l, t)
-            alkl[alkl_index_k] = [l, k, l, t, 0]
-
-    # sort alkl array
-    alkl.sort(key=lambda x:x[3])
-    alkl.sort(key=lambda x:x[2])
-    alkl.sort(key=lambda x:x[1])
-    alkl.sort(key=lambda x:x[0])
+            alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
 
 # preprocess input and output
 def preprocessInputAndOutput(input_data, output_data, windowSize):
@@ -606,27 +592,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         if clustering_finished: break
 
     # compute common throughput using q and directionList
-    # update alkl for each time from 0 to T (N+1 times, N moves)
-    alkl = []
-
-    # fill alkl first (iteration: L0 * K1 * L1 * T)
-    # if L0 = L1 = 5, K1 = 10 per cluster, T = 30,
-    # total iteration count is 5 * 10 * 5 * 30 = 7500
-    for i in range(L):
-        for j in range(L):
-
-            # the number of devices in cluster j
-            devices_in_l = numOfDevs[j]
-
-            for k in range(devices_in_l):
-                for t in range(N):
-                    alkl.append([i, k, j, t, 0])
-
-    # sort alkl array
-    alkl.sort(key=lambda x:x[3])
-    alkl.sort(key=lambda x:x[2])
-    alkl.sort(key=lambda x:x[1])
-    alkl.sort(key=lambda x:x[0])
+    # update alkl for each time from 0 to T (N times, N-1 moves)
+    alkl = {}
 
     # al : al[0] for each UAV l
     al = []
