@@ -185,10 +185,10 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height,
     # compute the time needed to move as bestMovement
     # (suppose that it is below N, otherwise common throughput can be zero)
     (locsUAV, minimumPath, closeness, stops) = computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, bestMovement, deviceList, width, height)
-    bestMoveTime = len(minimumPath) + 1
+    bestMoveTime = len(minimumPath)
 
-    # compute the remaining time ( = N - (minimum path length) )
-    remainingTime = (N + 1) - bestMoveTime
+    # compute the remaining time ( = (N - 1) - (minimum path length) )
+    remainingTime = (N - 1) - bestMoveTime
 
     # find (dist^2x) using closeness (=dist^-2) where x = (parameter 3)
     sqDistList = []

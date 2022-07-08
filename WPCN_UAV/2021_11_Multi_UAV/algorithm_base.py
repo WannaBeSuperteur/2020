@@ -84,7 +84,7 @@ except:
 # q = [[l, t, xlt, ylt, hlt], ...] -> update q
 def moveUAV(q, directionList, N, l, width, height):
 
-    for t in range(N):
+    for t in range(N-1):
 
         direction = directionList[t]
         deg = direction
