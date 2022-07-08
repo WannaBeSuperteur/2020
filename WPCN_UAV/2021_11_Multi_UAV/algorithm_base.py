@@ -379,6 +379,7 @@ def findNearDevice(q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs)
 # alkl      : a_l,kl[n] for each UAV l, device k and time slot n
 #             where alkl = [[l0, k, l1, n, value], ...
 def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic):
+    print('----')
     devices_in_l = numOfDevs[l]
 
     # for static mode
@@ -399,6 +400,10 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         else:
             print('base_comm_option of base_settings.txt must be "nearest" or "near".')
             exit(1)
+
+    # print if value > 0 ( = 1)
+    for i in range(len(alkl)):
+        if alkl[i][4] > 0: print(alkl[i])
 
     # update alkl, in the form of [[l0, k, l1, n, value], ...]
     alkl_index = f.find_alkl(alkl, l, deviceToCommunicate, l, t)
