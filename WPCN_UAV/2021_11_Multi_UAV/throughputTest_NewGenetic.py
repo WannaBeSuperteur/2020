@@ -178,7 +178,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
 # create the optimal path based on the best movement
 def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param3, printed=False):
 
-    param3 = 1 # first, assume that all sqDist's are SAME AS BEFORE
+    param3 = 0.0 # first, assume that all sqDist's are ALL THE SAME
 
     # suppose that the UAV "stops" near each device for a while
     
