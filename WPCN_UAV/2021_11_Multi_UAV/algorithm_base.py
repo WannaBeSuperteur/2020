@@ -650,7 +650,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # decide best parameter randomly
         else:
-            bestParams = [random.random(), random.random()]
+            bestParams = []
+            for i in range(base_paramCells):
+                bestParams.append(random.random())
             print('\n[ best parameters derived randomly ]')
 
         print(np.round_(bestParams, 6))
