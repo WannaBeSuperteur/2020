@@ -335,7 +335,8 @@ if __name__ == '__main__':
                                 'width':'float', 'height':'float',
                                 'M':'int', 'L':'int', 'devices':'int', 'T':'float', 'N':'int', 'H':'float',
                                 'iters':'int', 'clusteringAtLeast':'float', 'clusteringAtMost':'float',
-                                'windowSize':'int', 'epochs':'int'})
+                                'windowSize':'int', 'epochs':'int',
+                                'trajectoryArrowLength':'float', 'trajectoryArrowThickness':'float'})
 
     fc = paperArgs['fc']
     ng = paperArgs['ng']
@@ -363,6 +364,8 @@ if __name__ == '__main__':
     clusteringAtMost = paperArgs['clusteringAtMost']
     windowSize = paperArgs['windowSize']
     epochs = paperArgs['epochs']
+    trajectoryArrowLength = paperArgs['trajectoryArrowLength']
+    trajectoryArrowThickness = paperArgs['trajectoryArrowThickness']
 
     # (from https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=8950047&tag=1)
     # SN = (1 − alphaP)*T/N denotes the length of each subslot
@@ -401,7 +404,9 @@ if __name__ == '__main__':
     configContent += 'clusteringAtLeast=' + str(clusteringAtLeast) + '\n'
     configContent += 'clusteringAtMost=' + str(clusteringAtMost) + '\n'
     configContent += 'windowSize=' + str(windowSize) + '\n'
-    configContent += 'epochs=' + str(epochs)
+    configContent += 'epochs=' + str(epochs) + '\n'
+    configContent += 'trajectoryArrowLength=' + str(trajectoryArrowLength) + '\n'
+    configContent += 'trajectoryArrowThickness=' + str(trajectoryArrowThickness) + '\n'
 
     configFile.write(configContent)
     configFile.close()
@@ -421,6 +426,7 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  static_input_data, static_output_data, True, None, windowSize, True,
+                                 trajectoryArrowLength, trajectoryArrowThickness,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)
@@ -447,6 +453,7 @@ if __name__ == '__main__':
                                      ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                      iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                      input_data, output_data, True, None, windowSize, False,
+                                     trajectoryArrowLength, trajectoryArrowThickness,
                                      base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                      base_func_computeDirectionList=computeDirectionList,
                                      base_func_getDeviceLocation=None)
@@ -477,6 +484,7 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  test_input_data, test_output_data, False, model, windowSize, False,
+                                 trajectoryArrowLength, trajectoryArrowThickness,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)

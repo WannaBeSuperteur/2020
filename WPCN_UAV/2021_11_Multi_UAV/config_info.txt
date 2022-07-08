@@ -22,3 +22,5 @@ clusteringAtLeast=0.51
 clusteringAtMost=1.51
 windowSize=12
 epochs=15
+trajectoryArrowLength=0.25
+trajectoryArrowThickness=3.0

@@ -284,7 +284,8 @@ def getAndTrainModel(epochs, windowSize):
 
 # save trajectory as graph
 def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
-                        q, markerColors, training, isStatic, L, N):
+                        q, markerColors, training, isStatic, L, N,
+                        trajectoryArrowLength, trajectoryArrowThickness):
 
     plt.clf()
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
@@ -314,11 +315,11 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
 
             if t < N-1:
-                x = [q[ind][2], q[ind][2] * 0.25 + q[ind+1][2] * 0.75, q[ind+1][2]]
-                y = [q[ind][3], q[ind][3] * 0.25 + q[ind+1][3] * 0.75, q[ind+1][3]]
+                x = [q[ind][2], q[ind][2] * trajectoryArrowLength + q[ind+1][2] * (1.0 - trajectoryArrowLength), q[ind+1][2]]
+                y = [q[ind][3], q[ind][3] * trajectoryArrowLength + q[ind+1][3] * (1.0 - trajectoryArrowLength), q[ind+1][3]]
 
                 plt.plot(x[:2], y[:2], linewidth=0.75, c=markerColors[l])
-                plt.plot(x[1:], y[1:], linewidth=2.5, c=markerColors[l])
+                plt.plot(x[1:], y[1:], linewidth=0.75*trajectoryArrowThickness, c=markerColors[l])
             
             else:
                 x = [q[ind][2], None]
@@ -555,6 +556,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                    input_data, output_data, training, model, windowSize, isStatic,
+                   trajectoryArrowLength, trajectoryArrowThickness,
                    base_func_initializeMovementOfUAV=None,
                    base_func_computeDirectionList=None,
                    base_func_getDeviceLocation=None):
@@ -771,7 +773,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
     # save trajectory as graph
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
-                        q, markerColors, training, isStatic, L, N)
+                        q, markerColors, training, isStatic, L, N,
+                        trajectoryArrowLength, trajectoryArrowThickness)
 
     # save minimum throughput list
     if isStatic:

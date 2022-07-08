@@ -31,3 +31,5 @@ clusteringAtLeast=0.51 # each cluster contains devices at least int(this number 
 clusteringAtMost=1.51 # each cluster contains devices at most int(this number * average)
 epochs=15 # the number of epochs for training deep learning model
 isStatic=False # use static (devices do not move) mode
+trajectoryArrowLength=0.25 # the ratio of arrow part (thick line) length
+trajectoryArrowThickness=3.0 # thickness of arrow part (at least 1.0)
