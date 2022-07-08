@@ -308,12 +308,12 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
     for l in range(L):
         doNotMoveCnt = 0
         
-        for t in range(N+1):
+        for t in range(N):
             ind = l * (N+1) + t
 
             plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
 
-            if t < N:
+            if t < N-1:
                 x = [q[ind][2], q[ind+1][2]]
                 y = [q[ind][3], q[ind+1][3]]
             else:
@@ -321,7 +321,7 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                 y = [q[ind][3], None]
 
             # check stop of UAV
-            if t == N or pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) >= 0.1:
+            if t == N-1 or pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) >= 0.1:
                 
                 # write "stop count" when starting moving or the last time slot
                 if doNotMoveCnt > 0:
@@ -686,7 +686,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             moveUAV(q, directionList, N, l, width, height)
 
         # make direction list using random (when training)
-        for t in range(N+1):
+        for t in range(N):
 
             # update a_l,kl[n] for this (l, t) -> using the UAV location at time t
             update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic)
@@ -698,7 +698,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
             # decide next move (update directionList at time t < N)
             if base_func_getDeviceLocation != None:
-                if not isStatic and t < N:
+                if not isStatic and t < N-1:
                     decision = random.random()
                     currentX = q[l * (N + 1) + t][2]
                     currentY = q[l * (N + 1) + t][3]
