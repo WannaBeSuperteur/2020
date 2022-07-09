@@ -52,6 +52,7 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
 # parameter 2 -> proportion of A and B
 # parameter 3 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, param3, width, height, printed=False):
+    print('start', time.time())
 
     # define parameter A and B using param2 (between 0.0 ~ 1.0)
     A = param2
@@ -62,12 +63,13 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
     currentBestMovement = initialMovement
 
     # 30 iterations
+    print('for start', time.time())
     for i in range(30):
         bestModifiedMovement = None
         
         # create 20 candidate moves in an iteration to find ONLY ONE best move
         for j in range(20):
-            ###print(i, j)
+            print('i,j start                 ', i, j, time.time())
             modifiedMovement = copy.deepcopy(currentBestMovement)
 
             # change the movement
@@ -79,7 +81,9 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
                     modifiedMovement[k], modifiedMovement[k+1] = modifiedMovement[k+1], modifiedMovement[k]
 
             # compute the score
+            print('i,j before computeScore() ', i, j, time.time())
             score = computeScore(A, B, initialLocUAV, modifiedMovement, deviceList, width, height)
+            print('i,j after  computeScore() ', i, j, time.time())
 
             # update best modified score/movement
             if bestModifiedMovement == None or score < bestModifiedScore:
@@ -90,12 +94,15 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
         currentBestScore    = bestModifiedScore
         currentBestMovement = bestModifiedMovement
 
+    print('for end', time.time())
+
     # define best movement as the current best movement at the end of all the iterations
     bestMovement = currentBestMovement
 
     # create the optimal path based on the best movement
     (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param3, printed)
 
+    print('end', time.time())
     return (locsUAV, bestMovement, optimalPath)
 
 # distance between UAV and device (also can be between device A and device B)
