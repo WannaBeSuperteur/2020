@@ -329,8 +329,17 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
         for t in range(N):
             ind = l * (N+1) + t
 
-            plt.scatter(q[ind][2], q[ind][3], s=25, marker='x', c=markerColors[l])
+            # draw marker
+            if t == 0:
+                marker = 'P'
+            elif t == N-1:
+                marker = 'X'
+            else:
+                marker = 'o'
+                
+            plt.scatter(q[ind][2], q[ind][3], s=25, marker=marker, c=markerColors[l])
 
+            # draw line
             if t < N-1:
                 x = [q[ind][2], q[ind][2] * trajectoryArrowLength + q[ind+1][2] * (1.0 - trajectoryArrowLength), q[ind+1][2]]
                 y = [q[ind][3], q[ind][3] * trajectoryArrowLength + q[ind+1][3] * (1.0 - trajectoryArrowLength), q[ind+1][3]]
