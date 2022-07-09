@@ -52,8 +52,7 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
 # parameter 2 -> proportion of A and B
 # parameter 3 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, param3, width, height, printed=False):
-    print('start', time.time())
-
+    
     # define parameter A and B using param2 (between 0.0 ~ 1.0)
     A = param2
     B = 1.0 - param2
@@ -63,13 +62,11 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
     currentBestMovement = initialMovement
 
     # 30 iterations
-    print('for start', time.time())
     for i in range(30):
         bestModifiedMovement = None
         
         # create 20 candidate moves in an iteration to find ONLY ONE best move
         for j in range(20):
-            print('i,j start                 ', i, j, time.time())
             modifiedMovement = copy.deepcopy(currentBestMovement)
 
             # change the movement
@@ -81,10 +78,8 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
                     modifiedMovement[k], modifiedMovement[k+1] = modifiedMovement[k+1], modifiedMovement[k]
 
             # compute the score
-            print('i,j before computeScore() ', i, j, time.time())
             score = computeScore(A, B, initialLocUAV, modifiedMovement, deviceList, width, height)
-            print('i,j after  computeScore() ', i, j, time.time())
-
+            
             # update best modified score/movement
             if bestModifiedMovement == None or score < bestModifiedScore:
                 bestModifiedScore    = score
@@ -94,15 +89,12 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
         currentBestScore    = bestModifiedScore
         currentBestMovement = bestModifiedMovement
 
-    print('for end', time.time())
-
     # define best movement as the current best movement at the end of all the iterations
     bestMovement = currentBestMovement
 
     # create the optimal path based on the best movement
     (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param3, printed)
 
-    print('end', time.time())
     return (locsUAV, bestMovement, optimalPath)
 
 # distance between UAV and device (also can be between device A and device B)
@@ -168,7 +160,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
             else:
                 tempCurrentLocUAV = np.array(currentLocUAV)
                 
-                currentLocUAV = [currentLocUAV[0] + unitMovements[i][0], currentLocUAV[1] + unitMovements[i][1]]
+                currentLocUAV = [currentLocUAV[0] + unitMovements[minDistDirection][0], currentLocUAV[1] + unitMovements[minDistDirection][1]]
 
                 # limit x and y value
                 currentLocUAV[0] = 0.0 if currentLocUAV[0] < 0.0 else (width  if currentLocUAV[0] > width  else currentLocUAV[0])
@@ -181,8 +173,6 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
 
                 # meaningful movement
                 else:
-                    currentLocUAV = list(currentLocUAV)
-
                     minimumPath.append(minDistDirection)
                     locsUAV.append(currentLocUAV)
 
@@ -291,7 +281,6 @@ def computeScore(A, B, initialLocUAV, movement, deviceList, width, height):
 
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
 def computeTotalDist(initialLocUAV, movement, deviceList):
-    print('i,j before totalDist      ', time.time())
     
     # initial UAV location <-> first device
     totalDist = dist(initialLocUAV, deviceList[movement[0]])
@@ -300,18 +289,14 @@ def computeTotalDist(initialLocUAV, movement, deviceList):
     for i in range(len(deviceList)-1):
         totalDist += dist(deviceList[movement[i]], deviceList[movement[i+1]])
 
-    print('i,j after  totalDist      ', time.time())
     return totalDist
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
 def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList, width, height):
-    print('i,j before minPathCompute ', time.time())
     
     # compute the minimum path first
-    print('i,j before computeMinPath ', time.time())
     (locsUAV, minimumPath, stops) = computeMinimumPath(initialLocUAV, movement, deviceList, width, height)
-    print('i,j after  computeMinPath ', time.time())
-
+    
     # compute the closeness for each device
     closeness = [0.0 for i in range(len(deviceList))]
 
@@ -319,7 +304,6 @@ def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceLi
         for j in range(len(deviceList)):
             closeness[j] = max(closeness[j], 1.0 / pow(dist(locsUAV[i], deviceList[j]), 2))
 
-    print('i,j after  minPathCompute ', time.time())
     return (locsUAV, minimumPath, closeness, stops)
 
 # return the list of device in the current cluster
