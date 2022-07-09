@@ -285,6 +285,7 @@ def computeScore(A, B, initialLocUAV, movement, deviceList, width, height):
 
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
 def computeTotalDist(initialLocUAV, movement, deviceList):
+    print('i,j before totalDist      ', time.time())
     
     # initial UAV location <-> first device
     totalDist = dist(initialLocUAV, deviceList[movement[0]])
@@ -293,13 +294,17 @@ def computeTotalDist(initialLocUAV, movement, deviceList):
     for i in range(len(deviceList)-1):
         totalDist += dist(deviceList[movement[i]], deviceList[movement[i+1]])
 
+    print('i,j after  totalDist      ', time.time())
     return totalDist
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
 def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceList, width, height):
+    print('i,j before minPathCompute ', time.time())
     
     # compute the minimum path first
+    print('i,j before computeMinPath ', time.time())
     (locsUAV, minimumPath, stops) = computeMinimumPath(initialLocUAV, movement, deviceList, width, height)
+    print('i,j after  computeMinPath ', time.time())
 
     # compute the closeness for each device
     closeness = [0.0 for i in range(len(deviceList))]
@@ -308,6 +313,7 @@ def computeMinimumPathAndClosenessWithMinMoves(initialLocUAV, movement, deviceLi
         for j in range(len(deviceList)):
             closeness[j] = max(closeness[j], 1.0 / pow(dist(locsUAV[i], deviceList[j]), 2))
 
+    print('i,j after  minPathCompute ', time.time())
     return (locsUAV, minimumPath, closeness, stops)
 
 # return the list of device in the current cluster
