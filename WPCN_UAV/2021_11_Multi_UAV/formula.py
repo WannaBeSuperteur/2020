@@ -140,52 +140,6 @@ def formula_04(q, w, k, l0, l1, n, N, s, b1, b2, mu1, mu2, fc, c, alphaP):
 # alkl      : a_l,kl[n] for each UAV l, device k and time slot n
 #             where alkl = [[l0, k, l1, n, value], ...]
 
-# find alkl value using binary search
-def find_alkl(alkl, l0, k, l1, n):
-    maxUAVs      = 100
-    maxDevices   = 100
-    maxTimeSlots = 3600
-    
-    max_ = len(alkl)-1
-    min_ = 0
-
-    # extreme case (no data)
-    if len(alkl) == 0: return None
-
-    goal_alkl = (l0 * (maxDevices * maxUAVs * maxTimeSlots) +
-                 k  * (maxUAVs * maxTimeSlots) +
-                 l1 * maxTimeSlots +
-                 n)
-    
-    max_alkl = (alkl[max_][0] * (maxDevices * maxUAVs * maxTimeSlots) +
-                alkl[max_][1] * (maxUAVs * maxTimeSlots) +
-                alkl[max_][2] * maxTimeSlots +
-                alkl[max_][3])
-
-    # extreme case (l0 is too large to find the right cluster)
-    if goal_alkl > max_alkl:
-        return len(alkl)
-    elif goal_alkl == max_alkl:
-        return max_
-
-    # binary search
-    while True:
-        mid_ = (max_ + min_) // 2
-        
-        mid_alkl = (alkl[mid_][0] * (maxDevices * maxUAVs * maxTimeSlots) +
-                    alkl[mid_][1] * (maxUAVs * maxTimeSlots) +
-                    alkl[mid_][2] * maxTimeSlots +
-                    alkl[mid_][3])
-
-        if mid_alkl == goal_alkl:
-            return mid_
-        elif max_ < min_: # do not exist
-            return None
-        elif mid_alkl > goal_alkl:
-            max_ = mid_ - 1
-        else:
-            min_ = mid_ + 1
-
 # ng     : energy conversion efficiency of devices (= 0.1)
 # PD     : transmission power for UAVs' downlink   (= 40 dBm)
 # alphaP : path loss exponent

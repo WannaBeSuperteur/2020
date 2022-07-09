@@ -384,7 +384,6 @@ def findNearDevice(q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs)
 #                      -> (do not update for the device with n_x = 0)
 
 def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic):
-    print('----')
     devices_in_l = numOfDevs[l]
 
     # for static mode
@@ -413,7 +412,11 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         # set alkl as 0 for other devices
         for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
-            alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
+
+            try:
+                alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
+            except:
+                pass
 
     # when have alkl with (l, deviceToCommunicate, l, t)
     else:
@@ -422,7 +425,11 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
         # set alkl as 0 for other devices
         for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
-            alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
+
+            try:
+                alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
+            except:
+                pass
 
 # preprocess input and output
 def preprocessInputAndOutput(input_data, output_data, windowSize):
