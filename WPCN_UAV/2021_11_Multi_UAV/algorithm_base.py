@@ -349,11 +349,25 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
 
             # draw line
             if t < N-1:
-                x = [q[ind][2], q[ind][2] * trajectoryArrowLength + q[ind+1][2] * (1.0 - trajectoryArrowLength), q[ind+1][2]]
-                y = [q[ind][3], q[ind][3] * trajectoryArrowLength + q[ind+1][3] * (1.0 - trajectoryArrowLength), q[ind+1][3]]
+                x = [q[ind][2],
+                     q[ind][2] * trajectoryArrowLength       + q[ind+1][2] * (1.0 - trajectoryArrowLength),
+                     q[ind][2] * trajectoryArrowLength * 0.9 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.9),
+                     q[ind][2] * trajectoryArrowLength * 0.7 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.7),
+                     q[ind][2] * trajectoryArrowLength * 0.4 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.4),
+                                                               q[ind+1][2]]
+                
+                y = [q[ind][3],
+                     q[ind][3] * trajectoryArrowLength       + q[ind+1][3] * (1.0 - trajectoryArrowLength),
+                     q[ind][3] * trajectoryArrowLength * 0.9 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.9),
+                     q[ind][3] * trajectoryArrowLength * 0.7 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.7),
+                     q[ind][3] * trajectoryArrowLength * 0.4 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.4),
+                                                               q[ind+1][3]]
 
-                plt.plot(x[:2], y[:2], linewidth=0.75, c=markerColors[l])
-                plt.plot(x[1:], y[1:], linewidth=0.75*trajectoryArrowThickness, c=markerColors[l])
+                plt.plot(x[ :2], y[ :2], linewidth=0.75                                   , c=markerColors[l])
+                plt.plot(x[1:3], y[1:3], linewidth=0.75 * (2.0 * trajectoryArrowThickness), c=markerColors[l])
+                plt.plot(x[2:4], y[2:4], linewidth=0.75 * (1.2 * trajectoryArrowThickness), c=markerColors[l])
+                plt.plot(x[3:5], y[3:5], linewidth=0.75 * (0.6 * trajectoryArrowThickness), c=markerColors[l])
+                plt.plot(x[4: ], y[4: ], linewidth=0.75 * (0.3 * trajectoryArrowThickness), c=markerColors[l])
             
             else:
                 x = [q[ind][2], None]
