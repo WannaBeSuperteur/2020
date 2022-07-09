@@ -691,14 +691,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         if base_func_computeDirectionList != None and isStatic == False:
             directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height)
 
-        print('0', time.time())
-
         # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
         # (update q)
         if not isStatic:
             moveUAV(q, directionList, N, l, width, height)
-
-        print('1', time.time())
 
         # make direction list using random (when training)
         for t in range(N):
@@ -727,8 +723,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                     # decide next direction
                     directionList[t] = getIndexOfDirection(directionX, directionY)
 
-        print('2', time.time())
-
         # save throughputs at first iteration
         if iterationCount == 0:
             final_throughputs_df = pd.DataFrame(final_throughputs)
@@ -740,12 +734,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             else:
                 final_throughputs_df.to_csv('test_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
-        print('3', time.time())
-
         minThrput = min(final_throughputs)
         minthroughputs.append(minThrput)
-
-        print('4', time.time())
 
         # save at all_throughputs
         all_throughputs += list(final_throughputs)
@@ -753,10 +743,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # add to input and output data
         input_data.append(np.concatenate((inputImage, bestParams), axis=-1))
         output_data.append([minThrput])
-
-        print('5', time.time())
-
-    print('6', time.time())
 
     # save input and output data at the end
     if isStatic:
@@ -768,8 +754,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     else:
         pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
         pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
-
-    print('7', time.time())
 
     # preprocess input and output data
     (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
@@ -786,8 +770,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_input_preprocessed.csv')
         pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_output_preprocessed.csv')
 
-    print('8', time.time())
-
     # create min throughput information
     minThroughputList.append([iterationCount] + minthroughputs)
 
@@ -796,12 +778,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     all_throughputs_zero = (all_throughputs == 0)
     all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
 
-    print('9', time.time())
-
     # save trajectory as graph
-    saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
-                        q, markerColors, training, isStatic, L, N,
-                        trajectoryArrowLength, trajectoryArrowThickness, alkl)
+    if iterationCount < 5 or (iterationCount < 50 and iterationCount % 5 == 0) or iterationCount % 25 == 0:
+        saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
+                            q, markerColors, training, isStatic, L, N,
+                            trajectoryArrowLength, trajectoryArrowThickness, alkl)
 
     # save minimum throughput list
     if isStatic:
@@ -811,11 +792,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     else:
         memo = 'test'
 
-    print('10', time.time())
-
     saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
-
-    print('11', time.time())
 
 # save min throughput as *.csv file
 def saveMinThroughput(minThroughputList, memo, iters, L, devices, N):

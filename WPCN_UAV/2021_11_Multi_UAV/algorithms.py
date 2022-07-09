@@ -52,8 +52,6 @@ def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbo
     # cluster = each UAV, centroid = each UAV's location, elements = devices
     count = 0
     while True:
-
-        print(time.time())
         
         # initialize clusters as all []
         for i in range(L): clusters[i] = []
