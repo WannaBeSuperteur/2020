@@ -382,6 +382,7 @@ def findNearDevice(q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs)
 # USING reduced alkl : original   [[l0, k, l1, n, value], ...]
 #                      -> reduced [[l0, k, [n0, n1, ...]], ...] or {(l0, k) -> [n0, n1, ...]}
 #                      -> (do not update for the device with n_x = 0)
+
 def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs, isStatic):
     print('----')
     devices_in_l = numOfDevs[l]

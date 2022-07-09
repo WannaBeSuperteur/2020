@@ -258,6 +258,14 @@ def formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, n
     return B * math.log(1.0 + SINR, 2)
 
 # formula (11) : average throughput R_kl of IoT device kl of the flight cycle T, using formula (10)
+
+# alkl      : a_l,kl[n] for each UAV l, device k and time slot n
+#             where alkl = [[l0, k, l1, n, value], ...
+
+# USING reduced alkl : original   [[l0, k, l1, n, value], ...]
+#                      -> reduced [[l0, k, [n0, n1, ...]], ...] or {(l0, k) -> [n0, n1, ...]}
+#                      -> (do not update for the device with n_x = 0)
+
 def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs):
     result = 0
     #print('[11] k, l:', k, l)
@@ -265,13 +273,15 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
     thrputs = []
 
     for n in range(N):
-        alkl_value = alkl[find_alkl(alkl, l, k, l, n)][4]
+        alkl_communicated = (str(l) + ',' + str(k) in alkl) and (str(n) + ',' in alkl[str(l) + ',' + str(k)])
         throughput = formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
 
         if printDetails == True:
-            print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl = ' + str(alkl[find_alkl(alkl, l, k, l, n)]) + ' alkl_value = ' + str(alkl_value) + ' throughput = ' + str(throughput))
-        
-        result += alkl_value * throughput
+            print('[11] [n=' + str(n) + '] k = ' + str(k) + ' l = ' + str(l) + ' alkl_communicated = ' + str(alkl_communicated) + ' throughput = ' + str(throughput))
+
+        if alkl_communicated:
+            result += throughput
+            
         thrputs.append(result / N)
 
     if printDetails == True:
