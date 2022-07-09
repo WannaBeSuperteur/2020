@@ -283,9 +283,17 @@ def getAndTrainModel(epochs, windowSize):
               'then remove the model directory (for example, WPCN_UAV_DL_model) and retry.')
 
 # save trajectory as graph
+
+# alkl      : a_l,kl[n] for each UAV l, device k and time slot n
+#             where alkl = [[l0, k, l1, n, value], ...
+
+# USING reduced alkl : original   [[l0, k, l1, n, value], ...]
+#                      -> reduced [[l0, k, [n0, n1, ...]], ...] or {(l0, k) -> [n0, n1, ...]}
+#                      -> (do not update for the device with n_x = 0)
+
 def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
                         q, markerColors, training, isStatic, L, N,
-                        trajectoryArrowLength, trajectoryArrowThickness):
+                        trajectoryArrowLength, trajectoryArrowThickness, alkl):
 
     plt.clf()
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
@@ -304,6 +312,10 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             plt.scatter(w[i][2], w[i][3],
                         s=int(pow(5.0 + all_throughputs[i] * 7.0, 2.0)),
                         marker='o', c=changeColor(markerColors[w[i][0]], 0.6))
+
+            # communication count (refer to alkl)
+            cnt = bin(alkl[str(w[i][0]) + ',' + str(w[i][1])]).count('1')
+            plt.text(w[i][2], w[i][3], s=cnt, fontsize=8, c=markerColors[w[i][0]])
 
     # q = [[l, t, xlt, ylt, hlt], ...] for UAV
     for l in range(L):
@@ -764,7 +776,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # save trajectory as graph
     saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
                         q, markerColors, training, isStatic, L, N,
-                        trajectoryArrowLength, trajectoryArrowThickness)
+                        trajectoryArrowLength, trajectoryArrowThickness, alkl)
 
     # save minimum throughput list
     if isStatic:
