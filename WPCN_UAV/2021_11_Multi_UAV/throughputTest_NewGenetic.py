@@ -71,12 +71,12 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
             modifiedMovement = copy.deepcopy(currentBestMovement)
 
             # change the movement
-            for j in range(moves-1):
+            for k in range(moves-1):
                 r = random.random()
 
                 # random swap with probability (param1)
                 if r < param1 / 5.0:
-                    modifiedMovement[j], modifiedMovement[j+1] = modifiedMovement[j+1], modifiedMovement[j]
+                    modifiedMovement[k], modifiedMovement[k+1] = modifiedMovement[k+1], modifiedMovement[k]
 
             # compute the score
             score = computeScore(A, B, initialLocUAV, modifiedMovement, deviceList, width, height)
