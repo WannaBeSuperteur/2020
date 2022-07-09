@@ -356,24 +356,24 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             # draw line
             if t < N-1 and not isStatic:
                 x = [q[ind][2],
-                     q[ind][2] * trajectoryArrowLength        + q[ind+1][2] * (1.0 - trajectoryArrowLength),
-                     q[ind][2] * trajectoryArrowLength * 0.72 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.72),
-                     q[ind][2] * trajectoryArrowLength * 0.78 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.78),
-                     q[ind][2] * trajectoryArrowLength * 0.47 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.47),
-                     q[ind][2] * trajectoryArrowLength * 0.53 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.53),
-                     q[ind][2] * trajectoryArrowLength * 0.22 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.22),
-                     q[ind][2] * trajectoryArrowLength * 0.28 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.28),
-                                                                q[ind+1][2]]
+                     q[ind][2] * trajectoryArrowLength * 1.2  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.2 ),
+                     q[ind][2] * trajectoryArrowLength * 0.9  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.9 ),
+                     q[ind][2] * trajectoryArrowLength * 1.0  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.0 ),
+                     q[ind][2] * trajectoryArrowLength * 0.65 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.65),
+                     q[ind][2] * trajectoryArrowLength * 0.75 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.75),
+                     q[ind][2] * trajectoryArrowLength * 0.4  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.4 ),
+                     q[ind][2] * trajectoryArrowLength * 0.5  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.5 ),
+                     q[ind][2] * trajectoryArrowLength * 0.2  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.2 )]
                 
                 y = [q[ind][3],
-                     q[ind][3] * trajectoryArrowLength        + q[ind+1][3] * (1.0 - trajectoryArrowLength),
-                     q[ind][3] * trajectoryArrowLength * 0.72 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.72),
-                     q[ind][3] * trajectoryArrowLength * 0.78 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.78),
-                     q[ind][3] * trajectoryArrowLength * 0.47 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.47),
-                     q[ind][3] * trajectoryArrowLength * 0.53 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.53),
-                     q[ind][3] * trajectoryArrowLength * 0.22 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.22),
-                     q[ind][3] * trajectoryArrowLength * 0.28 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.28),
-                                                                q[ind+1][3]]
+                     q[ind][3] * trajectoryArrowLength * 1.2  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.2 ),
+                     q[ind][3] * trajectoryArrowLength * 0.9  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.9 ),
+                     q[ind][3] * trajectoryArrowLength * 1.0  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.0 ),
+                     q[ind][3] * trajectoryArrowLength * 0.65 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.65),
+                     q[ind][3] * trajectoryArrowLength * 0.75 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.75),
+                     q[ind][3] * trajectoryArrowLength * 0.4  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.4 ),
+                     q[ind][3] * trajectoryArrowLength * 0.5  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.5 ),
+                     q[ind][3] * trajectoryArrowLength * 0.2  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.2 )]
 
                 drawLine(x[ :2], y[ :2], 0.0, trajectoryArrowThickness, markerColors[l], False)
                 drawLine(x[1:3], y[1:3], 4.0, trajectoryArrowThickness, markerColors[l], True)
