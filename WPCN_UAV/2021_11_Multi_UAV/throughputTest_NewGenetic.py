@@ -48,7 +48,7 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
 # optimal path -> path of the optimal movement with the formula to minimize
 
 # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
-# parameter 1 -> 3 * (random swap probability of two neighboring device) -> probability = 0.0 ~ 0.333 (=1/3)
+# parameter 1 -> 5 * (random swap probability of two neighboring device) -> probability = 0.0 ~ 0.2 (=1/5)
 # parameter 2 -> proportion of A and B
 # parameter 3 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, param3, width, height, printed=False):
@@ -75,7 +75,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
                 r = random.random()
 
                 # random swap with probability (param1)
-                if r < param1 / 3.0:
+                if r < param1 / 5.0:
                     modifiedMovement[j], modifiedMovement[j+1] = modifiedMovement[j+1], modifiedMovement[j]
 
             # compute the score
