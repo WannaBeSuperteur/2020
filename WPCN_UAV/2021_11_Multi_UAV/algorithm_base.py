@@ -744,13 +744,19 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         input_data.append(np.concatenate((inputImage, bestParams), axis=-1))
         output_data.append([minThrput])
 
+    # create min throughput information
+    minThroughputList.append([iterationCount] + minthroughputs)
+
     # save file and trajectory image, not for all iterationCount ...
     if (iterationCount <= 5 or
         (iterationCount <= 50 and iterationCount % 5 == 0) or
         (iterationCount <= 250 and iterationCount % 25 == 0) or
         (iterationCount <= 500 and iterationCount % 100 == 0) or
         iterationCount % 200 == 0 or
-        iterationCount == iters - 1):
+        
+        (iterationCount == iters // 2 - 1           and isStatic) or
+        (iterationCount == iters - 1                and not isStatic and training) or
+        (iterationCount == max(10, iters // 20) - 1 and not isStatic and not training)):
 
         # save input and output data at the end
         if isStatic:
@@ -777,9 +783,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         else:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_input_preprocessed.csv')
             pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_output_preprocessed.csv')
-
-        # create min throughput information
-        minThroughputList.append([iterationCount] + minthroughputs)
 
         # all_throughputs
         all_throughputs = np.array(all_throughputs)
