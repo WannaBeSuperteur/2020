@@ -168,7 +168,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.CNN1 = tf.keras.layers.Conv2D(filters=128, kernel_size=3, padding='valid', activation='relu', name='CNN1') # 7
         self.CNN2 = tf.keras.layers.Conv2D(filters=64, kernel_size=3, padding='valid', activation='relu', name='CNN2')  # 5
 
-        self.CNNDense0 = tf.keras.layers.Dense(1024, activation='relu', kernel_regularizer=L2, name='CNNDense0')
+        self.CNNDense0 = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='CNNDense0')
         self.CNNDense1 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='CNNDense1')
 
         # dense part
@@ -177,7 +177,8 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         self.dense2 = tf.keras.layers.Dense(4, activation='relu', kernel_regularizer=L2, name='dense2')
 
         # final output part
-        self.final = tf.keras.layers.Dense(1, activation='tanh', kernel_regularizer=L2, name='dense_final')
+        self.finalDense = tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=L2, name='dense_final0')
+        self.final = tf.keras.layers.Dense(1, activation='tanh', kernel_regularizer=L2, name='dense_final1')
 
     def call(self, inputs, training):
         ws = self.windowSize
@@ -200,16 +201,20 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board = self.dropout(board)
         board = self.CNNDense1(board)
 
+        # (skip connection) merge the final dense of the board, with original (board: 4 -> 4 + 4 = 8)
+        board = tf.concat([board, parameters], axis=-1)
+
         # dense part with shape (4)
-        parameters = self.dense0(parameters)
-        parameters = self.dropout(parameters)
-        parameters = self.dense1(parameters)
-        parameters = self.dropout(parameters)
-        parameters = self.dense2(parameters)
+        params = self.dense0(parameters)
+        params = self.dropout(params)
+        params = self.dense1(params)
+        params = self.dropout(params)
+        params = self.dense2(params)
 
         # final output part
-        concatenated = tf.concat([board, parameters], axis=-1)
-        output = self.final(concatenated)
+        concatenated = tf.concat([board, params], axis=-1)
+        output       = self.finalDense(concatenated)
+        output       = self.final(output)
 
         return output
 
