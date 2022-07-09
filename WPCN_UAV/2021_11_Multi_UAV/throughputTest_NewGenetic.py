@@ -107,10 +107,13 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param
 
 # distance between UAV and device (also can be between device A and device B)
 def dist(locUAV, locDevice):
+    xdif = locUAV[0] - locDevice[0]
+    ydif = locUAV[1] - locDevice[1]
+    
     if len(locUAV) == 3:
-        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2) + pow(locUAV[2], 2))
+        return math.sqrt(xdif * xdif + ydif * ydif + locUAV[2] * locUAV[2])
     else:
-        return math.sqrt(pow(locUAV[0] - locDevice[0], 2) + pow(locUAV[1] - locDevice[1], 2))
+        return math.sqrt(xdif * xdif + ydif * ydif)
 
 # compute the path (with moving minimum times) corresponding to the movement
 def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
@@ -143,12 +146,13 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
 
             # find the index of the best direction (index 0~7: move, index 8: stop)
             for i in range(8):
-                nextLocUAV    = np.array(currentLocUAV) + np.array(unitMovements[i])
-                nextLocUAV    = list(nextLocUAV)
-                nextLocUAV[0] = np.clip(nextLocUAV[0], 0, width) # limit x value
-                nextLocUAV[1] = np.clip(nextLocUAV[1], 0, height) # limit y value
-                nextDist      = dist(nextLocUAV, device)
+                nextLocUAV    = [currentLocUAV[0] + unitMovements[i][0], currentLocUAV[1] + unitMovements[i][1]]
 
+                # limit x and y value
+                nextLocUAV[0] = 0.0 if nextLocUAV[0] < 0.0 else (width  if nextLocUAV[0] > width  else nextLocUAV[0])
+                nextLocUAV[1] = 0.0 if nextLocUAV[1] < 0.0 else (height if nextLocUAV[1] > height else nextLocUAV[1])
+
+                nextDist = dist(nextLocUAV, device)
                 if nextDist < minDist:
                     minDist          = nextDist
                     minDistDirection = i
@@ -164,9 +168,11 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
             else:
                 tempCurrentLocUAV = np.array(currentLocUAV)
                 
-                currentLocUAV = np.array(currentLocUAV) + np.array(unitMovements[minDistDirection])
-                currentLocUAV[0] = np.clip(currentLocUAV[0], 0.0, width) # limit x value
-                currentLocUAV[1] = np.clip(currentLocUAV[1], 0.0, height) # limit y value
+                currentLocUAV = [currentLocUAV[0] + unitMovements[i][0], currentLocUAV[1] + unitMovements[i][1]]
+
+                # limit x and y value
+                currentLocUAV[0] = 0.0 if currentLocUAV[0] < 0.0 else (width  if currentLocUAV[0] > width  else currentLocUAV[0])
+                currentLocUAV[1] = 0.0 if currentLocUAV[1] < 0.0 else (height if currentLocUAV[1] > height else currentLocUAV[1])
 
                 # clipping result is the same with original -> not meaningful movement
                 if dist(currentLocUAV, tempCurrentLocUAV) < 1e-6:
