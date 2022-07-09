@@ -19,6 +19,16 @@ or
 to iterate many "train-test"s at once,
 * ```python throughputTest_at_once.py```
 
+time consumption:
+* conditions:
+  * ```L=5```
+  * ```devices=20```
+  * ```T=1.0```
+  * ```N=30```
+* before ```2022.07.09``` : ```3``` training trajectories / ```1 min```
+* after ```2022.07.09``` 1st update (function modification) : ```20~25``` training trajectories / ```1 min```
+* after ```2022.07.09``` 2nd update (limiting writing files) : ```50``` training trajectories / ```1 min```
+
 ## FILE INFO - HELPER
 * ```algorithms.py```
   * ```kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbose)``` : K means clustering **(PHASE 2 of FIGURE 2)**
