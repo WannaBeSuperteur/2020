@@ -81,8 +81,11 @@ if __name__ == '__main__':
     # parameter 2 -> proportion of A and B (with A=0.3, B=0.7)
     param2 = 0.3
 
+    # parameter 3 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
+    param3 = 0.4
+
     # get optimal path
-    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, width, height, printed=True)
+    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, param3, width, height, printed=True)
 
     print('\ndevice list :')
     print(deviceList)
