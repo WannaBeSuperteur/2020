@@ -768,6 +768,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         (iterationCount == max(10, iters // 20) - 1 and not isStatic and not training)):
 
         # save input and output data at the end
+        input_data  = np.round_(input_data, 6)
+        output_data = np.round_(output_data, 6)
+        
         if isStatic:
             pd.DataFrame(np.array(input_data)).to_csv('static_input_raw.csv')
             pd.DataFrame(np.array(output_data)).to_csv('static_output_raw.csv')
@@ -782,6 +785,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
                                                                                        output_data,
                                                                                        windowSize)
+
+        preprocessed_input_data  = np.round_(preprocessed_input_data, 6)
+        preprocessed_output_data = np.round_(preprocessed_output_data, 6)
 
         if isStatic:
             pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_input_preprocessed.csv')
