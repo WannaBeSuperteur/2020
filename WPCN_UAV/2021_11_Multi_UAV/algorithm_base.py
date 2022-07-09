@@ -747,8 +747,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     # save file and trajectory image, not for all iterationCount ...
     if (iterationCount <= 5 or
         (iterationCount <= 50 and iterationCount % 5 == 0) or
-        (iterationCount <= 250 and iterationCount % 25) or
-        (iterationCount <= 500 and iterationCount % 100) or
+        (iterationCount <= 250 and iterationCount % 25 == 0) or
+        (iterationCount <= 500 and iterationCount % 100 == 0) or
         iterationCount % 200 == 0 or
         iterationCount == iters - 1):
 
