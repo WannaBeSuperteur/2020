@@ -197,12 +197,13 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         board = self.CNN2(board)    # 7  -> 5
 
         board = self.flat(board)
+        
+        # (skip connection) merge the final dense of the board, with original (board: 4 -> 4 + N)
+        board = tf.concat([board, parameters], axis=-1)
+        
         board = self.CNNDense0(board)
         board = self.dropout(board)
         board = self.CNNDense1(board)
-
-        # (skip connection) merge the final dense of the board, with original (board: 4 -> 4 + 4 = 8)
-        board = tf.concat([board, parameters], axis=-1)
 
         # dense part with shape (4)
         params = self.dense0(parameters)
