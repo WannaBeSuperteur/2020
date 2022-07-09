@@ -766,9 +766,9 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         (iterationCount <= 500 and iterationCount % 100 == 0) or
         iterationCount % 200 == 0 or
         
-        (iterationCount == iters // 2 - 1           and isStatic) or
-        (iterationCount == iters - 1                and not isStatic and training) or
-        (iterationCount == max(10, iters // 20) - 1 and not isStatic and not training)):
+        (iterationCount == iters // 2 - 1 and isStatic) or                     # static
+        (iterationCount == iters - 1      and not isStatic and training) or    # training
+        (iterationCount == iters - 1      and not isStatic and not training)): # test
 
         # save input and output data at the end
         input_data  = np.round_(input_data, 6)
