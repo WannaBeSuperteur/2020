@@ -354,33 +354,39 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
             plt.scatter(q[ind][2], q[ind][3], s=markerSize, marker=marker, c=markerColors[l])
 
             # draw line
-            if t < N-1:
+            if t < N-1 and not isStatic:
                 x = [q[ind][2],
                      q[ind][2] * trajectoryArrowLength        + q[ind+1][2] * (1.0 - trajectoryArrowLength),
-                     q[ind][2] * trajectoryArrowLength * 0.75 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.75),
-                     q[ind][2] * trajectoryArrowLength * 0.5  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.5),
-                     q[ind][2] * trajectoryArrowLength * 0.25 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.25),
+                     q[ind][2] * trajectoryArrowLength * 0.72 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.72),
+                     q[ind][2] * trajectoryArrowLength * 0.78 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.78),
+                     q[ind][2] * trajectoryArrowLength * 0.47 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.47),
+                     q[ind][2] * trajectoryArrowLength * 0.53 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.53),
+                     q[ind][2] * trajectoryArrowLength * 0.22 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.22),
+                     q[ind][2] * trajectoryArrowLength * 0.28 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.28),
                                                                 q[ind+1][2]]
                 
                 y = [q[ind][3],
                      q[ind][3] * trajectoryArrowLength        + q[ind+1][3] * (1.0 - trajectoryArrowLength),
-                     q[ind][3] * trajectoryArrowLength * 0.75 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.75),
-                     q[ind][3] * trajectoryArrowLength * 0.5  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.5),
-                     q[ind][3] * trajectoryArrowLength * 0.25 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.25),
+                     q[ind][3] * trajectoryArrowLength * 0.72 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.72),
+                     q[ind][3] * trajectoryArrowLength * 0.78 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.78),
+                     q[ind][3] * trajectoryArrowLength * 0.47 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.47),
+                     q[ind][3] * trajectoryArrowLength * 0.53 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.53),
+                     q[ind][3] * trajectoryArrowLength * 0.22 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.22),
+                     q[ind][3] * trajectoryArrowLength * 0.28 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.28),
                                                                 q[ind+1][3]]
 
-                drawLine(x[ :2], y[ :2], 0.0 , trajectoryArrowThickness, markerColors[l], False)
-                drawLine(x[1:3], y[1:3], 3.0 , trajectoryArrowThickness, markerColors[l], True)
-                drawLine(x[2:4], y[2:4], 2.25, trajectoryArrowThickness, markerColors[l], True)
-                drawLine(x[3:5], y[3:5], 1.5 , trajectoryArrowThickness, markerColors[l], True)
-                drawLine(x[4: ], y[4: ], 0.75, trajectoryArrowThickness, markerColors[l], True)
+                drawLine(x[ :2], y[ :2], 0.0, trajectoryArrowThickness, markerColors[l], False)
+                drawLine(x[1:3], y[1:3], 4.0, trajectoryArrowThickness, markerColors[l], True)
+                drawLine(x[3:5], y[3:5], 3.0, trajectoryArrowThickness, markerColors[l], True)
+                drawLine(x[5:7], y[5:7], 2.0, trajectoryArrowThickness, markerColors[l], True)
+                drawLine(x[7: ], y[7: ], 1.0, trajectoryArrowThickness, markerColors[l], True)
             
             else:
                 x = [q[ind][2], None]
                 y = [q[ind][3], None]
 
             # check stop of UAV
-            if t == N-1 or pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) >= 0.1:
+            if t == N-1 or isStatic or pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) >= 0.1:
                 
                 # write "stop count" when starting moving or the last time slot
                 if doNotMoveCnt > 0:
