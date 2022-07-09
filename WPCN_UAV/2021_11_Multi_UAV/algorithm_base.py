@@ -407,28 +407,32 @@ def update_alkl(alkl, q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDe
 
     # when DO NOT have alkl with (l, deviceToCommunicate, l, t)
     if str(l) + ',' + str(deviceToCommunicate) not in alkl:
-        alkl[str(l) + ',' + str(deviceToCommunicate)] = str(t) + ','
+        alkl[str(l) + ',' + str(deviceToCommunicate)] = pow(2, t)
 
         # set alkl as 0 for other devices
         for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
 
-            try:
-                alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
-            except:
+            if (str(l) + ',' + str(k) in alkl and
+                (alkl[str(l) + ',' + str(k)] % pow(2, t+1)) // pow(2, t) == 1):
+                
+                alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)] - pow(2, t)
+            else:
                 pass
 
     # when have alkl with (l, deviceToCommunicate, l, t)
     else:
-        alkl[str(l) + ',' + str(deviceToCommunicate)] += str(t) + ','
+        alkl[str(l) + ',' + str(deviceToCommunicate)] += pow(2, t)
 
         # set alkl as 0 for other devices
         for k in range(devices_in_l):
             if k == deviceToCommunicate: continue
 
-            try:
-                alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)].replace(str(t) + ',', '')
-            except:
+            if (str(l) + ',' + str(k) in alkl and
+                (alkl[str(l) + ',' + str(k)] % pow(2, t+1)) // pow(2, t) == 1):
+                
+                alkl[str(l) + ',' + str(k)] = alkl[str(l) + ',' + str(k)] - pow(2, t)
+            else:
                 pass
 
 # preprocess input and output

@@ -227,7 +227,7 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
     thrputs = []
 
     for n in range(N):
-        alkl_communicated = (str(l) + ',' + str(k) in alkl) and (str(n) + ',' in alkl[str(l) + ',' + str(k)])
+        alkl_communicated = (str(l) + ',' + str(k) in alkl) and ((alkl[str(l) + ',' + str(k)] % pow(2, n+1)) // pow(2, n) == 1)
         throughput = formula_10(q, w, l, k, n, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, PU, numOfDevs)
 
         if printDetails == True:
