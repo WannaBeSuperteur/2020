@@ -349,37 +349,40 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                 markerSize = 100
             else:
                 marker = 'o'
-                markerSize = 25
+                markerSize = 15
                 
             plt.scatter(q[ind][2], q[ind][3], s=markerSize, marker=marker, c=markerColors[l])
 
             # draw line
             if t < N-1 and not isStatic:
                 x = [q[ind][2],
-                     q[ind][2] * trajectoryArrowLength * 1.2  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.2 ),
-                     q[ind][2] * trajectoryArrowLength * 0.9  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.9 ),
-                     q[ind][2] * trajectoryArrowLength * 1.0  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.0 ),
-                     q[ind][2] * trajectoryArrowLength * 0.65 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.65),
-                     q[ind][2] * trajectoryArrowLength * 0.75 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.75),
-                     q[ind][2] * trajectoryArrowLength * 0.4  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.4 ),
-                     q[ind][2] * trajectoryArrowLength * 0.5  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.5 ),
-                     q[ind][2] * trajectoryArrowLength * 0.2  + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.2 )]
+                     q[ind][2] * trajectoryArrowLength * 1.5   + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.5  ),
+                     q[ind][2] * trajectoryArrowLength * 1.175 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.175),
+                     q[ind][2] * trajectoryArrowLength * 1.325 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.325),
+                     q[ind][2] * trajectoryArrowLength * 0.925 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.925),
+                     q[ind][2] * trajectoryArrowLength * 1.075 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 1.075),
+                     q[ind][2] * trajectoryArrowLength * 0.675 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.675),
+                     q[ind][2] * trajectoryArrowLength * 0.825 + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.825),
+                     q[ind][2] * trajectoryArrowLength * 0.5   + q[ind+1][2] * (1.0 - trajectoryArrowLength * 0.5  ),
+                                                                 q[ind+1][2]]
                 
                 y = [q[ind][3],
-                     q[ind][3] * trajectoryArrowLength * 1.2  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.2 ),
-                     q[ind][3] * trajectoryArrowLength * 0.9  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.9 ),
-                     q[ind][3] * trajectoryArrowLength * 1.0  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.0 ),
-                     q[ind][3] * trajectoryArrowLength * 0.65 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.65),
-                     q[ind][3] * trajectoryArrowLength * 0.75 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.75),
-                     q[ind][3] * trajectoryArrowLength * 0.4  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.4 ),
-                     q[ind][3] * trajectoryArrowLength * 0.5  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.5 ),
-                     q[ind][3] * trajectoryArrowLength * 0.2  + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.2 )]
+                     q[ind][3] * trajectoryArrowLength * 1.5   + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.5  ),
+                     q[ind][3] * trajectoryArrowLength * 1.175 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.175),
+                     q[ind][3] * trajectoryArrowLength * 1.325 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.325),
+                     q[ind][3] * trajectoryArrowLength * 0.925 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.925),
+                     q[ind][3] * trajectoryArrowLength * 1.075 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 1.075),
+                     q[ind][3] * trajectoryArrowLength * 0.675 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.675),
+                     q[ind][3] * trajectoryArrowLength * 0.825 + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.825),
+                     q[ind][3] * trajectoryArrowLength * 0.5   + q[ind+1][3] * (1.0 - trajectoryArrowLength * 0.5  ),
+                                                                 q[ind+1][3]]
 
                 drawLine(x[ :2], y[ :2], 0.0, trajectoryArrowThickness, markerColors[l], False)
                 drawLine(x[1:3], y[1:3], 4.0, trajectoryArrowThickness, markerColors[l], True)
                 drawLine(x[3:5], y[3:5], 3.0, trajectoryArrowThickness, markerColors[l], True)
                 drawLine(x[5:7], y[5:7], 2.0, trajectoryArrowThickness, markerColors[l], True)
-                drawLine(x[7: ], y[7: ], 1.0, trajectoryArrowThickness, markerColors[l], True)
+                drawLine(x[7:9], y[7:9], 1.0, trajectoryArrowThickness, markerColors[l], True)
+                drawLine(x[8: ], y[8: ], 0.0, trajectoryArrowThickness, markerColors[l], False)
             
             else:
                 x = [q[ind][2], None]
