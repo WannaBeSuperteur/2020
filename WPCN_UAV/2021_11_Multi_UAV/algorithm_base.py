@@ -603,7 +603,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # for example: 3 devices in cluster 0, 7 devices in cluster 1, and 6 devices in cluster 2
         # then, it becomes [3, 7, 6]
         while True:
-            (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, True, False)
+            (q, w, cluster_mem, markerColors) = algo.kMeansClustering(L, deviceList, width, height, H, N, False, False, False)
             numOfDevs = [cluster_mem.count(l) for l in range(L)]
             print(numOfDevs)
             clustering_count += 1

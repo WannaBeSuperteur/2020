@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 import numpy as np
 import formula as f
+import time
 
 def plotClusteringResult(count, L, UAVloc, markerColors, clusters, width, height):
     plt.clf()
@@ -51,6 +52,8 @@ def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbo
     # cluster = each UAV, centroid = each UAV's location, elements = devices
     count = 0
     while True:
+
+        print(time.time())
         
         # initialize clusters as all []
         for i in range(L): clusters[i] = []
@@ -67,7 +70,9 @@ def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbo
                 thisCluster = UAVloc[j] # [xj0, yj0, hj0]
 
                 # distance between device i and cluster j
-                dist = math.sqrt(pow(thisDevice[0] - thisCluster[0], 2) + pow(thisDevice[1] - thisCluster[1], 2))
+                dist_x = thisDevice[0] - thisCluster[0]
+                dist_y = thisDevice[1] - thisCluster[1]
+                dist   = math.sqrt(dist_x * dist_x + dist_y * dist_y)
                 clusterDist.append(dist)
 
             # find the cluster with the minimum distance
@@ -221,7 +226,7 @@ if __name__ == '__main__':
 
     # do K means clustering (at least 1 device for all clusters)
     while True:
-        (q, w, cluster_mem, markerColors) = kMeansClustering(L, deviceList, width, height, H, T, True, True)
+        (q, w, cluster_mem, markerColors) = kMeansClustering(L, deviceList, width, height, H, T, False, False, True)
         if min(cluster_mem.count(l) for l in range(L)) >= int(0.6 * devices // L): break
 
     # print result
