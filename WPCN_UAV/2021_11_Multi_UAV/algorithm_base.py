@@ -676,7 +676,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
             # get throughput
             for k in range(devices_in_l):
-                thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)[-1]
+                thrput = f.formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU, numOfDevs)
                 final_throughputs[k] = thrput
 
             # decide next move (update directionList at time t < N)

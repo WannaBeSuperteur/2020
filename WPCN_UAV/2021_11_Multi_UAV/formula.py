@@ -281,10 +281,12 @@ def formula_11(q, w, l, k, alphaP, N, T, s, b1, b2, mu1, mu2, fc, c, L, alkl, PU
 
         if alkl_communicated:
             result += throughput
-            
-        thrputs.append(result / N)
+
+        # write throughput for only the last time slot
+        if n == N-1:
+            thrputs.append(result / N)
 
     if printDetails == True:
         print('[11] N = ' + str(N) + ' result = ' + str(result))
 
-    return thrputs
+    return thrputs[0]
