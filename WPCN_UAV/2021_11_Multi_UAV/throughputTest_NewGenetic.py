@@ -424,6 +424,8 @@ if __name__ == '__main__':
     static_input_data = []
     static_output_data = []
 
+    currentTime = time.strftime('%Y%m%d%H%M', time.localtime())[2:]
+
     for iterationCount in range(iters // 2):
         print('STATIC ITER COUNT ', iterationCount, '/', iters // 2)
 
@@ -431,7 +433,7 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  static_input_data, static_output_data, True, None, windowSize, True,
-                                 trajectoryArrowLength, trajectoryArrowThickness,
+                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)
@@ -458,7 +460,7 @@ if __name__ == '__main__':
                                      ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                      iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                      input_data, output_data, True, None, windowSize, False,
-                                     trajectoryArrowLength, trajectoryArrowThickness,
+                                     trajectoryArrowLength, trajectoryArrowThickness, currentTime,
                                      base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                      base_func_computeDirectionList=computeDirectionList,
                                      base_func_getDeviceLocation=None)
@@ -489,7 +491,7 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  test_input_data, test_output_data, False, model, windowSize, False,
-                                 trajectoryArrowLength, trajectoryArrowThickness,
+                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)

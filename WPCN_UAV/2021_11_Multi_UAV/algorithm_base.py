@@ -627,7 +627,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                    input_data, output_data, training, model, windowSize, isStatic,
-                   trajectoryArrowLength, trajectoryArrowThickness,
+                   trajectoryArrowLength, trajectoryArrowThickness, currentTime,
                    base_func_initializeMovementOfUAV=None,
                    base_func_computeDirectionList=None,
                    base_func_getDeviceLocation=None):
@@ -849,11 +849,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # save minimum throughput list
         if isStatic:
-            memo = 'static' + time.strftime('%Y%m%d%H%M', time.localtime())[2:]
+            memo = 'static' + currentTime 
         elif training == True:
-            memo = 'train' + time.strftime('%Y%m%d%H%M', time.localtime())[2:]
+            memo = 'train' + currentTime
         else:
-            memo = 'test' + time.strftime('%Y%m%d%H%M', time.localtime())[2:]
+            memo = 'test' + currentTime
 
         saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
 
