@@ -744,55 +744,57 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         input_data.append(np.concatenate((inputImage, bestParams), axis=-1))
         output_data.append([minThrput])
 
-    # save input and output data at the end
-    if isStatic:
-        pd.DataFrame(np.array(input_data)).to_csv('static_input_raw.csv')
-        pd.DataFrame(np.array(output_data)).to_csv('static_output_raw.csv')
-    elif training == True:
-        pd.DataFrame(np.array(input_data)).to_csv('train_input_raw.csv')
-        pd.DataFrame(np.array(output_data)).to_csv('train_output_raw.csv')
-    else:
-        pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
-        pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
-
-    # preprocess input and output data
-    (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
-                                                                                   output_data,
-                                                                                   windowSize)
-
-    if isStatic:
-        pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_input_preprocessed.csv')
-        pd.DataFrame(np.array(preprocessed_output_data)).to_csv('static_output_preprocessed.csv')
-    elif training == True:
-        pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
-        pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
-    else:
-        pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_input_preprocessed.csv')
-        pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_output_preprocessed.csv')
-
-    # create min throughput information
-    minThroughputList.append([iterationCount] + minthroughputs)
-
-    # all_throughputs
-    all_throughputs = np.array(all_throughputs)
-    all_throughputs_zero = (all_throughputs == 0)
-    all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
-
-    # save trajectory as graph
+    # save file and trajectory image, not for all iterationCount ...
     if iterationCount < 5 or (iterationCount < 50 and iterationCount % 5 == 0) or iterationCount % 25 == 0:
+
+        # save input and output data at the end
+        if isStatic:
+            pd.DataFrame(np.array(input_data)).to_csv('static_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('static_output_raw.csv')
+        elif training == True:
+            pd.DataFrame(np.array(input_data)).to_csv('train_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('train_output_raw.csv')
+        else:
+            pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
+
+        # preprocess input and output data
+        (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
+                                                                                       output_data,
+                                                                                       windowSize)
+
+        if isStatic:
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('static_output_preprocessed.csv')
+        elif training == True:
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
+        else:
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_output_preprocessed.csv')
+
+        # create min throughput information
+        minThroughputList.append([iterationCount] + minthroughputs)
+
+        # all_throughputs
+        all_throughputs = np.array(all_throughputs)
+        all_throughputs_zero = (all_throughputs == 0)
+        all_throughputs = (all_throughputs - np.min(all_throughputs)) / (np.max(all_throughputs) - np.min(all_throughputs))
+
+        # save trajectory as graph
         saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
                             q, markerColors, training, isStatic, L, N,
                             trajectoryArrowLength, trajectoryArrowThickness, alkl)
 
-    # save minimum throughput list
-    if isStatic:
-        memo = 'static'
-    elif training == True:
-        memo = 'train'
-    else:
-        memo = 'test'
+        # save minimum throughput list
+        if isStatic:
+            memo = 'static'
+        elif training == True:
+            memo = 'train'
+        else:
+            memo = 'test'
 
-    saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
+        saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
 
 # save min throughput as *.csv file
 def saveMinThroughput(minThroughputList, memo, iters, L, devices, N):
