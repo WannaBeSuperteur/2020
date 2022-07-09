@@ -138,7 +138,12 @@ def changeColor(colorCode, k):
 
     for x in [r, g, b]:
         x = int(x, 16)
-        x = min(int(x * k), 255)
+        
+        if x < 127:
+            x = max(int(225 * (k - 1)), 0)
+        else:
+            x = min(int(x * k), 225)
+
         x = hex(x)
 
         result += '0'*(2 - len(x[2:])) + x[2:]
@@ -315,7 +320,7 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
 
             # communication count (refer to alkl)
             cnt = bin(alkl[str(w[i][0]) + ',' + str(w[i][1])]).count('1')
-            plt.text(w[i][2], w[i][3], s=cnt, fontsize=8, c=markerColors[w[i][0]])
+            plt.text(w[i][2], w[i][3], s=cnt, fontsize=10, c=changeColor(markerColors[w[i][0]], 1.6), weight='bold')
 
     # q = [[l, t, xlt, ylt, hlt], ...] for UAV
     for l in range(L):
@@ -342,7 +347,7 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                 
                 # write "stop count" when starting moving or the last time slot
                 if doNotMoveCnt > 0:
-                    plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
+                    plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10, weight='bold')
                 doNotMoveCnt = 0
                 
             else:

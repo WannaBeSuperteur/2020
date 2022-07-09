@@ -40,12 +40,12 @@ def kMeansClustering(L, deviceList, width, height, H, N, display, saveImg, verbo
     for i in range(L):
         mod = ((i * 6) % L) / L
         
-        if i < L / 6: markerColors.append('#FF' + format(int(204*mod), '02X') + '00')
-        elif i < 2*L / 6: markerColors.append('#' + format(int(255*(1-mod)), '02X') + 'CC00')
-        elif i < 3*L / 6: markerColors.append('#00CC' + format(int(255*mod), '02X'))
-        elif i < 4*L / 6: markerColors.append('#00' + format(int(204*(1-mod)), '02X') + 'FF')
-        elif i < 5*L / 6: markerColors.append('#' + format(int(255*mod), '02X') + '00FF')
-        else: markerColors.append('#FF00' + format(int(255*(1-mod)), '02X'))
+        if i < L / 6: markerColors.append('#DD' + format(int(170*mod), '02X') + '00')
+        elif i < 2*L / 6: markerColors.append('#' + format(int(221*(1-mod)), '02X') + 'AA00')
+        elif i < 3*L / 6: markerColors.append('#00AA' + format(int(221*mod), '02X'))
+        elif i < 4*L / 6: markerColors.append('#00' + format(int(170*(1-mod)), '02X') + 'DD')
+        elif i < 5*L / 6: markerColors.append('#' + format(int(221*mod), '02X') + '00DD')
+        else: markerColors.append('#DD00' + format(int(221*(1-mod)), '02X'))
     
     # do K means clustering
     # cluster = each UAV, centroid = each UAV's location, elements = devices
