@@ -849,11 +849,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
 
         # save minimum throughput list
         if isStatic:
-            memo = 'static'
+            memo = 'static' + time.strftime('%Y%m%d%H%M', time.localtime())[2:]
         elif training == True:
-            memo = 'train'
+            memo = 'train' + time.strftime('%Y%m%d%H%M', time.localtime())[2:]
         else:
-            memo = 'test'
+            memo = 'test' + time.strftime('%Y%m%d%H%M', time.localtime())[2:]
 
         saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
 
