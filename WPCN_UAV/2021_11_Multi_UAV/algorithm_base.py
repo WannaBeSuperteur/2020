@@ -331,13 +331,16 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
 
             # draw marker
             if t == 0:
-                marker = 'P'
+                marker = '+'
+                markerSize = 100
             elif t == N-1:
-                marker = 'X'
+                marker = 'x'
+                markerSize = 100
             else:
                 marker = 'o'
+                markerSize = 25
                 
-            plt.scatter(q[ind][2], q[ind][3], s=25, marker=marker, c=markerColors[l])
+            plt.scatter(q[ind][2], q[ind][3], s=markerSize, marker=marker, c=markerColors[l])
 
             # draw line
             if t < N-1:
