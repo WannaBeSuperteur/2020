@@ -22,9 +22,17 @@ class GENETIC_VISIT_AI_MODEL(tf.keras.Model):
         self.outputCols = output_cols
 
         # dense part
-        self.dense0 = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense0')
-        self.dense1 = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense1')
-        self.dense2 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense2')
+        self.dense0 = tf.keras.layers.Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.025),
+                                            kernel_regularizer=L2, name='dense0')
+        
+        self.dense1 = tf.keras.layers.Dense(256, activation=tf.keras.layers.LeakyReLU(alpha=0.025),
+                                            kernel_regularizer=L2, name='dense1')
+        
+        self.dense2 = tf.keras.layers.Dense(256, activation=tf.keras.layers.LeakyReLU(alpha=0.025),
+                                            kernel_regularizer=L2, name='dense2')
+        
+        self.dense3 = tf.keras.layers.Dense(64, activation=tf.keras.layers.LeakyReLU(alpha=0.025),
+                                            kernel_regularizer=L2, name='dense3')
 
         # final output part
         self.final  = tf.keras.layers.Dense(output_cols, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
@@ -37,6 +45,8 @@ class GENETIC_VISIT_AI_MODEL(tf.keras.Model):
         hiddens = self.dense1(hiddens)
         hiddens = self.dropout(hiddens)
         hiddens = self.dense2(hiddens)
+        hiddens = self.dropout(hiddens)
+        hiddens = self.dense3(hiddens)
 
         # final output part
         output  = self.final(hiddens)
