@@ -97,7 +97,7 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
 
     devCnt = len(deviceList)
     movements = list(permutations(range(devCnt), devCnt))
-    resultDist = 1000000
+    resultDist = 1000000 # devices=100, width=100, height=100 -> max 100*sqrt(100^2 + 100^2) = around 14K
     resultMovement = list(range(devCnt))
 
     for movement in movements:
@@ -164,6 +164,8 @@ def test(input_data, output_data, print_input_data):
         # save device location as image
         saveDeviceLocationImg(initialLocUAV, deviceList, len(input_data), swappedMovement, bruteForceMovement)
 
+# define model for LARGE SCALE CLUSTER (with >10 devices)
+# DEEP LEARNING (input: 2n, output: 2n-k) is faster than BRUTE FORCE (O(n!))
 def defineModel(train_input, train_output, test_input, test_output, epochs):
 
     # define model
@@ -209,9 +211,10 @@ if __name__ == '__main__':
 
     input_data  = []
     output_data = []
-    times       = 1000
+    times       = 20000
 
     for i in range(times):
+        if i % 300 == 0: print(i)
         test(input_data, output_data, i < 10)
 
     # save dataset
