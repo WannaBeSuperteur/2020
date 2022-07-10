@@ -55,7 +55,7 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList, fn):
 # test function
 def test(deviceList, initialMovement, fn):
 
-    N = 300
+    N = 150
     width = 60
     height = 70
 
@@ -104,3 +104,18 @@ if __name__ == '__main__':
     initialMovement = [7, 0, 5, 2, 4, 6, 3, 8, 1]
 
     test(deviceList, initialMovement, 'newGeneticTest_trajectory_2')
+
+    # test 3
+    deviceList = [[5, 5], [55, 5],
+                  [5, 65], [55, 65]]
+
+    initialMovement = [0, 3, 1, 2]
+
+    test(deviceList, initialMovement, 'newGeneticTest_trajectory_3')
+
+    # test 4
+    deviceList = [[55, 5], [5, 65], [55, 65]]
+
+    initialMovement = [1, 0, 2]
+
+    test(deviceList, initialMovement, 'newGeneticTest_trajectory_4')
