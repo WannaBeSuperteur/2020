@@ -229,8 +229,8 @@ if __name__ == '__main__':
         deviceCountList.append(devCnt)
 
     # save dataset
-    pd.DataFrame(np.array(input_data)).to_csv('newGeneticDeviceVisitAI_input.csv')
-    pd.DataFrame(np.array(output_data)).to_csv('newGeneticDeviceVisitAI_output.csv')
+    pd.DataFrame(np.round_(input_data, 4)).to_csv('newGeneticDeviceVisitAI_input.csv')
+    pd.DataFrame(np.round_(output_data, 4)).to_csv('newGeneticDeviceVisitAI_output.csv')
 
     # load dataset
     inputD  = pd.read_csv('newGeneticDeviceVisitAI_input.csv', index_col=0)
