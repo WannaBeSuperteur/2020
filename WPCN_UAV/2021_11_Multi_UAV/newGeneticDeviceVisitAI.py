@@ -11,11 +11,11 @@ import tensorflow as tf
 class GENETIC_VISIT_AI_MODEL(tf.keras.Model):
 
     def __init__(self, input_cols, output_cols, dropout_rate=0.25, training=False, name='Genetic_Visit_AI_model'):
-        super(DEEP_LEARNING_MODEL, self).__init__(name=name)
+        super(GENETIC_VISIT_AI_MODEL, self).__init__(name=name)
         
         # common
         self.dropout    = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
-        self.flat       = tf.keras.layers.Flatten()
+        #self.flat       = tf.keras.layers.Flatten()
         L2              = tf.keras.regularizers.l2(0.001)
 
         self.inputCols  = input_cols
@@ -225,10 +225,10 @@ if __name__ == '__main__':
     # split into training and test data
     train_len    = int(len(inputD) * 0.9)
     
-    train_input  = inputD[:train_len]
-    train_output = outputD[:train_len]
-    test_input   = inputD[train_len:]
-    test_output  = outputD[train_len:]
+    train_input  = np.array(inputD[:train_len])
+    train_output = np.array(outputD[:train_len])
+    test_input   = np.array(inputD[train_len:])
+    test_output  = np.array(outputD[train_len:])
 
     # training and test
     epochs = 10
