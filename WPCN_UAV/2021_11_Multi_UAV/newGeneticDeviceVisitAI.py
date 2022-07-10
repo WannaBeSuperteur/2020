@@ -119,6 +119,31 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
 
     return resultMovement
 
+# movement -> input data of the model (n: the number of devices)
+def convertMovementToInput(movement, deviceList, n):
+
+    # write input and output data
+    input_d = []
+    
+    for i in range(n):
+        if i == 0:
+            firstDevice = movement[0]
+            
+            input_d.append(deviceList[firstDevice][0])
+            input_d.append(deviceList[firstDevice][1])
+        else:
+            thisDevice = movement[i]
+            beforeDevice = movement[i-1]
+            
+            input_d.append(deviceList[thisDevice][0] - deviceList[beforeDevice][0])
+            input_d.append(deviceList[thisDevice][1] - deviceList[beforeDevice][1])
+
+    # fill the blank cells with zero
+    for i in range(2 * (6 - n)):
+        input_d.append(0.0)
+
+    return input_d
+
 def test(input_data, output_data, print_input_data):
     
     # randomly place device
@@ -149,25 +174,8 @@ def test(input_data, output_data, print_input_data):
     totalDistSwapped    = T_NG.computeTotalDist(initialLocUAV, swappedMovement   , deviceList)
     totalDistBruteForce = T_NG.computeTotalDist(initialLocUAV, bruteForceMovement, deviceList)
 
-    # write input and output data
-    input_d = []
-    
-    for i in range(n):
-        if i == 0:
-            swappedFirst = swappedMovement[0]
-            
-            input_d.append(deviceList[swappedFirst][0])
-            input_d.append(deviceList[swappedFirst][1])
-        else:
-            swapped = swappedMovement[i]
-            swappedBefore = swappedMovement[i-1]
-            
-            input_d.append(deviceList[swapped][0] - deviceList[swappedBefore][0])
-            input_d.append(deviceList[swapped][1] - deviceList[swappedBefore][1])
-
-    # fill the blank cells with zero
-    for i in range(2 * (6 - n)):
-        input_d.append(0.0)
+    # create input data
+    input_d = convertMovementToInput(swappedMovement, deviceList, n)
 
     # append to input_data and output_data
     input_data .append(input_d)
@@ -226,7 +234,7 @@ if __name__ == '__main__':
 
     input_data  = []
     output_data = []
-    times       = 250000
+    times       = 1000
 
     for i in range(times):
         if i % 300 == 0: print(i)
