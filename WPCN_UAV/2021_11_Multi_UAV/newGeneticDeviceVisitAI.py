@@ -154,13 +154,18 @@ def test(input_data, output_data, print_input_data):
     
     for i in range(n):
         if i == 0:
-            input_d.append(deviceList[0][0])
-            input_d.append(deviceList[0][1])
+            swappedFirst = swappedMovement[0]
+            
+            input_d.append(deviceList[swappedFirst][0])
+            input_d.append(deviceList[swappedFirst][1])
         else:
-            input_d.append(deviceList[i][0] - deviceList[i-1][0])
-            input_d.append(deviceList[i][1] - deviceList[i-1][1])
+            swapped = swappedMovement[i]
+            swappedBefore = swappedMovement[i-1]
+            
+            input_d.append(deviceList[swapped][0] - deviceList[swappedBefore][0])
+            input_d.append(deviceList[swapped][1] - deviceList[swappedBefore][1])
 
-    # fill the blank cells
+    # fill the blank cells with zero
     for i in range(2 * (6 - n)):
         input_d.append(0.0)
 
@@ -221,7 +226,7 @@ if __name__ == '__main__':
 
     input_data  = []
     output_data = []
-    times       = 150000
+    times       = 1000
 
     for i in range(times):
         if i % 300 == 0: print(i)
