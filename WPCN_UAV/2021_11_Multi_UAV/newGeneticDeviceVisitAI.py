@@ -226,7 +226,7 @@ if __name__ == '__main__':
 
     input_data  = []
     output_data = []
-    times       = 1000
+    times       = 250000
 
     for i in range(times):
         if i % 300 == 0: print(i)
