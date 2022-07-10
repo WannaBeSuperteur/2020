@@ -4,6 +4,20 @@ import random
 import math
 import pandas as pd
 from itertools import permutations
+import matplotlib.pyplot as plt
+
+# save input data as image
+def saveInputDataImg(input_data_row, row_index):
+
+    plt.clf()
+    plt.figure(figsize=(8.0, 8.0))
+    plt.suptitle('new genetic device visit AI input data')
+    plt.axis([-3, 3, -3, 3])
+
+    for i in range(len(input_data_row) // 2):
+        plt.scatter(input_data_row[2*i], input_data_row[2*i + 1], marker='o')
+
+    plt.savefig('newGenetic_AI_input_' + ('%04d' % (row_index - 1)))
 
 # brute force search for the path
 def doBruteForce(deviceList, initialLocUAV, initialMovement):
@@ -72,6 +86,9 @@ def test(input_data, output_data, print_input_data):
 
     if print_input_data == True:
         print('input data :', np.round_(input_data[-1], 4))
+
+        # save input data as image
+        saveInputDataImg(input_data[-1], len(input_data))
 
 def defineModel(train_input, train_output, test_input, test_output, epochs):
     
