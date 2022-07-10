@@ -15,22 +15,27 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
 
     # for each device
     for i in range(len(deviceList)):
-        plt.scatter(deviceList[i][0], deviceList[i][1], s=25, marker='o', c='orange')
+        plt.scatter(deviceList[i][0], deviceList[i][1], s=70, marker='o', c='orange')
 
     # for each location of UAV
     doNotMoveCnt = 0
     
     for t in range(N):
         if t == 0:
-            plt.scatter(initialLocUAV[0], initialLocUAV[1], s=25, marker='x', c='black')
-            plt.scatter(locsUAV[0][0], locsUAV[0][1], s=25, marker='x', c='forestgreen')
-            x = [initialLocUAV[0], locsUAV[0][0]]
-            y = [initialLocUAV[1], locsUAV[0][1]]
+            plt.scatter(initialLocUAV[0], initialLocUAV[1], s=100, marker='X', c='black')
+            plt.scatter(locsUAV[0][0], locsUAV[0][1], s=35, marker='x', c='forestgreen')
+            
+            x = [initialLocUAV[0], initialLocUAV[0] * 0.25 + locsUAV[0][0] * 0.75, locsUAV[0][0]]
+            y = [initialLocUAV[1], initialLocUAV[1] * 0.25 + locsUAV[0][1] * 0.75, locsUAV[0][1]]
             
         else:
-            plt.scatter(locsUAV[t][0], locsUAV[t][1], s=25, marker='x', c='forestgreen')
-            x = [locsUAV[t-1][0], locsUAV[t][0]]
-            y = [locsUAV[t-1][1], locsUAV[t][1]]
+            if t == N-1:
+                plt.scatter(locsUAV[t][0], locsUAV[t][1], s=100, marker='X', c='blue')
+            else:
+                plt.scatter(locsUAV[t][0], locsUAV[t][1], s=35, marker='x', c='forestgreen')
+                
+            x = [locsUAV[t-1][0], locsUAV[t-1][0] * 0.25 + locsUAV[t][0] * 0.75, locsUAV[t][0]]
+            y = [locsUAV[t-1][1], locsUAV[t-1][1] * 0.25 + locsUAV[t][1] * 0.75, locsUAV[t][1]]
 
         # check stop of UAV
         if pow(x[1] - x[0], 2) + pow(y[1] - y[0], 2) < 0.1 and t < N-2:
@@ -41,7 +46,8 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
                 plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
             doNotMoveCnt = 0
 
-        plt.plot(x, y, linewidth=0.75, c='forestgreen')
+        plt.plot(x[:2], y[:2], linewidth=0.75, c='forestgreen')
+        plt.plot(x[1:], y[1:], linewidth=2.5 , c='forestgreen')
 
     # save the figure
     plt.savefig('newGeneticTest_trajectory.png')
