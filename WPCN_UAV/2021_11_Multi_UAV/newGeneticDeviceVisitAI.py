@@ -5,6 +5,43 @@ import math
 import pandas as pd
 from itertools import permutations
 import matplotlib.pyplot as plt
+import tensorflow as tf
+
+# deep learning model class
+class GENETIC_VISIT_AI_MODEL(tf.keras.Model):
+
+    def __init__(self, input_cols, output_cols, dropout_rate=0.25, training=False, name='Genetic_Visit_AI_model'):
+        super(DEEP_LEARNING_MODEL, self).__init__(name=name)
+        
+        # common
+        self.dropout    = tf.keras.layers.Dropout(rate=dropout_rate, name='dropout')
+        self.flat       = tf.keras.layers.Flatten()
+        L2              = tf.keras.regularizers.l2(0.001)
+
+        self.inputCols  = input_cols
+        self.outputCols = output_cols
+
+        # dense part
+        self.dense0 = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense0')
+        self.dense1 = tf.keras.layers.Dense(256, activation='relu', kernel_regularizer=L2, name='dense1')
+        self.dense2 = tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=L2, name='dense2')
+
+        # final output part
+        self.final  = tf.keras.layers.Dense(output_cols, activation='sigmoid', kernel_regularizer=L2, name='dense_final')
+
+    def call(self, inputs, training):
+
+        # input -> output
+        hiddens = self.dense0(inputs)
+        hiddens = self.dropout(hiddens)
+        hiddens = self.dense1(hiddens)
+        hiddens = self.dropout(hiddens)
+        hiddens = self.dense2(hiddens)
+
+        # final output part
+        output  = self.final(hiddens)
+
+        return output
 
 # save device location as image
 def saveDeviceLocationImg(initialLocUAV, deviceList, row_index, swappedMovement, bruteForceMovement):
@@ -128,8 +165,9 @@ def test(input_data, output_data, print_input_data):
         saveDeviceLocationImg(initialLocUAV, deviceList, len(input_data), swappedMovement, bruteForceMovement)
 
 def defineModel(train_input, train_output, test_input, test_output, epochs):
-    
-    model = GENETIC_VISIT_AI_MODEL()
+
+    # define model
+    model = GENETIC_VISIT_AI_MODEL(input_cols=len(train_input[0]), output_cols=len(train_output[0]))
 
     # training setting (early stopping and reduce learning rate)
     early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
