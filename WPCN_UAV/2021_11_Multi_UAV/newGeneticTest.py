@@ -51,31 +51,20 @@ if __name__ == '__main__':
     # numpy setting
     np.set_printoptions(edgeitems=20, linewidth=200)
     
-    N = 100
+    N = 300
     width = 60
     height = 70
 
-    # device placement (X) :
-    #
-    #  X . . . X          58
-    #          .
-    #          .
-    #          .
-    #          X . . . X  39
-    #          .       .
-    #          .       .
-    #          .       .
-    #  X . . . X . . . X  20
-    #
-    # 10      27      44
-    
-    deviceList = [[10, 20], [27, 20], [44, 20], [27, 39], [44, 39], [10, 58], [27, 58]]
+    deviceList = [[5, 5], [20, 5], [35, 5], [55, 5],
+                  [5, 25], [20, 25], [35, 25], [55, 25],
+                  [5, 45], [20, 45], [35, 45], [55, 45],
+                  [5, 65], [20, 65], [35, 65], [55, 65]]
 
     # average of x : 27.00 (-> 20.22), y : 36.29 (-> 20.23), h : 15.00 (as same as the setting)
     initialLocUAV = [20.22, 20.23, 15.0]
 
     # initial movement
-    initialMovement = [3, 1, 2, 5, 4, 6, 0]
+    initialMovement = [7, 1, 10, 2, 9, 4, 0, 5, 6, 13, 3, 14, 8, 12, 15, 11]
 
     # parameter 1 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
     param1 = 0.4

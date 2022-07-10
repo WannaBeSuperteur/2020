@@ -52,9 +52,6 @@ def swapBasic(deviceList, initialLocUAV, initialMovement, printed=False):
     resultMovement = copy.deepcopy(initialMovement)
     devCnt = len(deviceList)
 
-    if printed:
-        print('init:', initialMovement)
-
     # try swap until convergence
     while True:
         swapped = False
@@ -67,12 +64,12 @@ def swapBasic(deviceList, initialLocUAV, initialMovement, printed=False):
             dist      = computeTotalDist(initialLocUAV, resultMovement    , deviceList)
             dist_swap = computeTotalDist(initialLocUAV, resultMovementSwap, deviceList)
 
+            if printed and i == 0:
+                print('dist:', resultMovement, 'dist:', dist)
+
             if dist_swap < dist:
                 resultMovement = resultMovementSwap
                 swapped = True
-
-        if printed:
-            print('swap:', resultMovement)
 
         if swapped == False:
             break
