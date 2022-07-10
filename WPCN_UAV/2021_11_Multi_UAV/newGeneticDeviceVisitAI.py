@@ -49,6 +49,7 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
         
         if dist < resultDist:
             resultMovement = list(movement)
+            resultDist = dist
 
     return resultMovement
 
@@ -99,10 +100,10 @@ def test(input_data, output_data, print_input_data):
 
     # append to input_data and output_data
     input_data .append(input_d)
-    output_data.append([math.log(totalDistBruteForce / totalDistSwapped, 2.0)])
+    output_data.append([math.log(totalDistSwapped / totalDistBruteForce, 2.0)])
 
     if print_input_data == True:
-        print('input data :', np.round_(input_data[-1], 4))
+        print('input data :', np.round_(input_data[-1], 4), 'dist :', round(totalDistSwapped, 4), round(totalDistBruteForce, 4))
 
         # save input data as image
         saveInputDataImg(input_data[-1], len(input_data), n, swappedMovement, bruteForceMovement)
