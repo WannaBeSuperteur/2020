@@ -47,11 +47,45 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
 
 # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
 # parameter 1 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
+
+def swapBasic(deviceList, initialLocUAV, initialMovement, printed=False):
+    resultMovement = copy.deepcopy(initialMovement)
+    devCnt = len(deviceList)
+
+    if printed:
+        print('init:', initialMovement)
+
+    # try swap until convergence
+    while True:
+        swapped = False
+
+        # (S-(A-B), A-(B-C)-D, ...)
+        for i in range(devCnt-1):
+            resultMovementSwap = copy.deepcopy(resultMovement)
+            resultMovementSwap[i], resultMovementSwap[i+1] = resultMovementSwap[i+1], resultMovementSwap[i]
+
+            dist      = computeTotalDist(deviceList, initialLocUAV, resultMovement)
+            dist_swap = computeTotalDist(deviceList, initialLocUAV, resultMovementSwap)
+
+            if dist_swap < dist:
+                resultMovement = resultMovementSwap
+                break
+
+        if printed:
+            print('swap:', resultMovement)
+
+        if swapped == False:
+            break
+
+    return resultMovement
+
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
+    bestMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
 
     # apply deep learning for check need of additional swap
+    # (later)
 
     # create the optimal path based on the best movement
     (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed)

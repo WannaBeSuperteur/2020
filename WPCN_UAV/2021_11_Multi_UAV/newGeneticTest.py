@@ -77,17 +77,11 @@ if __name__ == '__main__':
     # initial movement
     initialMovement = [3, 1, 2, 5, 4, 6, 0]
 
-    # parameter 1 -> 5 * (random swap probability of two neighboring device)
-    param1 = 0.5
-
-    # parameter 2 -> proportion of A and B (with A=0.3, B=0.7)
-    param2 = 0.3
-
-    # parameter 3 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
-    param3 = 0.4
+    # parameter 1 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
+    param1 = 0.4
 
     # get optimal path
-    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, param3, width, height, printed=True)
+    (locsUAV, bestMovement, optimalPath) = T_NG.findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=True)
 
     print('\ndevice list :')
     print(deviceList)
