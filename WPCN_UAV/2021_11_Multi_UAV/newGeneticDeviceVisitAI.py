@@ -6,8 +6,8 @@ import pandas as pd
 from itertools import permutations
 import matplotlib.pyplot as plt
 
-# save input data as image
-def saveInputDataImg(input_data_row, row_index, swappedMovement, bruteForceMovement):
+# save input data as image (n: the number of devices)
+def saveInputDataImg(input_data_row, row_index, n, swappedMovement, bruteForceMovement):
 
     movements = [swappedMovement, bruteForceMovement]
 
@@ -16,21 +16,25 @@ def saveInputDataImg(input_data_row, row_index, swappedMovement, bruteForceMovem
         movement = movements[i]
 
         plt.clf()
-        plt.figure(figsize=(8.0, 8.0))
-        plt.suptitle('new genetic device visit AI input data')
+        plt.figure(figsize=(4.0, 4.0))
+
+        if i == 0:
+            plt.suptitle('new genetic device visit AI input data (swapped)')
+        elif i == 1:
+            plt.suptitle('new genetic device visit AI input data (brute-force best)')
+            
         plt.axis([-3, 3, -3, 3])
 
-        for j in range(len(input_data_row) // 2):
+        for j in range(n):
             plt.scatter(input_data_row[2*j], input_data_row[2*j + 1], marker='o', c='blue')
 
-        for j in range(len(input_data_row) // 2 - 1):
-            print(movement)
+        for j in range(n - 1):
             x = [input_data_row[2*movement[j]    ], input_data_row[2*movement[j+1]    ]]
             y = [input_data_row[2*movement[j] + 1], input_data_row[2*movement[j+1] + 1]]
             
             plt.plot(x, y, linewidth=0.75, c='black')
 
-        plt.savefig('newGenetic_AI_input_' + str(i) + '_' + ('%04d' % (row_index - 1)))
+        plt.savefig('newGenetic_AI_input_' + ('%04d' % (row_index - 1)) + '_' + str(i))
 
 # brute force search for the path
 def doBruteForce(deviceList, initialLocUAV, initialMovement):
@@ -44,7 +48,7 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
         dist = T_NG.computeTotalDist(initialLocUAV, list(movement), deviceList)
         
         if dist < resultDist:
-            resultMovement = movement
+            resultMovement = list(movement)
 
     return resultMovement
 
@@ -101,7 +105,7 @@ def test(input_data, output_data, print_input_data):
         print('input data :', np.round_(input_data[-1], 4))
 
         # save input data as image
-        saveInputDataImg(input_data[-1], len(input_data), swappedMovement, bruteForceMovement)
+        saveInputDataImg(input_data[-1], len(input_data), n, swappedMovement, bruteForceMovement)
 
 def defineModel(train_input, train_output, test_input, test_output, epochs):
     
