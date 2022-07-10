@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import throughputTest_NewGenetic as T_NG
+from matplotlib.pyplot import figure
 
 # save trajectory as graph
 def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
@@ -8,6 +9,7 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
     N = len(locsUAV)
 
     plt.clf()
+    plt.figure(figsize=(width / 6.0, height / 6.0))
     plt.suptitle('trajectory result')
     plt.axis([-1, width+1, -1, height+1])
 
@@ -38,7 +40,7 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
             if doNotMoveCnt > 0:
                 plt.text(x[0], y[0], s=str(doNotMoveCnt + 1), fontsize=10)
             doNotMoveCnt = 0
-            
+
         plt.plot(x, y, linewidth=0.75, c='forestgreen')
 
     # save the figure
