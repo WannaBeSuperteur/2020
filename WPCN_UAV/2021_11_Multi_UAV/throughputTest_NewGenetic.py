@@ -273,13 +273,17 @@ def computeScore(A, B, initialLocUAV, movement, deviceList, width, height):
 
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
 def computeTotalDist(initialLocUAV, movement, deviceList):
+
+    #print('\nmovement:', np.round_(movement, 4))
     
     # initial UAV location <-> first device
     totalDist = dist(initialLocUAV, deviceList[movement[0]])
+    #print(round(totalDist, 4), initialLocUAV, np.round_(deviceList[movement[0]], 4))
 
     # k-th device <-> (k+1)-th device
     for i in range(len(deviceList)-1):
         totalDist += dist(deviceList[movement[i]], deviceList[movement[i+1]])
+        #print(i, round(totalDist, 4), np.round_(deviceList[movement[i+1]], 4))
 
     return totalDist
 
