@@ -2,6 +2,7 @@ import throughputTest_NewGenetic as T_NG
 import numpy as np
 import random
 import math
+import pandas as pd
 
 def doBruteForce(deviceList, initialLocUAV, initialMovement):
     pass
@@ -51,6 +52,43 @@ def test(input_data, output_data):
     input_data .append(input_d)
     output_data.append([math.log(totalDistBruteForce / totalDistSwapped, 2.0)])
 
+def defineModel(train_input, train_output, test_input, test_output, epochs):
+    
+    model = GENETIC_VISIT_AI_MODEL()
+
+    # training setting (early stopping and reduce learning rate)
+    early = tf.keras.callbacks.EarlyStopping(monitor="val_loss",
+                                             mode="min",
+                                             patience=5)
+
+    lr_reduced = tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss',
+                                                      factor=0.1,
+                                                      patience=2,
+                                                      verbose=1,
+                                                      min_delta=0.0001,
+                                                      mode='min')
+
+    model.compile(loss='mse', optimizer='adam', metrics=['accuracy'])
+
+    # train using input and output data
+    model.fit(train_input, train_output,
+              validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
+
+    model.summary()
+    model.save('Genetic_Visit_AI_model')
+
+    # test the model (validation)
+    # write test result and compare (test output) - (ground truth)
+    test_prediction = model.predict(test_input)
+    test_prediction = np.reshape(test_prediction, (len(test_prediction), 1))
+    test_result     = np.concatenate((test_prediction, test_output), axis=1)
+
+    test_result     = pd.DataFrame(test_result)
+    test_result.to_csv('newGenetic_train_valid_result.csv')
+
+    # return the trained model
+    return model
+
 if __name__ == '__main__':
 
     # numpy setting
@@ -62,3 +100,23 @@ if __name__ == '__main__':
 
     for i in range(times):
         test(input_data, output_data)
+
+    # save dataset
+    pd.DataFrame(np.array(input_data)).to_csv('newGeneticDeviceVisitAI_input.csv')
+    pd.DataFrame(np.array(output_data)).to_csv('newGeneticDeviceVisitAI_output.csv')
+
+    # load dataset
+    inputD  = pd.read_csv('newGeneticDeviceVisitAI_input.csv', index_col=0)
+    outputD = pd.read_csv('newGeneticDeviceVisitAI_output.csv', index_col=0)
+
+    # split into training and test data
+    train_len    = len(input_D) * 0.9
+    
+    train_input  = input_D[:train_len]
+    train_output = output_D[:train_len]
+    test_input   = input_D[train_len:]
+    test_output  = output_D[train_len:]
+
+    # training and test
+    epochs = 10
+    defineModel(train_input, train_output, test_input, test_output, epochs)
