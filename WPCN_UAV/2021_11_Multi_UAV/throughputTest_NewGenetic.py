@@ -64,12 +64,12 @@ def swapBasic(deviceList, initialLocUAV, initialMovement, printed=False):
             resultMovementSwap = copy.deepcopy(resultMovement)
             resultMovementSwap[i], resultMovementSwap[i+1] = resultMovementSwap[i+1], resultMovementSwap[i]
 
-            dist      = computeTotalDist(deviceList, initialLocUAV, resultMovement)
-            dist_swap = computeTotalDist(deviceList, initialLocUAV, resultMovementSwap)
+            dist      = computeTotalDist(initialLocUAV, resultMovement    , deviceList)
+            dist_swap = computeTotalDist(initialLocUAV, resultMovementSwap, deviceList)
 
             if dist_swap < dist:
                 resultMovement = resultMovementSwap
-                break
+                swapped = True
 
         if printed:
             print('swap:', resultMovement)
