@@ -7,17 +7,30 @@ from itertools import permutations
 import matplotlib.pyplot as plt
 
 # save input data as image
-def saveInputDataImg(input_data_row, row_index):
+def saveInputDataImg(input_data_row, row_index, swappedMovement, bruteForceMovement):
 
-    plt.clf()
-    plt.figure(figsize=(8.0, 8.0))
-    plt.suptitle('new genetic device visit AI input data')
-    plt.axis([-3, 3, -3, 3])
+    movements = [swappedMovement, bruteForceMovement]
 
-    for i in range(len(input_data_row) // 2):
-        plt.scatter(input_data_row[2*i], input_data_row[2*i + 1], marker='o')
+    # save image for both swappedMovement and bruteForceMovement
+    for i in range(2):
+        movement = movements[i]
 
-    plt.savefig('newGenetic_AI_input_' + ('%04d' % (row_index - 1)))
+        plt.clf()
+        plt.figure(figsize=(8.0, 8.0))
+        plt.suptitle('new genetic device visit AI input data')
+        plt.axis([-3, 3, -3, 3])
+
+        for j in range(len(input_data_row) // 2):
+            plt.scatter(input_data_row[2*j], input_data_row[2*j + 1], marker='o', c='blue')
+
+        for j in range(len(input_data_row) // 2 - 1):
+            print(movement)
+            x = [input_data_row[2*movement[j]    ], input_data_row[2*movement[j+1]    ]]
+            y = [input_data_row[2*movement[j] + 1], input_data_row[2*movement[j+1] + 1]]
+            
+            plt.plot(x, y, linewidth=0.75, c='black')
+
+        plt.savefig('newGenetic_AI_input_' + str(i) + '_' + ('%04d' % (row_index - 1)))
 
 # brute force search for the path
 def doBruteForce(deviceList, initialLocUAV, initialMovement):
@@ -88,7 +101,7 @@ def test(input_data, output_data, print_input_data):
         print('input data :', np.round_(input_data[-1], 4))
 
         # save input data as image
-        saveInputDataImg(input_data[-1], len(input_data))
+        saveInputDataImg(input_data[-1], len(input_data), swappedMovement, bruteForceMovement)
 
 def defineModel(train_input, train_output, test_input, test_output, epochs):
     
