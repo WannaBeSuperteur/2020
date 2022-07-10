@@ -119,32 +119,6 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
 
     return resultMovement
 
-# movement -> input data of the model (n: the number of devices)
-# (normally swapped movement)
-def convertMovementToInput(movement, deviceList, n):
-
-    # write input and output data
-    input_d = []
-    
-    for i in range(n):
-        if i == 0:
-            firstDevice = movement[0]
-            
-            input_d.append(deviceList[firstDevice][0])
-            input_d.append(deviceList[firstDevice][1])
-        else:
-            thisDevice = movement[i]
-            beforeDevice = movement[i-1]
-            
-            input_d.append(deviceList[thisDevice][0] - deviceList[beforeDevice][0])
-            input_d.append(deviceList[thisDevice][1] - deviceList[beforeDevice][1])
-
-    # fill the blank cells with zero
-    for i in range(2 * (6 - n)):
-        input_d.append(0.0)
-
-    return input_d
-
 # n: the number of devices
 def test(input_data, output_data, print_input_data):
     
@@ -177,8 +151,8 @@ def test(input_data, output_data, print_input_data):
     totalDistBruteForce = T_NG.computeTotalDist(initialLocUAV, bruteForceMovement, deviceList)
 
     # create input data
-    input_init = convertMovementToInput(initialMovement, deviceList, n)
-    input_swap = convertMovementToInput(swappedMovement, deviceList, n)
+    input_init = T_NG.convertMovementToInput(initialMovement, deviceList, n)
+    input_swap = T_NG.convertMovementToInput(swappedMovement, deviceList, n)
     input_d    = input_init + input_swap
 
     # the columns of each input row
@@ -245,7 +219,7 @@ if __name__ == '__main__':
 
     input_data      = []
     output_data     = []
-    times           = 200000
+    times           = 3000
     deviceCountList = []
 
     for i in range(times):

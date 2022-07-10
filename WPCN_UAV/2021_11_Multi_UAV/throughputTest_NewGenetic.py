@@ -76,6 +76,32 @@ def swapBasic(deviceList, initialLocUAV, initialMovement, printed=False):
 
     return resultMovement
 
+# movement -> input data of the model (n: the number of devices)
+# (normally swapped movement)
+def convertMovementToInput(movement, deviceList, n):
+
+    # write input and output data
+    input_d = []
+    
+    for i in range(n):
+        if i == 0:
+            firstDevice = movement[0]
+            
+            input_d.append(deviceList[firstDevice][0])
+            input_d.append(deviceList[firstDevice][1])
+        else:
+            thisDevice = movement[i]
+            beforeDevice = movement[i-1]
+            
+            input_d.append(deviceList[thisDevice][0] - deviceList[beforeDevice][0])
+            input_d.append(deviceList[thisDevice][1] - deviceList[beforeDevice][1])
+
+    # fill the blank cells with zero
+    for i in range(2 * (6 - n)):
+        input_d.append(0.0)
+
+    return input_d
+
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
