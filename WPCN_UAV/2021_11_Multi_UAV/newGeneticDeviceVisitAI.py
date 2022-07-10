@@ -7,7 +7,7 @@ from itertools import permutations
 import matplotlib.pyplot as plt
 
 # save input data as image (n: the number of devices)
-def saveInputDataImg(input_data_row, row_index, n, swappedMovement, bruteForceMovement):
+def saveInputDataImg(initialLocUAV, input_data_row, row_index, n, swappedMovement, bruteForceMovement):
 
     movements = [swappedMovement, bruteForceMovement]
     cs = ['red', 'orange', 'lime', 'green', 'blue', 'purple']
@@ -27,10 +27,20 @@ def saveInputDataImg(input_data_row, row_index, n, swappedMovement, bruteForceMo
             
         plt.axis([-3.5, 3.5, -3.5, 3.5])
 
+        # devices
+        plt.scatter(initialLocUAV[0], initialLocUAV[1], marker='P', s=125, c='black')
+        
         for j in range(n):
             plt.scatter(input_data_row[2*j], input_data_row[2*j + 1], marker='o', s=125, c=cs[j])
 
-        for j in range(n - 1):
+        # line between devices
+        x = [initialLocUAV[0], initialLocUAV[0] * 0.25 + input_data_row[2*movement[0]    ] * 0.75, input_data_row[2*movement[0]    ]]
+        y = [initialLocUAV[1], initialLocUAV[1] * 0.25 + input_data_row[2*movement[0] + 1] * 0.75, input_data_row[2*movement[0] + 1]]
+        
+        plt.plot(x[:2], y[:2], linewidth=0.75, c='black')
+        plt.plot(x[1:], y[1:], linewidth=2.5 , c='black')
+        
+        for j in range(n-1):
             x = [input_data_row[2*movement[j]],
                  input_data_row[2*movement[j]] * 0.25 + input_data_row[2*movement[j+1]] * 0.75,
                                                         input_data_row[2*movement[j+1]]]
@@ -114,7 +124,7 @@ def test(input_data, output_data, print_input_data):
         print('input data :', np.round_(input_data[-1], 4), 'dist :', round(totalDistSwapped, 4), round(totalDistBruteForce, 4))
 
         # save input data as image
-        saveInputDataImg(input_data[-1], len(input_data), n, swappedMovement, bruteForceMovement)
+        saveInputDataImg(initialLocUAV, input_data[-1], len(input_data), n, swappedMovement, bruteForceMovement)
 
 def defineModel(train_input, train_output, test_input, test_output, epochs):
     
