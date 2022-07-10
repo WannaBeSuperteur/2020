@@ -3,9 +3,23 @@ import numpy as np
 import random
 import math
 import pandas as pd
+import permutations from itertools
 
+# brute force search for the path
 def doBruteForce(deviceList, initialLocUAV, initialMovement):
-    pass
+
+    devCnt = len(deviceList)
+    movements = list(permutations(range(devCnt), devCnt))
+    resultDist = 1000000
+    resultMovement = list(range(devCnt))
+
+    for movement in movements:
+        dist = computeTotalDist(initialLocUAV, movement, deviceList)
+        
+        if dist < resultDist:
+            resultMovement = movement
+
+    return resultMovement
 
 def test(input_data, output_data):
     
