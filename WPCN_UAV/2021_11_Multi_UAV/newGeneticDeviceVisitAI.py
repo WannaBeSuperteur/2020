@@ -120,6 +120,7 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
     return resultMovement
 
 # movement -> input data of the model (n: the number of devices)
+# (normally swapped movement)
 def convertMovementToInput(movement, deviceList, n):
 
     # write input and output data
@@ -144,6 +145,7 @@ def convertMovementToInput(movement, deviceList, n):
 
     return input_d
 
+# n: the number of devices
 def test(input_data, output_data, print_input_data):
     
     # randomly place device
@@ -187,9 +189,11 @@ def test(input_data, output_data, print_input_data):
         # save device location as image
         saveDeviceLocationImg(initialLocUAV, deviceList, len(input_data), swappedMovement, bruteForceMovement)
 
+    return n
+
 # define model for LARGE SCALE CLUSTER (with >10 devices)
 # DEEP LEARNING (input: 2n, output: 2n-k) is faster than BRUTE FORCE (O(n!))
-def defineModel(train_input, train_output, test_input, test_output, epochs):
+def defineModel(train_input, train_output, test_input, test_output, deviceCountList, epochs):
 
     # define model
     model = GENETIC_VISIT_AI_MODEL(input_cols=len(train_input[0]), output_cols=len(train_output[0]))
@@ -219,7 +223,7 @@ def defineModel(train_input, train_output, test_input, test_output, epochs):
     # write test result and compare (test output) - (ground truth)
     test_prediction = model.predict(test_input)
     test_prediction = np.reshape(test_prediction, (len(test_prediction), 1))
-    test_result     = np.concatenate((test_prediction, test_output), axis=1)
+    test_result     = np.concatenate((test_prediction, test_output, deviceCountList), axis=1)
 
     test_result     = pd.DataFrame(test_result)
     test_result.to_csv('newGenetic_train_valid_result.csv')
@@ -232,13 +236,15 @@ if __name__ == '__main__':
     # numpy setting
     np.set_printoptions(edgeitems=20, linewidth=200)
 
-    input_data  = []
-    output_data = []
-    times       = 1000
+    input_data      = []
+    output_data     = []
+    times           = 1000
+    deviceCountList = []
 
     for i in range(times):
         if i % 300 == 0: print(i)
-        test(input_data, output_data, i < 10)
+        devCnt = test(input_data, output_data, i < 10)
+        deviceCountList.append(devCnt)
 
     # save dataset
     pd.DataFrame(np.array(input_data)).to_csv('newGeneticDeviceVisitAI_input.csv')
@@ -249,13 +255,15 @@ if __name__ == '__main__':
     outputD = pd.read_csv('newGeneticDeviceVisitAI_output.csv', index_col=0)
 
     # split into training and test data
-    train_len    = int(len(inputD) * 0.9)
+    train_len       = int(len(inputD) * 0.9)
     
-    train_input  = np.array(inputD[:train_len])
-    train_output = np.array(outputD[:train_len])
-    test_input   = np.array(inputD[train_len:])
-    test_output  = np.array(outputD[train_len:])
+    train_input     = np.array(inputD[:train_len])
+    train_output    = np.array(outputD[:train_len])
+    test_input      = np.array(inputD[train_len:])
+    test_output     = np.array(outputD[train_len:])
+
+    deviceCountList = np.array(deviceCountList[train_len:]).reshape((-1, 1))
 
     # training and test
     epochs = 10
-    defineModel(train_input, train_output, test_input, test_output, epochs)
+    defineModel(train_input, train_output, test_input, test_output, deviceCountList, epochs)
