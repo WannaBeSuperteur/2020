@@ -102,6 +102,40 @@ def convertMovementToInput(movement, deviceList, n):
 
     return input_d
 
+# movement -> (sin(angle), cos(angle), distance) input data of the model (n: the number of devices)
+# (normally swapped movement)
+def convertMovementToAngleInput(movement, initialLocUAV, deviceList, n):
+
+    # write input and output data
+    input_d = []
+    
+    for i in range(n):
+        if i == 0:
+            prevLoc = initialLocUAV[:2]
+            thisLoc = deviceList[movement[0]]
+        else:
+            prevLoc = deviceList[movement[i-1]]
+            thisLoc = deviceList[movement[i]]
+
+        xDist = thisLoc[0] - prevLoc[0]
+        yDist = thisLoc[1] - prevLoc[1]
+        r     = math.sqrt(xDist * xDist + yDist * yDist)
+
+        # append sin(angle), cos(angle) and distance
+        if r > 0.0:
+            input_d.append(yDist / r)
+            input_d.append(xDist / r)
+            input_d.append(r)
+        else:
+            for _ in range(3):
+                input_d.append(0.0)
+
+    # fill the blank cells with zero
+    for i in range(3 * (6 - n)):
+        input_d.append(0.0)
+
+    return input_d
+
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
