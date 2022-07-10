@@ -10,10 +10,12 @@ import matplotlib.pyplot as plt
 def saveInputDataImg(input_data_row, row_index, n, swappedMovement, bruteForceMovement):
 
     movements = [swappedMovement, bruteForceMovement]
+    cs = ['red', 'orange', 'lime', 'green', 'blue', 'purple']
 
     # save image for both swappedMovement and bruteForceMovement
     for i in range(2):
         movement = movements[i]
+        print(i, movement)
 
         plt.clf()
         plt.figure(figsize=(6.2, 6.2))
@@ -26,7 +28,7 @@ def saveInputDataImg(input_data_row, row_index, n, swappedMovement, bruteForceMo
         plt.axis([-3.5, 3.5, -3.5, 3.5])
 
         for j in range(n):
-            plt.scatter(input_data_row[2*j], input_data_row[2*j + 1], marker='o', c='blue')
+            plt.scatter(input_data_row[2*j], input_data_row[2*j + 1], marker='o', s=125, c=cs[j])
 
         for j in range(n - 1):
             x = [input_data_row[2*movement[j]],
