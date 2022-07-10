@@ -29,71 +29,32 @@ def initializeMovementOfUAV(devices):
 def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height):
 
     param1 = bestParams[0]
-    param2 = bestParams[1]
-    param3 = bestParams[2]
 
     UAV_x = q[l * (N+1)][2]
     UAV_y = q[l * (N+1)][3]
     UAV_h = q[l * (N+1)][4]
     initialLocUAV = [UAV_x, UAV_y, UAV_h]
             
-    (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, param2, param3, width, height)
+    (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, width, height)
     return directionList
 
 # genetic-like algorithm to decide optimal path (= direction list)
 
 #### NOTE ####
-# movement     -> device visit sequence
+# movement     -> device visit sequence, such as [3, 1, 2, 0, 4] if there are 5 devices in the cluster
 # path         -> direction list = list of directions of UAV to move
 # optimal path -> path of the optimal movement with the formula to minimize
 
 # minimum of A*(total movement distance) + B*(sum of 1/d^2 by moving minimum times)
-# parameter 1 -> 5 * (random swap probability of two neighboring device) -> probability = 0.0 ~ 0.2 (=1/5)
-# parameter 2 -> proportion of A and B
-# parameter 3 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
-def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, param2, param3, width, height, printed=False):
+# parameter 1 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
+def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
     
-    # define parameter A and B using param2 (between 0.0 ~ 1.0)
-    A = param2
-    B = 1.0 - param2
-    moves = len(initialMovement)
+    # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
 
-    currentBestScore    = computeScore(A, B, initialLocUAV, initialMovement, deviceList, width, height)
-    currentBestMovement = initialMovement
-
-    # 30 iterations
-    for i in range(30):
-        bestModifiedMovement = None
-        
-        # create 20 candidate moves in an iteration to find ONLY ONE best move
-        for j in range(20):
-            modifiedMovement = copy.deepcopy(currentBestMovement)
-
-            # change the movement
-            for k in range(moves-1):
-                r = random.random()
-
-                # random swap with probability (param1)
-                if r < param1 / 5.0:
-                    modifiedMovement[k], modifiedMovement[k+1] = modifiedMovement[k+1], modifiedMovement[k]
-
-            # compute the score
-            score = computeScore(A, B, initialLocUAV, modifiedMovement, deviceList, width, height)
-            
-            # update best modified score/movement
-            if bestModifiedMovement == None or score < bestModifiedScore:
-                bestModifiedScore    = score
-                bestModifiedMovement = copy.deepcopy(modifiedMovement)
-
-        # update current best score and movement at the end of each iteration
-        currentBestScore    = bestModifiedScore
-        currentBestMovement = bestModifiedMovement
-
-    # define best movement as the current best movement at the end of all the iterations
-    bestMovement = currentBestMovement
+    # apply deep learning for check need of additional swap
 
     # create the optimal path based on the best movement
-    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param3, printed)
+    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed)
 
     return (locsUAV, bestMovement, optimalPath)
 
@@ -179,7 +140,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
     return (locsUAV, minimumPath, stops)
     
 # create the optimal path based on the best movement
-def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param3, printed=False):
+def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed=False):
 
     # suppose that the UAV "stops" near each device for a while
     
@@ -194,7 +155,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height,
     # find (dist^(2x^2)) using closeness (=dist^-2) where x = (parameter 3)
     sqDistList = []
     for c in closeness:
-        sqDistList.append(1 / max(1e-6, pow(c, param3*param3)))
+        sqDistList.append(1 / max(1e-6, pow(c, param1*param1)))
 
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
