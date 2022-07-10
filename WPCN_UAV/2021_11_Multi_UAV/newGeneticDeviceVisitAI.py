@@ -3,7 +3,7 @@ import numpy as np
 import random
 import math
 import pandas as pd
-import permutations from itertools
+from itertools import permutations
 
 # brute force search for the path
 def doBruteForce(deviceList, initialLocUAV, initialMovement):
@@ -14,14 +14,14 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
     resultMovement = list(range(devCnt))
 
     for movement in movements:
-        dist = computeTotalDist(initialLocUAV, movement, deviceList)
+        dist = T_NG.computeTotalDist(initialLocUAV, list(movement), deviceList)
         
         if dist < resultDist:
             resultMovement = movement
 
     return resultMovement
 
-def test(input_data, output_data):
+def test(input_data, output_data, print_input_data):
     
     # randomly place device
     deviceList = []
@@ -44,7 +44,7 @@ def test(input_data, output_data):
     initialMovement = list(range(n))
 
     # test total distance
-    swappedMovement    = T_NG.swapBasic(deviceList, initialLocUAV, initialMovement, printed)
+    swappedMovement    = T_NG.swapBasic(deviceList, initialLocUAV, initialMovement, False)
     bruteForceMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
 
     # compute total distance
@@ -56,15 +56,22 @@ def test(input_data, output_data):
     
     for i in range(n):
         if i == 0:
-            input_data.append(deviceList[0][0])
-            input_data.append(deviceList[0][1])
+            input_d.append(deviceList[0][0])
+            input_d.append(deviceList[0][1])
         else:
-            input_data.append(deviceList[i][0] - deviceList[i-1][0])
-            input_data.append(deviceList[i][1] - deviceList[i-1][1])
+            input_d.append(deviceList[i][0] - deviceList[i-1][0])
+            input_d.append(deviceList[i][1] - deviceList[i-1][1])
+
+    # fill the blank cells
+    for i in range(2 * (6 - n)):
+        input_d.append(0.0)
 
     # append to input_data and output_data
     input_data .append(input_d)
     output_data.append([math.log(totalDistBruteForce / totalDistSwapped, 2.0)])
+
+    if print_input_data == True:
+        print('input data :', np.round_(input_data[-1], 4))
 
 def defineModel(train_input, train_output, test_input, test_output, epochs):
     
@@ -113,7 +120,7 @@ if __name__ == '__main__':
     times       = 1000
 
     for i in range(times):
-        test(input_data, output_data)
+        test(input_data, output_data, i < 10)
 
     # save dataset
     pd.DataFrame(np.array(input_data)).to_csv('newGeneticDeviceVisitAI_input.csv')
@@ -124,12 +131,12 @@ if __name__ == '__main__':
     outputD = pd.read_csv('newGeneticDeviceVisitAI_output.csv', index_col=0)
 
     # split into training and test data
-    train_len    = len(input_D) * 0.9
+    train_len    = int(len(inputD) * 0.9)
     
-    train_input  = input_D[:train_len]
-    train_output = output_D[:train_len]
-    test_input   = input_D[train_len:]
-    test_output  = output_D[train_len:]
+    train_input  = inputD[:train_len]
+    train_output = outputD[:train_len]
+    test_input   = inputD[train_len:]
+    test_output  = outputD[train_len:]
 
     # training and test
     epochs = 10
