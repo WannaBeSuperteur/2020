@@ -16,23 +16,29 @@ def saveInputDataImg(input_data_row, row_index, n, swappedMovement, bruteForceMo
         movement = movements[i]
 
         plt.clf()
-        plt.figure(figsize=(4.0, 4.0))
+        plt.figure(figsize=(6.2, 6.2))
 
         if i == 0:
             plt.suptitle('new genetic device visit AI input data (swapped)')
         elif i == 1:
             plt.suptitle('new genetic device visit AI input data (brute-force best)')
             
-        plt.axis([-3, 3, -3, 3])
+        plt.axis([-3.5, 3.5, -3.5, 3.5])
 
         for j in range(n):
             plt.scatter(input_data_row[2*j], input_data_row[2*j + 1], marker='o', c='blue')
 
         for j in range(n - 1):
-            x = [input_data_row[2*movement[j]    ], input_data_row[2*movement[j+1]    ]]
-            y = [input_data_row[2*movement[j] + 1], input_data_row[2*movement[j+1] + 1]]
+            x = [input_data_row[2*movement[j]],
+                 input_data_row[2*movement[j]] * 0.25 + input_data_row[2*movement[j+1]] * 0.75,
+                                                        input_data_row[2*movement[j+1]]]
             
-            plt.plot(x, y, linewidth=0.75, c='black')
+            y = [input_data_row[2*movement[j] + 1],
+                 input_data_row[2*movement[j] + 1] * 0.25 + input_data_row[2*movement[j+1] + 1] * 0.75,
+                                                            input_data_row[2*movement[j+1] + 1]]
+
+            plt.plot(x[:2], y[:2], linewidth=0.75, c='black')
+            plt.plot(x[1:], y[1:], linewidth=2.5 , c='black')
 
         plt.savefig('newGenetic_AI_input_' + ('%04d' % (row_index - 1)) + '_' + str(i))
 
