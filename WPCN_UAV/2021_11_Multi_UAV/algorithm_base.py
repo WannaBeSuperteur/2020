@@ -313,6 +313,7 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
                         trajectoryArrowLength, trajectoryArrowThickness, alkl):
 
     plt.clf()
+    plt.figure(figsize=(width / 6.0, height / 6.0))
     plt.suptitle('trajectory result at iter ' + str(iterationCount))
     plt.axis([-1, width+1, -1, height+1])
 
