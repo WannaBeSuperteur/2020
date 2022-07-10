@@ -4,7 +4,7 @@ import throughputTest_NewGenetic as T_NG
 from matplotlib.pyplot import figure
 
 # save trajectory as graph
-def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
+def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList, fn):
 
     N = len(locsUAV)
 
@@ -50,27 +50,17 @@ def saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList):
         plt.plot(x[1:], y[1:], linewidth=2.5 , c='forestgreen')
 
     # save the figure
-    plt.savefig('newGeneticTest_trajectory.png')
+    plt.savefig(fn + '.png')
 
-if __name__ == '__main__':
+# test function
+def test(deviceList, initialMovement, fn):
 
-    # numpy setting
-    np.set_printoptions(edgeitems=20, linewidth=200)
-    
     N = 300
     width = 60
     height = 70
 
-    deviceList = [[5, 5], [20, 5], [35, 5], [55, 5],
-                  [5, 25], [20, 25], [35, 25], [55, 25],
-                  [5, 45], [20, 45], [35, 45], [55, 45],
-                  [5, 65], [20, 65], [35, 65], [55, 65]]
-
-    # average of x : 27.00 (-> 20.22), y : 36.29 (-> 20.23), h : 15.00 (as same as the setting)
+    # initial location of UAV
     initialLocUAV = [20.22, 20.23, 15.0]
-
-    # initial movement
-    initialMovement = [7, 1, 10, 2, 9, 4, 0, 5, 6, 13, 3, 14, 8, 12, 15, 11]
 
     # parameter 1 -> the value of x, where the stop times of UAV is decided by (distance between UAV and nearest device)^x
     param1 = 0.4
@@ -89,4 +79,28 @@ if __name__ == '__main__':
         print(i, optimalPath[i], locsUAV[i])
 
     # save trajectory
-    saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList)
+    saveTrajectory(width, height, initialLocUAV, locsUAV, deviceList, fn)
+
+if __name__ == '__main__':
+
+    # numpy setting
+    np.set_printoptions(edgeitems=20, linewidth=200)
+
+    # test 1
+    deviceList = [[5, 5], [20, 5], [35, 5], [55, 5],
+                  [5, 25], [20, 25], [35, 25], [55, 25],
+                  [5, 45], [20, 45], [35, 45], [55, 45],
+                  [5, 65], [20, 65], [35, 65], [55, 65]]
+
+    initialMovement = [7, 1, 10, 2, 9, 4, 0, 5, 6, 13, 3, 14, 8, 12, 15, 11]
+
+    test(deviceList, initialMovement, 'newGeneticTest_trajectory_1')
+
+    # test 2
+    deviceList = [[5, 5], [30, 5], [55, 5],
+                  [5, 35], [30, 35], [55, 35],
+                  [5, 65], [30, 65], [55, 65]]
+
+    initialMovement = [7, 0, 5, 2, 4, 6, 3, 8, 1]
+
+    test(deviceList, initialMovement, 'newGeneticTest_trajectory_2')
