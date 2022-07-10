@@ -28,6 +28,7 @@ time consumption:
 * before ```2022.07.09``` : ```3``` training trajectories / ```1 min```
 * after ```2022.07.09``` 1st update (function modification) : ```20~25``` training trajectories / ```1 min```
 * after ```2022.07.09``` 2nd update (limiting writing files) : ```50``` training trajectories / ```1 min```
+* after ```2022.07.10``` **algorithm change** : ```200~300``` training trajectories / ```1 min```
 
 ## FILE INFO - HELPER
 * ```algorithms.py```
