@@ -79,13 +79,13 @@ def swapBasic(deviceList, initialLocUAV, initialMovement, printed=False):
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
-    bestMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
+    swappedMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
 
     # apply deep learning for check need of additional swap
     # (later)
 
     # create the optimal path based on the best movement
-    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed)
+    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, swappedMovement, deviceList, width, height, param1, printed)
 
     return (locsUAV, bestMovement, optimalPath)
 
@@ -274,17 +274,13 @@ def computeScore(A, B, initialLocUAV, movement, deviceList, width, height):
 # compute (total movement distance, NOT CONSIDERING THE MOVEMENT OF UAV, just Euclidean)
 def computeTotalDist(initialLocUAV, movement, deviceList):
 
-    #print('\nmovement:', np.round_(movement, 4))
-    
     # initial UAV location <-> first device
     totalDist = dist(initialLocUAV, deviceList[movement[0]])
-    #print(round(totalDist, 4), initialLocUAV, np.round_(deviceList[movement[0]], 4))
-
+    
     # k-th device <-> (k+1)-th device
     for i in range(len(deviceList)-1):
         totalDist += dist(deviceList[movement[i]], deviceList[movement[i+1]])
-        #print(i, round(totalDist, 4), np.round_(deviceList[movement[i+1]], 4))
-
+        
     return totalDist
 
 # compute (sum of 1/d^2 by moving minimum times) where d = distance
