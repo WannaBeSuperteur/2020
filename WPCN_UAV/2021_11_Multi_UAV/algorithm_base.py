@@ -310,7 +310,7 @@ def drawLine(x, y, width, trajectoryArrowThickness, color, isButt):
 
 def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
                         q, markerColors, training, isStatic, L, N,
-                        trajectoryArrowLength, trajectoryArrowThickness, alkl):
+                        trajectoryArrowLength, trajectoryArrowThickness, alkl, useGenTxt):
 
     plt.clf()
     plt.figure(figsize=(width / 6.0, height / 6.0))
@@ -403,11 +403,11 @@ def saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_t
 
     # save the figure
     if isStatic:
-        plt.savefig('static_trajectory_iter' + ('%04d' % iterationCount))
+        plt.savefig('static_' + useGenTxt + '_trajectory_iter' + ('%04d' % iterationCount))
     elif training == True:
-        plt.savefig('train_trajectory_iter' + ('%04d' % iterationCount))
+        plt.savefig('train_' + useGenTxt + '_trajectory_iter' + ('%04d' % iterationCount))
     else:
-        plt.savefig('test_trajectory_iter' + ('%04d' % iterationCount))
+        plt.savefig('test_' + useGenTxt + '_trajectory_iter' + ('%04d' % iterationCount))
 
 # find devices within 3m (only x and y)
 # w = [[l, k, xkl, ykl, 0], ...]
@@ -781,11 +781,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             final_throughputs_df = pd.DataFrame(final_throughputs)
 
             if isStatic:
-                final_throughputs_df.to_csv('static_thrputs_' + useGenTxt + '_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+                final_throughputs_df.to_csv('static_' + useGenTxt + '_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
             elif training == True:
-                final_throughputs_df.to_csv('train_thrputs_' + useGenTxt + '_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+                final_throughputs_df.to_csv('train_' + useGenTxt + '_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
             else:
-                final_throughputs_df.to_csv('test_thrputs_' + useGenTxt + '_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+                final_throughputs_df.to_csv('test_' + useGenTxt + '_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
         minThrput = min(final_throughputs)
         minthroughputs.append(minThrput)
@@ -851,7 +851,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # save trajectory as graph
         saveTrajectoryGraph(iterationCount, width, height, w, all_throughputs, all_throughputs_zero,
                             q, markerColors, training, isStatic, L, N,
-                            trajectoryArrowLength, trajectoryArrowThickness, alkl)
+                            trajectoryArrowLength, trajectoryArrowThickness, alkl, useGenTxt)
 
         # save minimum throughput list
         if isStatic:
