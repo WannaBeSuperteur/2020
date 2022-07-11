@@ -628,7 +628,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
                    ng, fc, B, o2, b1, b2, alphaP, alphaL, mu1, mu2, s, PD, PU,
                    iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                    input_data, output_data, training, model, windowSize, isStatic,
-                   trajectoryArrowLength, trajectoryArrowThickness, currentTime,
+                   trajectoryArrowLength, trajectoryArrowThickness, currentTime, useGeneticVisitAI,
                    base_func_initializeMovementOfUAV=None,
                    base_func_computeDirectionList=None,
                    base_func_getDeviceLocation=None):
@@ -689,6 +689,12 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     #              using         direction of remaining            devices at current
     sqDist = 2.0
 
+    # use genetic visit AI option
+    if useGeneticVisitAI == True:
+        useGenTxt = 'genVisit'
+    else:
+        useGenTxt = 'swapOnly'
+
     for l in range(L):
 
         # make input image
@@ -736,7 +742,7 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # parameter 1 -> random swap probability of two neighboring device
         # parameter 2 -> proportion of A and B
         if base_func_computeDirectionList != None and isStatic == False:
-            directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height)
+            directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height, useGeneticVisitAI)
 
         # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
         # (update q)
@@ -775,11 +781,11 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             final_throughputs_df = pd.DataFrame(final_throughputs)
 
             if isStatic:
-                final_throughputs_df.to_csv('static_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+                final_throughputs_df.to_csv('static_thrputs_' + useGenTxt + '_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
             elif training == True:
-                final_throughputs_df.to_csv('train_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+                final_throughputs_df.to_csv('train_thrputs_' + useGenTxt + '_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
             else:
-                final_throughputs_df.to_csv('test_thrputs_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
+                final_throughputs_df.to_csv('test_thrputs_' + useGenTxt + '_iter_' + str(iterationCount) + '_cluster_' + str(l) + '_final.csv')
 
         minThrput = min(final_throughputs)
         minthroughputs.append(minThrput)
@@ -810,14 +816,14 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         output_data = np.round_(output_data, 6)
         
         if isStatic:
-            pd.DataFrame(np.array(input_data)).to_csv('static_input_raw.csv')
-            pd.DataFrame(np.array(output_data)).to_csv('static_output_raw.csv')
+            pd.DataFrame(np.array(input_data)).to_csv('static_' + useGenTxt + '_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('static_' + useGenTxt + '_output_raw.csv')
         elif training == True:
-            pd.DataFrame(np.array(input_data)).to_csv('train_input_raw.csv')
-            pd.DataFrame(np.array(output_data)).to_csv('train_output_raw.csv')
+            pd.DataFrame(np.array(input_data)).to_csv('train_' + useGenTxt + '_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('train_' + useGenTxt + '_output_raw.csv')
         else:
-            pd.DataFrame(np.array(input_data)).to_csv('test_input_raw.csv')
-            pd.DataFrame(np.array(output_data)).to_csv('test_output_raw.csv')
+            pd.DataFrame(np.array(input_data)).to_csv('test_' + useGenTxt + '_input_raw.csv')
+            pd.DataFrame(np.array(output_data)).to_csv('test_' + useGenTxt + '_output_raw.csv')
 
         # preprocess input and output data
         (preprocessed_input_data, preprocessed_output_data) = preprocessInputAndOutput(input_data,
@@ -828,14 +834,14 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         preprocessed_output_data = np.round_(preprocessed_output_data, 6)
 
         if isStatic:
-            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_input_preprocessed.csv')
-            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('static_output_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('static_' + useGenTxt + '_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('static_' + useGenTxt + '_output_preprocessed.csv')
         elif training == True:
-            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_input_preprocessed.csv')
-            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_output_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('train_' + useGenTxt + '_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('train_' + useGenTxt + '_output_preprocessed.csv')
         else:
-            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_input_preprocessed.csv')
-            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_output_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_input_data)).to_csv('test_' + useGenTxt + '_input_preprocessed.csv')
+            pd.DataFrame(np.array(preprocessed_output_data)).to_csv('test_' + useGenTxt + '_output_preprocessed.csv')
 
         # all_throughputs
         all_throughputs = np.array(all_throughputs)
@@ -862,14 +868,14 @@ def saveMinThroughput(minThroughputList, memo, iters, L, devices, N):
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))
-    minThroughputList.to_csv('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) +
+    minThroughputList.to_csv('minThroughputList_' + memo + '_' + useGenTxt + '_iter_' + ('%04d' % iters) +
                              '_L_' + ('%04d' % L) + '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.csv')
 
     # save min throughput list as *.txt file
     arr = np.array(minThroughputList)[:, 1:]
     note = 'mean: ' + str(np.mean(arr)) + ', std: ' + str(np.std(arr)) + ', nonzero: ' + str(np.count_nonzero(arr))
 
-    noteFile = open('minThroughputList_' + memo + '_iter_' + ('%04d' % iters) +
+    noteFile = open('minThroughputList_' + memo + '_' + useGenTxt + '_iter_' + ('%04d' % iters) +
                     '_L_' + ('%04d' % L) + '_devs_' + ('%04d' % devices) + '_N_' + ('%04d' % N) + '.txt', 'w')
 
     noteFile.write(note)

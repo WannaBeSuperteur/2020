@@ -27,14 +27,18 @@ def initializeMovementOfUAV(devices):
     return list(np.random.permutation(range(devices)))
 
 #### compute direction list ####
-def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height):
+def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height, useGeneticVisitAI):
 
     UAV_x = q[l * (N+1)][2]
     UAV_y = q[l * (N+1)][3]
     UAV_h = q[l * (N+1)][4]
     initialLocUAV = [UAV_x, UAV_y, UAV_h]
-            
-    (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
+
+    if useGeneticVisitAI:            
+        (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
+    else:
+        (_, _, directionList) = findOptimalSwappedPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
+        
     return directionList
 
 # genetic-like algorithm to decide optimal path (= direction list)
@@ -572,7 +576,7 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  static_input_data, static_output_data, True, None, windowSize, True,
-                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime,
+                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime, True,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)
@@ -599,7 +603,19 @@ if __name__ == '__main__':
                                      ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                      iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                      input_data, output_data, True, None, windowSize, False,
-                                     trajectoryArrowLength, trajectoryArrowThickness, currentTime,
+                                     trajectoryArrowLength, trajectoryArrowThickness, currentTime, False,
+                                     base_func_initializeMovementOfUAV=initializeMovementOfUAV,
+                                     base_func_computeDirectionList=computeDirectionList,
+                                     base_func_getDeviceLocation=None)
+
+        for iterationCount in range(iters):
+            print('TRAINING ITER COUNT ', iterationCount, '/', iters)
+
+            algo_base.throughputTest(M, T, N, L, devices, width, height, H,
+                                     ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                                     iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                                     input_data, output_data, True, None, windowSize, False,
+                                     trajectoryArrowLength, trajectoryArrowThickness, currentTime, True,
                                      base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                      base_func_computeDirectionList=computeDirectionList,
                                      base_func_getDeviceLocation=None)
@@ -630,7 +646,19 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  test_input_data, test_output_data, False, model, windowSize, False,
-                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime,
+                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime, False,
+                                 base_func_initializeMovementOfUAV=initializeMovementOfUAV,
+                                 base_func_computeDirectionList=computeDirectionList,
+                                 base_func_getDeviceLocation=None)
+
+    for iterationCount in range(iters):
+        print('TEST ITER COUNT ', iterationCount, '/', iters)
+
+        algo_base.throughputTest(M, T, N, L, devices, width, height, H,
+                                 ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
+                                 iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
+                                 test_input_data, test_output_data, False, model, windowSize, False,
+                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime, True,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)
