@@ -18,6 +18,7 @@ import matplotlib.colors as clr
 
 import tensorflow as tf
 import algorithm_base as algo_base
+from itertools import permutations
 
 import time
 
@@ -145,7 +146,7 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
     resultMovement = list(range(devCnt))
 
     for movement in movements:
-        dist = T_NG.computeTotalDist(initialLocUAV, list(movement), deviceList)
+        dist = computeTotalDist(initialLocUAV, list(movement), deviceList)
         
         if dist < resultDist:
             resultMovement = list(movement)
@@ -154,6 +155,8 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
     return resultMovement
 
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
+
+    n = len(deviceList)
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
     swappedMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
@@ -165,15 +168,17 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
     # apply deep learning for check need of additional swap
     try:
         output = geneticVisitModel(input_d)
+        print('[ output:', output, 'brute force:', output >= 0.6, ']')
 
         # use brute-force result movement instead of swapped movement
-        if output >= 0.5:
+        if output >= 0.6:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
         else:
             bestMovement = swappedMovement
 
-    except:
+    except Exception as e:
         print('Cannot find the model. run newGeneticDeviceVisitAI.py first.')
+        print('error:', str(e))
         exit(1)
 
     # create the optimal path based on the best movement
