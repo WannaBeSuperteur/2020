@@ -1,5 +1,5 @@
-paramCells=1 # the number of parameter cells in the input of deep learning model
-p0_cases=101 # the number of possible cases for parameter 0
+paramCells=0 # the number of parameter cells in the input of deep learning model
+p0_cases=1 # the number of possible cases for parameter 0
 p1_cases=1 # the number of possible cases for parameter 1
 p2_cases=1 # the number of possible cases for parameter 2
 p3_cases=1 # the number of possible cases for parameter 3

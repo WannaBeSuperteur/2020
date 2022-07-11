@@ -29,14 +29,12 @@ def initializeMovementOfUAV(devices):
 #### compute direction list ####
 def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height):
 
-    param1 = bestParams[0]
-
     UAV_x = q[l * (N+1)][2]
     UAV_y = q[l * (N+1)][3]
     UAV_h = q[l * (N+1)][4]
     initialLocUAV = [UAV_x, UAV_y, UAV_h]
             
-    (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, param1, width, height)
+    (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
     return directionList
 
 # genetic-like algorithm to decide optimal path (= direction list)
@@ -154,10 +152,11 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
 
     return resultMovement
 
+# finding optimal path
 do_bruteForce = 0
 do_swap       = 0
 
-def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
+def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height, printed=False):
 
     global do_bruteForce
     global do_swap
@@ -216,7 +215,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
         exit(1)
 
     # create the optimal path based on the best movement
-    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed)
+    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, printed)
 
     return (locsUAV, bestMovement, optimalPath)
 
@@ -302,7 +301,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
     return (locsUAV, minimumPath, stops)
     
 # create the optimal path based on the best movement
-def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed=False):
+def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, printed=False):
 
     # suppose that the UAV "stops" near each device for a while
     
@@ -317,7 +316,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height,
     # find (dist^(2x^2)) using closeness (=dist^-2) where x = (parameter 3)
     sqDistList = []
     for c in closeness:
-        sqDistList.append(1 / max(1e-6, pow(c, param1*param1)))
+        sqDistList.append(1 / max(1e-6, pow(c, 1e-6)))
 
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
