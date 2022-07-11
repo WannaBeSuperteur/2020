@@ -861,10 +861,10 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         else:
             memo = 'test' + currentTime
 
-        saveMinThroughput(minThroughputList, memo, iters, L, devices, N)
+        saveMinThroughput(minThroughputList, memo, iters, L, devices, N, useGenTxt)
 
 # save min throughput as *.csv file
-def saveMinThroughput(minThroughputList, memo, iters, L, devices, N):
+def saveMinThroughput(minThroughputList, memo, iters, L, devices, N, useGenTxt):
 
     # save min throughput list as *.csv file
     minThroughputList = pd.DataFrame(np.array(minThroughputList))

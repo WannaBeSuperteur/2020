@@ -168,7 +168,7 @@ def findOptimalSwappedPath(N, deviceList, initialLocUAV, initialMovement, width,
     # create the optimal path based on the best movement
     (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, swappedMovement, deviceList, width, height, printed)
 
-    return (locsUAV, bestMovement, optimalPath)
+    return (locsUAV, swappedMovement, optimalPath)
 
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height, printed=False):
 
@@ -576,7 +576,7 @@ if __name__ == '__main__':
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
                                  static_input_data, static_output_data, True, None, windowSize, True,
-                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime, True,
+                                 trajectoryArrowLength, trajectoryArrowThickness, currentTime, False,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)
