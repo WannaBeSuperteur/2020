@@ -178,7 +178,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
 
         # final output part
         self.finalDense = tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=L2, name='dense_final0')
-        self.final = tf.keras.layers.Dense(1, activation='tanh', kernel_regularizer=L2, name='dense_final1')
+        self.final = tf.keras.layers.Dense(1, activation='sigmoid', kernel_regularizer=L2, name='dense_final1')
 
     def call(self, inputs, training):
         ws = self.windowSize
