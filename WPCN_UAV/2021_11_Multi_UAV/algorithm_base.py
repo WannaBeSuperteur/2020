@@ -709,7 +709,6 @@ def throughputTest(M, T, N, L, devices, width, height, H,
             print('\n[ best parameters derived randomly ]')
 
         print(np.round_(bestParams, 6))
-        print('\n')
 
         # the list of devices in cluster l
         deviceListC = findDevicesInCluster(l, deviceList, cluster_mem)

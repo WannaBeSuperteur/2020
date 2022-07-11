@@ -160,23 +160,45 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
     swappedMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
-    
-    input_swap      = convertMovementToInput     (swappedMovement, deviceList, n)
-    input_angle     = convertMovementToAngleInput(swappedMovement, initialLocUAV, deviceList, n)
+
+    # normalize device list first
+    # and then define normalize initial location of the UAV
+    deviceListNp = np.array(deviceList)
+
+    avg    = np.mean(deviceListNp, axis=0)
+    stddev = np.std(deviceListNp, axis=0)
+
+    normalizedDeviceList = np.zeros((n, 2))
+    for i in range(n):
+        normalizedDeviceList[i][0] = (deviceListNp[i][0] - avg[0]) / stddev[0]
+        normalizedDeviceList[i][1] = (deviceListNp[i][1] - avg[1]) / stddev[1]
+
+    normalizedInitialLocUAV = [0, 0, initialLocUAV[2]]
+
+    print('deviceList :', np.array(deviceList))
+    print('swapped    :', swappedMovement)
+
+    # create input data
+    input_swap      = convertMovementToInput     (swappedMovement, normalizedDeviceList, n)
+    input_angle     = convertMovementToAngleInput(swappedMovement, normalizedInitialLocUAV, normalizedDeviceList, n)
     input_d         = np.array(input_swap + input_angle)
     input_d         = input_d.reshape((1, len(input_d)))
-    print('input :', np.round_(input_d[0], 4))
+    print('input      :', np.round_(input_d[0], 4))
 
     # apply deep learning for check need of additional swap
     try:
         output = np.array(geneticVisitModel(input_d))
-        print('output:', output[0][0], 'brute_force:', output[0][0] >= 0.6)
+        print('output     :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
 
         # use brute-force result movement instead of swapped movement
         if output[0][0] >= 0.6:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
+            print('best=brute :', bestMovement)
         else:
             bestMovement = swappedMovement
+            print('best=swap :', bestMovement)
+
+        print('\n\n\n')
 
     except Exception as e:
         print('Cannot find the model. run newGeneticDeviceVisitAI.py first.')
@@ -186,7 +208,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
     # create the optimal path based on the best movement
     (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed)
 
-    return (locsUAV, swappedMovement, optimalPath)
+    return (locsUAV, bestMovement, optimalPath)
 
 # distance between UAV and device (also can be between device A and device B)
 def dist(locUAV, locDevice):
