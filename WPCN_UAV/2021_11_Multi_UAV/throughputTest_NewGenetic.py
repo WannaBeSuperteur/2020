@@ -316,7 +316,7 @@ def createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height,
     # find (dist^(2x^2)) using closeness (=dist^-2) where x = (parameter 3)
     sqDistList = []
     for c in closeness:
-        sqDistList.append(1 / max(1e-6, pow(c, 1e-6)))
+        sqDistList.append(1 / max(1e-6, pow(c, 0.001)))
 
     # the sum of sqDistList -> 1
     sqDistListNormalized = np.array(sqDistList) / np.sum(sqDistList)
