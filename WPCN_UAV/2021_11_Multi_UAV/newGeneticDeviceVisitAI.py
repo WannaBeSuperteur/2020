@@ -112,7 +112,20 @@ def test(input_data, output_data, print_input_data):
     
     # randomly place device
     deviceList = []
-    n = random.randint(4, 6)
+
+    # decide the number of devices (2: 10%, 3: 25%, 4: 30%, 5: 25%, 6: 10% probability)
+    r = random.random()
+
+    if r < 0.1:
+        n = 2
+    elif r < 0.35:
+        n = 3
+    elif r < 0.65:
+        n = 4
+    elif r < 0.9:
+        n = 5
+    else:
+        n = 6
     
     for i in range(n):
         deviceList.append([random.random(), random.random()])
@@ -214,7 +227,7 @@ if __name__ == '__main__':
 
     input_data      = []
     output_data     = []
-    times           = 20000
+    times           = 50000
     deviceCountList = []
 
     for i in range(times):
