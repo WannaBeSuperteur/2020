@@ -156,6 +156,16 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
 do_bruteForce = 0
 do_swap       = 0
 
+def findOptimalSwappedPath(N, deviceList, initialLocUAV, initialMovement, width, height, printed=False):
+    
+    # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
+    swappedMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
+
+    # create the optimal path based on the best movement
+    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, swappedMovement, deviceList, width, height, printed)
+
+    return (locsUAV, bestMovement, optimalPath)
+
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height, printed=False):
 
     global do_bruteForce
