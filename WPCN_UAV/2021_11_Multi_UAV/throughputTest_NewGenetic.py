@@ -154,6 +154,9 @@ def doBruteForce(deviceList, initialLocUAV, initialMovement):
 
     return resultMovement
 
+do_bruteForce = 0
+do_swap       = 0
+
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
 
     n = len(deviceList)
@@ -192,13 +195,16 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
         print('output      :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
 
         # use brute-force result movement instead of swapped movement
-        if output[0][0] >= 0.6:
+        if output[0][0] >= 0.35:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
             print('best=brute  :', bestMovement)
+            do_bruteForce += 1
         else:
             bestMovement = swappedMovement
             print('best=swap   :', bestMovement)
+            do_swap += 1
 
+        print('brute/swap  :', do_bruteForce, do_swap, round(do_bruteForce / (do_bruteForce + do_swap) * 100.0, 2), '%')
         print('\n\n\n')
 
     except Exception as e:
