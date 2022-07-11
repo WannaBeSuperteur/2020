@@ -175,28 +175,29 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
 
     normalizedInitialLocUAV = [0, 0, initialLocUAV[2]]
 
-    print('deviceList :', np.array(deviceList))
-    print('swapped    :', swappedMovement)
+    print('deviceList  :', np.array(deviceList))
+    print('swapped     :', swappedMovement)
 
     # create input data
-    input_swap      = convertMovementToInput     (swappedMovement, normalizedDeviceList, n)
-    input_angle     = convertMovementToAngleInput(swappedMovement, normalizedInitialLocUAV, normalizedDeviceList, n)
-    input_d         = np.array(input_swap + input_angle)
-    input_d         = input_d.reshape((1, len(input_d)))
-    print('input      :', np.round_(input_d[0], 4))
+    input_xy    = convertMovementToInput     (swappedMovement, normalizedDeviceList, n)
+    input_angle = convertMovementToAngleInput(swappedMovement, normalizedInitialLocUAV, normalizedDeviceList, n)
+    input_d     = np.array(input_xy + input_angle)
+    input_d     = input_d.reshape((1, len(input_d)))
+    print('input xy    :', np.round_(input_xy, 4))
+    print('input angle :', np.round_(input_angle, 4))
 
     # apply deep learning for check need of additional swap
     try:
         output = np.array(geneticVisitModel(input_d))
-        print('output     :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
+        print('output      :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
 
         # use brute-force result movement instead of swapped movement
         if output[0][0] >= 0.6:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
-            print('best=brute :', bestMovement)
+            print('best=brute  :', bestMovement)
         else:
             bestMovement = swappedMovement
-            print('best=swap :', bestMovement)
+            print('best=swap   :', bestMovement)
 
         print('\n\n\n')
 

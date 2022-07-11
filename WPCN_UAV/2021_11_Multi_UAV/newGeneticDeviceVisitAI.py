@@ -145,9 +145,9 @@ def test(input_data, output_data, print_input_data):
     initialMovement = list(range(n))
 
     # create input data
-    input_swap  = T_NG.convertMovementToInput     (swappedMovement, deviceList, n)
+    input_xy    = T_NG.convertMovementToInput     (swappedMovement, deviceList, n)
     input_angle = T_NG.convertMovementToAngleInput(swappedMovement, initialLocUAV, deviceList, n)
-    input_d     = input_swap + input_angle
+    input_d     = input_xy + input_angle
     
     # the columns of each input row
     inputCols = len(input_d)
