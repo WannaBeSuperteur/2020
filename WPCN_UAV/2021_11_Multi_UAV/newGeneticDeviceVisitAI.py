@@ -151,9 +151,9 @@ def test(input_data, output_data, print_input_data):
     totalDistBruteForce = T_NG.computeTotalDist(initialLocUAV, bruteForceMovement, deviceList)
 
     # create input data
-    #input_swap  = T_NG.convertMovementToInput     (swappedMovement, deviceList, n)
+    input_swap  = T_NG.convertMovementToInput     (swappedMovement, deviceList, n)
     input_angle = T_NG.convertMovementToAngleInput(swappedMovement, initialLocUAV, deviceList, n)
-    input_d     = input_angle # input_swap + input_angle
+    input_d     = input_swap + input_angle
     
     # the columns of each input row
     inputCols = len(input_d)
@@ -164,9 +164,8 @@ def test(input_data, output_data, print_input_data):
 
     if print_input_data == True:
         print('\n')
-        #print('input data (swap)  :', np.round_(input_data[-1][:2 * inputCols // 5 ], 4))
-        #print('input data (angle) :', np.round_(input_data[-1][ 2 * inputCols // 5:], 4))
-        print('input data (angle) :', np.round_(input_data[-1], 4))
+        print('input data (swap)  :', np.round_(input_data[-1][:2 * inputCols // 5 ], 4))
+        print('input data (angle) :', np.round_(input_data[-1][ 2 * inputCols // 5:], 4))
         print('dist               :', round(totalDistSwapped, 4), round(totalDistBruteForce, 4))
 
         # save device location as image

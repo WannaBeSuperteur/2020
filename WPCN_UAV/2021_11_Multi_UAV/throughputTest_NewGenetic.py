@@ -140,12 +140,27 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
     swappedMovement = swapBasic(deviceList, initialLocUAV, initialMovement, printed)
+    
+    input_swap      = convertMovementToInput     (swappedMovement, deviceList, n)
+    input_angle     = convertMovementToAngleInput(swappedMovement, initialLocUAV, deviceList, n)
+    input_d         = np.array(input_swap + input_angle)
 
     # apply deep learning for check need of additional swap
-    # (later)
+    try:
+        output = geneticVisitModel(input_d)
+
+        # use brute-force result movement instead of swapped movement
+        if output >= 0.5:
+            bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
+        else:
+            bestMovement = swappedMovement
+
+    except:
+        print('Cannot find the model. run newGeneticDeviceVisitAI.py first.')
+        exit(1)
 
     # create the optimal path based on the best movement
-    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, swappedMovement, deviceList, width, height, param1, printed)
+    (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, bestMovement, deviceList, width, height, param1, printed)
 
     return (locsUAV, swappedMovement, optimalPath)
 
@@ -467,6 +482,13 @@ if __name__ == '__main__':
 
     configFile.write(configContent)
     configFile.close()
+
+    # load genetic visit model first
+    try:
+        geneticVisitModel = tf.keras.models.load_model('Genetic_Visit_AI_model')
+    except:
+        print('Cannot find the model. run newGeneticDeviceVisitAI.py first.')
+        exit(1)
 
     # minimum throughput list
     minThroughputList = []
