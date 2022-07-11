@@ -147,7 +147,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
     # create the optimal path based on the best movement
     (locsUAV, optimalPath) = createOptimalPath(N, initialLocUAV, swappedMovement, deviceList, width, height, param1, printed)
 
-    return (locsUAV, bestMovement, optimalPath)
+    return (locsUAV, swappedMovement, optimalPath)
 
 # distance between UAV and device (also can be between device A and device B)
 def dist(locUAV, locDevice):
