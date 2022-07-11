@@ -136,6 +136,23 @@ def convertMovementToAngleInput(movement, initialLocUAV, deviceList, n):
 
     return input_d
 
+# brute force search for the path
+def doBruteForce(deviceList, initialLocUAV, initialMovement):
+
+    devCnt = len(deviceList)
+    movements = list(permutations(range(devCnt), devCnt))
+    resultDist = 1000000 # devices=100, width=100, height=100 -> max 100*sqrt(100^2 + 100^2) = around 14K
+    resultMovement = list(range(devCnt))
+
+    for movement in movements:
+        dist = T_NG.computeTotalDist(initialLocUAV, list(movement), deviceList)
+        
+        if dist < resultDist:
+            resultMovement = list(movement)
+            resultDist = dist
+
+    return resultMovement
+
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)

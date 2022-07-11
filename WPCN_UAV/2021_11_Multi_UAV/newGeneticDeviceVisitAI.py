@@ -102,23 +102,6 @@ def saveDeviceLocationImg(initialLocUAV, deviceList, row_index, swappedMovement,
 
         plt.savefig('newGenetic_AI_input_' + ('%04d' % (row_index - 1)) + '_' + str(i))
 
-# brute force search for the path
-def doBruteForce(deviceList, initialLocUAV, initialMovement):
-
-    devCnt = len(deviceList)
-    movements = list(permutations(range(devCnt), devCnt))
-    resultDist = 1000000 # devices=100, width=100, height=100 -> max 100*sqrt(100^2 + 100^2) = around 14K
-    resultMovement = list(range(devCnt))
-
-    for movement in movements:
-        dist = T_NG.computeTotalDist(initialLocUAV, list(movement), deviceList)
-        
-        if dist < resultDist:
-            resultMovement = list(movement)
-            resultDist = dist
-
-    return resultMovement
-
 # n: the number of devices
 def test(input_data, output_data, print_input_data):
     
@@ -144,7 +127,7 @@ def test(input_data, output_data, print_input_data):
 
     # test total distance
     swappedMovement    = T_NG.swapBasic(deviceList, initialLocUAV, initialMovement, False)
-    bruteForceMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
+    bruteForceMovement = T_NG.doBruteForce(deviceList, initialLocUAV, initialMovement)
 
     # compute total distance
     totalDistSwapped    = T_NG.computeTotalDist(initialLocUAV, swappedMovement   , deviceList)
