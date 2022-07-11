@@ -622,10 +622,12 @@ if __name__ == '__main__':
 
     # get and train model
     try:
-        model = tf.keras.models.load_model('WPCN_UAV_DL_model')
+        model_swapOnly = tf.keras.models.load_model('WPCN_UAV_DL_model_swapOnly')
+        model_genVisit = tf.keras.models.load_model('WPCN_UAV_DL_model_genVisit')
     except:
         print('model load failed')
-        model = algo_base.getAndTrainModel(epochs, windowSize)
+        model_swapOnly = algo_base.getAndTrainModel(epochs, windowSize, 'swapOnly')
+        model_genVisit = algo_base.getAndTrainModel(epochs, windowSize, 'genVisit')
 
     # find the best genetic algorithm argument based on the WPCN UAV network environment arguments
 
@@ -645,7 +647,7 @@ if __name__ == '__main__':
         algo_base.throughputTest(M, T, N, L, devices, width, height, H,
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                                 test_input_data, test_output_data, False, model, windowSize, False,
+                                 test_input_data, test_output_data, False, model_swapOnly, windowSize, False,
                                  trajectoryArrowLength, trajectoryArrowThickness, currentTime, False,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
@@ -657,7 +659,7 @@ if __name__ == '__main__':
         algo_base.throughputTest(M, T, N, L, devices, width, height, H,
                                  ng, fc, B, o2, b1, b2, alphaP, None, mu1, mu2, s, None, PU,
                                  iterationCount, iters, minThroughputList, clusteringAtLeast, clusteringAtMost,
-                                 test_input_data, test_output_data, False, model, windowSize, False,
+                                 test_input_data, test_output_data, False, model_genVisit, windowSize, False,
                                  trajectoryArrowLength, trajectoryArrowThickness, currentTime, True,
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,

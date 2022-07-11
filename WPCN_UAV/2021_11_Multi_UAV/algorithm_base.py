@@ -220,7 +220,7 @@ class DEEP_LEARNING_MODEL(tf.keras.Model):
         return output
 
 # define and train model
-def defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize):
+def defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize, useGenTxt):
     model = DEEP_LEARNING_MODEL(window=windowSize)
 
     # training setting (early stopping and reduce learning rate)
@@ -242,7 +242,7 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output, epoc
               validation_split=0.1, callbacks=[early, lr_reduced], epochs=epochs)
 
     model.summary()
-    model.save('WPCN_UAV_DL_model')
+    model.save('WPCN_UAV_DL_model_' + useGenTxt)
 
     # test the model (validation)
     test_prediction = model.predict(test_input)
@@ -250,18 +250,18 @@ def defineAndTrainModel(train_input, train_output, test_input, test_output, epoc
     test_result     = np.concatenate((test_prediction, test_output), axis=1)
 
     test_result     = pd.DataFrame(test_result)
-    test_result.to_csv('train_valid_result.csv')
+    test_result.to_csv('train_valid_result_' + useGenTxt + '.csv')
 
     # return the trained model
     return model
 
 # deep learning model
-def getAndTrainModel(epochs, windowSize):
+def getAndTrainModel(epochs, windowSize, useGenTxt):
 
     # load and preprocess input and output data
     try:
-        input_data  = pd.read_csv('train_input_preprocessed.csv' , index_col=0)
-        output_data = pd.read_csv('train_output_preprocessed.csv', index_col=0)
+        input_data  = pd.read_csv('train_' + useGenTxt + '_input_preprocessed.csv' , index_col=0)
+        output_data = pd.read_csv('train_' + useGenTxt + '_output_preprocessed.csv', index_col=0)
     except:
         print('[ NO PREPROCESSED DATA ]')
         exit(0)
@@ -283,11 +283,11 @@ def getAndTrainModel(epochs, windowSize):
     try:
         try:
             with tf.device('/gpu:0'):
-                return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
+                return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize, useGenTxt)
         except:
             print('GPU load failed -> using CPU')
             with tf.device('/cpu:0'):
-                return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize)
+                return defineAndTrainModel(train_input, train_output, test_input, test_output, epochs, windowSize, useGenTxt)
     except:
         print('Error occurred. If the error is because of the number of COLUMNS in the INPUT data\n' +
               '(for example, 627 = (2*12 + 1) * (2*12 + 1) + 2 when window size is 12 and the number of param is 2)\n' +
