@@ -104,6 +104,11 @@ def saveDeviceLocationImg(initialLocUAV, deviceList, row_index, swappedMovement,
 
 # n: the number of devices
 def test(input_data, output_data, print_input_data):
+
+    # 1. compute totalDist("swapped") / totalDist("brute force") (based on original device locations)
+    # 2. normalize device locations
+    # 3. create input data and output data (based on normalized device locations)
+    # 4. train and test the model
     
     # randomly place device
     deviceList = []
@@ -112,26 +117,32 @@ def test(input_data, output_data, print_input_data):
     for i in range(n):
         deviceList.append([random.random(), random.random()])
 
-    # normalize device locations
+    # initial location of UAV
     deviceListNp = np.array(deviceList)
 
     avg    = np.mean(deviceListNp, axis=0)
     stddev = np.std(deviceListNp, axis=0)
 
-    for i in range(n):
-        deviceList[i][0] = (deviceList[i][0] - avg[0]) / stddev[0]
-        deviceList[i][1] = (deviceList[i][1] - avg[1]) / stddev[1]
+    initialLocUAV = [avg[0], avg[1], 0.0]
 
-    initialLocUAV = [0, 0, 0]
+    # initial movement
     initialMovement = list(range(n))
 
-    # test total distance
+    # create swapped and brute-force-applied movement
     swappedMovement    = T_NG.swapBasic(deviceList, initialLocUAV, initialMovement, False)
     bruteForceMovement = T_NG.doBruteForce(deviceList, initialLocUAV, initialMovement)
 
     # compute total distance
     totalDistSwapped    = T_NG.computeTotalDist(initialLocUAV, swappedMovement   , deviceList)
     totalDistBruteForce = T_NG.computeTotalDist(initialLocUAV, bruteForceMovement, deviceList)
+
+    # normalize device locations
+    for i in range(n):
+        deviceList[i][0] = (deviceList[i][0] - avg[0]) / stddev[0]
+        deviceList[i][1] = (deviceList[i][1] - avg[1]) / stddev[1]
+
+    initialLocUAV = [0, 0, 0]
+    initialMovement = list(range(n))
 
     # create input data
     input_swap  = T_NG.convertMovementToInput     (swappedMovement, deviceList, n)
