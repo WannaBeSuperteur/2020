@@ -164,14 +164,16 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width
     input_swap      = convertMovementToInput     (swappedMovement, deviceList, n)
     input_angle     = convertMovementToAngleInput(swappedMovement, initialLocUAV, deviceList, n)
     input_d         = np.array(input_swap + input_angle)
+    input_d         = input_d.reshape((1, len(input_d)))
+    print('input :', np.round_(input_d[0], 4))
 
     # apply deep learning for check need of additional swap
     try:
-        output = geneticVisitModel(input_d)
-        print('[ output:', output, 'brute force:', output >= 0.6, ']')
+        output = np.array(geneticVisitModel(input_d))
+        print('output:', output[0][0], 'brute_force:', output[0][0] >= 0.6)
 
         # use brute-force result movement instead of swapped movement
-        if output >= 0.6:
+        if output[0][0] >= 0.6:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
         else:
             bestMovement = swappedMovement
