@@ -608,6 +608,11 @@ if __name__ == '__main__':
                                      base_func_computeDirectionList=computeDirectionList,
                                      base_func_getDeviceLocation=None)
 
+        # re-initialize
+        minThroughputList = []
+        input_data = []
+        output_data = []
+
         for iterationCount in range(iters):
             print('TRAINING ITER COUNT ', iterationCount, '/', iters)
 
@@ -652,6 +657,11 @@ if __name__ == '__main__':
                                  base_func_initializeMovementOfUAV=initializeMovementOfUAV,
                                  base_func_computeDirectionList=computeDirectionList,
                                  base_func_getDeviceLocation=None)
+
+    # re-initialize
+    minThroughputList = []
+    test_input_data = []
+    test_output_data = []
 
     for iterationCount in range(iters):
         print('TEST ITER COUNT ', iterationCount, '/', iters)
