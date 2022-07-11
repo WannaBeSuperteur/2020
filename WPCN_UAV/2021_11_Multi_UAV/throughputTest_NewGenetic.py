@@ -159,6 +159,9 @@ do_swap       = 0
 
 def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, param1, width, height, printed=False):
 
+    global do_bruteForce
+    global do_swap
+
     n = len(deviceList)
     
     # basic swap algorithm (S-A-B <=> S-B-A, A-B-C-D <=> A-C-B-D, ...)
