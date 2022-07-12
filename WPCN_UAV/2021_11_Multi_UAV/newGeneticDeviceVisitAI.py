@@ -167,7 +167,7 @@ def test(input_data, output_data, print_input_data):
 
     # append to input_data and output_data
     input_data .append(input_d)
-    output_data.append([min(1.0, math.log(totalDistSwapped / totalDistBruteForce, 1.6))])
+    output_data.append([min(1.0, math.log(totalDistSwapped / totalDistBruteForce, 1.75))])
 
     if print_input_data == True:
         print('\n')
@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
     input_data      = []
     output_data     = []
-    times           = 3000
+    times           = 6000
     deviceCountList = []
 
     for i in range(times):
