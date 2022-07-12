@@ -421,14 +421,14 @@ def findNearDevice(q, w, l, t, N, s, b1, b2, mu1, mu2, fc, c, alphaP, numOfDevs)
     UAV_x = q[ind][2]
     UAV_y = q[ind][3]
 
-    # find devices within 3.6m in array 'w'
+    # find devices within 3.125m in array 'w'
     for device in w:
         if device[0] == l:
             k = device[1]
             dev_x = device[2]
             dev_y = device[3]
 
-            if pow(UAV_x - dev_x, 2) + pow(UAV_y - dev_y, 2) <= 3.6 * 3.6:
+            if (UAV_x - dev_x) * (UAV_x - dev_x) + (UAV_y - dev_y) * (UAV_y - dev_y) <= 3.125 * 3.125:
                 result.append(k)
 
     # no device within 3m

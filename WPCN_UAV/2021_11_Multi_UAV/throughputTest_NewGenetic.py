@@ -288,8 +288,7 @@ def computeMinimumPath(initialLocUAV, movement, deviceList, width, height):
 
                 nextDist = dist(nextLocUAV, device)
 
-                # 
-                if nextDist < minDist - 1.0:
+                if nextDist < minDist:
                     minDist          = nextDist
                     minDistDirection = i
 
