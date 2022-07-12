@@ -22,6 +22,8 @@ from itertools import permutations
 
 import time
 
+maxDevicesInCluster = 8
+
 #### initialize the movement of UAV ####
 def initializeMovementOfUAV(devices):
     return list(np.random.permutation(range(devices)))
@@ -100,7 +102,7 @@ def convertMovementToInput(movement, deviceList, n):
             input_d.append(deviceList[thisDevice][1] - deviceList[beforeDevice][1])
 
     # fill the blank cells with zero
-    for i in range(2 * (6 - n)):
+    for i in range(2 * (maxDevicesInCluster - n)):
         input_d.append(0.0)
 
     return input_d
@@ -134,7 +136,7 @@ def convertMovementToAngleInput(movement, initialLocUAV, deviceList, n):
                 input_d.append(0.0)
 
     # fill the blank cells with zero
-    for i in range(3 * (6 - n)):
+    for i in range(3 * (maxDevicesInCluster - n)):
         input_d.append(0.0)
 
     return input_d
@@ -211,12 +213,13 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height
     # apply deep learning for check need of additional swap
     try:
         output = np.array(geneticVisitModel(input_d))
+        bruteForceThreshold = 0.35
 
         if printed2 == True:
-            print('output      :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
+            print('output      :', output[0][0], 'brute_force:', output[0][0] >= bruteForceThreshold)
 
         # use brute-force result movement instead of swapped movement
-        if output[0][0] >= 0.35:
+        if output[0][0] >= bruteForceThreshold:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
             if printed2 == True: print('best=brute  :', bestMovement)
             do_bruteForce += 1

@@ -58,7 +58,7 @@ def saveDeviceLocationImg(initialLocUAV, deviceList, row_index, swappedMovement,
 
     devCnt = len(deviceList)
     movements = [swappedMovement, bruteForceMovement]
-    cs = ['red', 'orange', 'lime', 'green', 'blue', 'purple']
+    cs = ['red', 'orange', 'limegreen', 'green', 'lightseagreen', 'deepskyblue', 'blue', 'darkorchid']
 
     # save image for both swappedMovement and bruteForceMovement
     for i in range(2):
@@ -113,19 +113,19 @@ def test(input_data, output_data, print_input_data):
     # randomly place device
     deviceList = []
 
-    # decide the number of devices (2: 10%, 3: 25%, 4: 30%, 5: 25%, 6: 10% probability)
+    # decide the number of devices (4: 15%, 5: 22%, 6: 26%, 7: 22%, 8: 15% probability)
     r = random.random()
 
-    if r < 0.1:
-        n = 2
-    elif r < 0.35:
-        n = 3
-    elif r < 0.65:
+    if r < 0.15:
         n = 4
-    elif r < 0.9:
+    elif r < 0.37:
         n = 5
-    else:
+    elif r < 0.63:
         n = 6
+    elif r < 0.85:
+        n = 7
+    else:
+        n = 8
     
     for i in range(n):
         deviceList.append([random.random(), random.random()])
@@ -227,11 +227,11 @@ if __name__ == '__main__':
 
     input_data      = []
     output_data     = []
-    times           = 50000
+    times           = 3000
     deviceCountList = []
 
     for i in range(times):
-        if i % 300 == 0: print(i)
+        if i % 30 == 0: print(i)
         devCnt = test(input_data, output_data, i < 10)
         deviceCountList.append(devCnt)
 
