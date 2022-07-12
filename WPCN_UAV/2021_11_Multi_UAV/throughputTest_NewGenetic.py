@@ -27,7 +27,7 @@ def initializeMovementOfUAV(devices):
     return list(np.random.permutation(range(devices)))
 
 #### compute direction list ####
-def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height, useGeneticVisitAI):
+def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height, useGeneticVisitAI, printed2):
 
     UAV_x = q[l * (N+1)][2]
     UAV_y = q[l * (N+1)][3]
@@ -35,7 +35,7 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
     initialLocUAV = [UAV_x, UAV_y, UAV_h]
 
     if useGeneticVisitAI:            
-        (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
+        (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height, printed2)
     else:
         (_, _, directionList) = findOptimalSwappedPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
         
@@ -170,7 +170,7 @@ def findOptimalSwappedPath(N, deviceList, initialLocUAV, initialMovement, width,
 
     return (locsUAV, swappedMovement, optimalPath)
 
-def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height, printed=False):
+def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height, printed=False, printed2=False):
 
     global do_bruteForce
     global do_swap
@@ -194,34 +194,40 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height
 
     normalizedInitialLocUAV = [0, 0, initialLocUAV[2]]
 
-    print('deviceList  :', np.array(deviceList))
-    print('swapped     :', swappedMovement)
+    if printed2 == True:
+        print('deviceList  :', np.array(deviceList))
+        print('swapped     :', swappedMovement)
 
     # create input data
     input_xy    = convertMovementToInput     (swappedMovement, normalizedDeviceList, n)
     input_angle = convertMovementToAngleInput(swappedMovement, normalizedInitialLocUAV, normalizedDeviceList, n)
     input_d     = np.array(input_xy + input_angle)
     input_d     = input_d.reshape((1, len(input_d)))
-    print('input xy    :', np.round_(input_xy, 4))
-    print('input angle :', np.round_(input_angle, 4))
+
+    if printed2 == True:
+        print('input xy    :', np.round_(input_xy, 4))
+        print('input angle :', np.round_(input_angle, 4))
 
     # apply deep learning for check need of additional swap
     try:
         output = np.array(geneticVisitModel(input_d))
-        print('output      :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
+
+        if printed2 == True:
+            print('output      :', output[0][0], 'brute_force:', output[0][0] >= 0.6)
 
         # use brute-force result movement instead of swapped movement
         if output[0][0] >= 0.35:
             bestMovement = doBruteForce(deviceList, initialLocUAV, initialMovement)
-            print('best=brute  :', bestMovement)
+            if printed2 == True: print('best=brute  :', bestMovement)
             do_bruteForce += 1
         else:
             bestMovement = swappedMovement
-            print('best=swap   :', bestMovement)
+            if printed2 == True: print('best=swap   :', bestMovement)
             do_swap += 1
 
-        print('brute/swap  :', do_bruteForce, do_swap, round(do_bruteForce / (do_bruteForce + do_swap) * 100.0, 2), '%')
-        print('\n\n\n')
+        if printed2 == True:
+            print('brute/swap  :', do_bruteForce, do_swap, round(do_bruteForce / (do_bruteForce + do_swap) * 100.0, 2), '%')
+            print('\n\n\n')
 
     except Exception as e:
         print('Cannot find the model. run newGeneticDeviceVisitAI.py first.')

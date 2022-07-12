@@ -536,7 +536,7 @@ def getWeight(base_cases):
         return 1 / (base_cases - 1)
 
 # find best parameter for path-finding algorithm
-def findBestParams(model, inputImage):
+def findBestParams(model, inputImage, printed2):
 
     bestParams = None
     bestOutput = -1.0 # actually at least 0 -> always updated
@@ -569,15 +569,16 @@ def findBestParams(model, inputImage):
                     else:
                         break
 
-    print('outputs: (for 100 elements with first 100 brute-force params)')
-    print(np.round_(np.array(outputs[:100]), 4), '...')
-    print('best param: ' + str(bestParams) + ', best output: ' + str(bestOutput))
+    if printed2 == True:
+        print('outputs: (for 100 elements with first 100 brute-force params)')
+        print(np.round_(np.array(outputs[:100]), 4), '...')
+        print('best param: ' + str(bestParams) + ', best output: ' + str(bestOutput))
 
     return bestParams
 
 # make input image for current UAV location and device location
 # dist : cell with ((distance to UAV or device)^2 < sqDist) is marked as -1 (UAV) or 1 (device)
-def makeInputImage(q, l, N, w, windowSize, sqDist):
+def makeInputImage(q, l, N, w, windowSize, sqDist, printed2):
 
     # current location of UAV [xlt, ylt, hlt]
     UAV_loc = q[l * (N + 1)][2:]
@@ -610,7 +611,9 @@ def makeInputImage(q, l, N, w, windowSize, sqDist):
                         except:
                             pass
 
-    print(np.round_(inputImage, 2))
+    if printed2 == True:
+        print(np.round_(inputImage, 2))
+        
     return inputImage
 
 # return the list of device in the current cluster
@@ -695,16 +698,19 @@ def throughputTest(M, T, N, L, devices, width, height, H,
     else:
         useGenTxt = 'swapOnly'
 
+    # use print option
+    printed2 = iterationCount < 5 or iterationCount % 10 == 0
+
     for l in range(L):
 
         # make input image
-        inputImage = makeInputImage(q, l, N, w, windowSize, sqDist)
+        inputImage = makeInputImage(q, l, N, w, windowSize, sqDist, printed2)
         inputImage = np.array(inputImage).flatten()
         inputImage = np.round_(inputImage, 2)
 
         # find best parameter using model
         if training == False:
-            bestParams = findBestParams(model, inputImage)
+            bestParams = findBestParams(model, inputImage, printed2)
             print('\n[ best parameters derived by model ]')
 
         # decide best parameter randomly
@@ -742,7 +748,8 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # parameter 1 -> random swap probability of two neighboring device
         # parameter 2 -> proportion of A and B
         if base_func_computeDirectionList != None and isStatic == False:
-            directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, width, height, useGeneticVisitAI)
+            directionList = base_func_computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement,
+                                                           width, height, useGeneticVisitAI, printed2)
 
         # move UAV from time from 0 to T (N+1 times, N moves), for all UAVs of all clusters
         # (update q)
