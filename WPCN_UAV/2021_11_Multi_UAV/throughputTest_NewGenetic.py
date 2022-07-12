@@ -35,7 +35,7 @@ def computeDirectionList(bestParams, q, l, N, deviceListC, initialMovement, widt
     initialLocUAV = [UAV_x, UAV_y, UAV_h]
 
     if useGeneticVisitAI:            
-        (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height, printed2)
+        (_, _, directionList) = findOptimalPath(N, deviceListC, initialLocUAV, initialMovement, width, height, False, printed2)
     else:
         (_, _, directionList) = findOptimalSwappedPath(N, deviceListC, initialLocUAV, initialMovement, width, height)
         

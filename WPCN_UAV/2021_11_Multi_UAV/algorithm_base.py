@@ -711,16 +711,17 @@ def throughputTest(M, T, N, L, devices, width, height, H,
         # find best parameter using model
         if training == False:
             bestParams = findBestParams(model, inputImage, printed2)
-            print('\n[ best parameters derived by model ]')
+            if printed2: print('\n[ best parameters derived by model ]')
 
         # decide best parameter randomly
         else:
             bestParams = []
             for i in range(base_paramCells):
                 bestParams.append(random.random())
-            print('\n[ best parameters derived randomly ]')
+            if printed2: print('\n[ best parameters derived randomly ]')
 
-        print(np.round_(bestParams, 6))
+        if printed2:
+            print(np.round_(bestParams, 6))
 
         # the list of devices in cluster l
         deviceListC = findDevicesInCluster(l, deviceList, cluster_mem)
