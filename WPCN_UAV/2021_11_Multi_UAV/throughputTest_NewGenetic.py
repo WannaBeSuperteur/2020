@@ -213,7 +213,7 @@ def findOptimalPath(N, deviceList, initialLocUAV, initialMovement, width, height
     # apply deep learning for check need of additional swap
     try:
         output = np.array(geneticVisitModel(input_d))
-        bruteForceThreshold = 0.35
+        bruteForceThreshold = 0.5
 
         if printed2 == True:
             print('output      :', output[0][0], 'brute_force:', output[0][0] >= bruteForceThreshold)
