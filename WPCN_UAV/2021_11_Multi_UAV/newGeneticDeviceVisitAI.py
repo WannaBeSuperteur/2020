@@ -227,7 +227,7 @@ if __name__ == '__main__':
 
     input_data      = []
     output_data     = []
-    times           = 6000
+    times           = 16000
     deviceCountList = []
 
     for i in range(times):
