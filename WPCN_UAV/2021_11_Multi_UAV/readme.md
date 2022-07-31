@@ -8,6 +8,9 @@ Reference:
  
 **For the usage of ```algorithm_base.py```, refer to ```algo_base.md```.**
 
+## FINAL FILE (INFO FOR WRITING FINAL PAPER)
+* ```WPCN_UAV_FINAL.pdf```
+
 ## RUN INFO
 command:
 * ```python throughputTest.py```
