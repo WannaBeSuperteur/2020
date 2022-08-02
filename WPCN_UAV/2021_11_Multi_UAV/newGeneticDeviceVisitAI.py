@@ -117,15 +117,15 @@ def test(input_data, output_data, print_input_data):
     r = random.random()
 
     if r < 0.15:
-        n = 2
-    elif r < 0.37:
-        n = 3
-    elif r < 0.63:
         n = 4
-    elif r < 0.85:
+    elif r < 0.37:
         n = 5
-    else:
+    elif r < 0.63:
         n = 6
+    elif r < 0.85:
+        n = 7
+    else:
+        n = 8
     
     for i in range(n):
         deviceList.append([random.random(), random.random()])

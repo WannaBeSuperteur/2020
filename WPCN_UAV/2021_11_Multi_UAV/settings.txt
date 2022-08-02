@@ -14,8 +14,8 @@ PU=-20.0 # transmission power for IoT devices' uplink
 width=50 # width (m)
 height=50 # height (m)
 M=1 # episodes
-L=5 # number of clusters = number of UAVs # 5
-devices=20 # number of devices
+L=7 # number of clusters = number of UAVs # 5
+devices=42 # number of devices
 T=1.0 # flight period (in seconds) (1.0 for example)
 N=30 # flight period T -> into N+1 time slots
 H=15 # hovering elevation (m)
@@ -27,8 +27,8 @@ printTimeDif=False # print time difference
 timeCheck=False # print time for important functions such as getMaxQ(), updateQvalue(), getNextState() and deepLearningQ_test() in deepQ.py
 warning=True # print warning for Q-value penalties
 constantToFill=-1.0 # constant to fill the state arrays (because of difference among the number of devices among clusters) (UNUSED)
-clusteringAtLeast=0.51 # each cluster contains devices at least int(this number * average)
-clusteringAtMost=1.51 # each cluster contains devices at most int(this number * average)
+clusteringAtLeast=0.67 # each cluster contains devices at least int(this number * average)
+clusteringAtMost=1.34 # each cluster contains devices at most int(this number * average)
 epochs=10 # the number of epochs for training deep learning model
 isStatic=False # use static (devices do not move) mode
 trajectoryArrowLength=0.25 # the ratio of arrow part (thick line) length
