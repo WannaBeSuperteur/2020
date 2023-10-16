@@ -242,7 +242,7 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                         
                         # 6. 테스트 데이터에 대한 출력 결과 확인하고 정답과 비교하기
                         print('[10] loading model...')
-                        newModel = deepLearning_GPU.deepLearningModel(WPCNdeepNN_modelName, True)
+                        newModel = deepLearning_GPU.deepLearningModel(WPCNdeepNN_modelName, op=op, loss=lc, isPrint=True)
 
                         print('[20] init throughput values...')
                         sumTestThroughput = 0.0 # test throughput의 합계
@@ -259,6 +259,7 @@ def run(size, numTrain, numTest, numWD, deviceName, doTrainAndTest):
                             testScreen = originalScreen[numTrain + i] # 테스트할 스크린
                             testOutput = deepLearning_GPU.modelOutput(newModel, [np.array(testScreen).reshape(size*size)]) # 테스트 결과
                             testOutputLayer = testOutput[len(testOutput)-1] # 테스트 결과의 output layer의 값
+                            newModel.save('newModel_tensorflow')
 
                             # 6-0. 테스트 결과 확인
                             # 출력값 받아오기
