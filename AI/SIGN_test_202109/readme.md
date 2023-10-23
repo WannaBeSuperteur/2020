@@ -1,3 +1,5 @@
+**How to execute: refer to ```execute.txt```**
+
 https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
 
 License: CC0 Public Domain

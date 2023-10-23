@@ -1,3 +1,5 @@
+**How to execute: refer to ```execute.txt```**
+
 https://www.kaggle.com/iamprateek/vehicle-images-gti
 
 SHAP: ```algo_0_shap.py```
