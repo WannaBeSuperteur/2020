@@ -1,6 +1,10 @@
 **How to execute: refer to ```execute.txt```**
 
+our XAI algorithm: ```XAI.py```
+
 https://www.kaggle.com/iamprateek/vehicle-images-gti
+
+other XAI algorithms:
 
 SHAP: ```algo_0_shap.py```
  * Scott M Lundberg and Su-In Lee, "A Unified Approach to Interpreting

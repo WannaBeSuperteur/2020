@@ -1,8 +1,12 @@
 **How to execute: refer to ```execute.txt```**
 
+our XAI algorithm: ```XAI.py```
+
 https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
 
 License: CC0 Public Domain
+
+other XAI algorithms:
 
 SHAP: ```algo_0_shap.py```
  * Scott M Lundberg and Su-In Lee, "A Unified Approach to Interpreting

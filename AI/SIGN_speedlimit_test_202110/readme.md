@@ -1,5 +1,7 @@
 **How to execute: refer to ```execute.txt```**
 
+our XAI algorithm: ```XAI.py```
+
 https://www.kaggle.com/meowmeowmeowmeowmeow/gtsrb-german-traffic-sign
 
 License: CC0 Public Domain
@@ -13,6 +15,8 @@ Merge original classes into new classes: (only use original classes ```0, 1, 2, 
 * original class ```5``` -> new class ```5```
 * original class ```7``` -> new class ```6```
 * original class ```8``` -> new class ```7```
+
+other XAI algorithms:
 
 SHAP: ```algo_0_shap.py```
 * Scott M Lundberg and Su-In Lee, "A Unified Approach to Interpreting Model Predictions", Allen School of Computer Science University of Washington, available online at https://arxiv.org/abs/1705.07874.
