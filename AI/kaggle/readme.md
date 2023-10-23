@@ -1,3 +1,7 @@
+**Kaggle Competition (종료된 것 포함) 총 18건 수행 (2020.08 ~ 2021.09)**
+
+**단, 2020년 7월에 수행한 'Santa Revenge 2019'는 수행 건수에서 제외합니다.**
+
 how to execute (to get the result)
  * 2020_08_random_acts_of_pizza: ```answer.py```
  * 2020_10_ConwayReverseGame: as ```2020_10_ConwayReverseGame/execute.py```
